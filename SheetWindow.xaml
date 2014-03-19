@@ -1,0 +1,28 @@
+﻿<Window x:Class="Sheet.SheetWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Sheet" Height="600" Width="800"
+        WindowStartupLocation="CenterScreen" WindowState="Normal">
+    <Grid x:Name="Workspace"
+          PreviewMouseWheel="Workspace_PreviewMouseWheel"
+          PreviewMouseDown="Workspace_PreviewMouseDown"
+          Background="Transparent">
+        <Canvas x:Name="Sheet" Background="Transparent" 
+                Width="720" Height="540"
+                SnapsToDevicePixels="True"
+                PreviewMouseLeftButtonDown="Sheet_PreviewMouseLeftButtonDown"
+                PreviewMouseLeftButtonUp="Sheet_PreviewMouseLeftButtonUp"
+                PreviewMouseMove="Sheet_PreviewMouseMove"
+                PreviewMouseRightButtonDown="Sheet_PreviewMouseRightButtonDown" 
+                RenderTransformOrigin="0.5,0.5">
+            <Canvas.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform x:Name="zoom" ScaleX="1" ScaleY="1"/>
+                    <SkewTransform/>
+                    <RotateTransform/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Canvas.RenderTransform>
+        </Canvas>
+    </Grid>
+</Window>
