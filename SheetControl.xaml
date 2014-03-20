@@ -18,7 +18,7 @@
                 PreviewMouseMove="Sheet_PreviewMouseMove"
                 PreviewMouseRightButtonDown="Sheet_PreviewMouseRightButtonDown" 
                 PreviewMouseRightButtonUp="Sheet_PreviewMouseRightButtonUp"
-                RenderTransformOrigin="0.5,0.5">
+                RenderTransformOrigin="0.0,0.0">
             <Canvas.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform x:Name="zoom" ScaleX="1" ScaleY="1"/>
