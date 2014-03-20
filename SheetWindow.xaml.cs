@@ -25,6 +25,7 @@ namespace Sheet
         double lthickness = 2.0;
         List<Line> lines = new List<Line>();
         List<Line> grids = new List<Line>();
+        Point start;
 
         public SheetWindow()
         {
@@ -131,6 +132,14 @@ namespace Sheet
                 l.X2 = Snap(p.X);
                 l.Y2 = Snap(p.Y);
             }
+            else if (Sheet.IsMouseCaptured && temp == null)
+            {
+                var p = e.GetPosition(this);
+                pan.X += p.X - start.X;
+                pan.Y += p.Y - start.Y;
+                start = p;
+                e.Handled = true;
+            }
         }
 
         private void Sheet_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -138,6 +147,20 @@ namespace Sheet
             if (Sheet.IsMouseCaptured && temp != null)
             {
                 CancelLine();
+            }
+            else if (!Sheet.IsMouseCaptured && temp == null)
+            {
+                start = e.GetPosition(this);
+                temp = null;
+                Sheet.CaptureMouse();
+            }
+        }
+
+        private void Sheet_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (Sheet.IsMouseCaptured && temp == null)
+            {
+                Sheet.ReleaseMouseCapture();
             }
         }
 
@@ -171,6 +194,8 @@ namespace Sheet
                 AdjustThickness(1.0);
                 zoom.ScaleX = 1.0;
                 zoom.ScaleY = 1.0;
+                pan.X = 0.0;
+                pan.Y = 0.0;
             }
         }
     }
