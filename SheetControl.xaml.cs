@@ -166,6 +166,8 @@ namespace Sheet
         private void Workspace_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
             double z = zoom.ScaleX;
+            double old = z;
+            var p = e.GetPosition(Sheet);
 
             if (e.Delta > 0)
             {
@@ -173,6 +175,10 @@ namespace Sheet
                 AdjustThickness(z);
                 zoom.ScaleX = z;
                 zoom.ScaleY = z;
+                double ax = p.X * old + pan.X;
+                double ay = p.Y * old + pan.Y;
+                pan.X = ax - p.X * z;
+                pan.Y = ay - p.Y * z;
             }
             else
             {
@@ -182,6 +188,10 @@ namespace Sheet
                     AdjustThickness(z);
                     zoom.ScaleX = z;
                     zoom.ScaleY = z;
+                    double ax = p.X * old + pan.X;
+                    double ay = p.Y * old + pan.Y;
+                    pan.X = ax - p.X * z;
+                    pan.Y = ay - p.Y * z;
                 }
             }
         }
