@@ -8,7 +8,8 @@
     <Grid x:Name="Workspace"
           PreviewMouseWheel="Workspace_PreviewMouseWheel"
           PreviewMouseDown="Workspace_PreviewMouseDown"
-          Background="Transparent">
+          Background="Transparent"
+          ClipToBounds="True">
         <Canvas x:Name="Sheet" Background="Transparent" 
                 Width="720" Height="540"
                 SnapsToDevicePixels="True"
