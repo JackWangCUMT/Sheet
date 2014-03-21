@@ -10,6 +10,19 @@
           PreviewMouseDown="Workspace_PreviewMouseDown"
           Background="Transparent"
           ClipToBounds="True">
+        <Canvas x:Name="Back" Background="Transparent" 
+                Width="720" Height="540"
+                SnapsToDevicePixels="True"
+                RenderTransformOrigin="0.0,0.0">
+            <Canvas.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform x:Name="zoom1" ScaleX="1" ScaleY="1"/>
+                    <SkewTransform/>
+                    <RotateTransform/>
+                    <TranslateTransform x:Name="pan1" X="0" Y="0"/>
+                </TransformGroup>
+            </Canvas.RenderTransform>
+        </Canvas>
         <Canvas x:Name="Sheet" Background="Transparent" 
                 Width="720" Height="540"
                 SnapsToDevicePixels="True"
@@ -21,10 +34,10 @@
                 RenderTransformOrigin="0.0,0.0">
             <Canvas.RenderTransform>
                 <TransformGroup>
-                    <ScaleTransform x:Name="zoom" ScaleX="1" ScaleY="1"/>
+                    <ScaleTransform x:Name="zoom2" ScaleX="1" ScaleY="1"/>
                     <SkewTransform/>
                     <RotateTransform/>
-                    <TranslateTransform x:Name="pan" X="0" Y="0"/>
+                    <TranslateTransform x:Name="pan2" X="0" Y="0"/>
                 </TransformGroup>
             </Canvas.RenderTransform>
         </Canvas>
