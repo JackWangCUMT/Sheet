@@ -15,16 +15,24 @@ using System.Windows.Shapes;
 namespace Sheet
 {
     public partial class SheetControl : UserControl
-    {
-        bool one = true;
-        Line temp = null;
+    {        
+        private int zi = 9; // zs index from 0 to 21, 9 = 100%
+        private int defaultzi = 9;
+        private double[] zs = 
+        { 
+            0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75,
+            1, 
+            1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64
+        };
         double snap = 15;
         double grid = 30;
         double gthickness = 1.0;
         double lthickness = 3.0;
+        bool one = true;
+        Line temp = null;
+        Point start;
         List<Line> lines = new List<Line>();
         List<Line> grids = new List<Line>();
-        Point start;
 
         public SheetControl()
         {
@@ -48,7 +56,7 @@ namespace Sheet
             {
                 var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gthickness, X1 = x, Y1 = 0, X2 = x, Y2 = h };
                 grids.Add(l);
-                Sheet.Children.Add(l);
+                Back.Children.Add(l);
             }
         }
 
@@ -56,6 +64,22 @@ namespace Sheet
         {
             double m = val % snap;
             return m >= snap / 2.0 ? val + snap - m : val - m;
+        }
+
+        private void SetZoom(double z)
+        {
+            zoom1.ScaleX = z;
+            zoom1.ScaleY = z;
+            zoom2.ScaleX = z;
+            zoom2.ScaleY = z;
+        }
+
+        private void SetPan(double x, double y)
+        {
+            pan1.X = x;
+            pan1.Y = y;
+            pan2.X = x;
+            pan2.Y = y;
         }
 
         private void AdjustThickness(double z)
@@ -73,14 +97,17 @@ namespace Sheet
 
         private void InitLine(Point p)
         {
-            double z = zoom.ScaleX;
+            double z = zoom1.ScaleX;
             double thickness = lthickness / z;
-            var l = new Line() { Stroke = Brushes.Red, StrokeThickness = thickness, StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round };
+            double x = Snap(p.X);
+            double y = Snap(p.Y);
+            var l = new Line() 
+            {
+                Stroke = Brushes.Red, StrokeThickness = thickness, 
+                StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round,
+                X1 = x, Y1 = y, X2 = x, Y2 = y
+            };
             temp = l;
-            l.X1 = Snap(p.X);
-            l.Y1 = Snap(p.Y);
-            l.X2 = Snap(p.X);
-            l.Y2 = Snap(p.Y);
             lines.Add(l);
             Sheet.Children.Add(l);
             Sheet.CaptureMouse();
@@ -88,8 +115,16 @@ namespace Sheet
 
         private void FinishLine()
         {
-            Sheet.ReleaseMouseCapture();
-            temp = null;
+            var l = temp;
+            if (Math.Round(l.X1, 1) == Math.Round(l.X2, 1) && Math.Round(l.Y1, 1) == Math.Round(l.Y2, 1))
+            {
+                CancelLine();
+            }
+            else
+            {
+                Sheet.ReleaseMouseCapture();
+                temp = null;
+            }
         }
 
         private void CancelLine()
@@ -128,16 +163,21 @@ namespace Sheet
             {
                 var p = e.GetPosition(Sheet);
                 var l = temp;
-                l.X2 = Snap(p.X);
-                l.Y2 = Snap(p.Y);
+                double x = Snap(p.X);
+                double y = Snap(p.Y);
+                if (Math.Round(x, 1) != Math.Round(l.X2, 1) || Math.Round(y, 1) != Math.Round(l.Y2, 1))
+                {
+                    l.X2 = x;
+                    l.Y2 = y;
+                }
             }
             else if (Sheet.IsMouseCaptured && temp == null)
             {
                 var p = e.GetPosition(this);
-                pan.X += p.X - start.X;
-                pan.Y += p.Y - start.Y;
+                double x = pan1.X + p.X - start.X;
+                double y = pan1.Y + p.Y - start.Y;
+                SetPan(x, y);
                 start = p;
-                e.Handled = true;
             }
         }
 
@@ -165,33 +205,33 @@ namespace Sheet
 
         private void Workspace_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            double z = zoom.ScaleX;
-            double old = z;
+            double old = zs[zi];
             var p = e.GetPosition(Sheet);
 
             if (e.Delta > 0)
             {
-                z += 0.1;
-                AdjustThickness(z);
-                zoom.ScaleX = z;
-                zoom.ScaleY = z;
-                double ax = p.X * old + pan.X;
-                double ay = p.Y * old + pan.Y;
-                pan.X = ax - p.X * z;
-                pan.Y = ay - p.Y * z;
+                if (zi < 21)
+                {
+                    zi++;
+                    double z = zs[zi];
+                    double x = (p.X * old + pan1.X) - p.X * z;
+                    double y = (p.Y * old + pan1.Y) - p.Y * z;
+                    AdjustThickness(z);
+                    SetZoom(z);
+                    SetPan(x, y);
+                }
             }
             else
             {
-                if (Math.Round(z, 1) > 0.1)
+                if (zi > 0)
                 {
-                    z -= 0.1;
+                    zi--;
+                    double z = zs[zi];
+                    double x = (p.X * old + pan1.X) - p.X * z;
+                    double y = (p.Y * old + pan1.Y) - p.Y * z;
                     AdjustThickness(z);
-                    zoom.ScaleX = z;
-                    zoom.ScaleY = z;
-                    double ax = p.X * old + pan.X;
-                    double ay = p.Y * old + pan.Y;
-                    pan.X = ax - p.X * z;
-                    pan.Y = ay - p.Y * z;
+                    SetZoom(z);
+                    SetPan(x, y);
                 }
             }
         }
@@ -200,11 +240,11 @@ namespace Sheet
         {
             if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
             {
-                AdjustThickness(1.0);
-                zoom.ScaleX = 1.0;
-                zoom.ScaleY = 1.0;
-                pan.X = 0.0;
-                pan.Y = 0.0;
+                zi = defaultzi;
+                double z = zs[zi];
+                AdjustThickness(z);
+                SetZoom(z);
+                SetPan(0.0, 0.0);
             }
         }
     }
