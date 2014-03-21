@@ -95,6 +95,17 @@ namespace Sheet
             }
         }
 
+        private void Zoom(Point p, int oldzi)
+        {
+            double oldz = zs[oldzi];
+            double z = zs[zi];
+            double x = (p.X * oldz + pan1.X) - p.X * z;
+            double y = (p.Y * oldz + pan1.Y) - p.Y * z;
+            AdjustThickness(z);
+            SetZoom(z);
+            SetPan(x, y);
+        }
+
         private void InitLine(Point p)
         {
             double z = zoom1.ScaleX;
@@ -205,33 +216,24 @@ namespace Sheet
 
         private void Workspace_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            double old = zs[zi];
             var p = e.GetPosition(Sheet);
 
             if (e.Delta > 0)
             {
                 if (zi < 21)
                 {
+                    int oldzi = zi;
                     zi++;
-                    double z = zs[zi];
-                    double x = (p.X * old + pan1.X) - p.X * z;
-                    double y = (p.Y * old + pan1.Y) - p.Y * z;
-                    AdjustThickness(z);
-                    SetZoom(z);
-                    SetPan(x, y);
+                    Zoom(p, oldzi);
                 }
             }
             else
             {
                 if (zi > 0)
                 {
+                    int oldzi = zi;
                     zi--;
-                    double z = zs[zi];
-                    double x = (p.X * old + pan1.X) - p.X * z;
-                    double y = (p.Y * old + pan1.Y) - p.Y * z;
-                    AdjustThickness(z);
-                    SetZoom(z);
-                    SetPan(x, y);
+                    Zoom(p, oldzi);
                 }
             }
         }
