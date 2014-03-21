@@ -36,34 +36,30 @@ namespace Sheet
 
         private double Zoom
         {
-            get { return zoom1.ScaleX; }
+            get { return zoom.ScaleX; }
             set
             {
                 AdjustThickness(value);
-                zoom1.ScaleX = value;
-                zoom1.ScaleY = value;
-                zoom2.ScaleX = value;
-                zoom2.ScaleY = value;
+                zoom.ScaleX = value;
+                zoom.ScaleY = value;
             }
         }
 
         private double PanX
         {
-            get { return pan1.X; }
+            get { return pan.X; }
             set
             {
-                pan1.X = value;
-                pan2.X = value;
+                pan.X = value;
             }
         }
 
         private double PanY
         {
-            get { return pan1.Y; }
+            get { return pan.Y; }
             set
             {
-                pan1.Y = value;
-                pan2.Y = value;
+                pan.Y = value;
             }
         }
 
@@ -117,8 +113,8 @@ namespace Sheet
             double oldz = zs[oldzi];
             double z = zs[zi];
             Zoom = z;
-            PanX = (p.X * oldz + pan1.X) - p.X * z;
-            PanY = (p.Y * oldz + pan1.Y) - p.Y * z;
+            PanX = (p.X * oldz + PanX) - p.X * z;
+            PanY = (p.Y * oldz + PanY) - p.Y * z;
         }
 
         private void InitLine(Point p)

@@ -4,6 +4,7 @@
         xmlns:local="clr-namespace:Sheet"
         Title="Sheet" Height="660" Width="800"
         WindowStartupLocation="CenterScreen" WindowState="Normal">
-    <local:SheetControl/>
+    <Grid>
+        <local:SheetControl/>
+    </Grid>
 </Window>
-

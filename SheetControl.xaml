@@ -4,42 +4,33 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="720" d:DesignWidth="540">
-    <Grid x:Name="Workspace"
-          PreviewMouseWheel="Workspace_PreviewMouseWheel"
-          PreviewMouseDown="Workspace_PreviewMouseDown"
-          Background="Transparent"
-          ClipToBounds="True">
+             d:DesignHeight="540" d:DesignWidth="720">
+    <Canvas x:Name="Workspace"
+            PreviewMouseWheel="Workspace_PreviewMouseWheel"
+            PreviewMouseDown="Workspace_PreviewMouseDown"
+            Width="720" Height="540"
+            Background="Transparent"
+            ClipToBounds="False"
+            RenderTransformOrigin="0.0,0.0"
+            SnapsToDevicePixels="True">
+        <Canvas.RenderTransform>
+            <TransformGroup>
+                <ScaleTransform x:Name="zoom" ScaleX="1" ScaleY="1"/>
+                <SkewTransform/>
+                <RotateTransform/>
+                <TranslateTransform x:Name="pan" X="0" Y="0"/>
+            </TransformGroup>
+        </Canvas.RenderTransform>
         <Canvas x:Name="Back" Background="Transparent" 
-                Width="720" Height="540"
-                SnapsToDevicePixels="True"
-                RenderTransformOrigin="0.0,0.0">
-            <Canvas.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform x:Name="zoom1" ScaleX="1" ScaleY="1"/>
-                    <SkewTransform/>
-                    <RotateTransform/>
-                    <TranslateTransform x:Name="pan1" X="0" Y="0"/>
-                </TransformGroup>
-            </Canvas.RenderTransform>
+                Width="720" Height="540">
         </Canvas>
         <Canvas x:Name="Sheet" Background="Transparent" 
                 Width="720" Height="540"
-                SnapsToDevicePixels="True"
                 PreviewMouseLeftButtonDown="Sheet_PreviewMouseLeftButtonDown"
                 PreviewMouseLeftButtonUp="Sheet_PreviewMouseLeftButtonUp"
                 PreviewMouseMove="Sheet_PreviewMouseMove"
                 PreviewMouseRightButtonDown="Sheet_PreviewMouseRightButtonDown" 
-                PreviewMouseRightButtonUp="Sheet_PreviewMouseRightButtonUp"
-                RenderTransformOrigin="0.0,0.0">
-            <Canvas.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform x:Name="zoom2" ScaleX="1" ScaleY="1"/>
-                    <SkewTransform/>
-                    <RotateTransform/>
-                    <TranslateTransform x:Name="pan2" X="0" Y="0"/>
-                </TransformGroup>
-            </Canvas.RenderTransform>
+                PreviewMouseRightButtonUp="Sheet_PreviewMouseRightButtonUp">
         </Canvas>
-    </Grid>
+    </Canvas>
 </UserControl>
