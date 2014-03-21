@@ -24,15 +24,48 @@ namespace Sheet
             1, 
             1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64
         };
-        double snap = 15;
-        double grid = 30;
-        double gthickness = 1.0;
-        double lthickness = 3.0;
-        bool one = true;
-        Line temp = null;
-        Point start;
-        List<Line> lines = new List<Line>();
-        List<Line> grids = new List<Line>();
+        private double snap = 15;
+        private double grid = 30;
+        private double gthickness = 1.0;
+        private double lthickness = 3.0;
+        private bool one = true;
+        private Line temp = null;
+        private Point start;
+        private List<Line> lines = new List<Line>();
+        private List<Line> grids = new List<Line>();
+
+        private double Zoom
+        {
+            get { return zoom1.ScaleX; }
+            set
+            {
+                AdjustThickness(value);
+                zoom1.ScaleX = value;
+                zoom1.ScaleY = value;
+                zoom2.ScaleX = value;
+                zoom2.ScaleY = value;
+            }
+        }
+
+        private double PanX
+        {
+            get { return pan1.X; }
+            set
+            {
+                pan1.X = value;
+                pan2.X = value;
+            }
+        }
+
+        private double PanY
+        {
+            get { return pan1.Y; }
+            set
+            {
+                pan1.Y = value;
+                pan2.Y = value;
+            }
+        }
 
         public SheetControl()
         {
@@ -66,22 +99,6 @@ namespace Sheet
             return m >= snap / 2.0 ? val + snap - m : val - m;
         }
 
-        private void SetZoom(double z)
-        {
-            zoom1.ScaleX = z;
-            zoom1.ScaleY = z;
-            zoom2.ScaleX = z;
-            zoom2.ScaleY = z;
-        }
-
-        private void SetPan(double x, double y)
-        {
-            pan1.X = x;
-            pan1.Y = y;
-            pan2.X = x;
-            pan2.Y = y;
-        }
-
         private void AdjustThickness(double z)
         {
             foreach (var l in grids)
@@ -95,21 +112,18 @@ namespace Sheet
             }
         }
 
-        private void Zoom(Point p, int oldzi)
+        private void ZoomTo(Point p, int oldzi)
         {
             double oldz = zs[oldzi];
             double z = zs[zi];
-            double x = (p.X * oldz + pan1.X) - p.X * z;
-            double y = (p.Y * oldz + pan1.Y) - p.Y * z;
-            AdjustThickness(z);
-            SetZoom(z);
-            SetPan(x, y);
+            Zoom = z;
+            PanX = (p.X * oldz + pan1.X) - p.X * z;
+            PanY = (p.Y * oldz + pan1.Y) - p.Y * z;
         }
 
         private void InitLine(Point p)
         {
-            double z = zoom1.ScaleX;
-            double thickness = lthickness / z;
+            double thickness = lthickness / Zoom;
             double x = Snap(p.X);
             double y = Snap(p.Y);
             var l = new Line() 
@@ -185,9 +199,8 @@ namespace Sheet
             else if (Sheet.IsMouseCaptured && temp == null)
             {
                 var p = e.GetPosition(this);
-                double x = pan1.X + p.X - start.X;
-                double y = pan1.Y + p.Y - start.Y;
-                SetPan(x, y);
+                PanX = PanX + p.X - start.X;
+                PanY = PanY + p.Y - start.Y;
                 start = p;
             }
         }
@@ -224,7 +237,7 @@ namespace Sheet
                 {
                     int oldzi = zi;
                     zi++;
-                    Zoom(p, oldzi);
+                    ZoomTo(p, oldzi);
                 }
             }
             else
@@ -233,7 +246,7 @@ namespace Sheet
                 {
                     int oldzi = zi;
                     zi--;
-                    Zoom(p, oldzi);
+                    ZoomTo(p, oldzi);
                 }
             }
         }
@@ -243,10 +256,9 @@ namespace Sheet
             if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
             {
                 zi = defaultzi;
-                double z = zs[zi];
-                AdjustThickness(z);
-                SetZoom(z);
-                SetPan(0.0, 0.0);
+                Zoom = zs[zi];
+                PanX = 0.0;
+                PanY = 0.0;
             }
         }
     }
