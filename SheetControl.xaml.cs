@@ -15,7 +15,7 @@ using System.Windows.Shapes;
 namespace Sheet
 {
     public partial class SheetControl : UserControl
-    {        
+    {
         private int zi = 9; // zs index from 0 to 21, 9 = 100%
         private int defaultzi = 9;
         private double[] zs = 
