@@ -5,6 +5,9 @@
         Title="Sheet" Height="660" Width="800"
         WindowStartupLocation="CenterScreen" WindowState="Normal">
     <Grid>
-        <local:SheetControl/>
+        <local:SheetControl ZoomIndex="9" PanX="0" PanY="0" ClipToBounds="True"/>
+        <!--<local:SheetControl ZoomIndex="4" PanX="0" PanY="0" ClipToBounds="True"/>-->
+        <!--<local:SheetControl ZoomIndex="4" PanX="200" PanY="0" ClipToBounds="True"/>-->
+        <!--<local:SheetControl ZoomIndex="4" PanX="400" PanY="0" ClipToBounds="True"/>-->
     </Grid>
 </Window>

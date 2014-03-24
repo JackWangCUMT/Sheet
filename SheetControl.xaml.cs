@@ -18,6 +18,7 @@ namespace Sheet
     {
         private int zi = 9; // zs index from 0 to 21, 9 = 100%
         private int defaultzi = 9;
+        private int maxzi = 21;
         private double[] zs = 
         { 
             0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75,
@@ -34,18 +35,33 @@ namespace Sheet
         private List<Line> lines = new List<Line>();
         private List<Line> grids = new List<Line>();
 
-        private double Zoom
+        public int ZoomIndex
+        {
+            get { return zi; }
+            set
+            {
+                if (value >= 0 && value <= maxzi)
+                {
+                    zi = value;
+                    Zoom = zs[zi];
+                }
+            }
+        }
+
+        public double Zoom
         {
             get { return zoom.ScaleX; }
             set
             {
-                AdjustThickness(value);
+                if (IsLoaded)
+                    AdjustThickness(value);
+
                 zoom.ScaleX = value;
                 zoom.ScaleY = value;
             }
         }
 
-        private double PanX
+        public double PanX
         {
             get { return pan.X; }
             set
@@ -54,7 +70,7 @@ namespace Sheet
             }
         }
 
-        private double PanY
+        public double PanY
         {
             get { return pan.Y; }
             set
@@ -87,6 +103,8 @@ namespace Sheet
                 grids.Add(l);
                 Back.Children.Add(l);
             }
+
+            AdjustThickness(zs[zi]);
         }
 
         private double Snap(double val)
@@ -229,7 +247,7 @@ namespace Sheet
 
             if (e.Delta > 0)
             {
-                if (zi < 21)
+                if (zi < maxzi)
                 {
                     int oldzi = zi;
                     zi++;
