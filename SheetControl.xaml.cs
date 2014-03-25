@@ -249,18 +249,14 @@ namespace Sheet
             {
                 if (zi < maxzi)
                 {
-                    int oldzi = zi;
-                    zi++;
-                    ZoomTo(p, oldzi);
+                    ZoomTo(p, zi++);
                 }
             }
             else
             {
                 if (zi > 0)
                 {
-                    int oldzi = zi;
-                    zi--;
-                    ZoomTo(p, oldzi);
+                    ZoomTo(p, zi--);
                 }
             }
         }
