@@ -29,7 +29,26 @@ namespace Sheet
 
     public static class ItemSerializer
     {
-        public static string Serialize(List<Line> lines)
+        private static char[] lineSeparators = { '\n' };
+        private static char[] modelSeparators = { ';' };
+
+        private static void SerializeLine(StringBuilder sb, LineItem line)
+        {
+            sb.Append('L');
+            sb.Append(';');
+            sb.Append(line.Id);
+            sb.Append(';');
+            sb.Append(line.X1);
+            sb.Append(';');
+            sb.Append(line.Y1);
+            sb.Append(';');
+            sb.Append(line.X2);
+            sb.Append(';');
+            sb.Append(line.Y2);
+            sb.Append('\n');
+        }
+
+        public static string Serialize(List<LineItem> lines)
         {
             var sb = new StringBuilder();
 
@@ -41,18 +60,27 @@ namespace Sheet
             return sb.ToString();
         }
 
-        private static void SerializeLine(StringBuilder sb, Line line)
+        public static List<LineItem> Deserialize(string s)
         {
-            sb.Append('L');
-            sb.Append(';');
-            sb.Append(line.X1);
-            sb.Append(';');
-            sb.Append(line.Y1);
-            sb.Append(';');
-            sb.Append(line.X2);
-            sb.Append(';');
-            sb.Append(line.Y2);
-            sb.Append('\n');
+            var lines = s.Split(lineSeparators);
+            var lineItems = new List<LineItem>();
+
+            foreach(var line in lines)
+            {
+                var m = line.Split(modelSeparators);
+                if (m.Length == 6 && string.Compare(m[0], "L", true) == 0)
+                {
+                    var lineItem = new LineItem();
+                    lineItem.Id = int.Parse(m[1]);
+                    lineItem.X1 = double.Parse(m[2]);
+                    lineItem.Y1 = double.Parse(m[3]);
+                    lineItem.X2 = double.Parse(m[4]);
+                    lineItem.Y2 = double.Parse(m[5]);
+                    lineItems.Add(lineItem);
+                }
+            }
+
+            return lineItems;
         }
     }
 
@@ -71,6 +99,7 @@ namespace Sheet
         private Point panStartPoint;
         private List<Line> logicLines = new List<Line>();
         private List<Line> gridLines = new List<Line>();
+        private string serializedLines = null;
 
         public int ZoomIndex
         {
@@ -148,6 +177,51 @@ namespace Sheet
             };
 
             return line;
+        }
+
+        private void Serialize()
+        {
+            var lineItems = new List<LineItem>();
+            int id = 0;
+
+            foreach (var line in logicLines)
+            {
+                var lineItem = new LineItem();
+                lineItem.Id = id++;
+                lineItem.X1 = line.X1;
+                lineItem.Y1 = line.Y1;
+                lineItem.X2 = line.X2;
+                lineItem.Y2 = line.Y2;
+                lineItems.Add(lineItem);
+            }
+
+            serializedLines = ItemSerializer.Serialize(lineItems);
+        }
+
+        private void Deserialize()
+        {
+            if (serializedLines != null)
+            {
+                var lineItems = ItemSerializer.Deserialize(serializedLines);
+
+                double thickness = lineThickness / Zoom;
+                foreach (var lineItem in lineItems)
+                {
+                    var line = CreateLogicLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
+                    logicLines.Add(line);
+                    Sheet.Children.Add(line);
+                }
+            }
+        }
+
+        private void Reset()
+        {
+            foreach (var line in logicLines)
+            {
+                Sheet.Children.Remove(line);
+            }
+
+            logicLines.Clear();
         }
 
         private void CreateGrid()
@@ -320,30 +394,21 @@ namespace Sheet
             }
         }
 
-        private string serializedLines = null;
-
         private void UserControl_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             switch(e.Key)
             {
-                case Key.R:
-                    {
-                        foreach(var line in logicLines)
-                        {
-                            Sheet.Children.Remove(line);
-                        }
-                    }
+                case Key.R: 
+                    Reset();
                     break;
 
                 case Key.S:
-                    {
-                        serializedLines = ItemSerializer.Serialize(logicLines);
-                    }
+                    Serialize();
                     break;
 
                 case Key.L:
-                    {
-                    }
+                    Reset();
+                    Deserialize();
                     break;
             }
         }
