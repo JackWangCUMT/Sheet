@@ -174,8 +174,7 @@ namespace Sheet
         {
             if (!Sheet.IsMouseCaptured && tempLine == null)
             {
-                var p = e.GetPosition(Sheet);
-                InitLine(p);
+                InitLine(e.GetPosition(Sheet));
             }
             else if (Sheet.IsMouseCaptured && oneClickMode)
             {
@@ -238,20 +237,18 @@ namespace Sheet
 
         private void Workspace_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            var p = e.GetPosition(Sheet);
-
             if (e.Delta > 0)
             {
                 if (zoomIndex < maxZoomIndex)
                 {
-                    ZoomTo(p, zoomIndex++);
+                    ZoomTo(e.GetPosition(Sheet), zoomIndex++);
                 }
             }
             else
             {
                 if (zoomIndex > 0)
                 {
-                    ZoomTo(p, zoomIndex--);
+                    ZoomTo(e.GetPosition(Sheet), zoomIndex--);
                 }
             }
         }
