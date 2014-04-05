@@ -16,15 +16,10 @@ namespace Sheet
 {
     public partial class SheetControl : UserControl
     {
-        private int zoomIndex = 9; // zs index from 0 to 21, 9 = 100%
+        private int zoomIndex = 9; // zoomFactors index from 0 to 21, 9 = 100%
         private int defaultZoomIndex = 9;
         private int maxZoomIndex = 21;
-        private double[] zoomFactors = 
-        { 
-            0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75,
-            1, 
-            1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64
-        };
+        private double[] zoomFactors = { 0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64 };
         private double snapSize = 15;
         private double gridSize = 30;
         private double gridThickness = 1.0;
