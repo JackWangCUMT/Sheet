@@ -325,13 +325,12 @@ namespace Sheet
             if (Sheet.IsMouseCaptured && tempLine != null)
             {
                 var p = e.GetPosition(Sheet);
-                var l = tempLine;
                 double x = Snap(p.X);
                 double y = Snap(p.Y);
-                if (Math.Round(x, 1) != Math.Round(l.X2, 1) || Math.Round(y, 1) != Math.Round(l.Y2, 1))
+                if (Math.Round(x, 1) != Math.Round(tempLine.X2, 1) || Math.Round(y, 1) != Math.Round(tempLine.Y2, 1))
                 {
-                    l.X2 = x;
-                    l.Y2 = y;
+                    tempLine.X2 = x;
+                    tempLine.Y2 = y;
                 }
             }
             else if (Sheet.IsMouseCaptured && tempLine == null)
