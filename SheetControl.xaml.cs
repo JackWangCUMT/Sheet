@@ -16,34 +16,34 @@ namespace Sheet
 {
     public partial class SheetControl : UserControl
     {
-        private int zi = 9; // zs index from 0 to 21, 9 = 100%
-        private int defaultzi = 9;
-        private int maxzi = 21;
-        private double[] zs = 
+        private int zoomIndex = 9; // zs index from 0 to 21, 9 = 100%
+        private int defaultZoomIndex = 9;
+        private int maxZoomIndex = 21;
+        private double[] zoomFactors = 
         { 
             0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75,
             1, 
             1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64
         };
-        private double snap = 15;
-        private double grid = 30;
-        private double gthickness = 1.0;
-        private double lthickness = 3.0;
-        private bool one = true;
-        private Line temp = null;
-        private Point start;
-        private List<Line> lines = new List<Line>();
-        private List<Line> grids = new List<Line>();
+        private double snapSize = 15;
+        private double gridSize = 30;
+        private double gridThickness = 1.0;
+        private double lineThickness = 3.0;
+        private bool oneClickMode = true;
+        private Line tempLine = null;
+        private Point panStartPoint;
+        private List<Line> logicLines = new List<Line>();
+        private List<Line> gridLines = new List<Line>();
 
         public int ZoomIndex
         {
-            get { return zi; }
+            get { return zoomIndex; }
             set
             {
-                if (value >= 0 && value <= maxzi)
+                if (value >= 0 && value <= maxZoomIndex)
                 {
-                    zi = value;
-                    Zoom = zs[zi];
+                    zoomIndex = value;
+                    Zoom = zoomFactors[zoomIndex];
                 }
             }
         }
@@ -90,46 +90,46 @@ namespace Sheet
             double w = Sheet.ActualWidth;
             double h = Sheet.ActualHeight;
 
-            for (double y = grid; y < h; y += grid)
+            for (double y = gridSize; y < h; y += gridSize)
             {
-                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gthickness, X1 = 0, Y1 = y, X2 = w, Y2 = y };
-                grids.Add(l);
+                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = 0, Y1 = y, X2 = w, Y2 = y };
+                gridLines.Add(l);
                 Sheet.Children.Add(l);
             }
 
-            for (double x = grid; x < w; x += grid)
+            for (double x = gridSize; x < w; x += gridSize)
             {
-                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gthickness, X1 = x, Y1 = 0, X2 = x, Y2 = h };
-                grids.Add(l);
+                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = x, Y1 = 0, X2 = x, Y2 = h };
+                gridLines.Add(l);
                 Back.Children.Add(l);
             }
 
-            AdjustThickness(zs[zi]);
+            AdjustThickness(zoomFactors[zoomIndex]);
         }
 
         private double Snap(double val)
         {
-            double m = val % snap;
-            return m >= snap / 2.0 ? val + snap - m : val - m;
+            double m = val % snapSize;
+            return m >= snapSize / 2.0 ? val + snapSize - m : val - m;
         }
 
         private void AdjustThickness(double z)
         {
-            foreach (var l in grids)
+            foreach (var l in gridLines)
             {
-                l.StrokeThickness = gthickness / z;
+                l.StrokeThickness = gridThickness / z;
             }
 
-            foreach (var l in lines)
+            foreach (var l in logicLines)
             {
-                l.StrokeThickness = lthickness / z;
+                l.StrokeThickness = lineThickness / z;
             }
         }
 
         private void ZoomTo(Point p, int oldzi)
         {
-            double oldz = zs[oldzi];
-            double z = zs[zi];
+            double oldz = zoomFactors[oldzi];
+            double z = zoomFactors[zoomIndex];
             Zoom = z;
             PanX = (p.X * oldz + PanX) - p.X * z;
             PanY = (p.Y * oldz + PanY) - p.Y * z;
@@ -137,7 +137,7 @@ namespace Sheet
 
         private void InitLine(Point p)
         {
-            double thickness = lthickness / Zoom;
+            double thickness = lineThickness / Zoom;
             double x = Snap(p.X);
             double y = Snap(p.Y);
             var l = new Line() 
@@ -146,15 +146,15 @@ namespace Sheet
                 StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round,
                 X1 = x, Y1 = y, X2 = x, Y2 = y
             };
-            temp = l;
-            lines.Add(l);
+            tempLine = l;
+            logicLines.Add(l);
             Sheet.Children.Add(l);
             Sheet.CaptureMouse();
         }
 
         private void FinishLine()
         {
-            var l = temp;
+            var l = tempLine;
             if (Math.Round(l.X1, 1) == Math.Round(l.X2, 1) && Math.Round(l.Y1, 1) == Math.Round(l.Y2, 1))
             {
                 CancelLine();
@@ -162,27 +162,27 @@ namespace Sheet
             else
             {
                 Sheet.ReleaseMouseCapture();
-                temp = null;
+                tempLine = null;
             }
         }
 
         private void CancelLine()
         {
-            var l = temp;
+            var l = tempLine;
             Sheet.ReleaseMouseCapture();
-            lines.Remove(l);
+            logicLines.Remove(l);
             Sheet.Children.Remove(l);
-            temp = null;
+            tempLine = null;
         }
 
         private void Sheet_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!Sheet.IsMouseCaptured && temp == null)
+            if (!Sheet.IsMouseCaptured && tempLine == null)
             {
                 var p = e.GetPosition(Sheet);
                 InitLine(p);
             }
-            else if (Sheet.IsMouseCaptured && one)
+            else if (Sheet.IsMouseCaptured && oneClickMode)
             {
                 FinishLine();
             }
@@ -190,7 +190,7 @@ namespace Sheet
 
         private void Sheet_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (Sheet.IsMouseCaptured && !one)
+            if (Sheet.IsMouseCaptured && !oneClickMode)
             {
                 FinishLine();
             }
@@ -198,10 +198,10 @@ namespace Sheet
 
         private void Sheet_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            if (Sheet.IsMouseCaptured && temp != null)
+            if (Sheet.IsMouseCaptured && tempLine != null)
             {
                 var p = e.GetPosition(Sheet);
-                var l = temp;
+                var l = tempLine;
                 double x = Snap(p.X);
                 double y = Snap(p.Y);
                 if (Math.Round(x, 1) != Math.Round(l.X2, 1) || Math.Round(y, 1) != Math.Round(l.Y2, 1))
@@ -210,32 +210,32 @@ namespace Sheet
                     l.Y2 = y;
                 }
             }
-            else if (Sheet.IsMouseCaptured && temp == null)
+            else if (Sheet.IsMouseCaptured && tempLine == null)
             {
                 var p = e.GetPosition(this);
-                PanX = PanX + p.X - start.X;
-                PanY = PanY + p.Y - start.Y;
-                start = p;
+                PanX = PanX + p.X - panStartPoint.X;
+                PanY = PanY + p.Y - panStartPoint.Y;
+                panStartPoint = p;
             }
         }
 
         private void Sheet_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (Sheet.IsMouseCaptured && temp != null)
+            if (Sheet.IsMouseCaptured && tempLine != null)
             {
                 CancelLine();
             }
-            else if (!Sheet.IsMouseCaptured && temp == null)
+            else if (!Sheet.IsMouseCaptured && tempLine == null)
             {
-                start = e.GetPosition(this);
-                temp = null;
+                panStartPoint = e.GetPosition(this);
+                tempLine = null;
                 Sheet.CaptureMouse();
             }
         }
 
         private void Sheet_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (Sheet.IsMouseCaptured && temp == null)
+            if (Sheet.IsMouseCaptured && tempLine == null)
             {
                 Sheet.ReleaseMouseCapture();
             }
@@ -247,16 +247,16 @@ namespace Sheet
 
             if (e.Delta > 0)
             {
-                if (zi < maxzi)
+                if (zoomIndex < maxZoomIndex)
                 {
-                    ZoomTo(p, zi++);
+                    ZoomTo(p, zoomIndex++);
                 }
             }
             else
             {
-                if (zi > 0)
+                if (zoomIndex > 0)
                 {
-                    ZoomTo(p, zi--);
+                    ZoomTo(p, zoomIndex--);
                 }
             }
         }
@@ -265,8 +265,8 @@ namespace Sheet
         {
             if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
             {
-                zi = defaultzi;
-                Zoom = zs[zi];
+                zoomIndex = defaultZoomIndex;
+                Zoom = zoomFactors[zoomIndex];
                 PanX = 0.0;
                 PanY = 0.0;
             }
