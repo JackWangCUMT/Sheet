@@ -14,6 +14,35 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
+    public static class ItemSerializer
+    {
+        public static string Serialize(List<Line> lines)
+        {
+            var sb = new StringBuilder();
+
+            foreach(var line in lines)
+            {
+                SerializeLine(sb, line);
+            }
+
+            return sb.ToString();
+        }
+
+        private static void SerializeLine(StringBuilder sb, Line line)
+        {
+            sb.Append('L');
+            sb.Append(';');
+            sb.Append(line.X1);
+            sb.Append(';');
+            sb.Append(line.Y1);
+            sb.Append(';');
+            sb.Append(line.X2);
+            sb.Append(';');
+            sb.Append(line.Y2);
+            sb.Append('\n');
+        }
+    }
+
     public partial class SheetControl : UserControl
     {
         private int zoomIndex = 9; // zoomFactors index from 0 to 21, 9 = 100%
@@ -77,13 +106,35 @@ namespace Sheet
         public SheetControl()
         {
             InitializeComponent();
-            Loaded += (s, e) => CreateGrid();
+
+            Loaded += (s, e) =>
+            {
+                CreateGrid();
+                Focus();
+            };
         }
 
         private double Snap(double val)
         {
             double r = val % snapSize;
             return r >= snapSize / 2.0 ? val + snapSize - r : val - r;
+        }
+
+        private Line CreateLogicLine(double thickness, double x1, double y1, double x2, double y2)
+        {
+            var line = new Line()
+            {
+                Stroke = Brushes.Red,
+                StrokeThickness = thickness,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+                X1 = x1,
+                Y1 = y1,
+                X2 = x2,
+                Y2 = y2
+            };
+
+            return line;
         }
 
         private void CreateGrid()
@@ -132,25 +183,18 @@ namespace Sheet
 
         private void InitLine(Point p)
         {
-            double thickness = lineThickness / Zoom;
             double x = Snap(p.X);
             double y = Snap(p.Y);
-            var l = new Line() 
-            {
-                Stroke = Brushes.Red, StrokeThickness = thickness, 
-                StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round,
-                X1 = x, Y1 = y, X2 = x, Y2 = y
-            };
-            tempLine = l;
-            logicLines.Add(l);
-            Sheet.Children.Add(l);
+            tempLine = CreateLogicLine(lineThickness / Zoom, x, y, x, y);
+            logicLines.Add(tempLine);
+            Sheet.Children.Add(tempLine);
             Sheet.CaptureMouse();
         }
 
         private void FinishLine()
         {
-            var l = tempLine;
-            if (Math.Round(l.X1, 1) == Math.Round(l.X2, 1) && Math.Round(l.Y1, 1) == Math.Round(l.Y2, 1))
+            if (Math.Round(tempLine.X1, 1) == Math.Round(tempLine.X2, 1) && 
+                Math.Round(tempLine.Y1, 1) == Math.Round(tempLine.Y2, 1))
             {
                 CancelLine();
             }
@@ -163,10 +207,9 @@ namespace Sheet
 
         private void CancelLine()
         {
-            var l = tempLine;
             Sheet.ReleaseMouseCapture();
-            logicLines.Remove(l);
-            Sheet.Children.Remove(l);
+            logicLines.Remove(tempLine);
+            Sheet.Children.Remove(tempLine);
             tempLine = null;
         }
 
@@ -261,6 +304,34 @@ namespace Sheet
                 Zoom = zoomFactors[zoomIndex];
                 PanX = 0.0;
                 PanY = 0.0;
+            }
+        }
+
+        private string serializedLines = null;
+
+        private void UserControl_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            switch(e.Key)
+            {
+                case Key.R:
+                    {
+                        foreach(var line in logicLines)
+                        {
+                            Sheet.Children.Remove(line);
+                        }
+                    }
+                    break;
+
+                case Key.S:
+                    {
+                        serializedLines = ItemSerializer.Serialize(logicLines);
+                    }
+                    break;
+
+                case Key.L:
+                    {
+                    }
+                    break;
             }
         }
     }
