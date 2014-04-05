@@ -88,19 +88,19 @@ namespace Sheet
 
         private void CreateGrid()
         {
-            double w = Sheet.ActualWidth;
-            double h = Sheet.ActualHeight;
+            double width = Sheet.ActualWidth;
+            double height = Sheet.ActualHeight;
 
-            for (double y = gridSize; y < h; y += gridSize)
+            for (double y = gridSize; y < height; y += gridSize)
             {
-                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = 0, Y1 = y, X2 = w, Y2 = y };
+                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = 0, Y1 = y, X2 = width, Y2 = y };
                 gridLines.Add(l);
                 Sheet.Children.Add(l);
             }
 
-            for (double x = gridSize; x < w; x += gridSize)
+            for (double x = gridSize; x < width; x += gridSize)
             {
-                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = x, Y1 = 0, X2 = x, Y2 = h };
+                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = x, Y1 = 0, X2 = x, Y2 = height };
                 gridLines.Add(l);
                 Back.Children.Add(l);
             }
