@@ -14,6 +14,19 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
+    public abstract class Item
+    {
+        public int Id { get; set; }
+    }
+
+    public class LineItem : Item
+    {
+        public double X1 { get; set; }
+        public double Y1 { get; set; }
+        public double X2 { get; set; }
+        public double Y2 { get; set; }
+    }
+
     public static class ItemSerializer
     {
         public static string Serialize(List<Line> lines)
