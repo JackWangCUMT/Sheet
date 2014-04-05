@@ -82,8 +82,8 @@ namespace Sheet
 
         private double Snap(double val)
         {
-            double m = val % snapSize;
-            return m >= snapSize / 2.0 ? val + snapSize - m : val - m;
+            double r = val % snapSize;
+            return r >= snapSize / 2.0 ? val + snapSize - r : val - r;
         }
 
         private void CreateGrid()
@@ -108,26 +108,26 @@ namespace Sheet
             AdjustThickness(zoomFactors[zoomIndex]);
         }
 
-        private void AdjustThickness(double z)
+        private void AdjustThickness(double zoom)
         {
             foreach (var l in gridLines)
             {
-                l.StrokeThickness = gridThickness / z;
+                l.StrokeThickness = gridThickness / zoom;
             }
 
             foreach (var l in logicLines)
             {
-                l.StrokeThickness = lineThickness / z;
+                l.StrokeThickness = lineThickness / zoom;
             }
         }
 
-        private void ZoomTo(Point p, int oldzi)
+        private void ZoomTo(Point p, int oldZoomIndex)
         {
-            double oldz = zoomFactors[oldzi];
-            double z = zoomFactors[zoomIndex];
-            Zoom = z;
-            PanX = (p.X * oldz + PanX) - p.X * z;
-            PanY = (p.Y * oldz + PanY) - p.Y * z;
+            double oldZoom = zoomFactors[oldZoomIndex];
+            double newZoom = zoomFactors[zoomIndex];
+            Zoom = newZoom;
+            PanX = (p.X * oldZoom + PanX) - p.X * newZoom;
+            PanY = (p.Y * oldZoom + PanY) - p.Y * newZoom;
         }
 
         private void InitLine(Point p)
