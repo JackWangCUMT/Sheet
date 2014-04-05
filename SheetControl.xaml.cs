@@ -80,6 +80,12 @@ namespace Sheet
             Loaded += (s, e) => CreateGrid();
         }
 
+        private double Snap(double val)
+        {
+            double m = val % snapSize;
+            return m >= snapSize / 2.0 ? val + snapSize - m : val - m;
+        }
+
         private void CreateGrid()
         {
             double w = Sheet.ActualWidth;
@@ -100,12 +106,6 @@ namespace Sheet
             }
 
             AdjustThickness(zoomFactors[zoomIndex]);
-        }
-
-        private double Snap(double val)
-        {
-            double m = val % snapSize;
-            return m >= snapSize / 2.0 ? val + snapSize - m : val - m;
         }
 
         private void AdjustThickness(double z)
