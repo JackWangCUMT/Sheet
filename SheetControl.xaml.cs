@@ -77,10 +77,10 @@ namespace Sheet
         public SheetControl()
         {
             InitializeComponent();
-            Loaded += (s, e) => Grid();
+            Loaded += (s, e) => CreateGrid();
         }
 
-        private void Grid()
+        private void CreateGrid()
         {
             double w = Sheet.ActualWidth;
             double h = Sheet.ActualHeight;
