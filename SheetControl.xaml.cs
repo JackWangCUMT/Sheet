@@ -99,7 +99,9 @@ namespace Sheet
         private Point panStartPoint;
         private List<Line> logicLines = new List<Line>();
         private List<Line> gridLines = new List<Line>();
+
         private string serializedLines = null;
+        private List<string> models = new List<string>();
 
         public int ZoomIndex
         {
