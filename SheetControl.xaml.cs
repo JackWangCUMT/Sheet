@@ -224,6 +224,17 @@ namespace Sheet
             logicLines.Clear();
         }
 
+        private void Move(double x, double y)
+        {
+            foreach (var line in logicLines)
+            {
+                line.X1 += x;
+                line.Y1 += y;
+                line.X2 += x;
+                line.Y2 += y;
+            }
+        }
+
         private void CreateGrid()
         {
             double width = Sheet.ActualWidth;
@@ -400,14 +411,24 @@ namespace Sheet
                 case Key.R: 
                     Reset();
                     break;
-
                 case Key.S:
                     Serialize();
                     break;
-
                 case Key.L:
                     Reset();
                     Deserialize();
+                    break;
+                case Key.Up:
+                    Move(0.0, -snapSize);
+                    break;
+                case Key.Down:
+                    Move(0.0, snapSize);
+                    break;
+                case Key.Left:
+                    Move(-snapSize, 0.0);
+                    break;
+                case Key.Right:
+                    Move(snapSize, 0.0);
                     break;
             }
         }
