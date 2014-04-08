@@ -381,6 +381,14 @@ namespace Sheet
             panStartPoint = p;
         }
 
+        private void ResetPanAndZoom()
+        {
+            zoomIndex = defaultZoomIndex;
+            Zoom = zoomFactors[zoomIndex];
+            PanX = 0.0;
+            PanY = 0.0;
+        }
+
         private void InitLine(Point p)
         {
             double x = Snap(p.X);
@@ -496,10 +504,7 @@ namespace Sheet
         {
             if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
             {
-                zoomIndex = defaultZoomIndex;
-                Zoom = zoomFactors[zoomIndex];
-                PanX = 0.0;
-                PanY = 0.0;
+                ResetPanAndZoom();
             }
         }
 
