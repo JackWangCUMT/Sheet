@@ -243,20 +243,26 @@ namespace Sheet
         private void Serialize()
         {
             var lineItems = new List<LineItem>();
-            int id = 0;
 
             foreach (var line in logicLines)
             {
-                var lineItem = new LineItem();
-                lineItem.Id = id++;
-                lineItem.X1 = line.X1;
-                lineItem.Y1 = line.Y1;
-                lineItem.X2 = line.X2;
-                lineItem.Y2 = line.Y2;
-                lineItems.Add(lineItem);
+                lineItems.Add(SerializeLine(line));
             }
 
             serializedLines = ItemSerializer.Serialize(lineItems);
+        }
+
+        private LineItem SerializeLine(Line line)
+        {
+            var lineItem = new LineItem();
+
+            lineItem.Id = 0;
+            lineItem.X1 = line.X1;
+            lineItem.Y1 = line.Y1;
+            lineItem.X2 = line.X2;
+            lineItem.Y2 = line.Y2;
+
+            return lineItem;
         }
 
         private void Deserialize()
