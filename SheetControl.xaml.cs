@@ -214,6 +214,35 @@ namespace Sheet
 
         #endregion
 
+        #region Serialize
+
+        private LineItem SerializeLine(Line line)
+        {
+            var lineItem = new LineItem();
+
+            lineItem.Id = 0;
+            lineItem.X1 = line.X1;
+            lineItem.Y1 = line.Y1;
+            lineItem.X2 = line.X2;
+            lineItem.Y2 = line.Y2;
+
+            return lineItem;
+        }
+
+        private void Serialize()
+        {
+            var lineItems = new List<LineItem>();
+
+            foreach (var line in logicLines)
+            {
+                lineItems.Add(SerializeLine(line));
+            }
+
+            serializedLines = ItemSerializer.Serialize(lineItems);
+        }
+
+        #endregion
+
         private Grid CreateText(string text, double x, double y, double width, double height)
         {
             var grid = new Grid();
@@ -249,31 +278,6 @@ namespace Sheet
             };
 
             return line;
-        }
-
-        private LineItem SerializeLine(Line line)
-        {
-            var lineItem = new LineItem();
-
-            lineItem.Id = 0;
-            lineItem.X1 = line.X1;
-            lineItem.Y1 = line.Y1;
-            lineItem.X2 = line.X2;
-            lineItem.Y2 = line.Y2;
-
-            return lineItem;
-        }
-
-        private void Serialize()
-        {
-            var lineItems = new List<LineItem>();
-
-            foreach (var line in logicLines)
-            {
-                lineItems.Add(SerializeLine(line));
-            }
-
-            serializedLines = ItemSerializer.Serialize(lineItems);
         }
 
         private void Deserialize()
