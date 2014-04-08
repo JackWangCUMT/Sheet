@@ -14,6 +14,8 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
+    #region Model
+
     public abstract class Item
     {
         public int Id { get; set; }
@@ -25,7 +27,9 @@ namespace Sheet
         public double Y1 { get; set; }
         public double X2 { get; set; }
         public double Y2 { get; set; }
-    }
+    } 
+
+    #endregion
 
     public static class ItemSerializer
     {
