@@ -302,12 +302,36 @@ namespace Sheet
 
         private void Reset()
         {
+            ResetLines();
+            ResetBlocks();
+        }
+
+        private void ResetLines()
+        {
             foreach (var line in logicLines)
             {
                 Sheet.Children.Remove(line);
             }
 
             logicLines.Clear();
+        }
+
+        private void ResetBlocks()
+        {
+            foreach (var block in blocks)
+            {
+                foreach (var line in block.Lines)
+                {
+                    Sheet.Children.Remove(line);
+                }
+
+                foreach (var text in block.Texts)
+                {
+                    Sheet.Children.Remove(text);
+                }
+            }
+
+            blocks.Clear();
         }
 
         private void Move(double x, double y)
