@@ -84,6 +84,12 @@ namespace Sheet
         }
     }
 
+    public class Block
+    {
+        public List<Line> Lines = new List<Line>();
+        public List<Grid> Texts = new List<Grid>();
+    }
+
     public partial class SheetControl : UserControl
     {
         private int zoomIndex = 9; // zoomFactors index from 0 to 21, 9 = 100%
@@ -93,13 +99,13 @@ namespace Sheet
         private double snapSize = 15;
         private double gridSize = 30;
         private double gridThickness = 1.0;
-        private double lineThickness = 3.0;
+        private double lineThickness = 2.0;
         private bool oneClickMode = true;
         private Line tempLine = null;
         private Point panStartPoint;
         private List<Line> logicLines = new List<Line>();
+        private List<Block> blocks = new List<Block>();
         private List<Line> gridLines = new List<Line>();
-
         private string serializedLines = null;
         private List<string> models = new List<string>();
 
@@ -147,6 +153,12 @@ namespace Sheet
             }
         }
 
+        private double Snap(double val)
+        {
+            double r = val % snapSize;
+            return r >= snapSize / 2.0 ? val + snapSize - r : val - r;
+        }
+
         public SheetControl()
         {
             InitializeComponent();
@@ -154,14 +166,61 @@ namespace Sheet
             Loaded += (s, e) =>
             {
                 CreateGrid();
+
+                blocks.Add(CreateOrGateBlock(30.0, 30.0, 1));
+                blocks.Add(CreateOrGateBlock(90.0, 30.0, 1));
+
                 Focus();
             };
         }
 
-        private double Snap(double val)
+        public Block CreateOrGateBlock(double x, double y, double count)
         {
-            double r = val % snapSize;
-            return r >= snapSize / 2.0 ? val + snapSize - r : val - r;
+            var block = new Block();
+
+            var text = CreateText("≥" + count.ToString(), x, y, 30.0, 30.0);
+            block.Texts.Add(text);
+            Sheet.Children.Add(text);
+
+            double thickness = lineThickness / Zoom;
+
+            var l0 = CreateLogicLine(thickness, x, y, x + 30.0, y);
+            block.Lines.Add(l0);
+            Sheet.Children.Add(l0);
+
+            var l1 = CreateLogicLine(thickness, x, y + 30.0, x + 30.0, y + 30.0);
+            block.Lines.Add(l1);
+            Sheet.Children.Add(l1);
+
+            var l2 = CreateLogicLine(thickness, x, y, x, y + 30.0);
+            block.Lines.Add(l2);
+            Sheet.Children.Add(l2);
+
+            var l3 = CreateLogicLine(thickness, x + 30.0, y, x + 30.0 , y + 30.0);
+            block.Lines.Add(l3);
+            Sheet.Children.Add(l3);
+
+            return block;
+        }
+
+        private Grid CreateText(string text, double x, double y, double width, double height)
+        {
+            var grid = new Grid();
+            grid.Background = Brushes.White;
+            grid.Width = width;
+            grid.Height = height;
+            Canvas.SetLeft(grid, x);
+            Canvas.SetTop(grid, y);
+
+            var tb = new TextBlock();
+            tb.VerticalAlignment = VerticalAlignment.Center;
+            tb.HorizontalAlignment = HorizontalAlignment.Center;
+            tb.Foreground = Brushes.Red;
+            tb.Text = text;
+
+            grid.Children.Add(tb);
+
+            return grid;
         }
 
         private Line CreateLogicLine(double thickness, double x1, double y1, double x2, double y2)
@@ -235,6 +294,23 @@ namespace Sheet
                 line.X2 += x;
                 line.Y2 += y;
             }
+
+            foreach (var block in blocks)
+            {
+                foreach(var line in block.Lines)
+                {
+                    line.X1 += x;
+                    line.Y1 += y;
+                    line.X2 += x;
+                    line.Y2 += y;
+                }
+
+                foreach(var text in block.Texts)
+                {
+                    Canvas.SetLeft(text, Canvas.GetLeft(text) + x);
+                    Canvas.SetTop(text, Canvas.GetTop(text) + y);
+                }
+            }
         }
 
         private void CreateGrid()
@@ -261,14 +337,22 @@ namespace Sheet
 
         private void AdjustThickness(double zoom)
         {
-            foreach (var l in gridLines)
+            foreach (var line in gridLines)
             {
-                l.StrokeThickness = gridThickness / zoom;
+                line.StrokeThickness = gridThickness / zoom;
             }
 
-            foreach (var l in logicLines)
+            foreach (var line in logicLines)
             {
-                l.StrokeThickness = lineThickness / zoom;
+                line.StrokeThickness = lineThickness / zoom;
+            }
+
+            foreach (var block in blocks)
+            {
+                foreach(var line in block.Lines)
+                {
+                    line.StrokeThickness = lineThickness / zoom;
+                }
             }
         }
 
