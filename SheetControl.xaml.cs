@@ -293,7 +293,7 @@ namespace Sheet
 
         private void Move(double x, double y)
         {
-            MoveLogicLines(x, y);
+            MoveLines(x, y, logicLines);
 
             foreach (var block in blocks)
             {
@@ -314,17 +314,6 @@ namespace Sheet
         private void MoveLines(double x, double y, List<Line> lines)
         {
             foreach (var line in lines)
-            {
-                line.X1 += x;
-                line.Y1 += y;
-                line.X2 += x;
-                line.Y2 += y;
-            }
-        }
-
-        private void MoveLogicLines(double x, double y)
-        {
-            foreach (var line in logicLines)
             {
                 line.X1 += x;
                 line.Y1 += y;
