@@ -153,11 +153,15 @@ namespace Sheet
             }
         }
 
+        #region Snap
+
         private double Snap(double val)
         {
             double r = val % snapSize;
             return r >= snapSize / 2.0 ? val + snapSize - r : val - r;
         }
+
+        #endregion
 
         #region Constructor
 
