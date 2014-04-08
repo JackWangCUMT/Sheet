@@ -389,7 +389,7 @@ namespace Sheet
             PanY = 0.0;
         }
 
-        private void InitLine(Point p)
+        private void InitTempLine(Point p)
         {
             double x = Snap(p.X);
             double y = Snap(p.Y);
@@ -436,7 +436,7 @@ namespace Sheet
         {
             if (!Sheet.IsMouseCaptured && tempLine == null)
             {
-                InitLine(e.GetPosition(Sheet));
+                InitTempLine(e.GetPosition(Sheet));
             }
             else if (Sheet.IsMouseCaptured && oneClickMode)
             {
