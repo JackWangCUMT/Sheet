@@ -240,18 +240,6 @@ namespace Sheet
             return line;
         }
 
-        private void Serialize()
-        {
-            var lineItems = new List<LineItem>();
-
-            foreach (var line in logicLines)
-            {
-                lineItems.Add(SerializeLine(line));
-            }
-
-            serializedLines = ItemSerializer.Serialize(lineItems);
-        }
-
         private LineItem SerializeLine(Line line)
         {
             var lineItem = new LineItem();
@@ -263,6 +251,18 @@ namespace Sheet
             lineItem.Y2 = line.Y2;
 
             return lineItem;
+        }
+
+        private void Serialize()
+        {
+            var lineItems = new List<LineItem>();
+
+            foreach (var line in logicLines)
+            {
+                lineItems.Add(SerializeLine(line));
+            }
+
+            serializedLines = ItemSerializer.Serialize(lineItems);
         }
 
         private void Deserialize()
