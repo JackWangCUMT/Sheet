@@ -399,6 +399,17 @@ namespace Sheet
             Sheet.CaptureMouse();
         }
 
+        private void MoveTempLine(Point p)
+        {
+            double x = Snap(p.X);
+            double y = Snap(p.Y);
+            if (Math.Round(x, 1) != Math.Round(tempLine.X2, 1) || Math.Round(y, 1) != Math.Round(tempLine.Y2, 1))
+            {
+                tempLine.X2 = x;
+                tempLine.Y2 = y;
+            }
+        }
+
         private void FinishLine()
         {
             if (Math.Round(tempLine.X1, 1) == Math.Round(tempLine.X2, 1) && 
@@ -445,14 +456,7 @@ namespace Sheet
         {
             if (Sheet.IsMouseCaptured && tempLine != null)
             {
-                var p = e.GetPosition(Sheet);
-                double x = Snap(p.X);
-                double y = Snap(p.Y);
-                if (Math.Round(x, 1) != Math.Round(tempLine.X2, 1) || Math.Round(y, 1) != Math.Round(tempLine.Y2, 1))
-                {
-                    tempLine.X2 = x;
-                    tempLine.Y2 = y;
-                }
+                MoveTempLine(e.GetPosition(Sheet));
             }
             else if (Sheet.IsMouseCaptured && tempLine == null)
             {
