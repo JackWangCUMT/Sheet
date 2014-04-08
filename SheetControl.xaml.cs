@@ -297,23 +297,23 @@ namespace Sheet
 
             foreach (var block in blocks)
             {
-                MoveBlockLines(x, y, block);
-                MoveBlockTexts(x, y, block);
+                MoveLines(x, y, block.Lines);
+                MoveTexts(x, y, block.Texts);
             }
         }
 
-        private void MoveBlockTexts(double x, double y, Block block)
+        private void MoveTexts(double x, double y, List<Grid> texts)
         {
-            foreach (var text in block.Texts)
+            foreach (var text in texts)
             {
                 Canvas.SetLeft(text, Canvas.GetLeft(text) + x);
                 Canvas.SetTop(text, Canvas.GetTop(text) + y);
             }
         }
 
-        private void MoveBlockLines(double x, double y, Block block)
+        private void MoveLines(double x, double y, List<Line> lines)
         {
-            foreach (var line in block.Lines)
+            foreach (var line in lines)
             {
                 line.X1 += x;
                 line.Y1 += y;
