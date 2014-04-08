@@ -243,6 +243,8 @@ namespace Sheet
 
         #endregion
 
+        #region Deserialize
+
         private Grid CreateText(string text, double x, double y, double width, double height)
         {
             var grid = new Grid();
@@ -295,6 +297,8 @@ namespace Sheet
                 }
             }
         }
+
+        #endregion
 
         private void Reset()
         {
