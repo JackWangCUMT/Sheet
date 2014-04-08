@@ -174,7 +174,7 @@ namespace Sheet
             };
         }
 
-        public Block CreateOrGateBlock(double x, double y, double count)
+        private Block CreateOrGateBlock(double x, double y, double count)
         {
             var block = new Block();
 
