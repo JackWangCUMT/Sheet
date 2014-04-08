@@ -109,6 +109,8 @@ namespace Sheet
         private string serializedLines = null;
         private List<string> models = new List<string>();
 
+        #region Properties
+
         public int ZoomIndex
         {
             get { return zoomIndex; }
@@ -152,6 +154,8 @@ namespace Sheet
                 pan.Y = value;
             }
         }
+
+        #endregion
 
         #region Snap
 
