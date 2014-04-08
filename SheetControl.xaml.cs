@@ -92,6 +92,8 @@ namespace Sheet
 
     public partial class SheetControl : UserControl
     {
+        #region Fields
+
         private int zoomIndex = 9; // zoomFactors index from 0 to 21, 9 = 100%
         private int defaultZoomIndex = 9;
         private int maxZoomIndex = 21;
@@ -107,7 +109,9 @@ namespace Sheet
         private List<Block> blocks = new List<Block>();
         private List<Line> gridLines = new List<Line>();
         private string serializedLines = null;
-        private List<string> models = new List<string>();
+        private List<string> models = new List<string>(); 
+
+        #endregion
 
         #region Properties
 
