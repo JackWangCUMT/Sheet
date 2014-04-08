@@ -393,6 +393,8 @@ namespace Sheet
 
         #endregion
 
+        #region Move
+
         private void Move(double x, double y)
         {
             MoveLines(x, y, logicLines);
@@ -423,6 +425,8 @@ namespace Sheet
                 line.Y2 += y;
             }
         }
+
+        #endregion
 
         #region Pan & Zoom
 
