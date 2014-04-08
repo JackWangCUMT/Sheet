@@ -175,6 +175,7 @@ namespace Sheet
         }
 
         #region Blocks
+
         private Block CreateGenericGateBlock(double x, double y, string text)
         {
             var block = new Block();
@@ -300,6 +301,8 @@ namespace Sheet
 
         #endregion
 
+        #region Reset
+
         private void Reset()
         {
             ResetLines();
@@ -333,6 +336,8 @@ namespace Sheet
 
             blocks.Clear();
         }
+
+        #endregion
 
         private void Move(double x, double y)
         {
