@@ -502,6 +502,8 @@ namespace Sheet
 
         #endregion
 
+        #region Temp Line
+
         private void InitTempLine(Point p)
         {
             double x = Snap(p.X);
@@ -525,7 +527,7 @@ namespace Sheet
 
         private void FinishTempLine()
         {
-            if (Math.Round(tempLine.X1, 1) == Math.Round(tempLine.X2, 1) && 
+            if (Math.Round(tempLine.X1, 1) == Math.Round(tempLine.X2, 1) &&
                 Math.Round(tempLine.Y1, 1) == Math.Round(tempLine.Y2, 1))
             {
                 CancelTempLine();
@@ -544,6 +546,8 @@ namespace Sheet
             Sheet.Children.Remove(tempLine);
             tempLine = null;
         }
+
+        #endregion
 
         #region Events
 
