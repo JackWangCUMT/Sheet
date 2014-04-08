@@ -92,11 +92,15 @@ namespace Sheet
 
     #endregion
 
+    #region Block
+
     public class Block
     {
         public List<Line> Lines = new List<Line>();
         public List<Grid> Texts = new List<Grid>();
-    }
+    } 
+
+    #endregion
 
     public partial class SheetControl : UserControl
     {
