@@ -374,6 +374,24 @@ namespace Sheet
             PanY = (p.Y * oldZoom + PanY) - p.Y * newZoom;
         }
 
+        private void ZoomTo(int delta, Point p)
+        {
+            if (delta > 0)
+            {
+                if (zoomIndex < maxZoomIndex)
+                {
+                    ZoomTo(p, zoomIndex++);
+                }
+            }
+            else
+            {
+                if (zoomIndex > 0)
+                {
+                    ZoomTo(p, zoomIndex--);
+                }
+            }
+        }
+
         private void InitPan(Point p)
         {
             panStartPoint = p;
@@ -493,20 +511,7 @@ namespace Sheet
 
         private void Workspace_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (e.Delta > 0)
-            {
-                if (zoomIndex < maxZoomIndex)
-                {
-                    ZoomTo(e.GetPosition(Sheet), zoomIndex++);
-                }
-            }
-            else
-            {
-                if (zoomIndex > 0)
-                {
-                    ZoomTo(e.GetPosition(Sheet), zoomIndex--);
-                }
-            }
+            ZoomTo(e.Delta, e.GetPosition(Sheet));
         }
 
         private void Workspace_PreviewMouseDown(object sender, MouseButtonEventArgs e)
