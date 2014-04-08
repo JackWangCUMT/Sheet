@@ -419,6 +419,8 @@ namespace Sheet
 
             AdjustThickness(zoomFactors[zoomIndex]);
         }
+        
+        #region Pan & Zoom
 
         private void AdjustThickness(double zoom)
         {
@@ -434,7 +436,7 @@ namespace Sheet
 
             foreach (var block in blocks)
             {
-                foreach(var line in block.Lines)
+                foreach (var line in block.Lines)
                 {
                     line.StrokeThickness = lineThickness / zoom;
                 }
@@ -488,7 +490,9 @@ namespace Sheet
             Zoom = zoomFactors[zoomIndex];
             PanX = 0.0;
             PanY = 0.0;
-        }
+        } 
+
+        #endregion
 
         private void InitTempLine(Point p)
         {
