@@ -174,6 +174,7 @@ namespace Sheet
             };
         }
 
+        #region Blocks
         private Block CreateGenericGateBlock(double x, double y, string text)
         {
             var block = new Block();
@@ -210,6 +211,8 @@ namespace Sheet
             block.Lines.Add(line);
             Sheet.Children.Add(line);
         }
+
+        #endregion
 
         private Grid CreateText(string text, double x, double y, double width, double height)
         {
