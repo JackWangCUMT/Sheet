@@ -293,13 +293,7 @@ namespace Sheet
 
         private void Move(double x, double y)
         {
-            foreach (var line in logicLines)
-            {
-                line.X1 += x;
-                line.Y1 += y;
-                line.X2 += x;
-                line.Y2 += y;
-            }
+            MoveLogicLines(x, y);
 
             foreach (var block in blocks)
             {
@@ -316,6 +310,17 @@ namespace Sheet
                     Canvas.SetLeft(text, Canvas.GetLeft(text) + x);
                     Canvas.SetTop(text, Canvas.GetTop(text) + y);
                 }
+            }
+        }
+
+        private void MoveLogicLines(double x, double y)
+        {
+            foreach (var line in logicLines)
+            {
+                line.X1 += x;
+                line.Y1 += y;
+                line.X2 += x;
+                line.Y2 += y;
             }
         }
 
