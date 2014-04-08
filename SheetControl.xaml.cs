@@ -31,6 +31,8 @@ namespace Sheet
 
     #endregion
 
+    #region ItemSerializer
+
     public static class ItemSerializer
     {
         private static char[] lineSeparators = { '\n' };
@@ -56,7 +58,7 @@ namespace Sheet
         {
             var sb = new StringBuilder();
 
-            foreach(var line in lines)
+            foreach (var line in lines)
             {
                 SerializeLine(sb, line);
             }
@@ -69,7 +71,7 @@ namespace Sheet
             var lines = s.Split(lineSeparators);
             var lineItems = new List<LineItem>();
 
-            foreach(var line in lines)
+            foreach (var line in lines)
             {
                 var m = line.Split(modelSeparators);
                 if (m.Length == 6 && string.Compare(m[0], "L", true) == 0)
@@ -87,6 +89,8 @@ namespace Sheet
             return lineItems;
         }
     }
+
+    #endregion
 
     public class Block
     {
