@@ -302,7 +302,7 @@ namespace Sheet
             }
         }
 
-        private void MoveTexts(double x, double y, List<Grid> texts)
+        private void MoveTexts(double x, double y, IEnumerable<Grid> texts)
         {
             foreach (var text in texts)
             {
@@ -311,7 +311,7 @@ namespace Sheet
             }
         }
 
-        private void MoveLines(double x, double y, List<Line> lines)
+        private void MoveLines(double x, double y, IEnumerable<Line> lines)
         {
             foreach (var line in lines)
             {
