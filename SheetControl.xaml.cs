@@ -159,6 +159,8 @@ namespace Sheet
             return r >= snapSize / 2.0 ? val + snapSize - r : val - r;
         }
 
+        #region Constructor
+
         public SheetControl()
         {
             InitializeComponent();
@@ -173,6 +175,8 @@ namespace Sheet
                 Focus();
             };
         }
+
+        #endregion
 
         #region Blocks
 
