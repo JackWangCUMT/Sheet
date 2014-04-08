@@ -374,6 +374,13 @@ namespace Sheet
             PanY = (p.Y * oldZoom + PanY) - p.Y * newZoom;
         }
 
+        private void Pan(Point p)
+        {
+            PanX = PanX + p.X - panStartPoint.X;
+            PanY = PanY + p.Y - panStartPoint.Y;
+            panStartPoint = p;
+        }
+
         private void InitLine(Point p)
         {
             double x = Snap(p.X);
@@ -441,10 +448,7 @@ namespace Sheet
             }
             else if (Sheet.IsMouseCaptured && tempLine == null)
             {
-                var p = e.GetPosition(this);
-                PanX = PanX + p.X - panStartPoint.X;
-                PanY = PanY + p.Y - panStartPoint.Y;
-                panStartPoint = p;
+                Pan(e.GetPosition(this));
             }
         }
 
