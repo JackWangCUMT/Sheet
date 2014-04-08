@@ -533,6 +533,8 @@ namespace Sheet
             tempLine = null;
         }
 
+        #region Events
+
         private void Sheet_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (!Sheet.IsMouseCaptured && tempLine == null)
@@ -626,5 +628,7 @@ namespace Sheet
                     break;
             }
         }
+
+        #endregion
     }
 }
