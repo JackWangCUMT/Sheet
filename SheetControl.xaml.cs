@@ -415,7 +415,7 @@ namespace Sheet
             if (Math.Round(tempLine.X1, 1) == Math.Round(tempLine.X2, 1) && 
                 Math.Round(tempLine.Y1, 1) == Math.Round(tempLine.Y2, 1))
             {
-                CancelLine();
+                CancelTempLine();
             }
             else
             {
@@ -424,7 +424,7 @@ namespace Sheet
             }
         }
 
-        private void CancelLine()
+        private void CancelTempLine()
         {
             Sheet.ReleaseMouseCapture();
             logicLines.Remove(tempLine);
@@ -468,7 +468,7 @@ namespace Sheet
         {
             if (Sheet.IsMouseCaptured && tempLine != null)
             {
-                CancelLine();
+                CancelTempLine();
             }
             else if (!Sheet.IsMouseCaptured && tempLine == null)
             {
