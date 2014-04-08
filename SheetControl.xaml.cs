@@ -410,7 +410,7 @@ namespace Sheet
             }
         }
 
-        private void FinishLine()
+        private void FinishTempLine()
         {
             if (Math.Round(tempLine.X1, 1) == Math.Round(tempLine.X2, 1) && 
                 Math.Round(tempLine.Y1, 1) == Math.Round(tempLine.Y2, 1))
@@ -440,7 +440,7 @@ namespace Sheet
             }
             else if (Sheet.IsMouseCaptured && oneClickMode)
             {
-                FinishLine();
+                FinishTempLine();
             }
         }
 
@@ -448,7 +448,7 @@ namespace Sheet
         {
             if (Sheet.IsMouseCaptured && !oneClickMode)
             {
-                FinishLine();
+                FinishTempLine();
             }
         }
 
