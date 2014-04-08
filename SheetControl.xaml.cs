@@ -298,12 +298,16 @@ namespace Sheet
             foreach (var block in blocks)
             {
                 MoveBlockLines(x, y, block);
+                MoveBlockTexts(x, y, block);
+            }
+        }
 
-                foreach(var text in block.Texts)
-                {
-                    Canvas.SetLeft(text, Canvas.GetLeft(text) + x);
-                    Canvas.SetTop(text, Canvas.GetTop(text) + y);
-                }
+        private void MoveBlockTexts(double x, double y, Block block)
+        {
+            foreach (var text in block.Texts)
+            {
+                Canvas.SetLeft(text, Canvas.GetLeft(text) + x);
+                Canvas.SetTop(text, Canvas.GetTop(text) + y);
             }
         }
 
