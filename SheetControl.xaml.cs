@@ -178,29 +178,27 @@ namespace Sheet
         {
             var block = new Block();
 
-            var text = CreateText("≥" + count.ToString(), x, y, 30.0, 30.0);
-            block.Texts.Add(text);
-            Sheet.Children.Add(text);
-
-            double thickness = lineThickness / Zoom;
-
-            var l0 = CreateLogicLine(thickness, x, y, x + 30.0, y);
-            block.Lines.Add(l0);
-            Sheet.Children.Add(l0);
-
-            var l1 = CreateLogicLine(thickness, x, y + 30.0, x + 30.0, y + 30.0);
-            block.Lines.Add(l1);
-            Sheet.Children.Add(l1);
-
-            var l2 = CreateLogicLine(thickness, x, y, x, y + 30.0);
-            block.Lines.Add(l2);
-            Sheet.Children.Add(l2);
-
-            var l3 = CreateLogicLine(thickness, x + 30.0, y, x + 30.0 , y + 30.0);
-            block.Lines.Add(l3);
-            Sheet.Children.Add(l3);
+            AddTextToBlock(block, "≥" + count.ToString(), x, y, 30.0, 30.0);
+            AddLineToBlock(block, x, y, x + 30.0, y);
+            AddLineToBlock(block, x, y + 30.0, x + 30.0, y + 30.0);
+            AddLineToBlock(block, x, y, x, y + 30.0);
+            AddLineToBlock(block, x + 30.0, y, x + 30.0, y + 30.0);
 
             return block;
+        }
+
+        private void AddTextToBlock(Block block, string str, double x, double y, double width, double height)
+        {
+            var text = CreateText(str, x, y, width, height);
+            block.Texts.Add(text);
+            Sheet.Children.Add(text);
+        }
+
+        private void AddLineToBlock(Block block, double x1, double y1, double x2, double y2)
+        {
+            var line = CreateLogicLine(lineThickness / Zoom, x1, y1, x2, y2);
+            block.Lines.Add(line);
+            Sheet.Children.Add(line);
         }
 
         private Grid CreateText(string text, double x, double y, double width, double height)
