@@ -202,6 +202,32 @@ namespace Sheet
 
         #endregion
 
+        #region Grid
+
+        private void CreateGrid()
+        {
+            double width = Sheet.ActualWidth;
+            double height = Sheet.ActualHeight;
+
+            for (double y = gridSize; y < height; y += gridSize)
+            {
+                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = 0, Y1 = y, X2 = width, Y2 = y };
+                gridLines.Add(l);
+                Sheet.Children.Add(l);
+            }
+
+            for (double x = gridSize; x < width; x += gridSize)
+            {
+                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = x, Y1 = 0, X2 = x, Y2 = height };
+                gridLines.Add(l);
+                Back.Children.Add(l);
+            }
+
+            AdjustThickness(zoomFactors[zoomIndex]);
+        }
+
+        #endregion
+
         #region Blocks
 
         private Block CreateGenericGateBlock(double x, double y, string text)
@@ -398,28 +424,6 @@ namespace Sheet
             }
         }
 
-        private void CreateGrid()
-        {
-            double width = Sheet.ActualWidth;
-            double height = Sheet.ActualHeight;
-
-            for (double y = gridSize; y < height; y += gridSize)
-            {
-                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = 0, Y1 = y, X2 = width, Y2 = y };
-                gridLines.Add(l);
-                Sheet.Children.Add(l);
-            }
-
-            for (double x = gridSize; x < width; x += gridSize)
-            {
-                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = x, Y1 = 0, X2 = x, Y2 = height };
-                gridLines.Add(l);
-                Back.Children.Add(l);
-            }
-
-            AdjustThickness(zoomFactors[zoomIndex]);
-        }
-        
         #region Pan & Zoom
 
         private void AdjustThickness(double zoom)
