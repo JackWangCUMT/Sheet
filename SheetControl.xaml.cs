@@ -168,23 +168,33 @@ namespace Sheet
                 CreateGrid();
 
                 blocks.Add(CreateOrGateBlock(30.0, 30.0, 1));
-                blocks.Add(CreateOrGateBlock(90.0, 30.0, 1));
+                blocks.Add(CreateAndGateBlock(90.0, 30.0));
 
                 Focus();
             };
         }
 
-        private Block CreateOrGateBlock(double x, double y, double count)
+        private Block CreateGenericGateBlock(double x, double y, string text)
         {
             var block = new Block();
 
-            AddTextToBlock(block, "≥" + count.ToString(), x, y, 30.0, 30.0);
+            AddTextToBlock(block, text, x, y, 30.0, 30.0);
             AddLineToBlock(block, x, y, x + 30.0, y);
             AddLineToBlock(block, x, y + 30.0, x + 30.0, y + 30.0);
             AddLineToBlock(block, x, y, x, y + 30.0);
             AddLineToBlock(block, x + 30.0, y, x + 30.0, y + 30.0);
 
             return block;
+        }
+
+        private Block CreateAndGateBlock(double x, double y)
+        {
+            return CreateGenericGateBlock(x, y, "&");
+        }
+
+        private Block CreateOrGateBlock(double x, double y, double count)
+        {
+            return CreateGenericGateBlock(x, y, "≥" + count.ToString());
         }
 
         private void AddTextToBlock(Block block, string str, double x, double y, double width, double height)
