@@ -37,8 +37,8 @@ namespace Sheet
         public double Height { get; set; }
         public int HAlign { get; set; }
         public int VAlign { get; set; }
-        public string Text { get; set; }
         public double Size { get; set; }
+        public string Text { get; set; }
     }
 
     public class BlockItem : Item
@@ -100,9 +100,9 @@ namespace Sheet
             sb.Append(modelSeparator);
             sb.Append(text.VAlign);
             sb.Append(modelSeparator);
-            sb.Append(text.Text);
-            sb.Append(modelSeparator);
             sb.Append(text.Size);
+            sb.Append(modelSeparator);
+            sb.Append(text.Text);
             sb.Append(lineSeparator);
         }
 
@@ -201,8 +201,8 @@ namespace Sheet
                     textItem.Height = double.Parse(m[5]);
                     textItem.HAlign = int.Parse(m[6]);
                     textItem.VAlign = int.Parse(m[7]);
-                    textItem.Text = m[8];
-                    textItem.Size = double.Parse(m[9]);
+                    textItem.Size = double.Parse(m[8]);
+                    textItem.Text = m[9];
 
                     if (block == null)
                     {
