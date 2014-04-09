@@ -29,52 +29,148 @@ namespace Sheet
         public double Y2 { get; set; }
     } 
 
+    public class TextItem : Item
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public int HAlign { get; set; }
+        public int VAlign { get; set; }
+        public string Text { get; set; }
+    }
+
+    public class BlockItem : Item
+    {
+        public string Name { get; set; }
+        public List<LineItem> Lines { get; set; }
+        public List<TextItem> Texts { get; set; }
+    } 
+
+    public class SheetItem : Item
+    {
+        public List<LineItem> Lines { get; set; }
+        public List<TextItem> Texts { get; set; }
+        public List<BlockItem> Blocks { get; set; }
+    } 
+
     #endregion
 
     #region ItemSerializer
 
     public static class ItemSerializer
     {
-        private static char[] lineSeparators = { '\n' };
+        private static string lineSeparator = "\r\n";
+        private static string modelSeparator = ";";
+        private static char[] lineSeparators = { '\r', '\n' };
         private static char[] modelSeparators = { ';' };
 
-        private static void SerializeLine(StringBuilder sb, LineItem line)
+        public static void Serialize(StringBuilder sb, LineItem line)
         {
-            sb.Append('L');
-            sb.Append(';');
+            sb.Append("LINE");
+            sb.Append(modelSeparator);
             sb.Append(line.Id);
-            sb.Append(';');
+            sb.Append(modelSeparator);
             sb.Append(line.X1);
-            sb.Append(';');
+            sb.Append(modelSeparator);
             sb.Append(line.Y1);
-            sb.Append(';');
+            sb.Append(modelSeparator);
             sb.Append(line.X2);
-            sb.Append(';');
+            sb.Append(modelSeparator);
             sb.Append(line.Y2);
-            sb.Append('\n');
+            sb.Append(lineSeparator);
         }
 
-        public static string Serialize(List<LineItem> lines)
+        public static void Serialize(StringBuilder sb, TextItem text)
+        {
+            sb.Append("TEXT");
+            sb.Append(modelSeparator);
+            sb.Append(text.Id);
+            sb.Append(modelSeparator);
+            sb.Append(text.X);
+            sb.Append(modelSeparator);
+            sb.Append(text.Y);
+            sb.Append(modelSeparator);
+            sb.Append(text.Width);
+            sb.Append(modelSeparator);
+            sb.Append(text.Height);
+            sb.Append(modelSeparator);
+            sb.Append(text.HAlign);
+            sb.Append(modelSeparator);
+            sb.Append(text.VAlign);
+            sb.Append(modelSeparator);
+            sb.Append(text.Text);
+            sb.Append(lineSeparator);
+        }
+
+        public static void Serialize(StringBuilder sb, BlockItem block)
+        {
+            sb.Append("BLOCK");
+            sb.Append(modelSeparator);
+            sb.Append(block.Id);
+            sb.Append(modelSeparator);
+            sb.Append(block.Name);
+            sb.Append(lineSeparator);
+
+            Serialize(sb, block.Lines);
+            Serialize(sb, block.Texts);
+
+            sb.Append("END");
+            sb.Append(lineSeparator);
+        }
+
+        public static void Serialize(StringBuilder sb, List<LineItem> lines)
+        {
+            foreach (var line in lines)
+            {
+                Serialize(sb, line);
+            }
+        }
+
+        public static void Serialize(StringBuilder sb, List<TextItem> texts)
+        {
+            foreach (var text in texts)
+            {
+                Serialize(sb, text);
+            }
+        }
+
+        public static void Serialize(StringBuilder sb, List<BlockItem> blocks)
+        {
+            foreach (var block in blocks)
+            {
+                Serialize(sb, block);
+            }
+        }
+
+        public static string Serialize(SheetItem sheet)
         {
             var sb = new StringBuilder();
 
-            foreach (var line in lines)
-            {
-                SerializeLine(sb, line);
-            }
+            Serialize(sb, sheet.Lines);
+            Serialize(sb, sheet.Texts);
+            Serialize(sb, sheet.Blocks);
 
             return sb.ToString();
         }
 
-        public static List<LineItem> Deserialize(string s)
+        public static SheetItem Deserialize(string s)
         {
-            var lines = s.Split(lineSeparators);
-            var lineItems = new List<LineItem>();
+            var lines = s.Split(lineSeparators, StringSplitOptions.RemoveEmptyEntries);
+
+            var sheet = new SheetItem()
+            {
+                Lines = new List<LineItem>(),
+                Texts = new List<TextItem>(),
+                Blocks = new List<BlockItem>()
+            };
+
+            BlockItem block = null;
 
             foreach (var line in lines)
             {
                 var m = line.Split(modelSeparators);
-                if (m.Length == 6 && string.Compare(m[0], "L", true) == 0)
+                if (m.Length == 6 && string.Compare(m[0], "LINE", true) == 0)
                 {
                     var lineItem = new LineItem();
                     lineItem.Id = int.Parse(m[1]);
@@ -82,11 +178,51 @@ namespace Sheet
                     lineItem.Y1 = double.Parse(m[3]);
                     lineItem.X2 = double.Parse(m[4]);
                     lineItem.Y2 = double.Parse(m[5]);
-                    lineItems.Add(lineItem);
+
+                    if (block == null)
+                    {
+                        sheet.Lines.Add(lineItem);
+                    }
+                    else
+                    {
+                        block.Lines.Add(lineItem);
+                    }
+                }
+                else if (m.Length == 9 && string.Compare(m[0], "TEXT", true) == 0)
+                {
+                    var textItem = new TextItem();
+                    textItem.Id = int.Parse(m[1]);
+                    textItem.X = double.Parse(m[2]);
+                    textItem.Y = double.Parse(m[3]);
+                    textItem.Width = double.Parse(m[4]);
+                    textItem.Height = double.Parse(m[5]);
+                    textItem.HAlign = int.Parse(m[6]);
+                    textItem.VAlign = int.Parse(m[7]);
+                    textItem.Text = m[8];
+
+                    if (block == null)
+                    {
+                        sheet.Texts.Add(textItem);
+                    }
+                    else
+                    {
+                        block.Texts.Add(textItem);
+                    }
+                }
+                else if (m.Length == 3 && string.Compare(m[0], "BLOCK", true) == 0 && block == null)
+                {
+                    block = new BlockItem() { Lines = new List<LineItem>(), Texts = new List<TextItem>() };
+                    block.Id = int.Parse(m[1]);
+                    block.Name = m[2];
+                }
+                else if (m.Length == 1 && string.Compare(m[0], "END", true) == 0 && block != null)
+                {
+                    sheet.Blocks.Add(block);
+                    block = null;
                 }
             }
 
-            return lineItems;
+            return sheet;
         }
     }
 
@@ -96,9 +232,10 @@ namespace Sheet
 
     public class Block
     {
+        public string Name = "";
         public List<Line> Lines = new List<Line>();
         public List<Grid> Texts = new List<Grid>();
-    } 
+    }
 
     #endregion
 
@@ -118,9 +255,10 @@ namespace Sheet
         private Line tempLine = null;
         private Point panStartPoint;
         private List<Line> logicLines = new List<Line>();
+        private List<Grid> texts = new List<Grid>();
         private List<Block> blocks = new List<Block>();
         private List<Line> gridLines = new List<Line>();
-        private string serializedLines = null;
+        private string serialized = null;
         private List<string> models = new List<string>(); 
 
         #endregion
@@ -193,8 +331,8 @@ namespace Sheet
             {
                 CreateGrid();
 
-                blocks.Add(CreateOrGateBlock(30.0, 30.0, 1));
-                blocks.Add(CreateAndGateBlock(90.0, 30.0));
+                blocks.Add(CreateOrGateBlock(90.0, 90.0, 1));
+                blocks.Add(CreateAndGateBlock(150.0, 90.0));
 
                 Focus();
             };
@@ -230,9 +368,9 @@ namespace Sheet
 
         #region Blocks
 
-        private Block CreateGenericGateBlock(double x, double y, string text)
+        private Block CreateGenericGateBlock(string name, double x, double y, string text)
         {
-            var block = new Block();
+            var block = new Block() { Name = name };
 
             AddTextToBlock(block, text, x, y, 30.0, 30.0);
             AddLineToBlock(block, x, y, x + 30.0, y);
@@ -245,26 +383,26 @@ namespace Sheet
 
         private Block CreateAndGateBlock(double x, double y)
         {
-            return CreateGenericGateBlock(x, y, "&");
+            return CreateGenericGateBlock("AND", x, y, "&");
         }
 
         private Block CreateOrGateBlock(double x, double y, double count)
         {
-            return CreateGenericGateBlock(x, y, "≥" + count.ToString());
-        }
-
-        private void AddTextToBlock(Block block, string str, double x, double y, double width, double height)
-        {
-            var text = CreateText(str, x, y, width, height);
-            block.Texts.Add(text);
-            Sheet.Children.Add(text);
+            return CreateGenericGateBlock("OR", x, y, "≥" + count.ToString());
         }
 
         private void AddLineToBlock(Block block, double x1, double y1, double x2, double y2)
         {
-            var line = CreateLogicLine(lineThickness / Zoom, x1, y1, x2, y2);
+            var line = CreateLine(lineThickness / Zoom, x1, y1, x2, y2);
             block.Lines.Add(line);
             Sheet.Children.Add(line);
+        }
+
+        private void AddTextToBlock(Block block, string str, double x, double y, double width, double height)
+        {
+            var text = CreateText(str, x, y, width, height, HorizontalAlignment.Center, VerticalAlignment.Center);
+            block.Texts.Add(text);
+            Sheet.Children.Add(text);
         }
 
         #endregion
@@ -284,23 +422,88 @@ namespace Sheet
             return lineItem;
         }
 
-        private void Serialize()
+        private TextItem SerializeText(Grid text)
         {
-            var lineItems = new List<LineItem>();
+            var textItem = new TextItem();
+
+            textItem.Id = 0;
+            textItem.X = Canvas.GetLeft(text);
+            textItem.Y = Canvas.GetTop(text);
+            textItem.Width = text.Width;
+            textItem.Height = text.Height;
+
+            var tb = text.Children[0] as TextBlock;
+            textItem.Text = tb.Text;
+            textItem.HAlign = (int) tb.HorizontalAlignment;
+            textItem.VAlign = (int) tb.VerticalAlignment;
+
+            return textItem;
+        }
+
+        private BlockItem SerializeBlock(Block block)
+        {
+            var blockItem = new BlockItem() 
+            {
+                Name = block.Name,
+                Lines = new List<LineItem>(),
+                Texts = new List<TextItem>(),
+            };
+
+            foreach (var line in block.Lines)
+            {
+                blockItem.Lines.Add(SerializeLine(line));
+            }
+
+            foreach (var text in block.Texts)
+            {
+                blockItem.Texts.Add(SerializeText(text));
+            }
+
+            return blockItem;
+        }
+
+        private SheetItem CreateSheet()
+        {
+            var sheet = new SheetItem()
+            {
+                Lines = new List<LineItem>(),
+                Texts = new List<TextItem>(),
+                Blocks = new List<BlockItem>()
+            };
 
             foreach (var line in logicLines)
             {
-                lineItems.Add(SerializeLine(line));
+                sheet.Lines.Add(SerializeLine(line));
             }
 
-            serializedLines = ItemSerializer.Serialize(lineItems);
+            foreach (var text in texts)
+            {
+                sheet.Texts.Add(SerializeText(text));
+            }
+
+            foreach (var block in blocks)
+            {
+                sheet.Blocks.Add(SerializeBlock(block));
+            }
+
+            return sheet;
+        }
+
+        private void Serialize()
+        {
+            serialized = ItemSerializer.Serialize(CreateSheet());
+
+            Clipboard.SetData(DataFormats.Text, serialized);
         }
 
         #endregion
 
         #region Deserialize
 
-        private Grid CreateText(string text, double x, double y, double width, double height)
+        private Grid CreateText(string text, 
+                                double x, double y, 
+                                double width, double height,
+                                HorizontalAlignment halign, VerticalAlignment valign)
         {
             var grid = new Grid();
             grid.Background = Brushes.White;
@@ -310,8 +513,8 @@ namespace Sheet
             Canvas.SetTop(grid, y);
 
             var tb = new TextBlock();
-            tb.VerticalAlignment = VerticalAlignment.Center;
-            tb.HorizontalAlignment = HorizontalAlignment.Center;
+            tb.HorizontalAlignment = halign;
+            tb.VerticalAlignment = valign;
             tb.Foreground = Brushes.Red;
             tb.Text = text;
 
@@ -320,7 +523,7 @@ namespace Sheet
             return grid;
         }
 
-        private Line CreateLogicLine(double thickness, double x1, double y1, double x2, double y2)
+        private Line CreateLine(double thickness, double x1, double y1, double x2, double y2)
         {
             var line = new Line()
             {
@@ -339,16 +542,53 @@ namespace Sheet
 
         private void Deserialize()
         {
-            if (serializedLines != null)
+            if (serialized != null)
             {
-                var lineItems = ItemSerializer.Deserialize(serializedLines);
+                var sheet = ItemSerializer.Deserialize(serialized);
 
                 double thickness = lineThickness / Zoom;
-                foreach (var lineItem in lineItems)
+
+                foreach (var lineItem in sheet.Lines)
                 {
-                    var line = CreateLogicLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
+                    var line = CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
                     logicLines.Add(line);
                     Sheet.Children.Add(line);
+                }
+
+                foreach (var textItem in sheet.Texts)
+                {
+                    var text = CreateText(textItem.Text, 
+                                          textItem.X, textItem.Y, 
+                                          textItem.Width, textItem.Height, 
+                                          (HorizontalAlignment) textItem.HAlign,
+                                          (VerticalAlignment) textItem.VAlign);
+                    texts.Add(text);
+                    Sheet.Children.Add(text);
+                }
+
+                foreach (var blockItem in sheet.Blocks)
+                {
+                    var block = new Block() { Name = blockItem.Name };
+
+                    foreach (var textItem in blockItem.Texts)
+                    {
+                        var text = CreateText(textItem.Text, 
+                                              textItem.X, textItem.Y, 
+                                              textItem.Width, textItem.Height, 
+                                              (HorizontalAlignment) textItem.HAlign,
+                                              (VerticalAlignment) textItem.VAlign);
+                        block.Texts.Add(text);
+                        Sheet.Children.Add(text);
+                    }
+
+                    foreach (var lineItem in blockItem.Lines)
+                    {
+                        var line = CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
+                        block.Lines.Add(line);
+                        Sheet.Children.Add(line);
+                    }
+
+                    blocks.Add(block);
                 }
             }
         }
@@ -360,6 +600,7 @@ namespace Sheet
         private void Reset()
         {
             ResetLines();
+            ResetTexts();
             ResetBlocks();
         }
 
@@ -371,6 +612,16 @@ namespace Sheet
             }
 
             logicLines.Clear();
+        }
+
+        private void ResetTexts()
+        {
+            foreach (var text in texts)
+            {
+                Sheet.Children.Remove(text);
+            }
+
+            texts.Clear();
         }
 
         private void ResetBlocks()
@@ -508,7 +759,7 @@ namespace Sheet
         {
             double x = Snap(p.X);
             double y = Snap(p.Y);
-            tempLine = CreateLogicLine(lineThickness / Zoom, x, y, x, y);
+            tempLine = CreateLine(lineThickness / Zoom, x, y, x, y);
             logicLines.Add(tempLine);
             Sheet.Children.Add(tempLine);
             Sheet.CaptureMouse();
