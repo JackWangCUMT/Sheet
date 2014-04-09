@@ -826,8 +826,7 @@ namespace Sheet
 
         private void Cut()
         {
-            var text = ItemSerializer.Serialize(CreateSheet());
-            Clipboard.SetData(DataFormats.UnicodeText, text);
+            Copy();
             Reset();
         }
 
