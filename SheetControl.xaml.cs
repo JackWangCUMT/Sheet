@@ -822,6 +822,29 @@ namespace Sheet
 
         #endregion
 
+        #region Clipboard
+
+        private void Cut()
+        {
+            var text = ItemSerializer.Serialize(CreateSheet());
+            Clipboard.SetData(DataFormats.UnicodeText, text);
+            Reset();
+        }
+
+        private void Copy()
+        {
+            var text = ItemSerializer.Serialize(CreateSheet());
+            Clipboard.SetData(DataFormats.UnicodeText, text);
+        }
+
+        private void Paste()
+        {
+            var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
+            Load(ItemSerializer.Deserialize(text));
+        }
+
+        #endregion
+
         #region Events
 
         private void Sheet_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -895,26 +918,22 @@ namespace Sheet
 
             switch(e.Key)
             {
+                case Key.X:
+                    if (ctrl)
+                    {
+                        Cut();
+                    }
+                    break;
                 case Key.C:
                     if (ctrl)
                     {
-                        var text = ItemSerializer.Serialize(CreateSheet());
-                        Clipboard.SetData(DataFormats.UnicodeText, text);
+                        Copy();
                     }
                     break;
                 case Key.V:
                     if (ctrl)
                     {
-                        var text = (string) Clipboard.GetData(DataFormats.UnicodeText);
-                        Load(ItemSerializer.Deserialize(text));
-                    }
-                    break;
-                case Key.X:
-                    if (ctrl)
-                    {
-                        var text = ItemSerializer.Serialize(CreateSheet());
-                        Clipboard.SetData(DataFormats.UnicodeText, text);
-                        Reset();
+                        Paste();
                     }
                     break;
                 case Key.R: 
