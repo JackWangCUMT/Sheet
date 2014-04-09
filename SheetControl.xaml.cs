@@ -38,6 +38,7 @@ namespace Sheet
         public int HAlign { get; set; }
         public int VAlign { get; set; }
         public string Text { get; set; }
+        public double Size { get; set; }
     }
 
     public class BlockItem : Item
@@ -100,6 +101,8 @@ namespace Sheet
             sb.Append(text.VAlign);
             sb.Append(modelSeparator);
             sb.Append(text.Text);
+            sb.Append(modelSeparator);
+            sb.Append(text.Size);
             sb.Append(lineSeparator);
         }
 
@@ -188,7 +191,7 @@ namespace Sheet
                         block.Lines.Add(lineItem);
                     }
                 }
-                else if (m.Length == 9 && string.Compare(m[0], "TEXT", true) == 0)
+                else if (m.Length == 10 && string.Compare(m[0], "TEXT", true) == 0)
                 {
                     var textItem = new TextItem();
                     textItem.Id = int.Parse(m[1]);
@@ -199,6 +202,7 @@ namespace Sheet
                     textItem.HAlign = int.Parse(m[6]);
                     textItem.VAlign = int.Parse(m[7]);
                     textItem.Text = m[8];
+                    textItem.Size = double.Parse(m[9]);
 
                     if (block == null)
                     {
@@ -331,8 +335,9 @@ namespace Sheet
             {
                 CreateGrid();
 
-                blocks.Add(CreateOrGateBlock(90.0, 90.0, 1));
-                blocks.Add(CreateAndGateBlock(150.0, 90.0));
+                blocks.Add(CreateOrGateBlock(300.0, 90.0, 1));
+                blocks.Add(CreateOrGateBlock(300.0, 180.0, 1));
+                blocks.Add(CreateAndGateBlock(360.0, 180.0));
 
                 Focus();
             };
@@ -400,7 +405,7 @@ namespace Sheet
 
         private void AddTextToBlock(Block block, string str, double x, double y, double width, double height)
         {
-            var text = CreateText(str, x, y, width, height, HorizontalAlignment.Center, VerticalAlignment.Center);
+            var text = CreateText(str, x, y, width, height, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0);
             block.Texts.Add(text);
             Sheet.Children.Add(text);
         }
@@ -436,6 +441,7 @@ namespace Sheet
             textItem.Text = tb.Text;
             textItem.HAlign = (int) tb.HorizontalAlignment;
             textItem.VAlign = (int) tb.VerticalAlignment;
+            textItem.Size = tb.FontSize;
 
             return textItem;
         }
@@ -501,7 +507,8 @@ namespace Sheet
         private Grid CreateText(string text, 
                                 double x, double y, 
                                 double width, double height,
-                                HorizontalAlignment halign, VerticalAlignment valign)
+                                HorizontalAlignment halign, VerticalAlignment valign,
+                                double size)
         {
             var grid = new Grid();
             grid.Background = Brushes.White;
@@ -514,6 +521,8 @@ namespace Sheet
             tb.HorizontalAlignment = halign;
             tb.VerticalAlignment = valign;
             tb.Foreground = Brushes.Red;
+            tb.FontSize = size;
+            tb.FontFamily = new FontFamily("Calibri");
             tb.Text = text;
 
             grid.Children.Add(tb);
@@ -579,7 +588,8 @@ namespace Sheet
                                       textItem.X, textItem.Y,
                                       textItem.Width, textItem.Height,
                                       (HorizontalAlignment)textItem.HAlign,
-                                      (VerticalAlignment)textItem.VAlign);
+                                      (VerticalAlignment)textItem.VAlign,
+                                      textItem.Size);
                 texts.Add(text);
                 Sheet.Children.Add(text);
             }
@@ -599,7 +609,8 @@ namespace Sheet
                                           textItem.X, textItem.Y,
                                           textItem.Width, textItem.Height,
                                           (HorizontalAlignment)textItem.HAlign,
-                                          (VerticalAlignment)textItem.VAlign);
+                                          (VerticalAlignment)textItem.VAlign,
+                                          textItem.Size);
                     block.Texts.Add(text);
                     Sheet.Children.Add(text);
                 }
