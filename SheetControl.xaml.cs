@@ -492,8 +492,6 @@ namespace Sheet
         private void Serialize()
         {
             serialized = ItemSerializer.Serialize(CreateSheet());
-
-            Clipboard.SetData(DataFormats.Text, serialized);
         }
 
         #endregion
@@ -544,52 +542,76 @@ namespace Sheet
         {
             if (serialized != null)
             {
-                var sheet = ItemSerializer.Deserialize(serialized);
+                Load(ItemSerializer.Deserialize(serialized));
+            }
+        }
 
-                double thickness = lineThickness / Zoom;
+        #endregion
 
-                foreach (var lineItem in sheet.Lines)
+        #region Load
+
+        private void Load(SheetItem sheet)
+        {
+            Load(sheet.Lines);
+            Load(sheet.Texts);
+            Load(sheet.Blocks);
+        }
+
+        private void Load(IEnumerable<LineItem> lineItems)
+        {
+            double thickness = lineThickness / Zoom;
+
+            foreach (var lineItem in lineItems)
+            {
+                var line = CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
+                logicLines.Add(line);
+                Sheet.Children.Add(line);
+            }
+        }
+
+        private void Load(IEnumerable<TextItem> textItems)
+        {
+            double thickness = lineThickness / Zoom;
+
+            foreach (var textItem in textItems)
+            {
+                var text = CreateText(textItem.Text,
+                                      textItem.X, textItem.Y,
+                                      textItem.Width, textItem.Height,
+                                      (HorizontalAlignment)textItem.HAlign,
+                                      (VerticalAlignment)textItem.VAlign);
+                texts.Add(text);
+                Sheet.Children.Add(text);
+            }
+        }
+
+        private void Load(IEnumerable<BlockItem> blockItems)
+        {
+            double thickness = lineThickness / Zoom;
+
+            foreach (var blockItem in blockItems)
+            {
+                var block = new Block() { Name = blockItem.Name };
+
+                foreach (var textItem in blockItem.Texts)
                 {
-                    var line = CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
-                    logicLines.Add(line);
-                    Sheet.Children.Add(line);
-                }
-
-                foreach (var textItem in sheet.Texts)
-                {
-                    var text = CreateText(textItem.Text, 
-                                          textItem.X, textItem.Y, 
-                                          textItem.Width, textItem.Height, 
-                                          (HorizontalAlignment) textItem.HAlign,
-                                          (VerticalAlignment) textItem.VAlign);
-                    texts.Add(text);
+                    var text = CreateText(textItem.Text,
+                                          textItem.X, textItem.Y,
+                                          textItem.Width, textItem.Height,
+                                          (HorizontalAlignment)textItem.HAlign,
+                                          (VerticalAlignment)textItem.VAlign);
+                    block.Texts.Add(text);
                     Sheet.Children.Add(text);
                 }
 
-                foreach (var blockItem in sheet.Blocks)
+                foreach (var lineItem in blockItem.Lines)
                 {
-                    var block = new Block() { Name = blockItem.Name };
-
-                    foreach (var textItem in blockItem.Texts)
-                    {
-                        var text = CreateText(textItem.Text, 
-                                              textItem.X, textItem.Y, 
-                                              textItem.Width, textItem.Height, 
-                                              (HorizontalAlignment) textItem.HAlign,
-                                              (VerticalAlignment) textItem.VAlign);
-                        block.Texts.Add(text);
-                        Sheet.Children.Add(text);
-                    }
-
-                    foreach (var lineItem in blockItem.Lines)
-                    {
-                        var line = CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
-                        block.Lines.Add(line);
-                        Sheet.Children.Add(line);
-                    }
-
-                    blocks.Add(block);
+                    var line = CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
+                    block.Lines.Add(line);
+                    Sheet.Children.Add(line);
                 }
+
+                blocks.Add(block);
             }
         }
 
@@ -869,8 +891,32 @@ namespace Sheet
 
         private void UserControl_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
+
             switch(e.Key)
             {
+                case Key.C:
+                    if (ctrl)
+                    {
+                        var text = ItemSerializer.Serialize(CreateSheet());
+                        Clipboard.SetData(DataFormats.UnicodeText, text);
+                    }
+                    break;
+                case Key.V:
+                    if (ctrl)
+                    {
+                        var text = (string) Clipboard.GetData(DataFormats.UnicodeText);
+                        Load(ItemSerializer.Deserialize(text));
+                    }
+                    break;
+                case Key.X:
+                    if (ctrl)
+                    {
+                        var text = ItemSerializer.Serialize(CreateSheet());
+                        Clipboard.SetData(DataFormats.UnicodeText, text);
+                        Reset();
+                    }
+                    break;
                 case Key.R: 
                     Reset();
                     break;
