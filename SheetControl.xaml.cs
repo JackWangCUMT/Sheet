@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -840,6 +841,80 @@ namespace Sheet
 
         #endregion
 
+        #region Open & Save
+
+        private void Open(string fileName)
+        {
+            try
+            {
+                using (var stream = System.IO.File.OpenText(fileName))
+                {
+                    var text = stream.ReadToEnd();
+                    if (text != null)
+                    {
+                        Reset();
+                        Load(ItemSerializer.Deserialize(text));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+            }
+        }
+
+        private void Save(string fileName)
+        {
+            try
+            {
+                var text = ItemSerializer.Serialize(CreateSheet());
+                if (text != null)
+                {
+                    using (var stream = System.IO.File.CreateText(fileName))
+                    {
+                        stream.Write(text);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region File Dialogs
+
+        private void Open()
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog()
+            {
+                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                Open(dlg.FileName);
+            }
+        }
+
+        private void Save()
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog()
+            {
+                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*",
+                FileName = "sheet"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                Save(dlg.FileName);
+            }
+        }
+
+        #endregion
+
         #region Events
 
         private void Sheet_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -937,13 +1012,13 @@ namespace Sheet
                 case Key.S:
                     if (ctrl)
                     {
-                        // TODO:
+                        Save();
                     }
                     break;
                 case Key.O:
                     if (ctrl)
                     {
-                        // TODO:
+                        Open();
                     }
                     break;
                 case Key.Up:
