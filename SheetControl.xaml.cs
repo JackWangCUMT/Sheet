@@ -720,13 +720,13 @@ namespace Sheet
             }
         }
 
-        private void ZoomTo(Point p, int oldZoomIndex)
+        private void ZoomTo(double x, double y, int oldZoomIndex)
         {
             double oldZoom = zoomFactors[oldZoomIndex];
             double newZoom = zoomFactors[zoomIndex];
             Zoom = newZoom;
-            PanX = (p.X * oldZoom + PanX) - p.X * newZoom;
-            PanY = (p.Y * oldZoom + PanY) - p.Y * newZoom;
+            PanX = (x * oldZoom + PanX) - x * newZoom;
+            PanY = (y * oldZoom + PanY) - y * newZoom;
         }
 
         private void ZoomTo(int delta, Point p)
@@ -735,14 +735,14 @@ namespace Sheet
             {
                 if (zoomIndex < maxZoomIndex)
                 {
-                    ZoomTo(p, zoomIndex++);
+                    ZoomTo(p.X, p.Y, zoomIndex++);
                 }
             }
             else
             {
                 if (zoomIndex > 0)
                 {
-                    ZoomTo(p, zoomIndex--);
+                    ZoomTo(p.X, p.Y, zoomIndex--);
                 }
             }
         }
