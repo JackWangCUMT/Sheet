@@ -334,6 +334,7 @@ namespace Sheet
             {
                 CreateGrid();
 
+                Push();
                 blocks.Add(CreateOrGateBlock(300.0, 90.0, 1));
                 blocks.Add(CreateOrGateBlock(300.0, 180.0, 1));
                 blocks.Add(CreateAndGateBlock(360.0, 180.0));
@@ -407,6 +408,22 @@ namespace Sheet
             var text = CreateText(str, x, y, width, height, halign, valign, size);
             block.Texts.Add(text);
             Sheet.Children.Add(text);
+        }
+
+        private void AddOrGate(Point p)
+        {
+            Push();
+            double x = Snap(p.X);
+            double y = Snap(p.Y);
+            blocks.Add(CreateOrGateBlock(x, y, 1));
+        }
+
+        private void AddAndGate(Point p)
+        {
+            Push();
+            double x = Snap(p.X);
+            double y = Snap(p.Y);
+            blocks.Add(CreateAndGateBlock(x, y));
         }
 
         #endregion
@@ -667,6 +684,7 @@ namespace Sheet
 
         private void Move(double x, double y)
         {
+            Push();
             MoveLines(x, y, logicLines);
 
             foreach (var block in blocks)
@@ -776,6 +794,7 @@ namespace Sheet
 
         private void InitTempLine(Point p)
         {
+            Push();
             double x = Snap(p.X);
             double y = Snap(p.Y);
             tempLine = CreateLine(lineThickness / Zoom, x, y, x, y);
@@ -811,10 +830,55 @@ namespace Sheet
 
         private void CancelTempLine()
         {
+            Pop();
             Sheet.ReleaseMouseCapture();
             logicLines.Remove(tempLine);
             Sheet.Children.Remove(tempLine);
             tempLine = null;
+        }
+
+        #endregion
+
+        #region Undo/Redo
+
+        private Stack<string> Undos = new Stack<string>();
+        private Stack<string> Redos = new Stack<string>();
+
+        private void Push()
+        {
+            var text = ItemSerializer.Serialize(CreateSheet());
+            Undos.Push(text);
+        }
+
+        private void Pop()
+        {
+            Undos.Pop();
+        }
+
+        private void Undo()
+        {
+            if (Undos.Count > 0)
+            {
+                var redo = ItemSerializer.Serialize(CreateSheet());
+                Redos.Push(redo);
+
+                var text = Undos.Pop();
+                Reset();
+                Load(ItemSerializer.Deserialize(text));
+            }
+        }
+
+        private void Redo()
+        {
+            if (Redos.Count > 0)
+            {
+                var undo = ItemSerializer.Serialize(CreateSheet());
+                Undos.Push(undo);
+
+                var text = Redos.Pop();
+                Reset();
+                Load(ItemSerializer.Deserialize(text));
+            }
         }
 
         #endregion
@@ -824,6 +888,7 @@ namespace Sheet
         private void Cut()
         {
             Copy();
+            Push();
             Reset();
         }
 
@@ -852,6 +917,7 @@ namespace Sheet
                     var text = stream.ReadToEnd();
                     if (text != null)
                     {
+                        Push();
                         Reset();
                         Load(ItemSerializer.Deserialize(text));
                     }
@@ -921,19 +987,11 @@ namespace Sheet
         {
             if (Keyboard.IsKeyDown(Key.A))
             {
-                var p = e.GetPosition(Sheet);
-                double x = Snap(p.X);
-                double y = Snap(p.Y);
-
-                blocks.Add(CreateAndGateBlock(x, y));
+                AddAndGate(e.GetPosition(Sheet));
             }
             else if (Keyboard.IsKeyDown(Key.O))
             {
-                var p = e.GetPosition(Sheet);
-                double x = Snap(p.X);
-                double y = Snap(p.Y);
-
-                blocks.Add(CreateOrGateBlock(x, y, 1));
+                AddOrGate(e.GetPosition(Sheet));
             }
             else
             {
@@ -1007,6 +1065,22 @@ namespace Sheet
 
             switch(e.Key)
             {
+                case Key.Z:
+                    {
+                        if (ctrl)
+                        {
+                            Undo();
+                        }
+                    }
+                    break;
+                case Key.Y:
+                    {
+                        if (ctrl)
+                        {
+                            Redo();
+                        }
+                    }
+                    break;
                 case Key.X:
                     if (ctrl)
                     {
@@ -1025,7 +1099,8 @@ namespace Sheet
                         Paste();
                     }
                     break;
-                case Key.R: 
+                case Key.R:
+                    Push();
                     Reset();
                     break;
                 case Key.S:
