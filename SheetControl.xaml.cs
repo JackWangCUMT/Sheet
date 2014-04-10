@@ -262,8 +262,6 @@ namespace Sheet
         private List<Grid> texts = new List<Grid>();
         private List<Block> blocks = new List<Block>();
         private List<Line> gridLines = new List<Line>();
-        private string serialized = null;
-        private List<string> models = new List<string>(); 
 
         #endregion
 
@@ -495,11 +493,6 @@ namespace Sheet
             return sheet;
         }
 
-        private void Serialize()
-        {
-            serialized = ItemSerializer.Serialize(CreateSheet());
-        }
-
         #endregion
 
         #region Deserialize
@@ -545,14 +538,6 @@ namespace Sheet
             };
 
             return line;
-        }
-
-        private void Deserialize()
-        {
-            if (serialized != null)
-            {
-                Load(ItemSerializer.Deserialize(serialized));
-            }
         }
 
         #endregion
@@ -950,11 +935,16 @@ namespace Sheet
                     Reset();
                     break;
                 case Key.S:
-                    Serialize();
+                    if (ctrl)
+                    {
+                        // TODO:
+                    }
                     break;
-                case Key.L:
-                    Reset();
-                    Deserialize();
+                case Key.O:
+                    if (ctrl)
+                    {
+                        // TODO:
+                    }
                     break;
                 case Key.Up:
                     Move(0.0, -snapSize);
