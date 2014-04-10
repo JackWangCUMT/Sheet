@@ -376,7 +376,7 @@ namespace Sheet
         {
             var block = new Block() { Name = name };
 
-            AddTextToBlock(block, text, x, y, 30.0, 30.0);
+            AddTextToBlock(block, text, x, y, 30.0, 30.0, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0);
             AddLineToBlock(block, x, y, x + 30.0, y);
             AddLineToBlock(block, x, y + 30.0, x + 30.0, y + 30.0);
             AddLineToBlock(block, x, y, x, y + 30.0);
@@ -402,9 +402,9 @@ namespace Sheet
             Sheet.Children.Add(line);
         }
 
-        private void AddTextToBlock(Block block, string str, double x, double y, double width, double height)
+        private void AddTextToBlock(Block block, string str, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size)
         {
-            var text = CreateText(str, x, y, width, height, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0);
+            var text = CreateText(str, x, y, width, height, halign, valign, size);
             block.Texts.Add(text);
             Sheet.Children.Add(text);
         }
