@@ -919,13 +919,32 @@ namespace Sheet
 
         private void Sheet_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!Sheet.IsMouseCaptured && tempLine == null)
+            if (Keyboard.IsKeyDown(Key.A))
             {
-                InitTempLine(e.GetPosition(Sheet));
+                var p = e.GetPosition(Sheet);
+                double x = Snap(p.X);
+                double y = Snap(p.Y);
+
+                blocks.Add(CreateAndGateBlock(x, y));
             }
-            else if (Sheet.IsMouseCaptured && oneClickMode)
+            else if (Keyboard.IsKeyDown(Key.O))
             {
-                FinishTempLine();
+                var p = e.GetPosition(Sheet);
+                double x = Snap(p.X);
+                double y = Snap(p.Y);
+
+                blocks.Add(CreateOrGateBlock(x, y, 1));
+            }
+            else
+            {
+                if (!Sheet.IsMouseCaptured && tempLine == null)
+                {
+                    InitTempLine(e.GetPosition(Sheet));
+                }
+                else if (Sheet.IsMouseCaptured && oneClickMode)
+                {
+                    FinishTempLine();
+                }
             }
         }
 
