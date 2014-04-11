@@ -244,10 +244,26 @@ namespace Sheet
 
     #endregion
 
+    #region Mode
+
+    public enum Mode
+    {
+        None,
+        Selection,
+        Pan,
+        Line,
+        AndGate,
+        OrGate
+    } 
+
+    #endregion
+
     public partial class SheetControl : UserControl
     {
         #region Fields
 
+        private Mode mode = Mode.Selection;
+        private Mode tempMode = Mode.None;
         private int zoomIndex = 9; // zoomFactors index from 0 to 21, 9 = 100%
         private int defaultZoomIndex = 9;
         private int maxZoomIndex = 21;
@@ -911,6 +927,8 @@ namespace Sheet
 
         private void InitPan(Point p)
         {
+            tempMode = mode;
+            mode = Mode.Pan;
             panStartPoint = p;
             tempLine = null;
             selectionRect = null;
@@ -922,6 +940,12 @@ namespace Sheet
             PanX = PanX + p.X - panStartPoint.X;
             PanY = PanY + p.Y - panStartPoint.Y;
             panStartPoint = p;
+        }
+
+        private void FinishPan()
+        {
+            mode = tempMode;
+            Overlay.ReleaseMouseCapture();
         }
 
         private void ResetPanAndZoom()
@@ -1366,62 +1390,51 @@ namespace Sheet
         {
             ResetFind();
 
-            if (Keyboard.IsKeyDown(Key.A))
+            if (mode == Mode.AndGate)
             {
                 AddAndGate(e.GetPosition(Overlay));
             }
-            else if (Keyboard.IsKeyDown(Key.O))
+            else if (mode == Mode.OrGate)
             {
                 AddOrGate(e.GetPosition(Overlay));
             }
-            else
+            else if (mode == Mode.Selection)
             {
-                bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
-
-                if (!Overlay.IsMouseCaptured && ctrl && selectionRect == null)
-                {
-                    InitSelectionRect(e.GetPosition(Overlay));
-                }
-                else
-                {
-                    if (!Overlay.IsMouseCaptured && tempLine == null)
-                    {
-                        InitTempLine(e.GetPosition(Overlay));
-                    }
-                    else if (Overlay.IsMouseCaptured && tempLine != null && oneClickMode)
-                    {
-                        FinishTempLine();
-                    }
-                }
+                InitSelectionRect(e.GetPosition(Overlay));
+            }
+            else if (mode == Mode.Line && !Overlay.IsMouseCaptured)
+            {
+                InitTempLine(e.GetPosition(Overlay));
+            }
+            else if (mode == Mode.Line && Overlay.IsMouseCaptured)
+            {
+                FinishTempLine();
+            }
+            else if (mode == Mode.Pan && Overlay.IsMouseCaptured)
+            {
+                FinishPan();
             }
         }
 
         private void Overlay_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (Overlay.IsMouseCaptured && selectionRect != null)
+            if (mode == Mode.Selection && Overlay.IsMouseCaptured)
             {
                 FinishSelectionRect();
-            }
-            else
-            {
-                if (Overlay.IsMouseCaptured && !oneClickMode)
-                {
-                    FinishTempLine();
-                }
             }
         }
 
         private void Overlay_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            if (Overlay.IsMouseCaptured && tempLine != null && selectionRect == null)
-            {
-                MoveTempLine(e.GetPosition(Overlay));
-            }
-            else if (Overlay.IsMouseCaptured && tempLine == null && selectionRect != null)
+            if (mode == Mode.Selection && Overlay.IsMouseCaptured)
             {
                 MoveSelectionRect(e.GetPosition(Overlay));
             }
-            else if (Overlay.IsMouseCaptured && tempLine == null && selectionRect == null)
+            else if (mode == Mode.Line && Overlay.IsMouseCaptured)
+            {
+                MoveTempLine(e.GetPosition(Overlay));
+            }
+            else if (mode == Mode.Pan && Overlay.IsMouseCaptured)
             {
                 Pan(e.GetPosition(this));
             }
@@ -1431,15 +1444,15 @@ namespace Sheet
         {
             ResetFind();
 
-            if (Overlay.IsMouseCaptured && tempLine != null && selectionRect == null)
-            {
-                CancelTempLine();
-            }
-            else if (Overlay.IsMouseCaptured && tempLine == null && selectionRect != null)
+            if (mode == Mode.Selection && Overlay.IsMouseCaptured)
             {
                 CancelSelectionRect();
             }
-            else if (!Overlay.IsMouseCaptured && tempLine == null && selectionRect == null)
+            else if (mode == Mode.Line && Overlay.IsMouseCaptured)
+            {
+                CancelTempLine();
+            }
+            else if (!Overlay.IsMouseCaptured)
             {
                 InitPan(e.GetPosition(this));
             }
@@ -1447,9 +1460,9 @@ namespace Sheet
 
         private void Overlay_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (Overlay.IsMouseCaptured && tempLine == null && selectionRect == null)
+            if (mode == Mode.Pan && Overlay.IsMouseCaptured)
             {
-                Overlay.ReleaseMouseCapture();
+                FinishPan();
             }
         }
 
@@ -1472,70 +1485,107 @@ namespace Sheet
 
             switch(e.Key)
             {
+                // Z: Undo
                 case Key.Z:
                     if (ctrl)
                     {
                         Undo();
                     }
                     break;
+                // R: Redo
                 case Key.Y:
                     if (ctrl)
                     {
                         Redo();
                     }
                     break;
+                // Ctrl+X: Cut
                 case Key.X:
                     if (ctrl)
                     {
                         Cut();
                     }
                     break;
+                // Ctrl+C: Copy
                 case Key.C:
                     if (ctrl)
                     {
                         Copy();
                     }
                     break;
+                // Ctrl+V: Paste
                 case Key.V:
                     if (ctrl)
                     {
                         Paste();
                     }
                     break;
+                // Del: Delete
                 case Key.Delete:
                     Delete();
                     break;
+                // Ctrl+A: Select All
+                // A: Mode AndGate
                 case Key.A:
                     if (ctrl)
                     {
                         SelectAll();
                     }
+                    else
+                    {
+                        mode = Mode.AndGate;
+                    }
                     break;
+                // R: Reset
                 case Key.R:
                     Push();
                     Reset();
                     break;
+                // Ctrls+S: Save
+                // S: Mode Selection
                 case Key.S:
                     if (ctrl)
                     {
                         Save();
                     }
+                    else
+                    {
+                        mode = Mode.Selection;
+                    }
                     break;
+                // Ctrl+O: Open
+                // O: Mode OrGate
                 case Key.O:
                     if (ctrl)
                     {
                         Open();
                     }
+                    else
+                    {
+                        mode = Mode.OrGate;
+                    }
                     break;
+                // L: Mode Line
+                case Key.L:
+                    mode = Mode.Line;
+                    break;
+                // N: Mode None
+                case Key.N:
+                    mode = Mode.None;
+                    break;
+                // Up: Move Up
                 case Key.Up:
                     Move(0.0, -snapSize);
                     break;
+                // Down: Move Down
                 case Key.Down:
                     Move(0.0, snapSize);
                     break;
+                // Left: Move Left
                 case Key.Left:
                     Move(-snapSize, 0.0);
                     break;
+                // Right: Move Right
                 case Key.Right:
                     Move(snapSize, 0.0);
                     break;
