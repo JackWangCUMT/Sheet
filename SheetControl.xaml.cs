@@ -273,7 +273,6 @@ namespace Sheet
         private double gridThickness = 1.0;
         private double selectionThickness = 1.0;
         private double lineThickness = 2.0;
-        private bool oneClickMode = true;
         private Line tempLine = null;
         private Rectangle selectionRect = null;
         private Point selectionStartPoint;
@@ -638,15 +637,21 @@ namespace Sheet
 
         #region Load
 
-        private void Load(SheetItem sheet)
+        private void Load(SheetItem sheet, bool select)
         {
-            Load(sheet.Lines);
-            Load(sheet.Texts);
-            Load(sheet.Blocks);
+            ResetFind();
+            Load(sheet.Lines, select);
+            Load(sheet.Texts, select);
+            Load(sheet.Blocks, select);
         }
 
-        private void Load(IEnumerable<LineItem> lineItems)
+        private void Load(IEnumerable<LineItem> lineItems, bool select)
         {
+            if (select)
+            {
+                selectedLogicLines = new List<Line>();
+            }
+
             double thickness = lineThickness / Zoom;
 
             foreach (var lineItem in lineItems)
@@ -654,11 +659,22 @@ namespace Sheet
                 var line = CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
                 logicLines.Add(line);
                 Add(line);
+
+                if (select)
+                {
+                    line.Stroke = Brushes.Red;
+                    selectedLogicLines.Add(line);
+                }
             }
         }
 
-        private void Load(IEnumerable<TextItem> textItems)
+        private void Load(IEnumerable<TextItem> textItems, bool select)
         {
+            if (select)
+            {
+                selectedTexts = new List<Grid>();
+            }
+
             double thickness = lineThickness / Zoom;
 
             foreach (var textItem in textItems)
@@ -671,11 +687,22 @@ namespace Sheet
                                       textItem.Size);
                 texts.Add(text);
                 Add(text);
+
+                if (select)
+                {
+                    GetTextBlock(text).Foreground = Brushes.Red;
+                    selectedTexts.Add(text);
+                }
             }
         }
 
-        private void Load(IEnumerable<BlockItem> blockItems)
+        private void Load(IEnumerable<BlockItem> blockItems, bool select)
         {
+            if (select)
+            {
+                selectedBlocks = new List<Block>();
+            }
+
             double thickness = lineThickness / Zoom;
 
             foreach (var blockItem in blockItems)
@@ -692,6 +719,11 @@ namespace Sheet
                                           textItem.Size);
                     block.Texts.Add(text);
                     Add(text);
+
+                    if (select)
+                    {
+                        GetTextBlock(text).Foreground = Brushes.Red;
+                    }
                 }
 
                 foreach (var lineItem in blockItem.Lines)
@@ -699,9 +731,19 @@ namespace Sheet
                     var line = CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
                     block.Lines.Add(line);
                     Add(line);
+
+                    if (select)
+                    {
+                        line.Stroke = Brushes.Red;
+                    }
                 }
 
                 blocks.Add(block);
+
+                if (select)
+                {
+                    selectedBlocks.Add(block);
+                }
             }
         }
 
@@ -1256,7 +1298,7 @@ namespace Sheet
 
                 var text = Undos.Pop();
                 Reset();
-                Load(ItemSerializer.Deserialize(text));
+                Load(ItemSerializer.Deserialize(text), false);
             }
         }
 
@@ -1269,7 +1311,7 @@ namespace Sheet
 
                 var text = Redos.Pop();
                 Reset();
-                Load(ItemSerializer.Deserialize(text));
+                Load(ItemSerializer.Deserialize(text), false);
             }
         }
 
@@ -1304,7 +1346,7 @@ namespace Sheet
         private void Paste()
         {
             var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
-            Load(ItemSerializer.Deserialize(text));
+            Load(ItemSerializer.Deserialize(text), true);
         }
 
         #endregion
@@ -1322,7 +1364,7 @@ namespace Sheet
                     {
                         Push();
                         Reset();
-                        Load(ItemSerializer.Deserialize(text));
+                        Load(ItemSerializer.Deserialize(text), false);
                     }
                 }
             }
