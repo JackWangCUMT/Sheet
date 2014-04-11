@@ -28,6 +28,6 @@ WPF logic drawing application.
 	Mouse:
 
 	Left Click		        Create / Start Selection / Deselect
-	Right Click		        Pan / Cancel / Deselecy
+	Right Click		        Pan / Cancel / Deselect
 	Mouse Wheel		        Zoom
-	Double Middel Click	    Reset Pan and Zoom
+	Double Middle Click	    Reset Pan and Zoom
