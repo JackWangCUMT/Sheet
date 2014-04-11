@@ -1527,14 +1527,14 @@ namespace Sheet
 
             switch(e.Key)
             {
-                // Z: Undo
+                // Ctrl+Z: Undo
                 case Key.Z:
                     if (ctrl)
                     {
                         Undo();
                     }
                     break;
-                // R: Redo
+                // Ctrl+Y: Redo
                 case Key.Y:
                     if (ctrl)
                     {
