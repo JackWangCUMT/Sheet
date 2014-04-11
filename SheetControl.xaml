@@ -27,12 +27,15 @@
                 Width="720" Height="540">
         </Canvas>
         <Canvas x:Name="Sheet" Background="Transparent" 
+                Width="720" Height="540">
+        </Canvas>
+        <Canvas x:Name="Overlay" Background="Transparent" 
                 Width="720" Height="540"
-                PreviewMouseLeftButtonDown="Sheet_PreviewMouseLeftButtonDown"
-                PreviewMouseLeftButtonUp="Sheet_PreviewMouseLeftButtonUp"
-                PreviewMouseMove="Sheet_PreviewMouseMove"
-                PreviewMouseRightButtonDown="Sheet_PreviewMouseRightButtonDown" 
-                PreviewMouseRightButtonUp="Sheet_PreviewMouseRightButtonUp">
+                PreviewMouseLeftButtonDown="Overlay_PreviewMouseLeftButtonDown"
+                PreviewMouseLeftButtonUp="Overlay_PreviewMouseLeftButtonUp"
+                PreviewMouseMove="Overlay_PreviewMouseMove"
+                PreviewMouseRightButtonDown="Overlay_PreviewMouseRightButtonDown" 
+                PreviewMouseRightButtonUp="Overlay_PreviewMouseRightButtonUp">
         </Canvas>
     </Canvas>
 </UserControl>
