@@ -47,6 +47,7 @@ namespace Sheet
         public string Name { get; set; }
         public List<LineItem> Lines { get; set; }
         public List<TextItem> Texts { get; set; }
+        public List<BlockItem> Blocks { get; set; }
     } 
 
     public class SheetItem : Item
@@ -118,6 +119,7 @@ namespace Sheet
 
             Serialize(sb, block.Lines);
             Serialize(sb, block.Texts);
+            Serialize(sb, block.Blocks);
 
             sb.Append("END");
             sb.Append(lineSeparator);
@@ -216,7 +218,7 @@ namespace Sheet
                 }
                 else if (m.Length == 3 && string.Compare(m[0], "BLOCK", true) == 0 && block == null)
                 {
-                    block = new BlockItem() { Lines = new List<LineItem>(), Texts = new List<TextItem>() };
+                    block = new BlockItem() { Lines = new List<LineItem>(), Texts = new List<TextItem>(), Blocks = new List<BlockItem>() };
                     block.Id = int.Parse(m[1]);
                     block.Name = m[2];
                 }
@@ -513,6 +515,7 @@ namespace Sheet
                 Name = block.Name,
                 Lines = new List<LineItem>(),
                 Texts = new List<TextItem>(),
+                Blocks = new List<BlockItem>()
             };
 
             foreach (var line in block.Lines)
