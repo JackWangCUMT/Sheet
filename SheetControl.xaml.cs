@@ -284,10 +284,9 @@ namespace Sheet
         private Line tempLine = null;
         private Point selectionStartPoint;
         private Rectangle selectionRect = null;
-        private Block selected = null;
-        private Block logic = null;
-        private List<Block> blocks = new List<Block>();
         private List<Line> gridLines = new List<Line>();
+        private Block logic = null;
+        private Block selected = null;
 
         #endregion
 
@@ -365,9 +364,9 @@ namespace Sheet
                 CreateGrid();
 
                 Push();
-                blocks.Add(CreateOrGateBlock(300.0, 90.0, 1));
-                blocks.Add(CreateOrGateBlock(300.0, 180.0, 1));
-                blocks.Add(CreateAndGateBlock(360.0, 180.0));
+                logic.Blocks.Add(CreateOrGateBlock(300.0, 90.0, 1));
+                logic.Blocks.Add(CreateOrGateBlock(300.0, 180.0, 1));
+                logic.Blocks.Add(CreateAndGateBlock(360.0, 180.0));
 
                 Focus();
             };
@@ -460,7 +459,7 @@ namespace Sheet
             Push();
             double x = Snap(p.X);
             double y = Snap(p.Y);
-            blocks.Add(CreateOrGateBlock(x, y, 1));
+            logic.Blocks.Add(CreateOrGateBlock(x, y, 1));
         }
 
         private void AddAndGate(Point p)
@@ -468,7 +467,7 @@ namespace Sheet
             Push();
             double x = Snap(p.X);
             double y = Snap(p.Y);
-            blocks.Add(CreateAndGateBlock(x, y));
+            logic.Blocks.Add(CreateAndGateBlock(x, y));
         }
 
         #endregion
@@ -531,7 +530,7 @@ namespace Sheet
 
         private SheetItem CreateSheet()
         {
-            return CreateSheet(logic.Lines, logic.Texts, blocks);
+            return CreateSheet(logic.Lines, logic.Texts, logic.Blocks);
         }
 
         private SheetItem CreateSheet(IEnumerable<Line> lines, 
@@ -749,7 +748,7 @@ namespace Sheet
                     }
                 }
 
-                blocks.Add(block);
+                logic.Blocks.Add(block);
 
                 if (select)
                 {
@@ -766,11 +765,11 @@ namespace Sheet
         {
             RemoveLines(logic.Lines);
             RemoveTexts(logic.Texts);
-            RemoveBlocks(blocks);
+            RemoveBlocks(logic.Blocks);
 
             logic.Lines.Clear();
             logic.Texts.Clear();
-            blocks.Clear();
+            logic.Blocks.Clear();
 
             selected.Lines = null;
             selected.Texts = null;
@@ -841,7 +840,7 @@ namespace Sheet
                         RemoveLines(block.Lines);
                         RemoveTexts(block.Texts);
 
-                        blocks.Remove(block);
+                        logic.Blocks.Remove(block);
                     }
 
                     selected.Blocks = null;
@@ -884,7 +883,7 @@ namespace Sheet
                 MoveLines(x, y, logic.Lines);
                 MoveTexts(x, y, logic.Texts);
 
-                foreach (var block in blocks)
+                foreach (var block in logic.Blocks)
                 {
                     MoveLines(x, y, block.Lines);
                     MoveTexts(x, y, block.Texts);
@@ -932,7 +931,7 @@ namespace Sheet
                 line.StrokeThickness = lineThicknessZoomed;
             }
 
-            foreach (var block in blocks)
+            foreach (var block in logic.Blocks)
             {
                 foreach (var line in block.Lines)
                 {
@@ -1077,7 +1076,7 @@ namespace Sheet
                 selected.Texts.Add(text);
             }
 
-            foreach (var block in blocks)
+            foreach (var block in logic.Blocks)
             {
                 foreach (var line in block.Lines)
                 {
@@ -1188,7 +1187,7 @@ namespace Sheet
 
         private void FindBlocks(Rect rect)
         {
-            foreach (var block in blocks)
+            foreach (var block in logic.Blocks)
             {
                 bool isSelected = false;
 
