@@ -237,9 +237,16 @@ namespace Sheet
 
     public class Block
     {
-        public string Name = "";
-        public List<Line> Lines = new List<Line>();
-        public List<Grid> Texts = new List<Grid>();
+        public string Name { get; set; }
+        public List<Line> Lines { get; set; }
+        public List<Grid> Texts { get; set; }
+        public List<Block> Blocks { get; set; }
+        public void Init()
+        {
+            Lines = new List<Line>();
+            Texts = new List<Grid>();
+            Blocks = new List<Block>();
+        }
     }
 
     #endregion
@@ -264,7 +271,7 @@ namespace Sheet
 
         private Mode mode = Mode.Selection;
         private Mode tempMode = Mode.None;
-        private int zoomIndex = 9; // zoomFactors index from 0 to 21, 9 = 100%
+        private int zoomIndex = 9;
         private int defaultZoomIndex = 9;
         private int maxZoomIndex = 21;
         private double[] zoomFactors = { 0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64 };
@@ -273,15 +280,12 @@ namespace Sheet
         private double gridThickness = 1.0;
         private double selectionThickness = 1.0;
         private double lineThickness = 2.0;
-        private Line tempLine = null;
-        private Rectangle selectionRect = null;
-        private Point selectionStartPoint;
-        private List<Line> selectedLogicLines = null;
-        private List<Grid> selectedTexts = null;
-        private List<Block> selectedBlocks = null;
         private Point panStartPoint;
-        private List<Line> logicLines = new List<Line>();
-        private List<Grid> texts = new List<Grid>();
+        private Line tempLine = null;
+        private Point selectionStartPoint;
+        private Rectangle selectionRect = null;
+        private Block selected = null;
+        private Block logic = null;
         private List<Block> blocks = new List<Block>();
         private List<Line> gridLines = new List<Line>();
 
@@ -351,6 +355,11 @@ namespace Sheet
         {
             InitializeComponent();
 
+            logic = new Block() { Name = "LOGIC" };
+            logic.Init();
+
+            selected = new Block { Name = "SELECTED" };
+
             Loaded += (s, e) =>
             {
                 CreateGrid();
@@ -411,6 +420,7 @@ namespace Sheet
         private Block CreateGenericGateBlock(string name, double x, double y, string text)
         {
             var block = new Block() { Name = name };
+            block.Init();
 
             AddTextToBlock(block, text, x, y, 30.0, 30.0, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0);
             AddLineToBlock(block, x, y, x + 30.0, y);
@@ -521,7 +531,7 @@ namespace Sheet
 
         private SheetItem CreateSheet()
         {
-            return CreateSheet(logicLines, texts, blocks);
+            return CreateSheet(logic.Lines, logic.Texts, blocks);
         }
 
         private SheetItem CreateSheet(IEnumerable<Line> lines, 
@@ -649,7 +659,7 @@ namespace Sheet
         {
             if (select)
             {
-                selectedLogicLines = new List<Line>();
+                selected.Lines = new List<Line>();
             }
 
             double thickness = lineThickness / Zoom;
@@ -657,13 +667,13 @@ namespace Sheet
             foreach (var lineItem in lineItems)
             {
                 var line = CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
-                logicLines.Add(line);
+                logic.Lines.Add(line);
                 Add(line);
 
                 if (select)
                 {
                     line.Stroke = Brushes.Red;
-                    selectedLogicLines.Add(line);
+                    selected.Lines.Add(line);
                 }
             }
         }
@@ -672,7 +682,7 @@ namespace Sheet
         {
             if (select)
             {
-                selectedTexts = new List<Grid>();
+                selected.Texts = new List<Grid>();
             }
 
             double thickness = lineThickness / Zoom;
@@ -685,13 +695,13 @@ namespace Sheet
                                       (HorizontalAlignment)textItem.HAlign,
                                       (VerticalAlignment)textItem.VAlign,
                                       textItem.Size);
-                texts.Add(text);
+                logic.Texts.Add(text);
                 Add(text);
 
                 if (select)
                 {
                     GetTextBlock(text).Foreground = Brushes.Red;
-                    selectedTexts.Add(text);
+                    selected.Texts.Add(text);
                 }
             }
         }
@@ -700,7 +710,7 @@ namespace Sheet
         {
             if (select)
             {
-                selectedBlocks = new List<Block>();
+                selected.Blocks = new List<Block>();
             }
 
             double thickness = lineThickness / Zoom;
@@ -708,6 +718,7 @@ namespace Sheet
             foreach (var blockItem in blockItems)
             {
                 var block = new Block() { Name = blockItem.Name };
+                block.Init();
 
                 foreach (var textItem in blockItem.Texts)
                 {
@@ -742,7 +753,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    selectedBlocks.Add(block);
+                    selected.Blocks.Add(block);
                 }
             }
         }
@@ -753,17 +764,17 @@ namespace Sheet
 
         private void Reset()
         {
-            RemoveLines(logicLines);
-            RemoveTexts(texts);
+            RemoveLines(logic.Lines);
+            RemoveTexts(logic.Texts);
             RemoveBlocks(blocks);
 
-            logicLines.Clear();
-            texts.Clear();
+            logic.Lines.Clear();
+            logic.Texts.Clear();
             blocks.Clear();
 
-            selectedLogicLines = null;
-            selectedTexts = null;
-            selectedBlocks = null;
+            selected.Lines = null;
+            selected.Texts = null;
+            selected.Blocks = null;
         }
 
         private void RemoveLines(IEnumerable<Line> lines)
@@ -793,39 +804,39 @@ namespace Sheet
 
         private void Delete()
         {
-            bool delete = (selectedLogicLines != null || selectedTexts != null || selectedBlocks != null);
+            bool delete = (selected.Lines != null || selected.Texts != null || selected.Blocks != null);
 
             if (delete)
             {
                 Push();
 
-                if (selectedLogicLines != null)
+                if (selected.Lines != null)
                 {
-                    RemoveLines(selectedLogicLines);
+                    RemoveLines(selected.Lines);
 
-                    foreach (var line in selectedLogicLines)
+                    foreach (var line in selected.Lines)
                     {
-                        logicLines.Remove(line);
+                        logic.Lines.Remove(line);
                     }
 
-                    selectedLogicLines = null;
+                    selected.Lines = null;
                 }
 
-                if (selectedTexts != null)
+                if (selected.Texts != null)
                 {
-                    RemoveTexts(selectedTexts);
+                    RemoveTexts(selected.Texts);
 
-                    foreach (var text in selectedTexts)
+                    foreach (var text in selected.Texts)
                     {
-                        texts.Remove(text);
+                        logic.Texts.Remove(text);
                     }
 
-                    selectedTexts = null;
+                    selected.Texts = null;
                 }
 
-                if (selectedBlocks != null)
+                if (selected.Blocks != null)
                 {
-                    foreach (var block in selectedBlocks)
+                    foreach (var block in selected.Blocks)
                     {
                         RemoveLines(block.Lines);
                         RemoveTexts(block.Texts);
@@ -833,7 +844,7 @@ namespace Sheet
                         blocks.Remove(block);
                     }
 
-                    selectedBlocks = null;
+                    selected.Blocks = null;
                 }
             }
         }
@@ -844,24 +855,24 @@ namespace Sheet
 
         private void Move(double x, double y)
         {
-            bool moveSelected = (selectedLogicLines != null || selectedTexts != null || selectedBlocks != null);
+            bool moveSelected = (selected.Lines != null || selected.Texts != null || selected.Blocks != null);
             Push();
 
             if (moveSelected)
             {
-                if (selectedLogicLines != null)
+                if (selected.Lines != null)
                 {
-                    MoveLines(x, y, selectedLogicLines);
+                    MoveLines(x, y, selected.Lines);
                 }
 
-                if (selectedTexts != null)
+                if (selected.Texts != null)
                 {
-                    MoveTexts(x, y, selectedTexts);
+                    MoveTexts(x, y, selected.Texts);
                 }
 
-                if (selectedBlocks != null)
+                if (selected.Blocks != null)
                 {
-                    foreach (var block in selectedBlocks)
+                    foreach (var block in selected.Blocks)
                     {
                         MoveLines(x, y, block.Lines);
                         MoveTexts(x, y, block.Texts);
@@ -870,8 +881,8 @@ namespace Sheet
             }
             else
             {
-                MoveLines(x, y, logicLines);
-                MoveTexts(x, y, texts);
+                MoveLines(x, y, logic.Lines);
+                MoveTexts(x, y, logic.Texts);
 
                 foreach (var block in blocks)
                 {
@@ -916,7 +927,7 @@ namespace Sheet
                 line.StrokeThickness = gridThicknessZoomed;
             }
 
-            foreach (var line in logicLines)
+            foreach (var line in logic.Lines)
             {
                 line.StrokeThickness = lineThicknessZoomed;
             }
@@ -1050,20 +1061,20 @@ namespace Sheet
 
         private void SelectAll()
         {
-            selectedLogicLines = new List<Line>();
-            selectedTexts = new List<Grid>();
-            selectedBlocks = new List<Block>();
+            selected.Lines = new List<Line>();
+            selected.Texts = new List<Grid>();
+            selected.Blocks = new List<Block>();
 
-            foreach (var line in logicLines)
+            foreach (var line in logic.Lines)
             {
                 line.Stroke = Brushes.Red;
-                selectedLogicLines.Add(line);
+                selected.Lines.Add(line);
             }
 
-            foreach (var text in texts)
+            foreach (var text in logic.Texts)
             {
                 GetTextBlock(text).Foreground = Brushes.Red;
-                selectedTexts.Add(text);
+                selected.Texts.Add(text);
             }
 
             foreach (var block in blocks)
@@ -1078,35 +1089,35 @@ namespace Sheet
                     GetTextBlock(text).Foreground = Brushes.Red;
                 }
 
-                selectedBlocks.Add(block);
+                selected.Blocks.Add(block);
             }
         }
 
         private void ResetFind()
         {
-            if (selectedLogicLines != null)
+            if (selected.Lines != null)
             {
-                foreach (var line in selectedLogicLines)
+                foreach (var line in selected.Lines)
                 {
                     line.Stroke = Brushes.Black;
                 }
 
-                selectedLogicLines = null;
+                selected.Lines = null;
             }
 
-            if (selectedTexts != null)
+            if (selected.Texts != null)
             {
-                foreach (var text in selectedTexts)
+                foreach (var text in selected.Texts)
                 {
                     GetTextBlock(text).Foreground = Brushes.Black;
                 }
 
-                selectedTexts = null;
+                selected.Texts = null;
             }
 
-            if (selectedBlocks != null)
+            if (selected.Blocks != null)
             {
-                foreach (var block in selectedBlocks)
+                foreach (var block in selected.Blocks)
                 {
                     foreach (var line in block.Lines)
                     {
@@ -1119,58 +1130,58 @@ namespace Sheet
                     }
                 }
 
-                selectedBlocks = null;
+                selected.Blocks = null;
             }  
         }
 
         private void Find(Rect rect)
         {
-            selectedLogicLines = new List<Line>();
-            selectedTexts = new List<Grid>();
-            selectedBlocks = new List<Block>();
+            selected.Lines = new List<Line>();
+            selected.Texts = new List<Grid>();
+            selected.Blocks = new List<Block>();
 
             FindLines(rect);
             FindTexts(rect);
             FindBlocks(rect);
 
-            if (selectedLogicLines.Count == 0)
+            if (selected.Lines.Count == 0)
             {
-                selectedLogicLines = null;
+                selected.Lines = null;
             }
 
-            if (selectedTexts.Count == 0)
+            if (selected.Texts.Count == 0)
             {
-                selectedTexts = null;
+                selected.Texts = null;
             }
 
-            if (selectedBlocks.Count == 0)
+            if (selected.Blocks.Count == 0)
             {
-                selectedBlocks = null;
+                selected.Blocks = null;
             }
         }
 
         private void FindLines(Rect rect)
         {
-            foreach (var line in logicLines)
+            foreach (var line in logic.Lines)
             {
                 var bounds = VisualTreeHelper.GetContentBounds(line);
                 if (rect.Contains(bounds))
                 {
                     line.Stroke = Brushes.Red;
-                    selectedLogicLines.Add(line);
+                    selected.Lines.Add(line);
                 }
             }
         }
 
         private void FindTexts(Rect rect)
         {
-            foreach (var text in texts)
+            foreach (var text in logic.Texts)
             {
                 var bounds = VisualTreeHelper.GetContentBounds(text);
                 if (rect.Contains(bounds))
                 {
                     GetTextBlock(text).Foreground = Brushes.Red;
-                    selectedTexts.Add(text);
+                    selected.Texts.Add(text);
                 }
             }
         }
@@ -1186,7 +1197,7 @@ namespace Sheet
                     var bounds = VisualTreeHelper.GetContentBounds(line);
                     if (rect.Contains(bounds))
                     {
-                        selectedBlocks.Add(block);
+                        selected.Blocks.Add(block);
                         isSelected = true;
                         break;
                     }
@@ -1199,7 +1210,7 @@ namespace Sheet
                         var bounds = VisualTreeHelper.GetContentBounds(text);
                         if (rect.Contains(bounds))
                         {
-                            selectedBlocks.Add(block);
+                            selected.Blocks.Add(block);
                             isSelected = true;
                             break;
                         }
@@ -1257,7 +1268,7 @@ namespace Sheet
             {
                 Overlay.ReleaseMouseCapture();
                 Overlay.Children.Remove(tempLine);
-                logicLines.Add(tempLine);
+                logic.Lines.Add(tempLine);
                 Add(tempLine);
                 tempLine = null;
             }
@@ -1324,8 +1335,8 @@ namespace Sheet
             Copy();
             Push();
 
-            bool selected = (selectedLogicLines != null || selectedTexts != null || selectedBlocks != null);
-            if (selected)
+            bool haveSelected = (selected.Lines != null || selected.Texts != null || selected.Blocks != null);
+            if (haveSelected)
             {
                 Delete();
             }
@@ -1337,9 +1348,9 @@ namespace Sheet
 
         private void Copy()
         {
-            bool selected = (selectedLogicLines != null || selectedTexts != null || selectedBlocks != null);
-            var text = ItemSerializer.Serialize(selected ? 
-                CreateSheet(selectedLogicLines, selectedTexts, selectedBlocks) : CreateSheet());
+            bool haveSelected = (selected.Lines != null || selected.Texts != null || selected.Blocks != null);
+            var text = ItemSerializer.Serialize(haveSelected ? 
+                CreateSheet(selected.Lines, selected.Texts, selected.Blocks) : CreateSheet());
             Clipboard.SetData(DataFormats.UnicodeText, text);
         }
 
