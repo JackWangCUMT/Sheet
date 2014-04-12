@@ -50,25 +50,24 @@ namespace Sheet
         public List<BlockItem> Blocks { get; set; }
     } 
 
-    public class SheetItem : Item
-    {
-        public List<LineItem> Lines { get; set; }
-        public List<TextItem> Texts { get; set; }
-        public List<BlockItem> Blocks { get; set; }
-    } 
-
     #endregion
 
     #region ItemSerializer
 
     public static class ItemSerializer
     {
+        #region Fields
+
         private static string lineSeparator = "\r\n";
         private static string modelSeparator = ";";
         private static char[] lineSeparators = { '\r', '\n' };
-        private static char[] modelSeparators = { ';' };
+        private static char[] modelSeparators = { ';' }; 
 
-        public static void Serialize(StringBuilder sb, LineItem line)
+        #endregion
+
+        #region Serialize
+
+        private static void Serialize(StringBuilder sb, LineItem line)
         {
             sb.Append("LINE");
             sb.Append(modelSeparator);
@@ -84,7 +83,7 @@ namespace Sheet
             sb.Append(lineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, TextItem text)
+        private static void Serialize(StringBuilder sb, TextItem text)
         {
             sb.Append("TEXT");
             sb.Append(modelSeparator);
@@ -108,7 +107,7 @@ namespace Sheet
             sb.Append(lineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, BlockItem block)
+        private static void Serialize(StringBuilder sb, BlockItem block)
         {
             sb.Append("BLOCK");
             sb.Append(modelSeparator);
@@ -125,7 +124,7 @@ namespace Sheet
             sb.Append(lineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, List<LineItem> lines)
+        private static void Serialize(StringBuilder sb, List<LineItem> lines)
         {
             foreach (var line in lines)
             {
@@ -133,7 +132,7 @@ namespace Sheet
             }
         }
 
-        public static void Serialize(StringBuilder sb, List<TextItem> texts)
+        private static void Serialize(StringBuilder sb, List<TextItem> texts)
         {
             foreach (var text in texts)
             {
@@ -141,7 +140,7 @@ namespace Sheet
             }
         }
 
-        public static void Serialize(StringBuilder sb, List<BlockItem> blocks)
+        private static void Serialize(StringBuilder sb, List<BlockItem> blocks)
         {
             foreach (var block in blocks)
             {
@@ -149,32 +148,34 @@ namespace Sheet
             }
         }
 
-        public static string Serialize(SheetItem sheet)
+        public static string Serialize(BlockItem block)
         {
             var sb = new StringBuilder();
 
-            Serialize(sb, sheet.Lines);
-            Serialize(sb, sheet.Texts);
-            Serialize(sb, sheet.Blocks);
+            Serialize(sb, block.Lines);
+            Serialize(sb, block.Texts);
+            Serialize(sb, block.Blocks);
 
             return sb.ToString();
         }
 
-        public static SheetItem Deserialize(string s)
-        {
-            var lines = s.Split(lineSeparators, StringSplitOptions.RemoveEmptyEntries);
+        #endregion
 
-            var sheet = new SheetItem()
+        #region Deserialize
+
+        private static BlockItem Deserialize(string[] lines, int length, ref int end, string name, int id)
+        {
+            var sheet = new BlockItem()
             {
+                Name = name,
                 Lines = new List<LineItem>(),
                 Texts = new List<TextItem>(),
                 Blocks = new List<BlockItem>()
             };
 
-            BlockItem block = null;
-
-            foreach (var line in lines)
+            for (; end < length; end++)
             {
+                string line = lines[end];
                 var m = line.Split(modelSeparators);
                 if (m.Length == 6 && string.Compare(m[0], "LINE", true) == 0)
                 {
@@ -184,15 +185,7 @@ namespace Sheet
                     lineItem.Y1 = double.Parse(m[3]);
                     lineItem.X2 = double.Parse(m[4]);
                     lineItem.Y2 = double.Parse(m[5]);
-
-                    if (block == null)
-                    {
-                        sheet.Lines.Add(lineItem);
-                    }
-                    else
-                    {
-                        block.Lines.Add(lineItem);
-                    }
+                    sheet.Lines.Add(lineItem);
                 }
                 else if (m.Length == 10 && string.Compare(m[0], "TEXT", true) == 0)
                 {
@@ -206,31 +199,33 @@ namespace Sheet
                     textItem.VAlign = int.Parse(m[7]);
                     textItem.Size = double.Parse(m[8]);
                     textItem.Text = m[9];
-
-                    if (block == null)
-                    {
-                        sheet.Texts.Add(textItem);
-                    }
-                    else
-                    {
-                        block.Texts.Add(textItem);
-                    }
+                    sheet.Texts.Add(textItem);
                 }
-                else if (m.Length == 3 && string.Compare(m[0], "BLOCK", true) == 0 && block == null)
+                else if (m.Length == 3 && string.Compare(m[0], "BLOCK", true) == 0)
                 {
-                    block = new BlockItem() { Lines = new List<LineItem>(), Texts = new List<TextItem>(), Blocks = new List<BlockItem>() };
-                    block.Id = int.Parse(m[1]);
-                    block.Name = m[2];
-                }
-                else if (m.Length == 1 && string.Compare(m[0], "END", true) == 0 && block != null)
-                {
+                    end++;
+                    var block = Deserialize(lines, length, ref end, m[2], int.Parse(m[1]));
                     sheet.Blocks.Add(block);
-                    block = null;
+                    continue;
+                }
+                else if (m.Length == 1 && string.Compare(m[0], "END", true) == 0)
+                {
+                    return sheet;
                 }
             }
 
             return sheet;
         }
+
+        public static BlockItem Deserialize(string model)
+        {
+            string[] lines = model.Split(lineSeparators, StringSplitOptions.RemoveEmptyEntries);
+            int length = lines.Length;
+            int end = 0;
+            return Deserialize(lines, length, ref end, "LOGIC", 0);
+        }
+
+        #endregion
     }
 
     #endregion
@@ -531,16 +526,16 @@ namespace Sheet
             return blockItem;
         }
 
-        private SheetItem CreateSheet()
+        private BlockItem CreateSheet()
         {
             return CreateSheet(logic.Lines, logic.Texts, logic.Blocks);
         }
 
-        private SheetItem CreateSheet(IEnumerable<Line> lines, 
+        private BlockItem CreateSheet(IEnumerable<Line> lines, 
                                       IEnumerable<Grid> texts,
                                       IEnumerable<Block> blocks)
         {
-            var sheet = new SheetItem()
+            var sheet = new BlockItem()
             {
                 Lines = new List<LineItem>(),
                 Texts = new List<TextItem>(),
@@ -649,7 +644,7 @@ namespace Sheet
 
         #region Load
 
-        private void Load(SheetItem sheet, bool select)
+        private void Load(BlockItem sheet, bool select)
         {
             ResetFind();
             Load(sheet.Lines, select);
