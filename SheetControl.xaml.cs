@@ -230,40 +230,40 @@ namespace Sheet
 
     #endregion
 
-    #region Block
-
-    public class Block
-    {
-        public string Name { get; set; }
-        public List<Line> Lines { get; set; }
-        public List<Grid> Texts { get; set; }
-        public List<Block> Blocks { get; set; }
-        public void Init()
-        {
-            Lines = new List<Line>();
-            Texts = new List<Grid>();
-            Blocks = new List<Block>();
-        }
-    }
-
-    #endregion
-
-    #region Mode
-
-    public enum Mode
-    {
-        None,
-        Selection,
-        Pan,
-        Line,
-        AndGate,
-        OrGate
-    } 
-
-    #endregion
-
     public partial class SheetControl : UserControl
     {
+        #region Block
+
+        public class Block
+        {
+            public string Name { get; set; }
+            public List<Line> Lines { get; set; }
+            public List<Grid> Texts { get; set; }
+            public List<Block> Blocks { get; set; }
+            public void Init()
+            {
+                Lines = new List<Line>();
+                Texts = new List<Grid>();
+                Blocks = new List<Block>();
+            }
+        }
+
+        #endregion
+
+        #region Mode
+
+        public enum Mode
+        {
+            None,
+            Selection,
+            Pan,
+            Line,
+            AndGate,
+            OrGate
+        }
+
+        #endregion
+
         #region Fields
 
         private Mode mode = Mode.Selection;
@@ -496,8 +496,8 @@ namespace Sheet
 
             var tb = GetTextBlock(text);
             textItem.Text = tb.Text;
-            textItem.HAlign = (int) tb.HorizontalAlignment;
-            textItem.VAlign = (int) tb.VerticalAlignment;
+            textItem.HAlign = (int)tb.HorizontalAlignment;
+            textItem.VAlign = (int)tb.VerticalAlignment;
             textItem.Size = tb.FontSize;
 
             return textItem;
@@ -505,7 +505,7 @@ namespace Sheet
 
         private BlockItem SerializeBlock(Block block)
         {
-            var blockItem = new BlockItem() 
+            var blockItem = new BlockItem()
             {
                 Name = block.Name,
                 Lines = new List<LineItem>(),
@@ -531,7 +531,7 @@ namespace Sheet
             return CreateSheet(logic.Lines, logic.Texts, logic.Blocks);
         }
 
-        private BlockItem CreateSheet(IEnumerable<Line> lines, 
+        private BlockItem CreateSheet(IEnumerable<Line> lines,
                                       IEnumerable<Grid> texts,
                                       IEnumerable<Block> blocks)
         {
@@ -578,8 +578,8 @@ namespace Sheet
             return text.Children[0] as TextBlock;
         }
 
-        private Grid CreateText(string text, 
-                                double x, double y, 
+        private Grid CreateText(string text,
+                                double x, double y,
                                 double width, double height,
                                 HorizontalAlignment halign, VerticalAlignment valign,
                                 double size)
@@ -1004,7 +1004,7 @@ namespace Sheet
             Zoom = zoomFactors[zoomIndex];
             PanX = 0.0;
             PanY = 0.0;
-        } 
+        }
 
         #endregion
 
@@ -1128,7 +1128,7 @@ namespace Sheet
                 }
 
                 selected.Blocks = null;
-            }  
+            }
         }
 
         private void Find(Rect rect)
@@ -1346,7 +1346,7 @@ namespace Sheet
         private void Copy()
         {
             bool haveSelected = (selected.Lines != null || selected.Texts != null || selected.Blocks != null);
-            var text = ItemSerializer.Serialize(haveSelected ? 
+            var text = ItemSerializer.Serialize(haveSelected ?
                 CreateSheet(selected.Lines, selected.Texts, selected.Blocks) : CreateSheet());
             Clipboard.SetData(DataFormats.UnicodeText, text);
         }
@@ -1533,7 +1533,7 @@ namespace Sheet
         {
             bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
 
-            switch(e.Key)
+            switch (e.Key)
             {
                 // Ctrl+Z: Undo
                 case Key.Z:
