@@ -1058,11 +1058,16 @@ namespace Sheet
 
         #region Selection
 
-        private void SelectAll()
+        private void InitSelected()
         {
             selected.Lines = new List<Line>();
             selected.Texts = new List<Grid>();
             selected.Blocks = new List<Block>();
+        }
+
+        private void SelectAll()
+        {
+            InitSelected();
 
             foreach (var line in logic.Lines)
             {
@@ -1139,9 +1144,7 @@ namespace Sheet
 
         private void Find(Rect rect)
         {
-            selected.Lines = new List<Line>();
-            selected.Texts = new List<Grid>();
-            selected.Blocks = new List<Block>();
+            InitSelected();
 
             FindLines(rect);
             FindTexts(rect);
@@ -1245,9 +1248,7 @@ namespace Sheet
 
         private void HitTest(Point p)
         {
-            selected.Lines = new List<Line>();
-            selected.Texts = new List<Grid>();
-            selected.Blocks = new List<Block>();
+            InitSelected();
 
             HitTestLines(p);
 
