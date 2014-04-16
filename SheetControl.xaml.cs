@@ -63,7 +63,7 @@ namespace Sheet
         private static char[] lineSeparators = { '\r', '\n' };
         private static char[] modelSeparators = { ';' };
         private static char[] whiteSpace = { ' ', '\t' };
-        private static string indenation = "    ";
+        private static string indentWhiteSpace = "    ";
 
         #endregion
 
@@ -121,9 +121,9 @@ namespace Sheet
             sb.Append(block.Name);
             sb.Append(lineSeparator);
 
-            Serialize(sb, block.Lines, indent + indenation);
-            Serialize(sb, block.Texts, indent + indenation);
-            Serialize(sb, block.Blocks, indent + indenation);
+            Serialize(sb, block.Lines, indent + indentWhiteSpace);
+            Serialize(sb, block.Texts, indent + indentWhiteSpace);
+            Serialize(sb, block.Blocks, indent + indentWhiteSpace);
 
             sb.Append(indent);
             sb.Append("END");
