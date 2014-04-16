@@ -232,6 +232,45 @@ namespace Sheet
         }
 
         #endregion
+
+        #region I/O
+
+        public static string OpenText(string fileName)
+        {
+            try
+            {
+                using (var stream = System.IO.File.OpenText(fileName))
+                {
+                    var text = stream.ReadToEnd();
+                    return text;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+            }
+            return null;
+        }
+
+        public static void SaveText(string fileName, string text)
+        {
+            try
+            {
+                if (text != null)
+                {
+                    using (var stream = System.IO.File.CreateText(fileName))
+                    {
+                        stream.Write(text);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+            }
+        }
+
+        #endregion
     }
 
     #endregion
@@ -247,41 +286,41 @@ namespace Sheet
 
     #endregion
 
+    #region Block
+
+    public class Block
+    {
+        public string Name { get; set; }
+        public List<Line> Lines { get; set; }
+        public List<Grid> Texts { get; set; }
+        public List<Block> Blocks { get; set; }
+        public void Init()
+        {
+            Lines = new List<Line>();
+            Texts = new List<Grid>();
+            Blocks = new List<Block>();
+        }
+    }
+
+    #endregion
+
+    #region Mode
+
+    public enum Mode
+    {
+        None,
+        Selection,
+        Pan,
+        Move,
+        Line,
+        AndGate,
+        OrGate
+    }
+
+    #endregion
+
     public partial class SheetControl : UserControl, ISheet
     {
-        #region Block
-
-        public class Block
-        {
-            public string Name { get; set; }
-            public List<Line> Lines { get; set; }
-            public List<Grid> Texts { get; set; }
-            public List<Block> Blocks { get; set; }
-            public void Init()
-            {
-                Lines = new List<Line>();
-                Texts = new List<Grid>();
-                Blocks = new List<Block>();
-            }
-        }
-
-        #endregion
-
-        #region Mode
-
-        public enum Mode
-        {
-            None,
-            Selection,
-            Pan,
-            Move,
-            Line,
-            AndGate,
-            OrGate
-        }
-
-        #endregion
-
         #region Fields
 
         private Stack<string> undos = new Stack<string>();
@@ -394,7 +433,7 @@ namespace Sheet
             logic = new Block() { Name = "LOGIC" };
             logic.Init();
 
-            selected = new Block { Name = "SELECTED" };
+            selected = new Block() { Name = "SELECTED" };
 
             Loaded += (s, e) =>
             {
@@ -438,7 +477,7 @@ namespace Sheet
             Push();
             double x = Snap(p.X);
             double y = Snap(p.Y);
-            logic.Blocks.Add(CreateAndGateBlock(x, y));
+            logic.Blocks.Add(CreateAndGateBlock(this, x, y, lineThickness / Zoom));
         }
 
         private void AddOrGate(Point p)
@@ -446,31 +485,29 @@ namespace Sheet
             Push();
             double x = Snap(p.X);
             double y = Snap(p.Y);
-            logic.Blocks.Add(CreateOrGateBlock(x, y, 1));
+            logic.Blocks.Add(CreateOrGateBlock(this, x, y, 1, lineThickness / Zoom));
         }
 
-        private Block CreateAndGateBlock(double x, double y)
+        private static Block CreateAndGateBlock(ISheet sheet, double x, double y, double thickness)
         {
-            return CreateGenericGateBlock("AND", x, y, "&");
+            return CreateGenericGateBlock(sheet, "AND", x, y, "&", thickness);
         }
 
-        private Block CreateOrGateBlock(double x, double y, double count)
+        private static Block CreateOrGateBlock(ISheet sheet, double x, double y, double count, double thickness)
         {
-            return CreateGenericGateBlock("OR", x, y, "≥" + count.ToString());
+            return CreateGenericGateBlock(sheet, "OR", x, y, "≥" + count.ToString(), thickness);
         }
 
-        private Block CreateGenericGateBlock(string name, double x, double y, string text)
+        private static Block CreateGenericGateBlock(ISheet sheet, string name, double x, double y, string text, double thickness)
         {
             var block = new Block() { Name = name };
             block.Init();
 
-            double thickness = lineThickness / Zoom;
-
-            AddTextToBlock(this, block, text, x, y, 30.0, 30.0, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0);
-            AddLineToBlock(this, block, thickness, x, y, x + 30.0, y);
-            AddLineToBlock(this, block, thickness, x, y + 30.0, x + 30.0, y + 30.0);
-            AddLineToBlock(this, block, thickness, x, y, x, y + 30.0);
-            AddLineToBlock(this, block, thickness, x + 30.0, y, x + 30.0, y + 30.0);
+            AddTextToBlock(sheet, block, text, x, y, 30.0, 30.0, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0);
+            AddLineToBlock(sheet, block, thickness, x, y, x + 30.0, y);
+            AddLineToBlock(sheet, block, thickness, x, y + 30.0, x + 30.0, y + 30.0);
+            AddLineToBlock(sheet, block, thickness, x, y, x, y + 30.0);
+            AddLineToBlock(sheet, block, thickness, x + 30.0, y, x + 30.0, y + 30.0);
 
             return block;
         }
@@ -553,11 +590,7 @@ namespace Sheet
             return blockItem;
         }
 
-        private static BlockItem CreateSheet(int id,
-            string name,
-            IEnumerable<Line> lines,
-            IEnumerable<Grid> texts,
-            IEnumerable<Block> blocks)
+        private static BlockItem CreateSheet(int id, string name, IEnumerable<Line> lines, IEnumerable<Grid> texts, IEnumerable<Block> blocks)
         {
             var sheet = new BlockItem()
             {
@@ -678,7 +711,7 @@ namespace Sheet
 
         private void Load(BlockItem sheet, bool select)
         {
-            DeselectAll();
+            DeselectAll(selected);
             double thickness = lineThickness / Zoom;
             Load(this, sheet.Texts, logic, selected, select, thickness);
             Load(this, sheet.Lines, logic, selected, select, thickness);
@@ -799,7 +832,7 @@ namespace Sheet
 
         #endregion
 
-        #region Reset
+        #region Remove
 
         private static void RemoveLines(ISheet sheet, IEnumerable<Line> lines)
         {
@@ -1159,7 +1192,7 @@ namespace Sheet
             }
         }
 
-        private void SelectAll()
+        private static void SelectAll(Block selected, Block logic)
         {
             selected.Init();
 
@@ -1196,7 +1229,7 @@ namespace Sheet
             }
         }
 
-        private void DeselectAll()
+        private static void DeselectAll(Block selected)
         {
             if (selected.Lines != null)
             {
@@ -1481,8 +1514,7 @@ namespace Sheet
 
         private void Push()
         {
-            var text = ItemSerializer.Serialize(CreateSheet());
-            undos.Push(text);
+            undos.Push(ItemSerializer.Serialize(CreateSheet()));
         }
 
         private void Pop()
@@ -1494,12 +1526,9 @@ namespace Sheet
         {
             if (undos.Count > 0)
             {
-                var redo = ItemSerializer.Serialize(CreateSheet());
-                redos.Push(redo);
-
-                var text = undos.Pop();
+                redos.Push(ItemSerializer.Serialize(CreateSheet()));
                 Reset();
-                Load(ItemSerializer.Deserialize(text), false);
+                Load(ItemSerializer.Deserialize(undos.Pop()), false);
             }
         }
 
@@ -1507,12 +1536,9 @@ namespace Sheet
         {
             if (redos.Count > 0)
             {
-                var undo = ItemSerializer.Serialize(CreateSheet());
-                undos.Push(undo);
-
-                var text = redos.Pop();
+                undos.Push(ItemSerializer.Serialize(CreateSheet()));
                 Reset();
-                Load(ItemSerializer.Deserialize(text), false);
+                Load(ItemSerializer.Deserialize(redos.Pop()), false);
             }
         }
 
@@ -1553,57 +1579,13 @@ namespace Sheet
             Load(ItemSerializer.Deserialize(text), true);
         }
 
-        private string CreateBlock(int id, string name, Block parent)
+        private static string CreateBlock(int id, string name, Block parent)
         {
             var block = CreateSheet(id, name, parent.Lines, parent.Texts, parent.Blocks);
             var sb = new StringBuilder();
 
             ItemSerializer.Serialize(sb, block, "");
             return sb.ToString();
-        }
-
-        #endregion
-
-        #region Open & Save
-
-        private void Open(string fileName)
-        {
-            try
-            {
-                using (var stream = System.IO.File.OpenText(fileName))
-                {
-                    var text = stream.ReadToEnd();
-                    if (text != null)
-                    {
-                        Push();
-                        Reset();
-                        Load(ItemSerializer.Deserialize(text), false);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.Print(ex.Message);
-            }
-        }
-
-        private void Save(string fileName)
-        {
-            try
-            {
-                var text = ItemSerializer.Serialize(CreateSheet());
-                if (text != null)
-                {
-                    using (var stream = System.IO.File.CreateText(fileName))
-                    {
-                        stream.Write(text);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.Print(ex.Message);
-            }
         }
 
         #endregion
@@ -1619,7 +1601,13 @@ namespace Sheet
 
             if (dlg.ShowDialog() == true)
             {
-                Open(dlg.FileName);
+                var text = ItemSerializer.OpenText(dlg.FileName);
+                if (text != null)
+                {
+                    Push();
+                    Reset();
+                    Load(ItemSerializer.Deserialize(text), false);
+                }
             }
         }
 
@@ -1633,7 +1621,8 @@ namespace Sheet
 
             if (dlg.ShowDialog() == true)
             {
-                Save(dlg.FileName);
+                var text = ItemSerializer.Serialize(CreateSheet());
+                ItemSerializer.SaveText(dlg.FileName, text);
             }
         }
 
@@ -1655,7 +1644,7 @@ namespace Sheet
                 }
             }
 
-            DeselectAll();
+            DeselectAll(selected);
 
             if (mode == Mode.AndGate)
             {
@@ -1725,7 +1714,7 @@ namespace Sheet
 
         private void Overlay_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            DeselectAll();
+            DeselectAll(selected);
 
             if (mode == Mode.Selection && Overlay.IsMouseCaptured)
             {
@@ -1812,7 +1801,7 @@ namespace Sheet
                 case Key.A:
                     if (ctrl)
                     {
-                        SelectAll();
+                        SelectAll(selected, logic);
                     }
                     else
                     {
