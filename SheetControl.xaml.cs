@@ -313,6 +313,7 @@ namespace Sheet
         Pan,
         Move,
         Line,
+        Text,
         AndGate,
         OrGate
     }
@@ -1678,6 +1679,14 @@ namespace Sheet
             {
                 FinishPan();
             }
+            else if (mode == Mode.Text && !Overlay.IsMouseCaptured)
+            {
+                var p = e.GetPosition(Overlay);
+                double x = Snap(p.X);
+                double y = Snap(p.Y);
+                Push();
+                AddTextToBlock(this, logic, "Text", x, y, 30.0, 15.0, System.Windows.HorizontalAlignment.Center, System.Windows.VerticalAlignment.Center, 11.0);
+            }
         }
 
         private void Overlay_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
@@ -1850,6 +1859,10 @@ namespace Sheet
                 // L: Mode Line
                 case Key.L:
                     mode = Mode.Line;
+                    break;
+                // T: Mode Text
+                case Key.T:
+                    mode = Mode.Text;
                     break;
                 // N: Mode None
                 case Key.N:
