@@ -20,7 +20,7 @@ Keyboard  Shortcuts:
     Del             Delete
     R               Reset
     Ctrl+A          Select All
-    Ctrl+B          Copy As Block
+    B               Create Block
     Up              Move Up
     Down            Move Down
     Left            Move Left
