@@ -755,21 +755,6 @@ namespace Sheet
 
         #region Reset
 
-        private void Reset()
-        {
-            RemoveLines(logic.Lines);
-            RemoveTexts(logic.Texts);
-            RemoveBlocks(logic.Blocks);
-
-            logic.Lines.Clear();
-            logic.Texts.Clear();
-            logic.Blocks.Clear();
-
-            selected.Lines = null;
-            selected.Texts = null;
-            selected.Blocks = null;
-        }
-
         private void RemoveLines(IEnumerable<Line> lines)
         {
             foreach (var line in lines)
@@ -795,49 +780,68 @@ namespace Sheet
             }
         }
 
+        private void Remove(Block source, Block selected)
+        {
+            if (selected.Lines != null)
+            {
+                RemoveLines(selected.Lines);
+
+                foreach (var line in selected.Lines)
+                {
+                    source.Lines.Remove(line);
+                }
+
+                selected.Lines = null;
+            }
+
+            if (selected.Texts != null)
+            {
+                RemoveTexts(selected.Texts);
+
+                foreach (var text in selected.Texts)
+                {
+                    source.Texts.Remove(text);
+                }
+
+                selected.Texts = null;
+            }
+
+            if (selected.Blocks != null)
+            {
+                foreach (var block in selected.Blocks)
+                {
+                    RemoveLines(block.Lines);
+                    RemoveTexts(block.Texts);
+
+                    source.Blocks.Remove(block);
+                }
+
+                selected.Blocks = null;
+            }
+        }
+
         private void Delete()
         {
             if (HaveSelected())
             {
                 Push();
-
-                if (selected.Lines != null)
-                {
-                    RemoveLines(selected.Lines);
-
-                    foreach (var line in selected.Lines)
-                    {
-                        logic.Lines.Remove(line);
-                    }
-
-                    selected.Lines = null;
-                }
-
-                if (selected.Texts != null)
-                {
-                    RemoveTexts(selected.Texts);
-
-                    foreach (var text in selected.Texts)
-                    {
-                        logic.Texts.Remove(text);
-                    }
-
-                    selected.Texts = null;
-                }
-
-                if (selected.Blocks != null)
-                {
-                    foreach (var block in selected.Blocks)
-                    {
-                        RemoveLines(block.Lines);
-                        RemoveTexts(block.Texts);
-
-                        logic.Blocks.Remove(block);
-                    }
-
-                    selected.Blocks = null;
-                }
+                Remove(logic, selected);
             }
+        }
+
+        private void Reset()
+        {
+            RemoveLines(logic.Lines);
+            RemoveTexts(logic.Texts);
+            RemoveBlocks(logic.Blocks);
+
+            logic.Lines.Clear();
+            logic.Texts.Clear();
+            logic.Blocks.Clear();
+
+            selected.Lines = null;
+            selected.Texts = null;
+            selected.Blocks = null;
         }
 
         #endregion
