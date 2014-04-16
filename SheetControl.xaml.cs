@@ -797,37 +797,37 @@ namespace Sheet
 
         #region Reset
 
-        private void RemoveLines(IEnumerable<Line> lines)
+        private static void RemoveLines(ISheet sheet, IEnumerable<Line> lines)
         {
             foreach (var line in lines)
             {
-                Remove(line);
+                sheet.Remove(line);
             }
         }
 
-        private void RemoveTexts(IEnumerable<Grid> texts)
+        private static void RemoveTexts(ISheet sheet, IEnumerable<Grid> texts)
         {
             foreach (var text in texts)
             {
-                Remove(text);
+                sheet.Remove(text);
             }
         }
 
-        private void RemoveBlocks(IEnumerable<Block> blocks)
+        private static void RemoveBlocks(ISheet sheet, IEnumerable<Block> blocks)
         {
             foreach (var block in blocks)
             {
-                RemoveLines(block.Lines);
-                RemoveTexts(block.Texts);
-                RemoveBlocks(block.Blocks);
+                RemoveLines(sheet, block.Lines);
+                RemoveTexts(sheet, block.Texts);
+                RemoveBlocks(sheet, block.Blocks);
             }
         }
 
-        private void Remove(Block parent, Block selected)
+        private static void Remove(ISheet sheet, Block parent, Block selected)
         {
             if (selected.Lines != null)
             {
-                RemoveLines(selected.Lines);
+                RemoveLines(sheet, selected.Lines);
 
                 foreach (var line in selected.Lines)
                 {
@@ -839,7 +839,7 @@ namespace Sheet
 
             if (selected.Texts != null)
             {
-                RemoveTexts(selected.Texts);
+                RemoveTexts(sheet, selected.Texts);
 
                 foreach (var text in selected.Texts)
                 {
@@ -853,9 +853,9 @@ namespace Sheet
             {
                 foreach (var block in selected.Blocks)
                 {
-                    RemoveLines(block.Lines);
-                    RemoveTexts(block.Texts);
-                    RemoveBlocks(block.Blocks);
+                    RemoveLines(sheet, block.Lines);
+                    RemoveTexts(sheet, block.Texts);
+                    RemoveBlocks(sheet, block.Blocks);
 
                     parent.Blocks.Remove(block);
                 }
@@ -869,15 +869,15 @@ namespace Sheet
             if (HaveSelected())
             {
                 Push();
-                Remove(logic, selected);
+                Remove(this, logic, selected);
             }
         }
 
         private void Reset()
         {
-            RemoveLines(logic.Lines);
-            RemoveTexts(logic.Texts);
-            RemoveBlocks(logic.Blocks);
+            RemoveLines(this, logic.Lines);
+            RemoveTexts(this, logic.Texts);
+            RemoveBlocks(this, logic.Blocks);
 
             logic.Lines.Clear();
             logic.Texts.Clear();
@@ -894,6 +894,7 @@ namespace Sheet
 
         private void InitMove(Point p)
         {
+            Push();
             tempMode = mode;
             mode = Mode.Move;
             p.X = Snap(p.X);
@@ -908,7 +909,7 @@ namespace Sheet
         {
             p.X = Snap(p.X);
             p.Y = Snap(p.Y);
-            Move(p.X - panStartPoint.X, p.Y - panStartPoint.Y);
+            Move(p.X - panStartPoint.X, p.Y - panStartPoint.Y, selected);
             panStartPoint = p;
         }
 
