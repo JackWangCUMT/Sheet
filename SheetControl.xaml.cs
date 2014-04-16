@@ -360,12 +360,6 @@ namespace Sheet
             Loaded += (s, e) =>
             {
                 CreateGrid();
-
-                Push();
-                logic.Blocks.Add(CreateOrGateBlock(300.0, 90.0, 1));
-                logic.Blocks.Add(CreateOrGateBlock(300.0, 180.0, 1));
-                logic.Blocks.Add(CreateAndGateBlock(360.0, 180.0));
-
                 Focus();
             };
         }
