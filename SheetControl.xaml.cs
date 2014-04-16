@@ -69,7 +69,7 @@ namespace Sheet
 
         #region Serialize
 
-        private static void Serialize(StringBuilder sb, LineItem line, string indent)
+        public static void Serialize(StringBuilder sb, LineItem line, string indent)
         {
             sb.Append(indent);
             sb.Append("LINE");
@@ -86,7 +86,7 @@ namespace Sheet
             sb.Append(lineSeparator);
         }
 
-        private static void Serialize(StringBuilder sb, TextItem text, string indent)
+        public static void Serialize(StringBuilder sb, TextItem text, string indent)
         {
             sb.Append(indent);
             sb.Append("TEXT");
@@ -111,7 +111,7 @@ namespace Sheet
             sb.Append(lineSeparator);
         }
 
-        private static void Serialize(StringBuilder sb, BlockItem block, string indent)
+        public static void Serialize(StringBuilder sb, BlockItem block, string indent)
         {
             sb.Append(indent);
             sb.Append("BLOCK");
@@ -130,7 +130,7 @@ namespace Sheet
             sb.Append(lineSeparator);
         }
 
-        private static void Serialize(StringBuilder sb, List<LineItem> lines, string indent)
+        public static void Serialize(StringBuilder sb, List<LineItem> lines, string indent)
         {
             foreach (var line in lines)
             {
@@ -138,7 +138,7 @@ namespace Sheet
             }
         }
 
-        private static void Serialize(StringBuilder sb, List<TextItem> texts, string indent)
+        public static void Serialize(StringBuilder sb, List<TextItem> texts, string indent)
         {
             foreach (var text in texts)
             {
@@ -146,7 +146,7 @@ namespace Sheet
             }
         }
 
-        private static void Serialize(StringBuilder sb, List<BlockItem> blocks, string indent)
+        public static void Serialize(StringBuilder sb, List<BlockItem> blocks, string indent)
         {
             foreach (var block in blocks)
             {
@@ -553,12 +553,16 @@ namespace Sheet
             return blockItem;
         }
 
-        private static BlockItem CreateSheet(IEnumerable<Line> lines,
-                                      IEnumerable<Grid> texts,
-                                      IEnumerable<Block> blocks)
+        private static BlockItem CreateSheet(int id,
+            string name,
+            IEnumerable<Line> lines,
+            IEnumerable<Grid> texts,
+            IEnumerable<Block> blocks)
         {
             var sheet = new BlockItem()
             {
+                Id = id,
+                Name = name,
                 Lines = new List<LineItem>(),
                 Texts = new List<TextItem>(),
                 Blocks = new List<BlockItem>()
@@ -593,7 +597,7 @@ namespace Sheet
 
         private BlockItem CreateSheet()
         {
-            return CreateSheet(logic.Lines, logic.Texts, logic.Blocks);
+            return CreateSheet(0, "LOGIC", logic.Lines, logic.Texts, logic.Blocks);
         }
 
         #endregion
@@ -1536,7 +1540,7 @@ namespace Sheet
         private void Copy()
         {
             var text = ItemSerializer.Serialize(HaveSelected() ?
-                CreateSheet(selected.Lines, selected.Texts, selected.Blocks) : CreateSheet());
+                CreateSheet(0, "SELECTED", selected.Lines, selected.Texts, selected.Blocks) : CreateSheet());
             Clipboard.SetData(DataFormats.UnicodeText, text);
         }
 
@@ -1544,6 +1548,15 @@ namespace Sheet
         {
             var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
             Load(ItemSerializer.Deserialize(text), true);
+        }
+
+        private string CreateBlock(int id, string name, Block parent)
+        {
+            var block = CreateSheet(id, name, parent.Lines, parent.Texts, parent.Blocks);
+            var sb = new StringBuilder();
+
+            ItemSerializer.Serialize(sb, block, "");
+            return sb.ToString();
         }
 
         #endregion
@@ -1801,6 +1814,19 @@ namespace Sheet
                     else
                     {
                         mode = Mode.AndGate;
+                    }
+                    break;
+                // Ctrl+B: Copy As Block
+                case Key.B:
+                    {
+                        if (ctrl)
+                        {
+                            if (HaveSelected())
+                            {
+                                var text = CreateBlock(0, "BLOCK0", selected);
+                                Clipboard.SetData(DataFormats.UnicodeText, text);
+                            }
+                        }
                     }
                     break;
                 // R: Reset
