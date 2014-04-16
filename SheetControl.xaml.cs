@@ -811,7 +811,7 @@ namespace Sheet
             }
         }
 
-        private void Remove(Block source, Block selected)
+        private void Remove(Block parent, Block selected)
         {
             if (selected.Lines != null)
             {
@@ -819,7 +819,7 @@ namespace Sheet
 
                 foreach (var line in selected.Lines)
                 {
-                    source.Lines.Remove(line);
+                    parent.Lines.Remove(line);
                 }
 
                 selected.Lines = null;
@@ -831,7 +831,7 @@ namespace Sheet
 
                 foreach (var text in selected.Texts)
                 {
-                    source.Texts.Remove(text);
+                    parent.Texts.Remove(text);
                 }
 
                 selected.Texts = null;
@@ -843,8 +843,9 @@ namespace Sheet
                 {
                     RemoveLines(block.Lines);
                     RemoveTexts(block.Texts);
+                    RemoveBlocks(block.Blocks);
 
-                    source.Blocks.Remove(block);
+                    parent.Blocks.Remove(block);
                 }
 
                 selected.Blocks = null;
