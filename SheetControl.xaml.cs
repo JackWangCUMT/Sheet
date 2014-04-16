@@ -981,29 +981,32 @@ namespace Sheet
 
         #region Pan & Zoom
 
+        private static void AdjustThickness(IEnumerable<Line> lines, double thickness)
+        {
+            foreach (var line in lines)
+            {
+                line.StrokeThickness = thickness;
+            }
+        }
+
+        private static void AdjustThickness(Block parent, double thickness)
+        {
+            AdjustThickness(parent.Lines, thickness);
+
+            foreach (var block in parent.Blocks)
+            {
+                AdjustThickness(block, thickness);
+            }
+        }
+
         private void AdjustThickness(double zoom)
         {
             double gridThicknessZoomed = gridThickness / zoom;
             double lineThicknessZoomed = lineThickness / zoom;
             double selectionThicknessZoomed = selectionThickness / zoom;
 
-            foreach (var line in gridLines)
-            {
-                line.StrokeThickness = gridThicknessZoomed;
-            }
-
-            foreach (var line in logic.Lines)
-            {
-                line.StrokeThickness = lineThicknessZoomed;
-            }
-
-            foreach (var block in logic.Blocks)
-            {
-                foreach (var line in block.Lines)
-                {
-                    line.StrokeThickness = lineThicknessZoomed;
-                }
-            }
+            AdjustThickness(gridLines, gridThicknessZoomed);
+            AdjustThickness(logic, lineThicknessZoomed);
 
             if (tempLine != null)
             {
