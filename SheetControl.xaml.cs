@@ -648,7 +648,7 @@ namespace Sheet
 
         private void Load(BlockItem sheet, bool select)
         {
-            ResetFind();
+            DeselectAll();
             Load(sheet.Lines, select);
             Load(sheet.Texts, select);
             Load(sheet.Blocks, select);
@@ -1056,7 +1056,7 @@ namespace Sheet
 
         #endregion
 
-        #region Find
+        #region Selection
 
         private void SelectAll()
         {
@@ -1092,7 +1092,7 @@ namespace Sheet
             }
         }
 
-        private void ResetFind()
+        private void DeselectAll()
         {
             if (selected.Lines != null)
             {
@@ -1132,6 +1132,10 @@ namespace Sheet
                 selected.Blocks = null;
             }
         }
+
+        #endregion
+
+        #region Find
 
         private void Find(Rect rect)
         {
@@ -1571,7 +1575,7 @@ namespace Sheet
 
         private void Overlay_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            ResetFind();
+            DeselectAll();
 
             if (mode == Mode.AndGate)
             {
@@ -1629,7 +1633,7 @@ namespace Sheet
 
         private void Overlay_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
-            ResetFind();
+            DeselectAll();
 
             if (mode == Mode.Selection && Overlay.IsMouseCaptured)
             {
