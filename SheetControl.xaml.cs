@@ -519,24 +519,29 @@ namespace Sheet
             return textItem;
         }
 
-        private static BlockItem SerializeBlock(Block block)
+        private static BlockItem SerializeBlock(Block parent)
         {
             var blockItem = new BlockItem()
             {
-                Name = block.Name,
+                Name = parent.Name,
                 Lines = new List<LineItem>(),
                 Texts = new List<TextItem>(),
                 Blocks = new List<BlockItem>()
             };
 
-            foreach (var line in block.Lines)
+            foreach (var line in parent.Lines)
             {
                 blockItem.Lines.Add(SerializeLine(line));
             }
 
-            foreach (var text in block.Texts)
+            foreach (var text in parent.Texts)
             {
                 blockItem.Texts.Add(SerializeText(text));
+            }
+
+            foreach(var block in parent.Blocks)
+            {
+                blockItem.Blocks.Add(SerializeBlock(block));
             }
 
             return blockItem;
