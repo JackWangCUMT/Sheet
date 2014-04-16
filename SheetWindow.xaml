@@ -46,6 +46,7 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <TextBlock Text="Edit" TextDecorations="Underline" FontWeight="Medium" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Margin="2"/>
                 <TextBlock Text="Undo" Grid.Column="0" Grid.Row="1" Margin="2"/>
@@ -64,14 +65,16 @@
                 <TextBlock Text="R" Grid.Column="1" Grid.Row="7" Margin="8,2,2,2"/>
                 <TextBlock Text="Select All" Grid.Column="0" Grid.Row="8" Margin="2"/>
                 <TextBlock Text="Ctrl+A" Grid.Column="1" Grid.Row="8" Margin="8,2,2,2"/>
-                <TextBlock Text="Move Up" Grid.Column="0" Grid.Row="9" Margin="2"/>
-                <TextBlock Text="Up" Grid.Column="1" Grid.Row="9" Margin="8,2,2,2"/>
-                <TextBlock Text="Move Down" Grid.Column="0" Grid.Row="10" Margin="2"/>
-                <TextBlock Text="Down" Grid.Column="1" Grid.Row="10" Margin="8,2,2,2"/>
-                <TextBlock Text="Move Left" Grid.Column="0" Grid.Row="11" Margin="2"/>
-                <TextBlock Text="Left" Grid.Column="1" Grid.Row="11" Margin="8,2,2,2"/>
-                <TextBlock Text="Move Right" Grid.Column="0" Grid.Row="12" Margin="2"/>
-                <TextBlock Text="Right" Grid.Column="1" Grid.Row="12" Margin="8,2,2,2"/>
+                <TextBlock Text="Create Block" Grid.Column="0" Grid.Row="9" Margin="2"/>
+                <TextBlock Text="B" Grid.Column="1" Grid.Row="9" Margin="8,2,2,2"/>
+                <TextBlock Text="Move Up" Grid.Column="0" Grid.Row="10" Margin="2"/>
+                <TextBlock Text="Up" Grid.Column="1" Grid.Row="10" Margin="8,2,2,2"/>
+                <TextBlock Text="Move Down" Grid.Column="0" Grid.Row="11" Margin="2"/>
+                <TextBlock Text="Down" Grid.Column="1" Grid.Row="11" Margin="8,2,2,2"/>
+                <TextBlock Text="Move Left" Grid.Column="0" Grid.Row="12" Margin="2"/>
+                <TextBlock Text="Left" Grid.Column="1" Grid.Row="12" Margin="8,2,2,2"/>
+                <TextBlock Text="Move Right" Grid.Column="0" Grid.Row="13" Margin="2"/>
+                <TextBlock Text="Right" Grid.Column="1" Grid.Row="13" Margin="8,2,2,2"/>
             </Grid>
             <Grid Margin="2">
                 <Grid.ColumnDefinitions>

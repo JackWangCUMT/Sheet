@@ -1816,16 +1816,13 @@ namespace Sheet
                         mode = Mode.AndGate;
                     }
                     break;
-                // Ctrl+B: Copy As Block
+                // B: Create Block
                 case Key.B:
                     {
-                        if (ctrl)
+                        if (HaveSelected())
                         {
-                            if (HaveSelected())
-                            {
-                                var text = CreateBlock(0, "BLOCK0", selected);
-                                Clipboard.SetData(DataFormats.UnicodeText, text);
-                            }
+                            var text = CreateBlock(0, "BLOCK0", selected);
+                            Clipboard.SetData(DataFormats.UnicodeText, text);
                         }
                     }
                     break;
