@@ -1044,7 +1044,7 @@ namespace Sheet
             double height = selectionRect.Height;
 
             CancelSelectionRect();
-            Find(new Rect(x, y, width, height));
+            HitTest(new Rect(x, y, width, height));
         }
 
         private void CancelSelectionRect()
@@ -1056,7 +1056,8 @@ namespace Sheet
 
         #endregion
 
-        #region Selection
+
+        #region HitTest
 
         private void InitSelected()
         {
@@ -1064,6 +1065,159 @@ namespace Sheet
             selected.Texts = new List<Grid>();
             selected.Blocks = new List<Block>();
         }
+
+        private void HitTest(Rect rect)
+        {
+            InitSelected();
+
+            HitTestLines(rect, false);
+            HitTestTexts(rect, false);
+            HitTestBlocks(rect, false);
+
+            if (selected.Lines.Count == 0)
+            {
+                selected.Lines = null;
+            }
+
+            if (selected.Texts.Count == 0)
+            {
+                selected.Texts = null;
+            }
+
+            if (selected.Blocks.Count == 0)
+            {
+                selected.Blocks = null;
+            }
+        }
+
+        private void HitTest(Point p)
+        {
+            InitSelected();
+
+            var hit = new Rect(p.X - hitSize, p.Y - hitSize, 2 * hitSize, 2 * hitSize);
+
+            HitTestLines(hit, true);
+
+            if (selected.Lines.Count <= 0)
+            {
+                HitTestTexts(hit, true);
+            }
+
+            if (selected.Lines.Count <= 0 && selected.Texts.Count <= 0)
+            {
+                HitTestBlocks(hit, true);
+            }
+
+            if (selected.Lines.Count == 0)
+            {
+                selected.Lines = null;
+            }
+
+            if (selected.Texts.Count == 0)
+            {
+                selected.Texts = null;
+            }
+
+            if (selected.Blocks.Count == 0)
+            {
+                selected.Blocks = null;
+            }
+        }
+
+        private void HitTestLines(Rect rect, bool onlyFirst)
+        {
+            foreach (var line in logic.Lines)
+            {
+                var bounds = VisualTreeHelper.GetContentBounds(line);
+                if (rect.IntersectsWith(bounds))
+                {
+                    line.Stroke = Brushes.Red;
+                    selected.Lines.Add(line);
+
+                    if (onlyFirst)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void HitTestTexts(Rect rect, bool onlyFirst)
+        {
+            foreach (var text in logic.Texts)
+            {
+                var bounds = VisualTreeHelper.GetContentBounds(text);
+                var offset = text.TranslatePoint(new Point(0, 0), Sheet);
+                bounds.Offset(offset.X, offset.Y);
+                if (rect.IntersectsWith(bounds))
+                {
+                    GetTextBlock(text).Foreground = Brushes.Red;
+                    selected.Texts.Add(text);
+
+                    if (onlyFirst)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void HitTestBlocks(Rect rect, bool onlyFirst)
+        {
+            foreach (var block in logic.Blocks)
+            {
+                bool isSelected = false;
+
+                foreach (var line in block.Lines)
+                {
+                    var bounds = VisualTreeHelper.GetContentBounds(line);
+                    if (rect.IntersectsWith(bounds))
+                    {
+                        selected.Blocks.Add(block);
+                        isSelected = true;
+                        break;
+                    }
+                }
+
+                if (!isSelected)
+                {
+                    foreach (var text in block.Texts)
+                    {
+                        var bounds = VisualTreeHelper.GetContentBounds(text);
+                        var offset = text.TranslatePoint(new Point(0, 0), Sheet);
+                        bounds.Offset(offset.X, offset.Y);
+                        if (rect.IntersectsWith(bounds))
+                        {
+                            selected.Blocks.Add(block);
+                            isSelected = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isSelected)
+                {
+                    foreach (var line in block.Lines)
+                    {
+                        line.Stroke = Brushes.Red;
+                    }
+
+                    foreach (var text in block.Texts)
+                    {
+                        GetTextBlock(text).Foreground = Brushes.Red;
+                    }
+
+                    if (onlyFirst)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region Selection
 
         private void SelectAll()
         {
@@ -1135,232 +1289,6 @@ namespace Sheet
                 }
 
                 selected.Blocks = null;
-            }
-        }
-
-        #endregion
-
-        #region Find
-
-        private void Find(Rect rect)
-        {
-            InitSelected();
-
-            FindLines(rect);
-            FindTexts(rect);
-            FindBlocks(rect);
-
-            if (selected.Lines.Count == 0)
-            {
-                selected.Lines = null;
-            }
-
-            if (selected.Texts.Count == 0)
-            {
-                selected.Texts = null;
-            }
-
-            if (selected.Blocks.Count == 0)
-            {
-                selected.Blocks = null;
-            }
-        }
-
-        private void FindLines(Rect rect)
-        {
-            foreach (var line in logic.Lines)
-            {
-                var bounds = VisualTreeHelper.GetContentBounds(line);
-                if (rect.IntersectsWith(bounds))
-                {
-                    line.Stroke = Brushes.Red;
-                    selected.Lines.Add(line);
-                }
-            }
-        }
-
-        private void FindTexts(Rect rect)
-        {
-            foreach (var text in logic.Texts)
-            {
-                var bounds = VisualTreeHelper.GetContentBounds(text);
-                var offset = text.TranslatePoint(new Point(0, 0), Sheet);
-                bounds.Offset(offset.X, offset.Y);
-                if (rect.IntersectsWith(bounds))
-                {
-                    GetTextBlock(text).Foreground = Brushes.Red;
-                    selected.Texts.Add(text);
-                }
-            }
-        }
-
-        private void FindBlocks(Rect rect)
-        {
-            foreach (var block in logic.Blocks)
-            {
-                bool isSelected = false;
-
-                foreach (var line in block.Lines)
-                {
-                    var bounds = VisualTreeHelper.GetContentBounds(line);
-                    if (rect.IntersectsWith(bounds))
-                    {
-                        selected.Blocks.Add(block);
-                        isSelected = true;
-                        break;
-                    }
-                }
-
-                if (!isSelected)
-                {
-                    foreach (var text in block.Texts)
-                    {
-                        var bounds = VisualTreeHelper.GetContentBounds(text);
-                        var offset = text.TranslatePoint(new Point(0, 0), Sheet);
-                        bounds.Offset(offset.X, offset.Y);
-                        if (rect.IntersectsWith(bounds))
-                        {
-                            selected.Blocks.Add(block);
-                            isSelected = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (isSelected)
-                {
-                    foreach (var line in block.Lines)
-                    {
-                        line.Stroke = Brushes.Red;
-                    }
-
-                    foreach (var text in block.Texts)
-                    {
-                        GetTextBlock(text).Foreground = Brushes.Red;
-                    }
-                }
-            }
-        }
-
-        #endregion
-
-        #region HitTest
-
-        private void HitTest(Point p)
-        {
-            InitSelected();
-
-            HitTestLines(p);
-
-            if (selected.Lines.Count <= 0)
-            {
-                HitTestTexts(p);
-            }
-
-            if (selected.Lines.Count <= 0 && selected.Texts.Count <= 0)
-            {
-                HitTestBlocks(p);
-            }
-
-            if (selected.Lines.Count == 0)
-            {
-                selected.Lines = null;
-            }
-
-            if (selected.Texts.Count == 0)
-            {
-                selected.Texts = null;
-            }
-
-            if (selected.Blocks.Count == 0)
-            {
-                selected.Blocks = null;
-            }
-        }
-
-        private void HitTestLines(Point p)
-        {
-            var hit = new Rect(p.X - hitSize, p.Y - hitSize, 2 * hitSize, 2 * hitSize);
-
-            foreach (var line in logic.Lines)
-            {
-                var bounds = VisualTreeHelper.GetContentBounds(line);
-                if (hit.IntersectsWith(bounds))
-                {
-                    line.Stroke = Brushes.Red;
-                    selected.Lines.Add(line);
-                    break;
-                }
-            }
-        }
-
-        private void HitTestTexts(Point p)
-        {
-            var hit = new Rect(p.X - hitSize, p.Y - hitSize, 2 * hitSize, 2 * hitSize);
-
-            foreach (var text in logic.Texts)
-            {
-                var bounds = VisualTreeHelper.GetContentBounds(text);
-                var offset = text.TranslatePoint(new Point(0, 0), Sheet);
-                bounds.Offset(offset.X, offset.Y);
-                if (hit.IntersectsWith(bounds))
-                {
-                    GetTextBlock(text).Foreground = Brushes.Red;
-                    selected.Texts.Add(text);
-                    break;
-                }
-            }
-        }
-
-        private void HitTestBlocks(Point p)
-        {
-            var hit = new Rect(p.X - hitSize, p.Y - hitSize, 2 * hitSize, 2 * hitSize);
-
-            foreach (var block in logic.Blocks)
-            {
-                bool isSelected = false;
-
-                foreach (var line in block.Lines)
-                {
-                    var bounds = VisualTreeHelper.GetContentBounds(line);
-                    if (hit.IntersectsWith(bounds))
-                    {
-                        selected.Blocks.Add(block);
-                        isSelected = true;
-                        break;
-                    }
-                }
-
-                if (!isSelected)
-                {
-                    foreach (var text in block.Texts)
-                    {
-                        var bounds = VisualTreeHelper.GetContentBounds(text);
-                        var offset = text.TranslatePoint(new Point(0, 0), Sheet);
-                        bounds.Offset(offset.X, offset.Y);
-                        if (hit.IntersectsWith(bounds))
-                        {
-                            selected.Blocks.Add(block);
-                            isSelected = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (isSelected)
-                {
-                    foreach (var line in block.Lines)
-                    {
-                        line.Stroke = Brushes.Red;
-                    }
-
-                    foreach (var text in block.Texts)
-                    {
-                        GetTextBlock(text).Foreground = Brushes.Red;
-                    }
-
-                    break;
-                }
             }
         }
 
