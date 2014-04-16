@@ -797,9 +797,7 @@ namespace Sheet
 
         private void Delete()
         {
-            bool delete = (selected.Lines != null || selected.Texts != null || selected.Blocks != null);
-
-            if (delete)
+            if (HaveSelected())
             {
                 Push();
 
@@ -848,44 +846,40 @@ namespace Sheet
 
         private void Move(double x, double y)
         {
-            bool moveSelected = (selected.Lines != null || selected.Texts != null || selected.Blocks != null);
             Push();
+            Move(x, y, HaveSelected() ? selected : logic);
+        }
 
-            if (moveSelected)
+        private static void Move(double x, double y, Block block)
+        {
+            if (block.Lines != null)
             {
-                if (selected.Lines != null)
-                {
-                    MoveLines(x, y, selected.Lines);
-                }
-
-                if (selected.Texts != null)
-                {
-                    MoveTexts(x, y, selected.Texts);
-                }
-
-                if (selected.Blocks != null)
-                {
-                    foreach (var block in selected.Blocks)
-                    {
-                        MoveLines(x, y, block.Lines);
-                        MoveTexts(x, y, block.Texts);
-                    }
-                }
+                MoveLines(x, y, block.Lines);
             }
-            else
-            {
-                MoveLines(x, y, logic.Lines);
-                MoveTexts(x, y, logic.Texts);
 
-                foreach (var block in logic.Blocks)
-                {
-                    MoveLines(x, y, block.Lines);
-                    MoveTexts(x, y, block.Texts);
-                }
+            if (block.Texts != null)
+            {
+                MoveTexts(x, y, block.Texts);
+            }
+
+            if (block.Blocks != null)
+            {
+                MoveBlocks(x, y, block.Blocks);
             }
         }
 
-        private void MoveTexts(double x, double y, IEnumerable<Grid> texts)
+        private static void MoveLines(double x, double y, IEnumerable<Line> lines)
+        {
+            foreach (var line in lines)
+            {
+                line.X1 += x;
+                line.Y1 += y;
+                line.X2 += x;
+                line.Y2 += y;
+            }
+        }
+
+        private static void MoveTexts(double x, double y, IEnumerable<Grid> texts)
         {
             foreach (var text in texts)
             {
@@ -894,14 +888,12 @@ namespace Sheet
             }
         }
 
-        private void MoveLines(double x, double y, IEnumerable<Line> lines)
+        private static void MoveBlocks(double x, double y, IEnumerable<Block> blocks)
         {
-            foreach (var line in lines)
+            foreach (var block in blocks)
             {
-                line.X1 += x;
-                line.Y1 += y;
-                line.X2 += x;
-                line.Y2 += y;
+                MoveLines(x, y, block.Lines);
+                MoveTexts(x, y, block.Texts);
             }
         }
 
