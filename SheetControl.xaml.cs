@@ -955,6 +955,7 @@ namespace Sheet
             {
                 MoveLines(x, y, block.Lines);
                 MoveTexts(x, y, block.Texts);
+                MoveBlocks(x, y, block.Blocks);
             }
         }
 
