@@ -1056,7 +1056,6 @@ namespace Sheet
 
         #endregion
 
-
         #region HitTest
 
         private void InitSelected()
