@@ -573,7 +573,7 @@ namespace Sheet
             return text.Children[0] as TextBlock;
         }
 
-        private Grid CreateText(string text,
+        private static Grid CreateText(string text,
                                 double x, double y,
                                 double width, double height,
                                 HorizontalAlignment halign, VerticalAlignment valign,
@@ -600,7 +600,7 @@ namespace Sheet
             return grid;
         }
 
-        private Line CreateLine(double thickness, double x1, double y1, double x2, double y2)
+        private static Line CreateLine(double thickness, double x1, double y1, double x2, double y2)
         {
             var line = new Line()
             {
@@ -617,7 +617,7 @@ namespace Sheet
             return line;
         }
 
-        private Rectangle CreateSelectionRect(double thickness, double x, double y, double width, double height)
+        private static Rectangle CreateSelectionRect(double thickness, double x, double y, double width, double height)
         {
             var rect = new Rectangle()
             {
