@@ -61,7 +61,8 @@ namespace Sheet
         private static string lineSeparator = "\r\n";
         private static string modelSeparator = ";";
         private static char[] lineSeparators = { '\r', '\n' };
-        private static char[] modelSeparators = { ';' }; 
+        private static char[] modelSeparators = { ';' };
+        private static char[] whiteSpace = { ' ', '\t' };
 
         #endregion
 
@@ -162,7 +163,7 @@ namespace Sheet
         #endregion
 
         #region Deserialize
-
+     
         private static BlockItem Deserialize(string[] lines, int length, ref int end, string name, int id)
         {
             var sheet = new BlockItem()
@@ -175,7 +176,7 @@ namespace Sheet
 
             for (; end < length; end++)
             {
-                string line = lines[end];
+                string line = lines[end].TrimStart(whiteSpace);
                 var m = line.Split(modelSeparators);
                 if (m.Length == 6 && string.Compare(m[0], "LINE", true) == 0)
                 {
