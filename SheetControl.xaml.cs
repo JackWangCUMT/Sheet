@@ -819,6 +819,7 @@ namespace Sheet
             {
                 RemoveLines(block.Lines);
                 RemoveTexts(block.Texts);
+                RemoveBlocks(block.Blocks);
             }
         }
 
