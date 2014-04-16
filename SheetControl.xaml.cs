@@ -568,7 +568,7 @@ namespace Sheet
 
         #region Deserialize
 
-        private TextBlock GetTextBlock(Grid text)
+        private static TextBlock GetTextBlock(Grid text)
         {
             return text.Children[0] as TextBlock;
         }
@@ -1052,20 +1052,13 @@ namespace Sheet
 
         #region HitTest
 
-        private void InitSelected()
-        {
-            selected.Lines = new List<Line>();
-            selected.Texts = new List<Grid>();
-            selected.Blocks = new List<Block>();
-        }
-
         private void HitTest(Rect rect)
         {
-            InitSelected();
+            selected.Init();
 
-            HitTestLines(rect, false);
-            HitTestTexts(rect, false);
-            HitTestBlocks(rect, false);
+            HitTestLines(logic, selected, rect, false);
+            HitTestTexts(logic, selected, rect, false, Sheet);
+            HitTestBlocks(logic, selected, rect, false, Sheet);
 
             if (selected.Lines.Count == 0)
             {
@@ -1085,20 +1078,20 @@ namespace Sheet
 
         private void HitTest(Point p)
         {
-            InitSelected();
+            selected.Init();
 
-            var hit = new Rect(p.X - hitSize, p.Y - hitSize, 2 * hitSize, 2 * hitSize);
+            var rect = new Rect(p.X - hitSize, p.Y - hitSize, 2 * hitSize, 2 * hitSize);
 
-            HitTestLines(hit, true);
+            HitTestLines(logic, selected, rect, true);
 
             if (selected.Lines.Count <= 0)
             {
-                HitTestTexts(hit, true);
+                HitTestTexts(logic, selected, rect, true, Sheet);
             }
 
             if (selected.Lines.Count <= 0 && selected.Texts.Count <= 0)
             {
-                HitTestBlocks(hit, true);
+                HitTestBlocks(logic, selected, rect, true, Sheet);
             }
 
             if (selected.Lines.Count == 0)
@@ -1117,7 +1110,7 @@ namespace Sheet
             }
         }
 
-        private void HitTestLines(Rect rect, bool onlyFirst)
+        private static void HitTestLines(Block logic, Block selected, Rect rect, bool onlyFirst)
         {
             foreach (var line in logic.Lines)
             {
@@ -1135,12 +1128,12 @@ namespace Sheet
             }
         }
 
-        private void HitTestTexts(Rect rect, bool onlyFirst)
+        private static void HitTestTexts(Block logic, Block selected, Rect rect, bool onlyFirst, UIElement relative)
         {
             foreach (var text in logic.Texts)
             {
                 var bounds = VisualTreeHelper.GetContentBounds(text);
-                var offset = text.TranslatePoint(new Point(0, 0), Sheet);
+                var offset = text.TranslatePoint(new Point(0, 0), relative);
                 bounds.Offset(offset.X, offset.Y);
                 if (rect.IntersectsWith(bounds))
                 {
@@ -1155,7 +1148,7 @@ namespace Sheet
             }
         }
 
-        private void HitTestBlocks(Rect rect, bool onlyFirst)
+        private static void HitTestBlocks(Block logic, Block selected, Rect rect, bool onlyFirst, UIElement relative)
         {
             foreach (var block in logic.Blocks)
             {
@@ -1177,7 +1170,7 @@ namespace Sheet
                     foreach (var text in block.Texts)
                     {
                         var bounds = VisualTreeHelper.GetContentBounds(text);
-                        var offset = text.TranslatePoint(new Point(0, 0), Sheet);
+                        var offset = text.TranslatePoint(new Point(0, 0), relative);
                         bounds.Offset(offset.X, offset.Y);
                         if (rect.IntersectsWith(bounds))
                         {
@@ -1214,7 +1207,7 @@ namespace Sheet
 
         private void SelectAll()
         {
-            InitSelected();
+            selected.Init();
 
             foreach (var line in logic.Lines)
             {
