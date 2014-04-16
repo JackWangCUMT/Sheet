@@ -466,7 +466,7 @@ namespace Sheet
 
         #region Serialize
 
-        private LineItem SerializeLine(Line line)
+        private static LineItem SerializeLine(Line line)
         {
             var lineItem = new LineItem();
 
@@ -479,7 +479,7 @@ namespace Sheet
             return lineItem;
         }
 
-        private TextItem SerializeText(Grid text)
+        private static TextItem SerializeText(Grid text)
         {
             var textItem = new TextItem();
 
@@ -498,7 +498,7 @@ namespace Sheet
             return textItem;
         }
 
-        private BlockItem SerializeBlock(Block block)
+        private static BlockItem SerializeBlock(Block block)
         {
             var blockItem = new BlockItem()
             {
@@ -521,12 +521,7 @@ namespace Sheet
             return blockItem;
         }
 
-        private BlockItem CreateSheet()
-        {
-            return CreateSheet(logic.Lines, logic.Texts, logic.Blocks);
-        }
-
-        private BlockItem CreateSheet(IEnumerable<Line> lines,
+        private static BlockItem CreateSheet(IEnumerable<Line> lines,
                                       IEnumerable<Grid> texts,
                                       IEnumerable<Block> blocks)
         {
@@ -562,6 +557,11 @@ namespace Sheet
             }
 
             return sheet;
+        }
+
+        private BlockItem CreateSheet()
+        {
+            return CreateSheet(logic.Lines, logic.Texts, logic.Blocks);
         }
 
         #endregion
