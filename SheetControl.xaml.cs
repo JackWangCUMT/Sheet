@@ -368,6 +368,11 @@ namespace Sheet
 
         #region Sheet
 
+        private FrameworkElement GetSheet()
+        {
+            return Sheet;
+        }
+
         private void Add(UIElement element)
         {
             Sheet.Children.Add(element);
@@ -384,8 +389,8 @@ namespace Sheet
 
         private void CreateGrid()
         {
-            double width = Sheet.ActualWidth;
-            double height = Sheet.ActualHeight;
+            double width = GetSheet().ActualWidth;
+            double height = GetSheet().ActualHeight;
 
             for (double y = gridSize; y < height; y += gridSize)
             {
@@ -643,53 +648,22 @@ namespace Sheet
         private void Load(BlockItem sheet, bool select)
         {
             DeselectAll();
-            Load(sheet.Lines, select);
-            Load(sheet.Texts, select);
-            Load(sheet.Blocks, select);
-        }
-
-        private void Load(IEnumerable<LineItem> lineItems, bool select)
-        {
-            if (select)
-            {
-                selected.Lines = new List<Line>();
-            }
-
             double thickness = lineThickness / Zoom;
-
-            foreach (var lineItem in lineItems)
-            {
-                var line = CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
-                logic.Lines.Add(line);
-                Add(line);
-
-                if (select)
-                {
-                    line.Stroke = Brushes.Red;
-                    selected.Lines.Add(line);
-                }
-            }
+            Load(sheet.Texts, logic, selected, select, thickness);
+            Load(sheet.Lines, logic, selected, select, thickness);
+            Load(sheet.Blocks, logic, selected, select, thickness);
         }
 
-        private void Load(IEnumerable<TextItem> textItems, bool select)
+        private void Load(IEnumerable<TextItem> textItems, Block parent, Block selected, bool select, double thickness)
         {
             if (select)
             {
                 selected.Texts = new List<Grid>();
             }
 
-            double thickness = lineThickness / Zoom;
-
             foreach (var textItem in textItems)
             {
-                var text = CreateText(textItem.Text,
-                                      textItem.X, textItem.Y,
-                                      textItem.Width, textItem.Height,
-                                      (HorizontalAlignment)textItem.HAlign,
-                                      (VerticalAlignment)textItem.VAlign,
-                                      textItem.Size);
-                logic.Texts.Add(text);
-                Add(text);
+                var text = LoadTextItem(parent, textItem);
 
                 if (select)
                 {
@@ -699,56 +673,97 @@ namespace Sheet
             }
         }
 
-        private void Load(IEnumerable<BlockItem> blockItems, bool select)
+        private void Load(IEnumerable<LineItem> lineItems, Block parent, Block selected, bool select, double thickness)
+        {
+            if (select)
+            {
+                selected.Lines = new List<Line>();
+            }
+
+            foreach (var lineItem in lineItems)
+            {
+                var line = LoadLineItem(parent, lineItem, thickness);
+
+                if (select)
+                {
+                    line.Stroke = Brushes.Red;
+                    selected.Lines.Add(line);
+                }
+            }
+        }
+
+        private void Load(IEnumerable<BlockItem> blockItems, Block parent, Block selected, bool select, double thickness)
         {
             if (select)
             {
                 selected.Blocks = new List<Block>();
             }
 
-            double thickness = lineThickness / Zoom;
-
             foreach (var blockItem in blockItems)
             {
-                var block = new Block() { Name = blockItem.Name };
-                block.Init();
-
-                foreach (var textItem in blockItem.Texts)
-                {
-                    var text = CreateText(textItem.Text,
-                                          textItem.X, textItem.Y,
-                                          textItem.Width, textItem.Height,
-                                          (HorizontalAlignment)textItem.HAlign,
-                                          (VerticalAlignment)textItem.VAlign,
-                                          textItem.Size);
-                    block.Texts.Add(text);
-                    Add(text);
-
-                    if (select)
-                    {
-                        GetTextBlock(text).Foreground = Brushes.Red;
-                    }
-                }
-
-                foreach (var lineItem in blockItem.Lines)
-                {
-                    var line = CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
-                    block.Lines.Add(line);
-                    Add(line);
-
-                    if (select)
-                    {
-                        line.Stroke = Brushes.Red;
-                    }
-                }
-
-                logic.Blocks.Add(block);
+                var block = LoadBlockItem(logic, blockItem, select, thickness);
 
                 if (select)
                 {
                     selected.Blocks.Add(block);
                 }
             }
+        }
+
+        private Grid LoadTextItem(Block parent, TextItem textItem)
+        {
+            var text = CreateText(textItem.Text,
+                                  textItem.X, textItem.Y,
+                                  textItem.Width, textItem.Height,
+                                  (HorizontalAlignment)textItem.HAlign,
+                                  (VerticalAlignment)textItem.VAlign,
+                                  textItem.Size);
+            parent.Texts.Add(text);
+            Add(text);
+            return text;
+        }
+
+        private Line LoadLineItem(Block parent, LineItem lineItem, double thickness)
+        {
+            var line = CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
+            parent.Lines.Add(line);
+            Add(line);
+            return line;
+        }
+
+        private Block LoadBlockItem(Block parent, BlockItem blockItem, bool select, double thickness)
+        {
+            var block = new Block() { Name = blockItem.Name };
+            block.Init();
+
+            foreach (var textItem in blockItem.Texts)
+            {
+                var text = LoadTextItem(block, textItem);
+
+                if (select)
+                {
+                    GetTextBlock(text).Foreground = Brushes.Red;
+                }
+            }
+
+            foreach (var lineItem in blockItem.Lines)
+            {
+                var line = LoadLineItem(block, lineItem, thickness);
+
+                if (select)
+                {
+                    line.Stroke = Brushes.Red;
+                }
+            }
+
+            foreach (var childBlockItem in blockItem.Blocks)
+            {
+                LoadBlockItem(block, childBlockItem, select, thickness);
+            }
+
+            parent.Blocks.Add(block);
+
+            return block;
         }
 
         #endregion
@@ -1053,8 +1068,8 @@ namespace Sheet
             selected.Init();
 
             HitTestLines(logic, selected, rect, false);
-            HitTestTexts(logic, selected, rect, false, Sheet);
-            HitTestBlocks(logic, selected, rect, false, Sheet);
+            HitTestTexts(logic, selected, rect, false, GetSheet());
+            HitTestBlocks(logic, selected, rect, false, GetSheet());
 
             if (selected.Lines.Count == 0)
             {
@@ -1082,12 +1097,12 @@ namespace Sheet
 
             if (selected.Lines.Count <= 0)
             {
-                HitTestTexts(logic, selected, rect, true, Sheet);
+                HitTestTexts(logic, selected, rect, true, GetSheet());
             }
 
             if (selected.Lines.Count <= 0 && selected.Texts.Count <= 0)
             {
-                HitTestBlocks(logic, selected, rect, true, Sheet);
+                HitTestBlocks(logic, selected, rect, true, GetSheet());
             }
 
             if (selected.Lines.Count == 0)
