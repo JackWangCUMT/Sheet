@@ -63,13 +63,15 @@ namespace Sheet
         private static char[] lineSeparators = { '\r', '\n' };
         private static char[] modelSeparators = { ';' };
         private static char[] whiteSpace = { ' ', '\t' };
+        private static string indenation = "    ";
 
         #endregion
 
         #region Serialize
 
-        private static void Serialize(StringBuilder sb, LineItem line)
+        private static void Serialize(StringBuilder sb, LineItem line, string indent)
         {
+            sb.Append(indent);
             sb.Append("LINE");
             sb.Append(modelSeparator);
             sb.Append(line.Id);
@@ -84,8 +86,9 @@ namespace Sheet
             sb.Append(lineSeparator);
         }
 
-        private static void Serialize(StringBuilder sb, TextItem text)
+        private static void Serialize(StringBuilder sb, TextItem text, string indent)
         {
+            sb.Append(indent);
             sb.Append("TEXT");
             sb.Append(modelSeparator);
             sb.Append(text.Id);
@@ -108,8 +111,9 @@ namespace Sheet
             sb.Append(lineSeparator);
         }
 
-        private static void Serialize(StringBuilder sb, BlockItem block)
+        private static void Serialize(StringBuilder sb, BlockItem block, string indent)
         {
+            sb.Append(indent);
             sb.Append("BLOCK");
             sb.Append(modelSeparator);
             sb.Append(block.Id);
@@ -117,35 +121,36 @@ namespace Sheet
             sb.Append(block.Name);
             sb.Append(lineSeparator);
 
-            Serialize(sb, block.Lines);
-            Serialize(sb, block.Texts);
-            Serialize(sb, block.Blocks);
+            Serialize(sb, block.Lines, indent + indenation);
+            Serialize(sb, block.Texts, indent + indenation);
+            Serialize(sb, block.Blocks, indent + indenation);
 
+            sb.Append(indent);
             sb.Append("END");
             sb.Append(lineSeparator);
         }
 
-        private static void Serialize(StringBuilder sb, List<LineItem> lines)
+        private static void Serialize(StringBuilder sb, List<LineItem> lines, string indent)
         {
             foreach (var line in lines)
             {
-                Serialize(sb, line);
+                Serialize(sb, line, indent);
             }
         }
 
-        private static void Serialize(StringBuilder sb, List<TextItem> texts)
+        private static void Serialize(StringBuilder sb, List<TextItem> texts, string indent)
         {
             foreach (var text in texts)
             {
-                Serialize(sb, text);
+                Serialize(sb, text, indent);
             }
         }
 
-        private static void Serialize(StringBuilder sb, List<BlockItem> blocks)
+        private static void Serialize(StringBuilder sb, List<BlockItem> blocks, string indent)
         {
             foreach (var block in blocks)
             {
-                Serialize(sb, block);
+                Serialize(sb, block, indent);
             }
         }
 
@@ -153,9 +158,9 @@ namespace Sheet
         {
             var sb = new StringBuilder();
 
-            Serialize(sb, block.Lines);
-            Serialize(sb, block.Texts);
-            Serialize(sb, block.Blocks);
+            Serialize(sb, block.Lines, "");
+            Serialize(sb, block.Texts, "");
+            Serialize(sb, block.Blocks, "");
 
             return sb.ToString();
         }
