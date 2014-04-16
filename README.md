@@ -10,6 +10,7 @@ Keyboard  Shortcuts:
     N               Mode None
     S               Mode Selection
     L               Mode Line
+    T               Mode Text
     A               Mode AndGate
     O               Mode OrGate
     Ctrl+Z          Undo
