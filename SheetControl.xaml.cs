@@ -1102,6 +1102,42 @@ namespace Sheet
             selectionRect = null;
         }
 
+        private static void Select(Block parent)
+        {
+            foreach (var line in parent.Lines)
+            {
+                line.Stroke = Brushes.Red;
+            }
+
+            foreach (var text in parent.Texts)
+            {
+                GetTextBlock(text).Foreground = Brushes.Red;
+            }
+
+            foreach (var block in parent.Blocks)
+            {
+                Select(block);
+            }
+        }
+
+        private static void Deselect(Block parent)
+        {
+            foreach (var line in parent.Lines)
+            {
+                line.Stroke = Brushes.Black;
+            }
+
+            foreach (var text in parent.Texts)
+            {
+                GetTextBlock(text).Foreground = Brushes.Black;
+            }
+
+            foreach (var block in parent.Blocks)
+            {
+                Deselect(block);
+            }
+        }
+
         private void SelectAll()
         {
             selected.Init();
@@ -1118,19 +1154,24 @@ namespace Sheet
                 selected.Texts.Add(text);
             }
 
-            foreach (var block in logic.Blocks)
+            foreach (var parent in logic.Blocks)
             {
-                foreach (var line in block.Lines)
+                foreach (var line in parent.Lines)
                 {
                     line.Stroke = Brushes.Red;
                 }
 
-                foreach (var text in block.Texts)
+                foreach (var text in parent.Texts)
                 {
                     GetTextBlock(text).Foreground = Brushes.Red;
                 }
 
-                selected.Blocks.Add(block);
+                foreach(var block in parent.Blocks)
+                {
+                    Select(block);
+                }
+
+                selected.Blocks.Add(parent);
             }
         }
 
@@ -1158,16 +1199,21 @@ namespace Sheet
 
             if (selected.Blocks != null)
             {
-                foreach (var block in selected.Blocks)
+                foreach (var parent in selected.Blocks)
                 {
-                    foreach (var line in block.Lines)
+                    foreach (var line in parent.Lines)
                     {
                         line.Stroke = Brushes.Black;
                     }
 
-                    foreach (var text in block.Texts)
+                    foreach (var text in parent.Texts)
                     {
                         GetTextBlock(text).Foreground = Brushes.Black;
+                    }
+
+                    foreach (var block in parent.Blocks)
+                    {
+                        Deselect(block);
                     }
                 }
 
@@ -1299,46 +1345,12 @@ namespace Sheet
         {
             foreach (var block in parent.Blocks)
             {
-                bool isSelected = false;
-
-                foreach (var line in block.Lines)
-                {
-                    var bounds = VisualTreeHelper.GetContentBounds(line);
-                    if (rect.IntersectsWith(bounds))
-                    {
-                        selected.Blocks.Add(block);
-                        isSelected = true;
-                        break;
-                    }
-                }
-
-                if (!isSelected)
-                {
-                    foreach (var text in block.Texts)
-                    {
-                        var bounds = VisualTreeHelper.GetContentBounds(text);
-                        var offset = text.TranslatePoint(new Point(0, 0), relative);
-                        bounds.Offset(offset.X, offset.Y);
-                        if (rect.IntersectsWith(bounds))
-                        {
-                            selected.Blocks.Add(block);
-                            isSelected = true;
-                            break;
-                        }
-                    }
-                }
+                bool isSelected = HitTestBlock(block, selected, rect, relative);
 
                 if (isSelected)
                 {
-                    foreach (var line in block.Lines)
-                    {
-                        line.Stroke = Brushes.Red;
-                    }
-
-                    foreach (var text in block.Texts)
-                    {
-                        GetTextBlock(text).Foreground = Brushes.Red;
-                    }
+                    selected.Blocks.Add(block);
+                    Select(block);
 
                     if (onlyFirst)
                     {
@@ -1346,6 +1358,50 @@ namespace Sheet
                     }
                 }
             }
+        }
+
+        private static bool HitTestBlock(Block parent, Block selected, Rect rect, UIElement relative)
+        {
+            bool isSelected = false;
+
+            foreach (var line in parent.Lines)
+            {
+                var bounds = VisualTreeHelper.GetContentBounds(line);
+                if (rect.IntersectsWith(bounds))
+                {
+                    isSelected = true;
+                    break;
+                }
+            }
+
+            if (!isSelected)
+            {
+                foreach (var text in parent.Texts)
+                {
+                    var bounds = VisualTreeHelper.GetContentBounds(text);
+                    var offset = text.TranslatePoint(new Point(0, 0), relative);
+                    bounds.Offset(offset.X, offset.Y);
+                    if (rect.IntersectsWith(bounds))
+                    {
+                        isSelected = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!isSelected)
+            {
+                foreach(var block in parent.Blocks)
+                {
+                    if (HitTestBlock(block, selected, rect, relative))
+                    {
+                        isSelected = true;
+                        break;
+                    }
+                }
+            }
+
+            return isSelected;
         }
 
         #endregion
