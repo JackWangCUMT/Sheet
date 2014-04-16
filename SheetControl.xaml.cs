@@ -268,6 +268,7 @@ namespace Sheet
             None,
             Selection,
             Pan,
+            Move,
             Line,
             AndGate,
             OrGate
@@ -878,6 +879,32 @@ namespace Sheet
 
         #region Move
 
+        private void InitMove(Point p)
+        {
+            tempMode = mode;
+            mode = Mode.Move;
+            p.X = Snap(p.X);
+            p.Y = Snap(p.Y);
+            panStartPoint = p;
+            tempLine = null;
+            selectionRect = null;
+            Overlay.CaptureMouse();
+        }
+
+        private void Move(Point p)
+        {
+            p.X = Snap(p.X);
+            p.Y = Snap(p.Y);
+            Move(p.X - panStartPoint.X, p.Y - panStartPoint.Y);
+            panStartPoint = p;
+        }
+
+        private void FinishMove()
+        {
+            mode = tempMode;
+            Overlay.ReleaseMouseCapture();
+        }
+
         private void Move(double x, double y)
         {
             Push();
@@ -1030,7 +1057,7 @@ namespace Sheet
 
         #endregion
 
-        #region Selection Rect
+        #region Selection
 
         private void InitSelectionRect(Point p)
         {
@@ -1064,7 +1091,7 @@ namespace Sheet
             double height = selectionRect.Height;
 
             CancelSelectionRect();
-            HitTest(new Rect(x, y, width, height));
+            HitTest(new Rect(x, y, width, height), this, logic, selected);
         }
 
         private void CancelSelectionRect()
@@ -1073,163 +1100,6 @@ namespace Sheet
             Overlay.Children.Remove(selectionRect);
             selectionRect = null;
         }
-
-        #endregion
-
-        #region HitTest
-
-        private void HitTest(Rect rect)
-        {
-            selected.Init();
-
-            HitTestLines(logic, selected, rect, false);
-            HitTestTexts(logic, selected, rect, false, GetParent());
-            HitTestBlocks(logic, selected, rect, false, GetParent());
-
-            if (selected.Lines.Count == 0)
-            {
-                selected.Lines = null;
-            }
-
-            if (selected.Texts.Count == 0)
-            {
-                selected.Texts = null;
-            }
-
-            if (selected.Blocks.Count == 0)
-            {
-                selected.Blocks = null;
-            }
-        }
-
-        private void HitTest(Point p)
-        {
-            selected.Init();
-
-            var rect = new Rect(p.X - hitSize, p.Y - hitSize, 2 * hitSize, 2 * hitSize);
-
-            HitTestLines(logic, selected, rect, true);
-
-            if (selected.Lines.Count <= 0)
-            {
-                HitTestTexts(logic, selected, rect, true, GetParent());
-            }
-
-            if (selected.Lines.Count <= 0 && selected.Texts.Count <= 0)
-            {
-                HitTestBlocks(logic, selected, rect, true, GetParent());
-            }
-
-            if (selected.Lines.Count == 0)
-            {
-                selected.Lines = null;
-            }
-
-            if (selected.Texts.Count == 0)
-            {
-                selected.Texts = null;
-            }
-
-            if (selected.Blocks.Count == 0)
-            {
-                selected.Blocks = null;
-            }
-        }
-
-        private static void HitTestLines(Block logic, Block selected, Rect rect, bool onlyFirst)
-        {
-            foreach (var line in logic.Lines)
-            {
-                var bounds = VisualTreeHelper.GetContentBounds(line);
-                if (rect.IntersectsWith(bounds))
-                {
-                    line.Stroke = Brushes.Red;
-                    selected.Lines.Add(line);
-
-                    if (onlyFirst)
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
-        private static void HitTestTexts(Block logic, Block selected, Rect rect, bool onlyFirst, UIElement relative)
-        {
-            foreach (var text in logic.Texts)
-            {
-                var bounds = VisualTreeHelper.GetContentBounds(text);
-                var offset = text.TranslatePoint(new Point(0, 0), relative);
-                bounds.Offset(offset.X, offset.Y);
-                if (rect.IntersectsWith(bounds))
-                {
-                    GetTextBlock(text).Foreground = Brushes.Red;
-                    selected.Texts.Add(text);
-
-                    if (onlyFirst)
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
-        private static void HitTestBlocks(Block logic, Block selected, Rect rect, bool onlyFirst, UIElement relative)
-        {
-            foreach (var block in logic.Blocks)
-            {
-                bool isSelected = false;
-
-                foreach (var line in block.Lines)
-                {
-                    var bounds = VisualTreeHelper.GetContentBounds(line);
-                    if (rect.IntersectsWith(bounds))
-                    {
-                        selected.Blocks.Add(block);
-                        isSelected = true;
-                        break;
-                    }
-                }
-
-                if (!isSelected)
-                {
-                    foreach (var text in block.Texts)
-                    {
-                        var bounds = VisualTreeHelper.GetContentBounds(text);
-                        var offset = text.TranslatePoint(new Point(0, 0), relative);
-                        bounds.Offset(offset.X, offset.Y);
-                        if (rect.IntersectsWith(bounds))
-                        {
-                            selected.Blocks.Add(block);
-                            isSelected = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (isSelected)
-                {
-                    foreach (var line in block.Lines)
-                    {
-                        line.Stroke = Brushes.Red;
-                    }
-
-                    foreach (var text in block.Texts)
-                    {
-                        GetTextBlock(text).Foreground = Brushes.Red;
-                    }
-
-                    if (onlyFirst)
-                    {
-                        break;
-                    }
-                }
-            }
-        }
-
-        #endregion
-
-        #region Selection
 
         private void SelectAll()
         {
@@ -1301,6 +1171,179 @@ namespace Sheet
                 }
 
                 selected.Blocks = null;
+            }
+        }
+
+        #endregion
+
+        #region HitTest
+
+        private static void HitTest(Rect rect, ISheet sheet, Block parent, Block selected)
+        {
+            selected.Init();
+
+            if (parent.Lines != null)
+            {
+                HitTestLines(parent, selected, rect, false);
+            }
+
+            if (parent.Texts != null)
+            {
+                HitTestTexts(parent, selected, rect, false, sheet.GetParent());
+            }
+
+            if (parent.Blocks != null)
+            {
+                HitTestBlocks(parent, selected, rect, false, sheet.GetParent());
+            }
+
+            if (selected.Lines.Count == 0)
+            {
+                selected.Lines = null;
+            }
+
+            if (selected.Texts.Count == 0)
+            {
+                selected.Texts = null;
+            }
+
+            if (selected.Blocks.Count == 0)
+            {
+                selected.Blocks = null;
+            }
+        }
+
+        private static void HitTest(Point p, double size, ISheet sheet, Block parent, Block selected)
+        {
+            selected.Init();
+
+            var rect = new Rect(p.X - size, p.Y - size, 2 * size, 2 * size);
+
+            if (parent.Lines != null)
+            {
+                HitTestLines(parent, selected, rect, true);
+            }
+
+            if (selected.Lines.Count <= 0)
+            {
+                if (parent.Texts != null)
+                {
+                    HitTestTexts(parent, selected, rect, true, sheet.GetParent());
+                }
+            }
+
+            if (selected.Lines.Count <= 0 && selected.Texts.Count <= 0)
+            {
+                if (parent.Blocks != null)
+                {
+                    HitTestBlocks(parent, selected, rect, true, sheet.GetParent());
+                }
+            }
+
+            if (selected.Lines.Count == 0)
+            {
+                selected.Lines = null;
+            }
+
+            if (selected.Texts.Count == 0)
+            {
+                selected.Texts = null;
+            }
+
+            if (selected.Blocks.Count == 0)
+            {
+                selected.Blocks = null;
+            }
+        }
+
+        private static void HitTestLines(Block parent, Block selected, Rect rect, bool onlyFirst)
+        {
+            foreach (var line in parent.Lines)
+            {
+                var bounds = VisualTreeHelper.GetContentBounds(line);
+                if (rect.IntersectsWith(bounds))
+                {
+                    line.Stroke = Brushes.Red;
+                    selected.Lines.Add(line);
+
+                    if (onlyFirst)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        private static void HitTestTexts(Block parent, Block selected, Rect rect, bool onlyFirst, UIElement relative)
+        {
+            foreach (var text in parent.Texts)
+            {
+                var bounds = VisualTreeHelper.GetContentBounds(text);
+                var offset = text.TranslatePoint(new Point(0, 0), relative);
+                bounds.Offset(offset.X, offset.Y);
+                if (rect.IntersectsWith(bounds))
+                {
+                    GetTextBlock(text).Foreground = Brushes.Red;
+                    selected.Texts.Add(text);
+
+                    if (onlyFirst)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        private static void HitTestBlocks(Block parent, Block selected, Rect rect, bool onlyFirst, UIElement relative)
+        {
+            foreach (var block in parent.Blocks)
+            {
+                bool isSelected = false;
+
+                foreach (var line in block.Lines)
+                {
+                    var bounds = VisualTreeHelper.GetContentBounds(line);
+                    if (rect.IntersectsWith(bounds))
+                    {
+                        selected.Blocks.Add(block);
+                        isSelected = true;
+                        break;
+                    }
+                }
+
+                if (!isSelected)
+                {
+                    foreach (var text in block.Texts)
+                    {
+                        var bounds = VisualTreeHelper.GetContentBounds(text);
+                        var offset = text.TranslatePoint(new Point(0, 0), relative);
+                        bounds.Offset(offset.X, offset.Y);
+                        if (rect.IntersectsWith(bounds))
+                        {
+                            selected.Blocks.Add(block);
+                            isSelected = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (isSelected)
+                {
+                    foreach (var line in block.Lines)
+                    {
+                        line.Stroke = Brushes.Red;
+                    }
+
+                    foreach (var text in block.Texts)
+                    {
+                        GetTextBlock(text).Foreground = Brushes.Red;
+                    }
+
+                    if (onlyFirst)
+                    {
+                        break;
+                    }
+                }
             }
         }
 
@@ -1513,6 +1556,18 @@ namespace Sheet
 
         private void Overlay_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (HaveSelected())
+            {
+                var temp = new Block();
+                HitTest(e.GetPosition(Overlay), hitSize, this, selected, temp);
+
+                if (temp.Lines != null || temp.Texts != null || temp.Blocks != null)
+                {
+                    InitMove(e.GetPosition(this));
+                    return;
+                }
+            }
+
             DeselectAll();
 
             if (mode == Mode.AndGate)
@@ -1525,10 +1580,14 @@ namespace Sheet
             }
             else if (mode == Mode.Selection)
             {
-                HitTest(e.GetPosition(Overlay));
+                HitTest(e.GetPosition(Overlay), hitSize, this, logic, selected);
                 if (!HaveSelected())
                 {
                     InitSelectionRect(e.GetPosition(Overlay));
+                }
+                else
+                {
+                    InitMove(e.GetPosition(this));
                 }
             }
             else if (mode == Mode.Line && !Overlay.IsMouseCaptured)
@@ -1551,6 +1610,10 @@ namespace Sheet
             {
                 FinishSelectionRect();
             }
+            else if (mode == Mode.Move && Overlay.IsMouseCaptured)
+            {
+                FinishMove();
+            }
         }
 
         private void Overlay_PreviewMouseMove(object sender, MouseEventArgs e)
@@ -1566,6 +1629,10 @@ namespace Sheet
             else if (mode == Mode.Pan && Overlay.IsMouseCaptured)
             {
                 Pan(e.GetPosition(this));
+            }
+            else if (mode == Mode.Move && Overlay.IsMouseCaptured)
+            {
+                Move(e.GetPosition(this));
             }
         }
 
