@@ -230,7 +230,18 @@ namespace Sheet
 
     #endregion
 
-    public partial class SheetControl : UserControl
+    #region ISheet
+
+    public interface ISheet
+    {
+        FrameworkElement GetParent();
+        void Add(UIElement element);
+        void Remove(UIElement element);
+    }
+
+    #endregion
+
+    public partial class SheetControl : UserControl, ISheet
     {
         #region Block
 
@@ -266,6 +277,8 @@ namespace Sheet
 
         #region Fields
 
+        private Stack<string> undos = new Stack<string>();
+        private Stack<string> redos = new Stack<string>();
         private Mode mode = Mode.Selection;
         private Mode tempMode = Mode.None;
         private int zoomIndex = 9;
@@ -346,6 +359,25 @@ namespace Sheet
 
         #endregion
 
+        #region ISheet
+
+        public FrameworkElement GetParent()
+        {
+            return Sheet;
+        }
+
+        public void Add(UIElement element)
+        {
+            Sheet.Children.Add(element);
+        }
+
+        public void Remove(UIElement element)
+        {
+            Sheet.Children.Remove(element);
+        }
+
+        #endregion
+
         #region Constructor
 
         public SheetControl()
@@ -366,31 +398,12 @@ namespace Sheet
 
         #endregion
 
-        #region Sheet
-
-        private FrameworkElement GetSheet()
-        {
-            return Sheet;
-        }
-
-        private void Add(UIElement element)
-        {
-            Sheet.Children.Add(element);
-        }
-
-        private void Remove(UIElement element)
-        {
-            Sheet.Children.Remove(element);
-        }
-
-        #endregion
-
         #region Grid
 
         private void CreateGrid()
         {
-            double width = GetSheet().ActualWidth;
-            double height = GetSheet().ActualHeight;
+            double width = GetParent().ActualWidth;
+            double height = GetParent().ActualHeight;
 
             for (double y = gridSize; y < height; y += gridSize)
             {
@@ -413,18 +426,20 @@ namespace Sheet
 
         #region Blocks
 
-        private Block CreateGenericGateBlock(string name, double x, double y, string text)
+        private void AddAndGate(Point p)
         {
-            var block = new Block() { Name = name };
-            block.Init();
+            Push();
+            double x = Snap(p.X);
+            double y = Snap(p.Y);
+            logic.Blocks.Add(CreateAndGateBlock(x, y));
+        }
 
-            AddTextToBlock(block, text, x, y, 30.0, 30.0, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0);
-            AddLineToBlock(block, x, y, x + 30.0, y);
-            AddLineToBlock(block, x, y + 30.0, x + 30.0, y + 30.0);
-            AddLineToBlock(block, x, y, x, y + 30.0);
-            AddLineToBlock(block, x + 30.0, y, x + 30.0, y + 30.0);
-
-            return block;
+        private void AddOrGate(Point p)
+        {
+            Push();
+            double x = Snap(p.X);
+            double y = Snap(p.Y);
+            logic.Blocks.Add(CreateOrGateBlock(x, y, 1));
         }
 
         private Block CreateAndGateBlock(double x, double y)
@@ -437,34 +452,34 @@ namespace Sheet
             return CreateGenericGateBlock("OR", x, y, "≥" + count.ToString());
         }
 
-        private void AddLineToBlock(Block block, double x1, double y1, double x2, double y2)
+        private Block CreateGenericGateBlock(string name, double x, double y, string text)
         {
-            var line = CreateLine(lineThickness / Zoom, x1, y1, x2, y2);
-            block.Lines.Add(line);
-            Add(line);
+            var block = new Block() { Name = name };
+            block.Init();
+
+            double thickness = lineThickness / Zoom;
+
+            AddTextToBlock(this, block, text, x, y, 30.0, 30.0, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0);
+            AddLineToBlock(this, block, thickness, x, y, x + 30.0, y);
+            AddLineToBlock(this, block, thickness, x, y + 30.0, x + 30.0, y + 30.0);
+            AddLineToBlock(this, block, thickness, x, y, x, y + 30.0);
+            AddLineToBlock(this, block, thickness, x + 30.0, y, x + 30.0, y + 30.0);
+
+            return block;
         }
 
-        private void AddTextToBlock(Block block, string str, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size)
+        private static void AddTextToBlock(ISheet sheet, Block block, string str, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size)
         {
             var text = CreateText(str, x, y, width, height, halign, valign, size);
             block.Texts.Add(text);
-            Add(text);
+            sheet.Add(text);
         }
 
-        private void AddOrGate(Point p)
+        private static void AddLineToBlock(ISheet sheet, Block block, double thickness, double x1, double y1, double x2, double y2)
         {
-            Push();
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
-            logic.Blocks.Add(CreateOrGateBlock(x, y, 1));
-        }
-
-        private void AddAndGate(Point p)
-        {
-            Push();
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
-            logic.Blocks.Add(CreateAndGateBlock(x, y));
+            var line = CreateLine(thickness, x1, y1, x2, y2);
+            block.Lines.Add(line);
+            sheet.Add(line);
         }
 
         #endregion
@@ -649,12 +664,12 @@ namespace Sheet
         {
             DeselectAll();
             double thickness = lineThickness / Zoom;
-            Load(sheet.Texts, logic, selected, select, thickness);
-            Load(sheet.Lines, logic, selected, select, thickness);
-            Load(sheet.Blocks, logic, selected, select, thickness);
+            Load(this, sheet.Texts, logic, selected, select, thickness);
+            Load(this, sheet.Lines, logic, selected, select, thickness);
+            Load(this, sheet.Blocks, logic, selected, select, thickness);
         }
 
-        private void Load(IEnumerable<TextItem> textItems, Block parent, Block selected, bool select, double thickness)
+        private static void Load(ISheet sheet, IEnumerable<TextItem> textItems, Block parent, Block selected, bool select, double thickness)
         {
             if (select)
             {
@@ -663,7 +678,7 @@ namespace Sheet
 
             foreach (var textItem in textItems)
             {
-                var text = LoadTextItem(parent, textItem);
+                var text = LoadTextItem(sheet, parent, textItem);
 
                 if (select)
                 {
@@ -673,7 +688,7 @@ namespace Sheet
             }
         }
 
-        private void Load(IEnumerable<LineItem> lineItems, Block parent, Block selected, bool select, double thickness)
+        private static void Load(ISheet sheet, IEnumerable<LineItem> lineItems, Block parent, Block selected, bool select, double thickness)
         {
             if (select)
             {
@@ -682,7 +697,7 @@ namespace Sheet
 
             foreach (var lineItem in lineItems)
             {
-                var line = LoadLineItem(parent, lineItem, thickness);
+                var line = LoadLineItem(sheet, parent, lineItem, thickness);
 
                 if (select)
                 {
@@ -692,7 +707,7 @@ namespace Sheet
             }
         }
 
-        private void Load(IEnumerable<BlockItem> blockItems, Block parent, Block selected, bool select, double thickness)
+        private static void Load(ISheet sheet, IEnumerable<BlockItem> blockItems, Block parent, Block selected, bool select, double thickness)
         {
             if (select)
             {
@@ -701,7 +716,7 @@ namespace Sheet
 
             foreach (var blockItem in blockItems)
             {
-                var block = LoadBlockItem(logic, blockItem, select, thickness);
+                var block = LoadBlockItem(sheet, parent, blockItem, select, thickness);
 
                 if (select)
                 {
@@ -710,7 +725,7 @@ namespace Sheet
             }
         }
 
-        private Grid LoadTextItem(Block parent, TextItem textItem)
+        private static Grid LoadTextItem(ISheet sheet, Block parent, TextItem textItem)
         {
             var text = CreateText(textItem.Text,
                                   textItem.X, textItem.Y,
@@ -719,26 +734,26 @@ namespace Sheet
                                   (VerticalAlignment)textItem.VAlign,
                                   textItem.Size);
             parent.Texts.Add(text);
-            Add(text);
+            sheet.Add(text);
             return text;
         }
 
-        private Line LoadLineItem(Block parent, LineItem lineItem, double thickness)
+        private static Line LoadLineItem(ISheet sheet, Block parent, LineItem lineItem, double thickness)
         {
             var line = CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
             parent.Lines.Add(line);
-            Add(line);
+            sheet.Add(line);
             return line;
         }
 
-        private Block LoadBlockItem(Block parent, BlockItem blockItem, bool select, double thickness)
+        private static Block LoadBlockItem(ISheet sheet, Block parent, BlockItem blockItem, bool select, double thickness)
         {
             var block = new Block() { Name = blockItem.Name };
             block.Init();
 
             foreach (var textItem in blockItem.Texts)
             {
-                var text = LoadTextItem(block, textItem);
+                var text = LoadTextItem(sheet, block, textItem);
 
                 if (select)
                 {
@@ -748,7 +763,7 @@ namespace Sheet
 
             foreach (var lineItem in blockItem.Lines)
             {
-                var line = LoadLineItem(block, lineItem, thickness);
+                var line = LoadLineItem(sheet, block, lineItem, thickness);
 
                 if (select)
                 {
@@ -758,7 +773,7 @@ namespace Sheet
 
             foreach (var childBlockItem in blockItem.Blocks)
             {
-                LoadBlockItem(block, childBlockItem, select, thickness);
+                LoadBlockItem(sheet, block, childBlockItem, select, thickness);
             }
 
             parent.Blocks.Add(block);
@@ -1068,8 +1083,8 @@ namespace Sheet
             selected.Init();
 
             HitTestLines(logic, selected, rect, false);
-            HitTestTexts(logic, selected, rect, false, GetSheet());
-            HitTestBlocks(logic, selected, rect, false, GetSheet());
+            HitTestTexts(logic, selected, rect, false, GetParent());
+            HitTestBlocks(logic, selected, rect, false, GetParent());
 
             if (selected.Lines.Count == 0)
             {
@@ -1097,12 +1112,12 @@ namespace Sheet
 
             if (selected.Lines.Count <= 0)
             {
-                HitTestTexts(logic, selected, rect, true, GetSheet());
+                HitTestTexts(logic, selected, rect, true, GetParent());
             }
 
             if (selected.Lines.Count <= 0 && selected.Texts.Count <= 0)
             {
-                HitTestBlocks(logic, selected, rect, true, GetSheet());
+                HitTestBlocks(logic, selected, rect, true, GetParent());
             }
 
             if (selected.Lines.Count == 0)
@@ -1343,28 +1358,25 @@ namespace Sheet
 
         #region Undo/Redo
 
-        private Stack<string> Undos = new Stack<string>();
-        private Stack<string> Redos = new Stack<string>();
-
         private void Push()
         {
             var text = ItemSerializer.Serialize(CreateSheet());
-            Undos.Push(text);
+            undos.Push(text);
         }
 
         private void Pop()
         {
-            Undos.Pop();
+            undos.Pop();
         }
 
         private void Undo()
         {
-            if (Undos.Count > 0)
+            if (undos.Count > 0)
             {
                 var redo = ItemSerializer.Serialize(CreateSheet());
-                Redos.Push(redo);
+                redos.Push(redo);
 
-                var text = Undos.Pop();
+                var text = undos.Pop();
                 Reset();
                 Load(ItemSerializer.Deserialize(text), false);
             }
@@ -1372,12 +1384,12 @@ namespace Sheet
 
         private void Redo()
         {
-            if (Redos.Count > 0)
+            if (redos.Count > 0)
             {
                 var undo = ItemSerializer.Serialize(CreateSheet());
-                Undos.Push(undo);
+                undos.Push(undo);
 
-                var text = Redos.Pop();
+                var text = redos.Pop();
                 Reset();
                 Load(ItemSerializer.Deserialize(text), false);
             }
