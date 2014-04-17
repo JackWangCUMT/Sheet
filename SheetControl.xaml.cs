@@ -449,19 +449,21 @@ namespace Sheet
 
         private void CreateGrid()
         {
-            double width = GetParent().ActualWidth;
-            double height = GetParent().ActualHeight;
+            double startX = 300.0;
+            double startY = 0.0;
+            double width = 600.0;
+            double height = 750.0;
 
-            for (double y = gridSize; y < height; y += gridSize)
+            for (double y = startY + gridSize; y < height + startY; y += gridSize)
             {
-                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = 0, Y1 = y, X2 = width, Y2 = y };
+                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = startX, Y1 = y, X2 = width + startX, Y2 = y };
                 gridLines.Add(l);
                 Back.Children.Add(l);
             }
 
-            for (double x = gridSize; x < width; x += gridSize)
+            for (double x = startX + gridSize; x < startX + width; x += gridSize)
             {
-                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = x, Y1 = 0, X2 = x, Y2 = height };
+                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = x, Y1 = startY, X2 = x, Y2 = height + startY };
                 gridLines.Add(l);
                 Back.Children.Add(l);
             }
