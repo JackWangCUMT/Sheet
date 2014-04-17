@@ -26,6 +26,7 @@ Keyboard  Shortcuts:
     Down            Move Down
     Left            Move Left
     Right           Move Right
+    H               Show Help
 
 Mouse:
 
