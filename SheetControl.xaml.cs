@@ -282,6 +282,9 @@ namespace Sheet
         FrameworkElement GetParent();
         void Add(UIElement element);
         void Remove(UIElement element);
+        void Capture();
+        void ReleaseCapture();
+        bool IsCaptured { get; }
     }
 
     #endregion
@@ -320,10 +323,69 @@ namespace Sheet
 
     #endregion
 
-    public partial class SheetControl : UserControl, ISheet
+    #region CanvasSheet
+
+    public class CanvasSheet : ISheet
     {
         #region Fields
 
+        private Canvas canvas = null;
+
+        #endregion
+
+        #region Constructor
+
+        public CanvasSheet(Canvas canvas)
+        {
+            this.canvas = canvas;
+        }
+
+        #endregion
+
+        #region ISheet
+
+        public FrameworkElement GetParent()
+        {
+            return canvas;
+        }
+
+        public void Add(UIElement element)
+        {
+            canvas.Children.Add(element);
+        }
+
+        public void Remove(UIElement element)
+        {
+            canvas.Children.Remove(element);
+        }
+
+        public void Capture()
+        {
+            canvas.CaptureMouse();
+        }
+
+        public void ReleaseCapture()
+        {
+            canvas.ReleaseMouseCapture();
+        }
+
+        public bool IsCaptured
+        {
+            get { return canvas.IsMouseCaptured; }
+        }
+
+        #endregion
+    }
+
+    #endregion
+
+    public partial class SheetControl : UserControl
+    {
+        #region Fields
+
+        private ISheet back = null;
+        private ISheet sheet = null;
+        private ISheet overlay = null;
         private Stack<string> undos = new Stack<string>();
         private Stack<string> redos = new Stack<string>();
         private Mode mode = Mode.Selection;
@@ -406,30 +468,15 @@ namespace Sheet
 
         #endregion
 
-        #region ISheet
-
-        public FrameworkElement GetParent()
-        {
-            return Sheet;
-        }
-
-        public void Add(UIElement element)
-        {
-            Sheet.Children.Add(element);
-        }
-
-        public void Remove(UIElement element)
-        {
-            Sheet.Children.Remove(element);
-        }
-
-        #endregion
-
         #region Constructor
 
         public SheetControl()
         {
             InitializeComponent();
+
+            back = new CanvasSheet(Back);
+            sheet = new CanvasSheet(Sheet);
+            overlay = new CanvasSheet(Overlay);
 
             logic = new Block() { Name = "LOGIC" };
             logic.Init();
@@ -438,7 +485,7 @@ namespace Sheet
 
             Loaded += (s, e) =>
             {
-                CreateGrid(300.0, 0.0, 600.0, 750.0, gridSize, gridThickness);
+                CreateGrid(back, 300.0, 0.0, 600.0, 750.0, gridSize, gridThickness);
                 AdjustThickness(gridLines, gridThickness / zoomFactors[zoomIndex]);
                 Focus();
             };
@@ -448,7 +495,7 @@ namespace Sheet
 
         #region Grid
 
-        private void AddGridLine(double thickness, double x1, double y1, double x2, double y2)
+        private void AddGridLine(ISheet sheet, double thickness, double x1, double y1, double x2, double y2)
         {
             var line = new Line()
             {
@@ -460,19 +507,19 @@ namespace Sheet
                 Y2 = y2
             };
             gridLines.Add(line);
-            Back.Children.Add(line);
+            sheet.Add(line);
         }
 
-        private void CreateGrid(double startX, double startY, double width, double height, double gridSize, double gridThickness)
+        private void CreateGrid(ISheet sheet, double startX, double startY, double width, double height, double gridSize, double gridThickness)
         {
             for (double y = startY + gridSize; y < height + startY; y += gridSize)
             {
-                AddGridLine(gridThickness, startX, y, width + startX, y);
+                AddGridLine(sheet, gridThickness, startX, y, width + startX, y);
             }
 
             for (double x = startX + gridSize; x < startX + width; x += gridSize)
             {
-                AddGridLine(gridThickness, x, startY, x, height + startY);
+                AddGridLine(sheet, gridThickness, x, startY, x, height + startY);
             }
         }
 
@@ -485,7 +532,7 @@ namespace Sheet
             Push();
             double x = Snap(p.X);
             double y = Snap(p.Y);
-            logic.Blocks.Add(CreateAndGateBlock(this, x, y, lineThickness / Zoom));
+            logic.Blocks.Add(CreateAndGateBlock(sheet, x, y, lineThickness / Zoom));
         }
 
         private void AddOrGate(Point p)
@@ -493,7 +540,7 @@ namespace Sheet
             Push();
             double x = Snap(p.X);
             double y = Snap(p.Y);
-            logic.Blocks.Add(CreateOrGateBlock(this, x, y, 1, lineThickness / Zoom));
+            logic.Blocks.Add(CreateOrGateBlock(sheet, x, y, 1, lineThickness / Zoom));
         }
 
         private static Block CreateAndGateBlock(ISheet sheet, double x, double y, double thickness)
@@ -717,13 +764,13 @@ namespace Sheet
 
         #region Load
 
-        private void Load(BlockItem sheet, bool select)
+        private void Load(BlockItem block, bool select)
         {
             DeselectAll(selected);
             double thickness = lineThickness / Zoom;
-            Load(this, sheet.Texts, logic, selected, select, thickness);
-            Load(this, sheet.Lines, logic, selected, select, thickness);
-            Load(this, sheet.Blocks, logic, selected, select, thickness);
+            Load(sheet, block.Texts, logic, selected, select, thickness);
+            Load(sheet, block.Lines, logic, selected, select, thickness);
+            Load(sheet, block.Blocks, logic, selected, select, thickness);
         }
 
         private static void Load(ISheet sheet, IEnumerable<TextItem> textItems, Block parent, Block selected, bool select, double thickness)
@@ -914,15 +961,15 @@ namespace Sheet
             if (HaveSelected())
             {
                 Push();
-                Remove(this, logic, selected);
+                Remove(sheet, logic, selected);
             }
         }
 
         private void Reset()
         {
-            RemoveLines(this, logic.Lines);
-            RemoveTexts(this, logic.Texts);
-            RemoveBlocks(this, logic.Blocks);
+            RemoveLines(sheet, logic.Lines);
+            RemoveTexts(sheet, logic.Texts);
+            RemoveBlocks(sheet, logic.Blocks);
 
             logic.Lines.Clear();
             logic.Texts.Clear();
@@ -947,7 +994,7 @@ namespace Sheet
             panStartPoint = p;
             tempLine = null;
             selectionRect = null;
-            Overlay.CaptureMouse();
+            overlay.Capture();
         }
 
         private void Move(Point p)
@@ -961,7 +1008,7 @@ namespace Sheet
         private void FinishMove()
         {
             mode = tempMode;
-            Overlay.ReleaseMouseCapture();
+            overlay.ReleaseCapture();
         }
 
         private void Move(double x, double y)
@@ -1094,7 +1141,7 @@ namespace Sheet
             panStartPoint = p;
             tempLine = null;
             selectionRect = null;
-            Overlay.CaptureMouse();
+            overlay.Capture();
         }
 
         private void Pan(Point p)
@@ -1107,7 +1154,7 @@ namespace Sheet
         private void FinishPan()
         {
             mode = tempMode;
-            Overlay.ReleaseMouseCapture();
+            overlay.ReleaseCapture();
         }
 
         private void ResetPanAndZoom()
@@ -1128,8 +1175,8 @@ namespace Sheet
             double x = p.X;
             double y = p.Y;
             selectionRect = CreateSelectionRect(selectionThickness / Zoom, x, y, 0.0, 0.0);
-            Overlay.Children.Add(selectionRect);
-            Overlay.CaptureMouse();
+            overlay.Add(selectionRect);
+            overlay.Capture();
         }
 
         private void MoveSelectionRect(Point p)
@@ -1154,13 +1201,13 @@ namespace Sheet
             double height = selectionRect.Height;
 
             CancelSelectionRect();
-            HitTest(new Rect(x, y, width, height), this, logic, selected);
+            HitTest(new Rect(x, y, width, height), sheet, logic, selected);
         }
 
         private void CancelSelectionRect()
         {
-            Overlay.ReleaseMouseCapture();
-            Overlay.Children.Remove(selectionRect);
+            overlay.ReleaseCapture();
+            overlay.Remove(selectionRect);
             selectionRect = null;
         }
 
@@ -1476,8 +1523,8 @@ namespace Sheet
             double x = Snap(p.X);
             double y = Snap(p.Y);
             tempLine = CreateLine(lineThickness / Zoom, x, y, x, y);
-            Overlay.Children.Add(tempLine);
-            Overlay.CaptureMouse();
+            overlay.Add(tempLine);
+            overlay.Capture();
         }
 
         private void MoveTempLine(Point p)
@@ -1500,10 +1547,10 @@ namespace Sheet
             }
             else
             {
-                Overlay.ReleaseMouseCapture();
-                Overlay.Children.Remove(tempLine);
+                overlay.ReleaseCapture();
+                overlay.Remove(tempLine);
                 logic.Lines.Add(tempLine);
-                Add(tempLine);
+                sheet.Add(tempLine);
                 tempLine = null;
             }
         }
@@ -1511,8 +1558,8 @@ namespace Sheet
         private void CancelTempLine()
         {
             Pop();
-            Overlay.ReleaseMouseCapture();
-            Overlay.Children.Remove(tempLine);
+            overlay.ReleaseCapture();
+            overlay.Remove(tempLine);
             tempLine = null;
         }
 
@@ -1641,7 +1688,7 @@ namespace Sheet
         private bool CanInitMove(Point p)
         {
             var temp = new Block();
-            HitTest(p, hitSize, this, selected, temp);
+            HitTest(p, hitSize, sheet, selected, temp);
 
             if (temp.Lines != null || temp.Texts != null || temp.Blocks != null)
             {
@@ -1653,7 +1700,7 @@ namespace Sheet
 
         private void Overlay_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (HaveSelected() && CanInitMove(e.GetPosition(Overlay)))
+            if (HaveSelected() && CanInitMove(e.GetPosition(overlay.GetParent())))
             {
                 InitMove(e.GetPosition(this));
                 return;
@@ -1663,53 +1710,53 @@ namespace Sheet
 
             if (mode == Mode.AndGate)
             {
-                AddAndGate(e.GetPosition(Overlay));
+                AddAndGate(e.GetPosition(overlay.GetParent()));
             }
             else if (mode == Mode.OrGate)
             {
-                AddOrGate(e.GetPosition(Overlay));
+                AddOrGate(e.GetPosition(overlay.GetParent()));
             }
             else if (mode == Mode.Selection)
             {
-                HitTest(e.GetPosition(Overlay), hitSize, this, logic, selected);
+                HitTest(e.GetPosition(overlay.GetParent()), hitSize, sheet, logic, selected);
                 if (!HaveSelected())
                 {
-                    InitSelectionRect(e.GetPosition(Overlay));
+                    InitSelectionRect(e.GetPosition(overlay.GetParent()));
                 }
                 else
                 {
                     InitMove(e.GetPosition(this));
                 }
             }
-            else if (mode == Mode.Line && !Overlay.IsMouseCaptured)
+            else if (mode == Mode.Line && !overlay.IsCaptured)
             {
-                InitTempLine(e.GetPosition(Overlay));
+                InitTempLine(e.GetPosition(overlay.GetParent()));
             }
-            else if (mode == Mode.Line && Overlay.IsMouseCaptured)
+            else if (mode == Mode.Line && overlay.IsCaptured)
             {
                 FinishTempLine();
             }
-            else if (mode == Mode.Pan && Overlay.IsMouseCaptured)
+            else if (mode == Mode.Pan && overlay.IsCaptured)
             {
                 FinishPan();
             }
-            else if (mode == Mode.Text && !Overlay.IsMouseCaptured)
+            else if (mode == Mode.Text && !overlay.IsCaptured)
             {
-                var p = e.GetPosition(Overlay);
+                var p = e.GetPosition(overlay.GetParent());
                 double x = Snap(p.X);
                 double y = Snap(p.Y);
                 Push();
-                AddTextToBlock(this, logic, "Text", x, y, 30.0, 15.0, System.Windows.HorizontalAlignment.Center, System.Windows.VerticalAlignment.Center, 11.0);
+                AddTextToBlock(sheet, logic, "Text", x, y, 30.0, 15.0, System.Windows.HorizontalAlignment.Center, System.Windows.VerticalAlignment.Center, 11.0);
             }
         }
 
         private void Overlay_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (mode == Mode.Selection && Overlay.IsMouseCaptured)
+            if (mode == Mode.Selection && overlay.IsCaptured)
             {
                 FinishSelectionRect();
             }
-            else if (mode == Mode.Move && Overlay.IsMouseCaptured)
+            else if (mode == Mode.Move && overlay.IsCaptured)
             {
                 FinishMove();
             }
@@ -1717,19 +1764,19 @@ namespace Sheet
 
         private void Overlay_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            if (mode == Mode.Selection && Overlay.IsMouseCaptured)
+            if (mode == Mode.Selection && overlay.IsCaptured)
             {
-                MoveSelectionRect(e.GetPosition(Overlay));
+                MoveSelectionRect(e.GetPosition(overlay.GetParent()));
             }
-            else if (mode == Mode.Line && Overlay.IsMouseCaptured)
+            else if (mode == Mode.Line && overlay.IsCaptured)
             {
-                MoveTempLine(e.GetPosition(Overlay));
+                MoveTempLine(e.GetPosition(overlay.GetParent()));
             }
-            else if (mode == Mode.Pan && Overlay.IsMouseCaptured)
+            else if (mode == Mode.Pan && overlay.IsCaptured)
             {
                 Pan(e.GetPosition(this));
             }
-            else if (mode == Mode.Move && Overlay.IsMouseCaptured)
+            else if (mode == Mode.Move && overlay.IsCaptured)
             {
                 Move(e.GetPosition(this));
             }
@@ -1739,15 +1786,15 @@ namespace Sheet
         {
             DeselectAll(selected);
 
-            if (mode == Mode.Selection && Overlay.IsMouseCaptured)
+            if (mode == Mode.Selection && overlay.IsCaptured)
             {
                 CancelSelectionRect();
             }
-            else if (mode == Mode.Line && Overlay.IsMouseCaptured)
+            else if (mode == Mode.Line && overlay.IsCaptured)
             {
                 CancelTempLine();
             }
-            else if (!Overlay.IsMouseCaptured)
+            else if (!overlay.IsCaptured)
             {
                 InitPan(e.GetPosition(this));
             }
@@ -1755,7 +1802,7 @@ namespace Sheet
 
         private void Overlay_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (mode == Mode.Pan && Overlay.IsMouseCaptured)
+            if (mode == Mode.Pan && overlay.IsCaptured)
             {
                 FinishPan();
             }
@@ -1890,7 +1937,7 @@ namespace Sheet
 
         private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            ZoomTo(e.Delta, e.GetPosition(Overlay));
+            ZoomTo(e.Delta, e.GetPosition(overlay.GetParent()));
         }
 
         private void UserControl_PreviewMouseDown(object sender, MouseButtonEventArgs e)
