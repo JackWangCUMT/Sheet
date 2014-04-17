@@ -22,6 +22,7 @@ Keyboard  Shortcuts:
     R               Reset
     Ctrl+A          Select All
     B               Create Block
+    Ctrl+B          Break Block
     Up              Move Up
     Down            Move Down
     Left            Move Left
