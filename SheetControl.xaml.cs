@@ -1747,19 +1747,6 @@ namespace Sheet
             }
         }
 
-        private void Workspace_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            ZoomTo(e.Delta, e.GetPosition(Overlay));
-        }
-
-        private void Workspace_PreviewMouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
-            {
-                ResetPanAndZoom();
-            }
-        }
-
         private void UserControl_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
@@ -1884,6 +1871,19 @@ namespace Sheet
                 case Key.Right:
                     Move(snapSize, 0.0);
                     break;
+            }
+        }
+
+        private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            ZoomTo(e.Delta, e.GetPosition(Overlay));
+        }
+
+        private void UserControl_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
+            {
+                ResetPanAndZoom();
             }
         }
 
