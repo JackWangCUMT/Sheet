@@ -984,6 +984,19 @@ namespace Sheet
 
         #region Move
 
+        private bool CanInitMove(Point p)
+        {
+            var temp = new Block();
+            HitTest(p, hitSize, sheet, selected, temp);
+
+            if (temp.Lines != null || temp.Texts != null || temp.Blocks != null)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         private void InitMove(Point p)
         {
             Push();
@@ -1694,19 +1707,6 @@ namespace Sheet
         #endregion
 
         #region Events
-
-        private bool CanInitMove(Point p)
-        {
-            var temp = new Block();
-            HitTest(p, hitSize, sheet, selected, temp);
-
-            if (temp.Lines != null || temp.Texts != null || temp.Blocks != null)
-            {
-                return true;
-            }
-
-            return false;
-        }
 
         private void Overlay_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
