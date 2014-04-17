@@ -1001,8 +1001,18 @@ namespace Sheet
         {
             p.X = Snap(p.X);
             p.Y = Snap(p.Y);
-            Move(p.X - panStartPoint.X, p.Y - panStartPoint.Y, selected);
-            panStartPoint = p;
+
+            double x = p.X - panStartPoint.X;
+            double y = p.Y - panStartPoint.Y;
+            double z = zoomFactors[zoomIndex];
+
+            if (x != 0.0 || y != 0.0)
+            {
+                x = x / z;
+                y = y / z;
+                Move(x, y, selected);
+                panStartPoint = p;
+            }  
         }
 
         private void FinishMove()
