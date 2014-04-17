@@ -1707,12 +1707,33 @@ namespace Sheet
             return sb.ToString();
         }
 
-        private void CreateBlock(Block parent, string name)
+        private void CreateBlock(string name)
         {
-            var text = SerializeAsBlock(0, name, parent);
-            Clipboard.SetData(DataFormats.UnicodeText, text);
+            var text = SerializeAsBlock(0, name, selected);
+
             Delete();
-            Paste();
+
+            Load(ItemSerializer.Deserialize(text), true);
+        }
+
+        private void BreakBlock()
+        {
+            var text = ItemSerializer.Serialize(CreateSheet(0, "SELECTED", selected.Lines, selected.Texts, selected.Blocks));
+            var parent = ItemSerializer.Deserialize(text);
+
+            Delete();
+
+            double thickness = lineThickness / Zoom;
+            
+            Load(sheet, parent.Texts, logic, selected, true, thickness);
+            Load(sheet, parent.Lines, logic, selected, true, thickness);
+
+            foreach(var block in parent.Blocks)
+            {
+                Load(sheet, block.Texts, logic, selected, true, thickness);
+                Load(sheet, block.Lines, logic, selected, true, thickness);
+                Load(sheet, block.Blocks, logic, selected, true, thickness);
+            }
         }
 
         #endregion
@@ -1887,11 +1908,20 @@ namespace Sheet
                     }
                     break;
                 // B: Create Block
+                // Ctrl+B: Break Block
                 case Key.B:
                     {
                         if (HaveSelected(selected))
                         {
-                            CreateBlock(selected, "BLOCK0");
+                            Push();
+                            if (ctrl)
+                            {
+                                BreakBlock();
+                            }
+                            else
+                            {
+                                CreateBlock("BLOCK0");
+                            }
                         }
                     }
                     break;
