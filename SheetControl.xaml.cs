@@ -630,6 +630,15 @@ namespace Sheet
             return CreateSheet(0, "LOGIC", logic.Lines, logic.Texts, logic.Blocks);
         }
 
+        private static string CreateBlock(int id, string name, Block parent)
+        {
+            var block = CreateSheet(id, name, parent.Lines, parent.Texts, parent.Blocks);
+            var sb = new StringBuilder();
+
+            ItemSerializer.Serialize(sb, block, "");
+            return sb.ToString();
+        }
+
         #endregion
 
         #region Create
@@ -1640,15 +1649,6 @@ namespace Sheet
         #endregion
 
         #region Blocks
-
-        private static string CreateBlock(int id, string name, Block parent)
-        {
-            var block = CreateSheet(id, name, parent.Lines, parent.Texts, parent.Blocks);
-            var sb = new StringBuilder();
-
-            ItemSerializer.Serialize(sb, block, "");
-            return sb.ToString();
-        }
 
         private void AddAndGate(Point p)
         {
