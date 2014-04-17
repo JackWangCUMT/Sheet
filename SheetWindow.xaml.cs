@@ -21,5 +21,15 @@ namespace Sheet
         {
             InitializeComponent();
         }
+
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            switch(e.Key)
+            {
+                case Key.H:
+                    Help.Visibility = Help.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
+                    break;
+            }
+        }
     }
 }
