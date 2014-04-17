@@ -1638,18 +1638,25 @@ namespace Sheet
 
         #region Events
 
+        private bool CanInitMove(Point p)
+        {
+            var temp = new Block();
+            HitTest(p, hitSize, this, selected, temp);
+
+            if (temp.Lines != null || temp.Texts != null || temp.Blocks != null)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         private void Overlay_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (HaveSelected())
+            if (HaveSelected() && CanInitMove(e.GetPosition(Overlay)))
             {
-                var temp = new Block();
-                HitTest(e.GetPosition(Overlay), hitSize, this, selected, temp);
-
-                if (temp.Lines != null || temp.Texts != null || temp.Blocks != null)
-                {
-                    InitMove(e.GetPosition(this));
-                    return;
-                }
+                InitMove(e.GetPosition(this));
+                return;
             }
 
             DeselectAll(selected);
