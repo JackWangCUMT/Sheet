@@ -865,17 +865,12 @@ namespace Sheet
 
         #region Clipboard
 
-        private bool HaveSelected()
-        {
-            return (selected.Lines != null || selected.Texts != null || selected.Blocks != null);
-        }
-
         private void Cut()
         {
             Copy();
             Push();
 
-            if (HaveSelected())
+            if (HaveSelected(selected))
             {
                 Delete();
             }
@@ -887,7 +882,7 @@ namespace Sheet
 
         private void Copy()
         {
-            var text = ItemSerializer.Serialize(HaveSelected() ?
+            var text = ItemSerializer.Serialize(HaveSelected(selected) ?
                 CreateSheet(0, "SELECTED", selected.Lines, selected.Texts, selected.Blocks) : CreateSheet());
             Clipboard.SetData(DataFormats.UnicodeText, text);
         }
@@ -1018,7 +1013,7 @@ namespace Sheet
 
         private void Delete()
         {
-            if (HaveSelected())
+            if (HaveSelected(selected))
             {
                 Push();
                 Remove(sheet, logic, selected);
@@ -1097,7 +1092,7 @@ namespace Sheet
         private void Move(double x, double y)
         {
             Push();
-            Move(x, y, HaveSelected() ? selected : logic);
+            Move(x, y, HaveSelected(selected) ? selected : logic);
         }
 
         private static void Move(double x, double y, Block block)
@@ -1328,6 +1323,11 @@ namespace Sheet
             {
                 Deselect(block);
             }
+        }
+
+        private static bool HaveSelected(Block selected)
+        {
+            return (selected.Lines != null || selected.Texts != null || selected.Blocks != null);
         }
 
         private static void SelectAll(Block selected, Block logic)
@@ -1710,7 +1710,7 @@ namespace Sheet
 
         private void Overlay_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (HaveSelected() && CanInitMove(e.GetPosition(overlay.GetParent())))
+            if (HaveSelected(selected) && CanInitMove(e.GetPosition(overlay.GetParent())))
             {
                 InitMove(e.GetPosition(this));
                 return;
@@ -1729,7 +1729,7 @@ namespace Sheet
             else if (mode == Mode.Selection)
             {
                 HitTest(e.GetPosition(overlay.GetParent()), hitSize, sheet, logic, selected);
-                if (!HaveSelected())
+                if (!HaveSelected(selected))
                 {
                     InitSelectionRect(e.GetPosition(overlay.GetParent()));
                 }
@@ -1878,7 +1878,7 @@ namespace Sheet
                 // B: Create Block
                 case Key.B:
                     {
-                        if (HaveSelected())
+                        if (HaveSelected(selected))
                         {
                             var text = CreateBlock(0, "BLOCK0", selected);
                             Clipboard.SetData(DataFormats.UnicodeText, text);
