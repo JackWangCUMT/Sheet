@@ -630,15 +630,6 @@ namespace Sheet
             return CreateSheet(0, "LOGIC", logic.Lines, logic.Texts, logic.Blocks);
         }
 
-        private static string CreateBlock(int id, string name, Block parent)
-        {
-            var block = CreateSheet(id, name, parent.Lines, parent.Texts, parent.Blocks);
-            var sb = new StringBuilder();
-
-            ItemSerializer.Serialize(sb, block, "");
-            return sb.ToString();
-        }
-
         #endregion
 
         #region Create
@@ -1706,6 +1697,26 @@ namespace Sheet
 
         #endregion
 
+        #region Block
+
+        private static string SerializeAsBlock(int id, string name, Block parent)
+        {
+            var block = CreateSheet(id, name, parent.Lines, parent.Texts, parent.Blocks);
+            var sb = new StringBuilder();
+            ItemSerializer.Serialize(sb, block, "");
+            return sb.ToString();
+        }
+
+        private void CreateBlock(Block parent, string name)
+        {
+            var text = SerializeAsBlock(0, name, parent);
+            Clipboard.SetData(DataFormats.UnicodeText, text);
+            Delete();
+            Paste();
+        }
+
+        #endregion
+
         #region Events
 
         private void Overlay_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -1880,8 +1891,7 @@ namespace Sheet
                     {
                         if (HaveSelected(selected))
                         {
-                            var text = CreateBlock(0, "BLOCK0", selected);
-                            Clipboard.SetData(DataFormats.UnicodeText, text);
+                            CreateBlock(selected, "BLOCK0");
                         }
                     }
                     break;
