@@ -525,64 +525,6 @@ namespace Sheet
 
         #endregion
 
-        #region Blocks
-
-        private void AddAndGate(Point p)
-        {
-            Push();
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
-            logic.Blocks.Add(CreateAndGateBlock(sheet, x, y, lineThickness / Zoom));
-        }
-
-        private void AddOrGate(Point p)
-        {
-            Push();
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
-            logic.Blocks.Add(CreateOrGateBlock(sheet, x, y, 1, lineThickness / Zoom));
-        }
-
-        private static Block CreateAndGateBlock(ISheet sheet, double x, double y, double thickness)
-        {
-            return CreateGenericGateBlock(sheet, "AND", x, y, "&", thickness);
-        }
-
-        private static Block CreateOrGateBlock(ISheet sheet, double x, double y, double count, double thickness)
-        {
-            return CreateGenericGateBlock(sheet, "OR", x, y, "≥" + count.ToString(), thickness);
-        }
-
-        private static Block CreateGenericGateBlock(ISheet sheet, string name, double x, double y, string text, double thickness)
-        {
-            var block = new Block() { Name = name };
-            block.Init();
-
-            AddTextToBlock(sheet, block, text, x, y, 30.0, 30.0, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0);
-            AddLineToBlock(sheet, block, thickness, x, y, x + 30.0, y);
-            AddLineToBlock(sheet, block, thickness, x, y + 30.0, x + 30.0, y + 30.0);
-            AddLineToBlock(sheet, block, thickness, x, y, x, y + 30.0);
-            AddLineToBlock(sheet, block, thickness, x + 30.0, y, x + 30.0, y + 30.0);
-
-            return block;
-        }
-
-        private static void AddTextToBlock(ISheet sheet, Block block, string str, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size)
-        {
-            var text = CreateText(str, x, y, width, height, halign, valign, size);
-            block.Texts.Add(text);
-            sheet.Add(text);
-        }
-
-        private static void AddLineToBlock(ISheet sheet, Block block, double thickness, double x1, double y1, double x2, double y2)
-        {
-            var line = CreateLine(thickness, x1, y1, x2, y2);
-            block.Lines.Add(line);
-            sheet.Add(line);
-        }
-
-        #endregion
-
         #region Serialize
 
         private static LineItem SerializeLine(Line line)
@@ -883,6 +825,124 @@ namespace Sheet
             parent.Blocks.Add(block);
 
             return block;
+        }
+
+        #endregion
+
+        #region Undo/Redo
+
+        private void Push()
+        {
+            undos.Push(ItemSerializer.Serialize(CreateSheet()));
+        }
+
+        private void Pop()
+        {
+            undos.Pop();
+        }
+
+        private void Undo()
+        {
+            if (undos.Count > 0)
+            {
+                redos.Push(ItemSerializer.Serialize(CreateSheet()));
+                Reset();
+                Load(ItemSerializer.Deserialize(undos.Pop()), false);
+            }
+        }
+
+        private void Redo()
+        {
+            if (redos.Count > 0)
+            {
+                undos.Push(ItemSerializer.Serialize(CreateSheet()));
+                Reset();
+                Load(ItemSerializer.Deserialize(redos.Pop()), false);
+            }
+        }
+
+        #endregion
+
+        #region Clipboard
+
+        private bool HaveSelected()
+        {
+            return (selected.Lines != null || selected.Texts != null || selected.Blocks != null);
+        }
+
+        private void Cut()
+        {
+            Copy();
+            Push();
+
+            if (HaveSelected())
+            {
+                Delete();
+            }
+            else
+            {
+                Reset();
+            }
+        }
+
+        private void Copy()
+        {
+            var text = ItemSerializer.Serialize(HaveSelected() ?
+                CreateSheet(0, "SELECTED", selected.Lines, selected.Texts, selected.Blocks) : CreateSheet());
+            Clipboard.SetData(DataFormats.UnicodeText, text);
+        }
+
+        private void Paste()
+        {
+            var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
+            Load(ItemSerializer.Deserialize(text), true);
+        }
+
+        private static string CreateBlock(int id, string name, Block parent)
+        {
+            var block = CreateSheet(id, name, parent.Lines, parent.Texts, parent.Blocks);
+            var sb = new StringBuilder();
+
+            ItemSerializer.Serialize(sb, block, "");
+            return sb.ToString();
+        }
+
+        #endregion
+
+        #region File Dialogs
+
+        private void Open()
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog()
+            {
+                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                var text = ItemSerializer.OpenText(dlg.FileName);
+                if (text != null)
+                {
+                    Push();
+                    Reset();
+                    Load(ItemSerializer.Deserialize(text), false);
+                }
+            }
+        }
+
+        private void Save()
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog()
+            {
+                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*",
+                FileName = "sheet"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                var text = ItemSerializer.Serialize(CreateSheet());
+                ItemSerializer.SaveText(dlg.FileName, text);
+            }
         }
 
         #endregion
@@ -1588,120 +1648,60 @@ namespace Sheet
 
         #endregion
 
-        #region Undo/Redo
+        #region Blocks
 
-        private void Push()
+        private void AddAndGate(Point p)
         {
-            undos.Push(ItemSerializer.Serialize(CreateSheet()));
-        }
-
-        private void Pop()
-        {
-            undos.Pop();
-        }
-
-        private void Undo()
-        {
-            if (undos.Count > 0)
-            {
-                redos.Push(ItemSerializer.Serialize(CreateSheet()));
-                Reset();
-                Load(ItemSerializer.Deserialize(undos.Pop()), false);
-            }
-        }
-
-        private void Redo()
-        {
-            if (redos.Count > 0)
-            {
-                undos.Push(ItemSerializer.Serialize(CreateSheet()));
-                Reset();
-                Load(ItemSerializer.Deserialize(redos.Pop()), false);
-            }
-        }
-
-        #endregion
-
-        #region Clipboard
-
-        private bool HaveSelected()
-        {
-            return (selected.Lines != null || selected.Texts != null || selected.Blocks != null);
-        }
-
-        private void Cut()
-        {
-            Copy();
             Push();
-
-            if (HaveSelected())
-            {
-                Delete();
-            }
-            else
-            {
-                Reset();
-            }
+            double x = Snap(p.X);
+            double y = Snap(p.Y);
+            logic.Blocks.Add(CreateAndGateBlock(sheet, x, y, lineThickness / Zoom));
         }
 
-        private void Copy()
+        private void AddOrGate(Point p)
         {
-            var text = ItemSerializer.Serialize(HaveSelected() ?
-                CreateSheet(0, "SELECTED", selected.Lines, selected.Texts, selected.Blocks) : CreateSheet());
-            Clipboard.SetData(DataFormats.UnicodeText, text);
+            Push();
+            double x = Snap(p.X);
+            double y = Snap(p.Y);
+            logic.Blocks.Add(CreateOrGateBlock(sheet, x, y, 1, lineThickness / Zoom));
         }
 
-        private void Paste()
+        private static Block CreateAndGateBlock(ISheet sheet, double x, double y, double thickness)
         {
-            var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
-            Load(ItemSerializer.Deserialize(text), true);
+            return CreateGenericGateBlock(sheet, "AND", x, y, "&", thickness);
         }
 
-        private static string CreateBlock(int id, string name, Block parent)
+        private static Block CreateOrGateBlock(ISheet sheet, double x, double y, double count, double thickness)
         {
-            var block = CreateSheet(id, name, parent.Lines, parent.Texts, parent.Blocks);
-            var sb = new StringBuilder();
-
-            ItemSerializer.Serialize(sb, block, "");
-            return sb.ToString();
+            return CreateGenericGateBlock(sheet, "OR", x, y, "≥" + count.ToString(), thickness);
         }
 
-        #endregion
-
-        #region File Dialogs
-
-        private void Open()
+        private static Block CreateGenericGateBlock(ISheet sheet, string name, double x, double y, string text, double thickness)
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog()
-            {
-                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*"
-            };
+            var block = new Block() { Name = name };
+            block.Init();
 
-            if (dlg.ShowDialog() == true)
-            {
-                var text = ItemSerializer.OpenText(dlg.FileName);
-                if (text != null)
-                {
-                    Push();
-                    Reset();
-                    Load(ItemSerializer.Deserialize(text), false);
-                }
-            }
+            AddTextToBlock(sheet, block, text, x, y, 30.0, 30.0, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0);
+            AddLineToBlock(sheet, block, thickness, x, y, x + 30.0, y);
+            AddLineToBlock(sheet, block, thickness, x, y + 30.0, x + 30.0, y + 30.0);
+            AddLineToBlock(sheet, block, thickness, x, y, x, y + 30.0);
+            AddLineToBlock(sheet, block, thickness, x + 30.0, y, x + 30.0, y + 30.0);
+
+            return block;
         }
 
-        private void Save()
+        private static void AddTextToBlock(ISheet sheet, Block block, string str, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size)
         {
-            var dlg = new Microsoft.Win32.SaveFileDialog()
-            {
-                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*",
-                FileName = "sheet"
-            };
+            var text = CreateText(str, x, y, width, height, halign, valign, size);
+            block.Texts.Add(text);
+            sheet.Add(text);
+        }
 
-            if (dlg.ShowDialog() == true)
-            {
-                var text = ItemSerializer.Serialize(CreateSheet());
-                ItemSerializer.SaveText(dlg.FileName, text);
-            }
+        private static void AddLineToBlock(ISheet sheet, Block block, double thickness, double x1, double y1, double x2, double y2)
+        {
+            var line = CreateLine(thickness, x1, y1, x2, y2);
+            block.Lines.Add(line);
+            sheet.Add(line);
         }
 
         #endregion
