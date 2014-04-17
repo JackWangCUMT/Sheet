@@ -438,7 +438,8 @@ namespace Sheet
 
             Loaded += (s, e) =>
             {
-                CreateGrid();
+                CreateGrid(300.0, 0.0, 600.0, 750.0, gridSize, gridThickness);
+                AdjustThickness(gridLines, gridThickness / zoomFactors[zoomIndex]);
                 Focus();
             };
         }
@@ -447,28 +448,32 @@ namespace Sheet
 
         #region Grid
 
-        private void CreateGrid()
+        private void AddGridLine(double thickness, double x1, double y1, double x2, double y2)
         {
-            double startX = 300.0;
-            double startY = 0.0;
-            double width = 600.0;
-            double height = 750.0;
+            var line = new Line()
+            {
+                Stroke = Brushes.LightGray,
+                StrokeThickness = thickness,
+                X1 = x1,
+                Y1 = y1,
+                X2 = x2,
+                Y2 = y2
+            };
+            gridLines.Add(line);
+            Back.Children.Add(line);
+        }
 
+        private void CreateGrid(double startX, double startY, double width, double height, double gridSize, double gridThickness)
+        {
             for (double y = startY + gridSize; y < height + startY; y += gridSize)
             {
-                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = startX, Y1 = y, X2 = width + startX, Y2 = y };
-                gridLines.Add(l);
-                Back.Children.Add(l);
+                AddGridLine(gridThickness, startX, y, width + startX, y);
             }
 
             for (double x = startX + gridSize; x < startX + width; x += gridSize)
             {
-                var l = new Line() { Stroke = Brushes.LightGray, StrokeThickness = gridThickness, X1 = x, Y1 = startY, X2 = x, Y2 = height + startY };
-                gridLines.Add(l);
-                Back.Children.Add(l);
+                AddGridLine(gridThickness, x, startY, x, height + startY);
             }
-
-            AdjustThickness(zoomFactors[zoomIndex]);
         }
 
         #endregion
