@@ -10,6 +10,7 @@ Keyboard  Shortcuts:
     N               Mode None
     S               Mode Selection
     L               Mode Line
+    R               Mode Rectangle
     T               Mode Text
     I               Mode Signal
     A               Mode AndGate
@@ -20,7 +21,7 @@ Keyboard  Shortcuts:
     Ctrl+C          Copy
     Ctrl+V          Paste
     Del             Delete
-    R               Reset
+    Ctrl+Del        Reset
     Ctrl+A          Select All
     B               Create Block
     Ctrl+B          Break Block
