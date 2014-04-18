@@ -1710,10 +1710,23 @@ namespace Sheet
         private void CreateBlock(string name)
         {
             var text = SerializeAsBlock(0, name, selected);
-
             Delete();
-
             Load(ItemSerializer.Deserialize(text), true);
+        }
+
+        private void CreateBlock()
+        {
+            var window = new TextWindow();
+            window.Title = "Create Block";
+            window.Label = "Name:";
+            window.Text = "BLOCK0";
+            window.Owner = GetOwner<Window>(this);
+            var result = window.ShowDialog();
+            if (result.HasValue && result.Value == true)
+            {
+                Push();
+                CreateBlock(window.Text);
+            }
         }
 
         private void BreakBlock()
@@ -1721,6 +1734,7 @@ namespace Sheet
             var text = ItemSerializer.Serialize(CreateSheet(0, "SELECTED", selected.Lines, selected.Texts, selected.Blocks));
             var parent = ItemSerializer.Deserialize(text);
 
+            Push();
             Delete();
 
             double thickness = lineThickness / Zoom;
@@ -1740,14 +1754,14 @@ namespace Sheet
 
         #region Owner
 
-        private DependencyObject GetOwner(DependencyObject reference)
+        private T GetOwner<T>(DependencyObject reference) where T : class
         {
             var parent = VisualTreeHelper.GetParent(reference);
-            while (!(parent is Window))
+            while (!(parent is T))
             {
                 parent = VisualTreeHelper.GetParent(parent);
             }
-            return parent;
+            return parent as T;
         }
 
         #endregion
@@ -1927,23 +1941,13 @@ namespace Sheet
                     {
                         if (HaveSelected(selected))
                         {
-                            Push();
                             if (ctrl)
                             {
                                 BreakBlock();
                             }
                             else
                             {
-                                var window = new TextWindow();
-                                window.Title = "Block";
-                                window.Label = "Name:";
-                                window.Text = "BLOCK0";
-                                window.Owner = GetOwner(this) as Window;
-                                var result = window.ShowDialog();
-                                if (result.HasValue && result.Value == true)
-                                {
-                                    CreateBlock(window.Text);
-                                }
+                                CreateBlock();
                             }
                         }
                     }
