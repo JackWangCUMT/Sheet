@@ -1738,6 +1738,20 @@ namespace Sheet
 
         #endregion
 
+        #region Owner
+
+        private DependencyObject GetOwner(DependencyObject reference)
+        {
+            var parent = VisualTreeHelper.GetParent(reference);
+            while (!(parent is Window))
+            {
+                parent = VisualTreeHelper.GetParent(parent);
+            }
+            return parent;
+        }
+
+        #endregion
+
         #region Events
 
         private void Overlay_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -1920,7 +1934,16 @@ namespace Sheet
                             }
                             else
                             {
-                                CreateBlock("BLOCK0");
+                                var window = new TextWindow();
+                                window.Title = "Block";
+                                window.Label = "Name:";
+                                window.Text = "BLOCK0";
+                                window.Owner = GetOwner(this) as Window;
+                                var result = window.ShowDialog();
+                                if (result.HasValue && result.Value == true)
+                                {
+                                    CreateBlock(window.Text);
+                                }
                             }
                         }
                     }
