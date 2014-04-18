@@ -460,6 +460,7 @@ namespace Sheet
         private double lineThickness = 2.0;
         private Point panStartPoint;
         private Line tempLine = null;
+        private Rectangle tempRectangle = null;
         private Point selectionStartPoint;
         private Rectangle selectionRect = null;
         private double hitSize = 3.5;
@@ -1238,6 +1239,7 @@ namespace Sheet
             p.Y = Snap(p.Y);
             panStartPoint = p;
             tempLine = null;
+            tempRectangle = null;
             selectionRect = null;
             overlay.Capture();
         }
@@ -1382,6 +1384,11 @@ namespace Sheet
                 tempLine.StrokeThickness = lineThicknessZoomed;
             }
 
+            if (tempRectangle != null)
+            {
+                tempRectangle.StrokeThickness = lineThicknessZoomed;
+            }
+
             if (selectionRect != null)
             {
                 selectionRect.StrokeThickness = selectionThicknessZoomed;
@@ -1421,6 +1428,7 @@ namespace Sheet
             mode = Mode.Pan;
             panStartPoint = p;
             tempLine = null;
+            tempRectangle = null;
             selectionRect = null;
             overlay.Capture();
         }
@@ -1952,6 +1960,64 @@ namespace Sheet
 
         #endregion
 
+        #region Temp Rectangle
+
+        private void InitTempRect(Point p)
+        {
+            Push();
+            double x = Snap(p.X);
+            double y = Snap(p.Y);
+            selectionStartPoint = new Point(x, y);
+            tempRectangle = CreateRectangle(selectionThickness / Zoom, x, y, 0.0, 0.0, true);
+            overlay.Add(tempRectangle);
+            overlay.Capture();
+        }
+
+        private void MoveTempRect(Point p)
+        {
+            double sx = selectionStartPoint.X;
+            double sy = selectionStartPoint.Y;
+            double x = Snap(p.X);
+            double y = Snap(p.Y);
+            double width = Math.Abs(sx - x);
+            double height = Math.Abs(sy - y);
+            Canvas.SetLeft(tempRectangle, Math.Min(sx, x));
+            Canvas.SetTop(tempRectangle, Math.Min(sy, y));
+            tempRectangle.Width = width;
+            tempRectangle.Height = height;
+        }
+
+        private void FinishTempRect()
+        {
+            double x = Canvas.GetLeft(tempRectangle);
+            double y = Canvas.GetTop(tempRectangle);
+            double width = tempRectangle.Width;
+            double height = tempRectangle.Height;
+
+            if (width == 0.0 || height == 0.0)
+            {
+                CancelTempRect();
+            }
+            else
+            {
+                overlay.ReleaseCapture();
+                overlay.Remove(tempRectangle);
+                logic.Rectangles.Add(tempRectangle);
+                sheet.Add(tempRectangle);
+                tempRectangle = null;
+            }
+        }
+
+        private void CancelTempRect()
+        {
+            Pop();
+            overlay.ReleaseCapture();
+            overlay.Remove(tempRectangle);
+            tempRectangle = null;
+        }
+
+        #endregion
+
         #region Blocks
 
         private void AddSignal(Point p)
@@ -2186,11 +2252,11 @@ namespace Sheet
             }
             else if (mode == Mode.Rectangle && !overlay.IsCaptured)
             {
-                // TODO:
+                InitTempRect(e.GetPosition(overlay.GetParent()));
             }
             else if (mode == Mode.Rectangle && overlay.IsCaptured)
             {
-                // TODO:
+                FinishTempRect();
             }
             else if (mode == Mode.Pan && overlay.IsCaptured)
             {
@@ -2230,7 +2296,7 @@ namespace Sheet
             }
             else if (mode == Mode.Rectangle && overlay.IsCaptured)
             {
-                // TODO:
+                MoveTempRect(e.GetPosition(overlay.GetParent()));
             }
             else if (mode == Mode.Pan && overlay.IsCaptured)
             {
@@ -2261,7 +2327,7 @@ namespace Sheet
             }
             else if (mode == Mode.Rectangle && overlay.IsCaptured)
             {
-                // TODO:
+                CancelTempRect();
             }
             else if (!overlay.IsCaptured)
             {
