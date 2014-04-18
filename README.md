@@ -11,6 +11,7 @@ Keyboard  Shortcuts:
     S               Mode Selection
     L               Mode Line
     T               Mode Text
+    I               Mode Signal
     A               Mode AndGate
     O               Mode OrGate
     Ctrl+Z          Undo
