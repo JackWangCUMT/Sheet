@@ -97,6 +97,7 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <TextBlock Text="Mode" TextDecorations="Underline" FontWeight="Medium" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Margin="2"/>
                 <TextBlock Text="None" Grid.Column="0" Grid.Row="1" Margin="2"/>
@@ -107,10 +108,12 @@
                 <TextBlock Text="L" Grid.Column="1" Grid.Row="3" Margin="8,2,2,2"/>
                 <TextBlock Text="Text" Grid.Column="0" Grid.Row="4" Margin="2"/>
                 <TextBlock Text="T" Grid.Column="1" Grid.Row="4" Margin="8,2,2,2"/>
-                <TextBlock Text="AndGate" Grid.Column="0" Grid.Row="5" Margin="2"/>
-                <TextBlock Text="A" Grid.Column="1" Grid.Row="5" Margin="8,2,2,2"/>
-                <TextBlock Text="OrGate" Grid.Column="0" Grid.Row="6" Margin="2"/>
-                <TextBlock Text="O" Grid.Column="1" Grid.Row="6" Margin="8,2,2,2"/>
+                <TextBlock Text="Signal" Grid.Column="0" Grid.Row="5" Margin="2"/>
+                <TextBlock Text="I" Grid.Column="1" Grid.Row="5" Margin="8,2,2,2"/>
+                <TextBlock Text="AndGate" Grid.Column="0" Grid.Row="6" Margin="2"/>
+                <TextBlock Text="A" Grid.Column="1" Grid.Row="6" Margin="8,2,2,2"/>
+                <TextBlock Text="OrGate" Grid.Column="0" Grid.Row="7" Margin="2"/>
+                <TextBlock Text="O" Grid.Column="1" Grid.Row="7" Margin="8,2,2,2"/>
             </Grid>
             <Grid Margin="2">
                 <Grid.ColumnDefinitions>
