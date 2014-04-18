@@ -17,19 +17,27 @@ namespace Sheet
 {
     public partial class SheetWindow : Window
     {
+        #region Constructor
+
         public SheetWindow()
         {
             InitializeComponent();
         }
 
+        #endregion
+
+        #region Events
+
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            switch(e.Key)
+            switch (e.Key)
             {
                 case Key.H:
                     Help.Visibility = Help.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
                     break;
             }
         }
+
+        #endregion
     }
 }

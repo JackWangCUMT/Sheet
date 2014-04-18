@@ -397,6 +397,7 @@ namespace Sheet
         private double[] zoomFactors = { 0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64 };
         private double snapSize = 15;
         private double gridSize = 30;
+        private double frameThickness = 1.0;
         private double gridThickness = 1.0;
         private double selectionThickness = 1.0;
         private double lineThickness = 2.0;
@@ -406,6 +407,7 @@ namespace Sheet
         private Rectangle selectionRect = null;
         private double hitSize = 3.5;
         private List<Line> gridLines = new List<Line>();
+        private List<Line> frameLines = new List<Line>();
         private Block logic = null;
         private Block selected = null;
 
@@ -486,41 +488,62 @@ namespace Sheet
 
             Loaded += (s, e) =>
             {
-                CreateGrid(back, 300.0, 0.0, 600.0, 750.0, gridSize, gridThickness);
+                CreateGrid(back, gridLines, 300.0, 0.0, 600.0, 750.0, gridSize, gridThickness);
+                CreateFrame(back, frameLines, gridSize, gridThickness);
                 AdjustThickness(gridLines, gridThickness / zoomFactors[zoomIndex]);
+                AdjustThickness(frameLines, frameThickness / zoomFactors[zoomIndex]);
                 Focus();
             };
         }
 
         #endregion
 
-        #region Grid
+        #region Back
 
-        private void AddGridLine(ISheet sheet, double thickness, double x1, double y1, double x2, double y2)
+        private static void AddLine(ISheet sheet, List<Line> lines, double thickness, double x1, double y1, double x2, double y2, Brush stroke)
         {
             var line = new Line()
             {
-                Stroke = Brushes.LightGray,
+                Stroke = stroke,
                 StrokeThickness = thickness,
                 X1 = x1,
                 Y1 = y1,
                 X2 = x2,
                 Y2 = y2
             };
-            gridLines.Add(line);
+            lines.Add(line);
             sheet.Add(line);
         }
 
-        private void CreateGrid(ISheet sheet, double startX, double startY, double width, double height, double gridSize, double gridThickness)
+        private static void CreateFrame(ISheet sheet, List<Line> lines, double size, double thickness)
         {
-            for (double y = startY + gridSize; y < height + startY; y += gridSize)
+            AddLine(sheet, lines, thickness, 210.0, 0.0, 210.0, 750.0, Brushes.DarkGray);
+            AddLine(sheet, lines, thickness, 300.0, 0.0, 300.0, 750.0, Brushes.DarkGray);
+
+            for (double y = 30.0; y < 750.0; y += size)
             {
-                AddGridLine(sheet, gridThickness, startX, y, width + startX, y);
+                AddLine(sheet, lines, thickness, 0.0, y, 300.0, y, Brushes.DarkGray);
             }
 
-            for (double x = startX + gridSize; x < startX + width; x += gridSize)
+            AddLine(sheet, lines, thickness, 900.0, 0.0, 900.0, 750.0, Brushes.DarkGray);
+            AddLine(sheet, lines, thickness, 1110.0, 0.0, 1110.0, 750.0, Brushes.DarkGray);
+
+            for (double y = 30.0; y < 750.0; y += size)
             {
-                AddGridLine(sheet, gridThickness, x, startY, x, height + startY);
+                AddLine(sheet, lines, thickness, 900.0, y, 1200.0, y, Brushes.DarkGray);
+            }
+        }
+
+        private static void CreateGrid(ISheet sheet, List<Line> lines, double startX, double startY, double width, double height, double size, double thickness)
+        {
+            for (double y = startY + size; y < height + startY; y += size)
+            {
+                AddLine(sheet, lines, thickness, startX, y, width + startX, y, Brushes.LightGray);
+            }
+
+            for (double x = startX + size; x < startX + width; x += size)
+            {
+                AddLine(sheet, lines, thickness, x, startY, x, height + startY, Brushes.LightGray);
             }
         }
 
@@ -1160,10 +1183,12 @@ namespace Sheet
         private void AdjustThickness(double zoom)
         {
             double gridThicknessZoomed = gridThickness / zoom;
+            double frameThicknessZoomed = frameThickness / zoom;
             double lineThicknessZoomed = lineThickness / zoom;
             double selectionThicknessZoomed = selectionThickness / zoom;
 
             AdjustThickness(gridLines, gridThicknessZoomed);
+            AdjustThickness(frameLines, frameThicknessZoomed);
             AdjustThickness(logic, lineThicknessZoomed);
 
             if (tempLine != null)
@@ -1728,6 +1753,51 @@ namespace Sheet
 
         #region Block
 
+        private SheetWindow owner = null;
+
+        private void OK_Click(object sender, RoutedEventArgs e)
+        {
+            if (owner != null)
+            {
+                owner.OK.Click -= OK_Click;
+                owner.Cancel.Click -= Cancel_Click;
+                owner.TextGrid.Visibility = Visibility.Collapsed;
+                Push();
+                CreateBlock(owner.TextValue.Text);
+                owner = null;
+                Focus();
+                mode = tempMode;
+            }
+        }
+
+        private void Cancel_Click(object sender, RoutedEventArgs e)
+        {
+            if (owner != null)
+            {
+                owner.OK.Click -= OK_Click;
+                owner.Cancel.Click -= Cancel_Click;
+                owner.TextGrid.Visibility = Visibility.Collapsed;
+                owner = null;
+                Focus();
+                mode = tempMode;
+            }
+        }
+
+        private void CreateBlock()
+        {
+            owner = GetOwner<SheetWindow>(this);
+            if (owner != null)
+            {
+                tempMode = mode;
+                mode = Mode.None;
+                owner.TextLabel.Text = "Name:";
+                owner.TextValue.Text = "BLOCK0";
+                owner.OK.Click += OK_Click;
+                owner.Cancel.Click += Cancel_Click;
+                owner.TextGrid.Visibility = Visibility.Visible;
+            }
+        }
+
         private static string SerializeAsBlock(int id, string name, Block parent)
         {
             var block = CreateSheet(id, name, parent.Lines, parent.Texts, parent.Blocks);
@@ -1741,21 +1811,6 @@ namespace Sheet
             var text = SerializeAsBlock(0, name, selected);
             Delete();
             Load(ItemSerializer.Deserialize(text), true);
-        }
-
-        private void CreateBlock()
-        {
-            var window = new TextWindow();
-            window.Title = "Create Block";
-            window.Label = "Name:";
-            window.Text = "BLOCK0";
-            window.Owner = GetOwner<Window>(this);
-            var result = window.ShowDialog();
-            if (result.HasValue && result.Value == true)
-            {
-                Push();
-                CreateBlock(window.Text);
-            }
         }
 
         private void BreakBlock()
@@ -1799,6 +1854,11 @@ namespace Sheet
 
         private void Overlay_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (mode == Mode.None)
+            {
+                return;
+            }
+
             if (HaveSelected(selected) && CanInitMove(e.GetPosition(overlay.GetParent())))
             {
                 InitMove(e.GetPosition(this));
@@ -1883,6 +1943,11 @@ namespace Sheet
 
         private void Overlay_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (mode == Mode.None)
+            {
+                return;
+            }
+
             DeselectAll(selected);
 
             if (mode == Mode.Selection && overlay.IsCaptured)
