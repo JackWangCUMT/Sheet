@@ -670,7 +670,7 @@ namespace Sheet
                                 double size)
         {
             var grid = new Grid();
-            grid.Background = Brushes.White;
+            grid.Background = Brushes.Transparent;
             grid.Width = width;
             grid.Height = height;
             Canvas.SetLeft(grid, x);
