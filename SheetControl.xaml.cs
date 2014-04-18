@@ -317,6 +317,7 @@ namespace Sheet
         Move,
         Line,
         Text,
+        Signal,
         AndGate,
         OrGate
     }
@@ -1641,20 +1642,40 @@ namespace Sheet
 
         #region Blocks
 
+        private void AddSignal(Point p)
+        {
+            Push();
+            logic.Blocks.Add(CreateSignal(sheet, "SIGNAL", Snap(p.X), Snap(p.Y), lineThickness / Zoom, new string[] { "Text", "Text", "Text", "Text" }));
+        }
+
+        private static Block CreateSignal(ISheet sheet, string name, double x, double y, double thickness, string[] text)
+        {
+            var block = new Block() { Name = name };
+            block.Init();
+
+            AddTextToBlock(sheet, block, text[0], x + 5.0, y, 200.0, 15.0, HorizontalAlignment.Left, VerticalAlignment.Center, 11.0);
+            AddTextToBlock(sheet, block, text[1], x + 5.0, y + 15.0, 200.0, 15.0, HorizontalAlignment.Left, VerticalAlignment.Center, 11.0);
+            AddTextToBlock(sheet, block, text[2], x + 215.0, y, 80.0, 15.0, HorizontalAlignment.Left, VerticalAlignment.Center, 11.0);
+            AddTextToBlock(sheet, block, text[3], x + 215.0, y + 15.0, 80.0, 15.0, HorizontalAlignment.Left, VerticalAlignment.Center, 11.0);
+            AddLineToBlock(sheet, block, thickness, x, y, x + 300.0, y);
+            AddLineToBlock(sheet, block, thickness, x, y + 30.0, x + 300.0, y + 30.0);
+            AddLineToBlock(sheet, block, thickness, x, y, x, y + 30.0);
+            AddLineToBlock(sheet, block, thickness, x + 210.0, y, x + 210.0, y + 30.0);
+            AddLineToBlock(sheet, block, thickness, x + 300.0, y, x + 300.0, y + 30.0);
+
+            return block;
+        }
+
         private void AddAndGate(Point p)
         {
             Push();
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
-            logic.Blocks.Add(CreateAndGateBlock(sheet, x, y, lineThickness / Zoom));
+            logic.Blocks.Add(CreateAndGateBlock(sheet, Snap(p.X), Snap(p.Y), lineThickness / Zoom));
         }
 
         private void AddOrGate(Point p)
         {
             Push();
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
-            logic.Blocks.Add(CreateOrGateBlock(sheet, x, y, 1, lineThickness / Zoom));
+            logic.Blocks.Add(CreateOrGateBlock(sheet, Snap(p.X), Snap(p.Y), 1, lineThickness / Zoom));
         }
 
         private static Block CreateAndGateBlock(ISheet sheet, double x, double y, double thickness)
@@ -1679,6 +1700,14 @@ namespace Sheet
             AddLineToBlock(sheet, block, thickness, x + 30.0, y, x + 30.0, y + 30.0);
 
             return block;
+        }
+
+        private void AddText(Point p)
+        {
+            double x = Snap(p.X);
+            double y = Snap(p.Y);
+            Push();
+            AddTextToBlock(sheet, logic, "Text", x, y, 30.0, 15.0, System.Windows.HorizontalAlignment.Center, System.Windows.VerticalAlignment.Center, 11.0);
         }
 
         private static void AddTextToBlock(ISheet sheet, Block block, string str, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size)
@@ -1812,11 +1841,11 @@ namespace Sheet
             }
             else if (mode == Mode.Text && !overlay.IsCaptured)
             {
-                var p = e.GetPosition(overlay.GetParent());
-                double x = Snap(p.X);
-                double y = Snap(p.Y);
-                Push();
-                AddTextToBlock(sheet, logic, "Text", x, y, 30.0, 15.0, System.Windows.HorizontalAlignment.Center, System.Windows.VerticalAlignment.Center, 11.0);
+                AddText(e.GetPosition(overlay.GetParent()));
+            }
+            else if (mode == Mode.Signal && !overlay.IsCaptured)
+            {
+                AddSignal(e.GetPosition(overlay.GetParent()));
             }
         }
 
@@ -1988,6 +2017,10 @@ namespace Sheet
                 // T: Mode Text
                 case Key.T:
                     mode = Mode.Text;
+                    break;
+                // I: Mode Signal
+                case Key.I:
+                    mode = Mode.Signal;
                     break;
                 // N: Mode None
                 case Key.N:
