@@ -28,6 +28,15 @@ namespace Sheet
         public double Y1 { get; set; }
         public double X2 { get; set; }
         public double Y2 { get; set; }
+    }
+
+    public class RectangleItem : Item
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public bool IsFilled { get; set; }
     } 
 
     public class TextItem : Item
@@ -46,8 +55,18 @@ namespace Sheet
     {
         public string Name { get; set; }
         public List<LineItem> Lines { get; set; }
+        public List<RectangleItem> Rectangles { get; set; }
         public List<TextItem> Texts { get; set; }
         public List<BlockItem> Blocks { get; set; }
+        public void Init(int id, string name)
+        {
+            Id = id;
+            Name = name;
+            Lines = new List<LineItem>();
+            Rectangles = new List<RectangleItem>();
+            Texts = new List<TextItem>();
+            Blocks = new List<BlockItem>();
+        }
     } 
 
     #endregion
@@ -83,6 +102,25 @@ namespace Sheet
             sb.Append(line.X2);
             sb.Append(modelSeparator);
             sb.Append(line.Y2);
+            sb.Append(lineSeparator);
+        }
+
+        public static void Serialize(StringBuilder sb, RectangleItem rectangle, string indent)
+        {
+            sb.Append(indent);
+            sb.Append("RECTANGLE");
+            sb.Append(modelSeparator);
+            sb.Append(rectangle.Id);
+            sb.Append(modelSeparator);
+            sb.Append(rectangle.X);
+            sb.Append(modelSeparator);
+            sb.Append(rectangle.Y);
+            sb.Append(modelSeparator);
+            sb.Append(rectangle.Width);
+            sb.Append(modelSeparator);
+            sb.Append(rectangle.Height);
+            sb.Append(modelSeparator);
+            sb.Append(rectangle.IsFilled);
             sb.Append(lineSeparator);
         }
 
@@ -122,6 +160,7 @@ namespace Sheet
             sb.Append(lineSeparator);
 
             Serialize(sb, block.Lines, indent + indentWhiteSpace);
+            Serialize(sb, block.Rectangles, indent + indentWhiteSpace);
             Serialize(sb, block.Texts, indent + indentWhiteSpace);
             Serialize(sb, block.Blocks, indent + indentWhiteSpace);
 
@@ -135,6 +174,14 @@ namespace Sheet
             foreach (var line in lines)
             {
                 Serialize(sb, line, indent);
+            }
+        }
+
+        public static void Serialize(StringBuilder sb, List<RectangleItem> rectangles, string indent)
+        {
+            foreach (var rectangle in rectangles)
+            {
+                Serialize(sb, rectangle, indent);
             }
         }
 
@@ -159,6 +206,7 @@ namespace Sheet
             var sb = new StringBuilder();
 
             Serialize(sb, block.Lines, "");
+            Serialize(sb, block.Rectangles, "");
             Serialize(sb, block.Texts, "");
             Serialize(sb, block.Blocks, "");
 
@@ -171,13 +219,8 @@ namespace Sheet
      
         private static BlockItem Deserialize(string[] lines, int length, ref int end, string name, int id)
         {
-            var sheet = new BlockItem()
-            {
-                Name = name,
-                Lines = new List<LineItem>(),
-                Texts = new List<TextItem>(),
-                Blocks = new List<BlockItem>()
-            };
+            var sheet = new BlockItem();
+            sheet.Init(id, name);
 
             for (; end < length; end++)
             {
@@ -192,6 +235,17 @@ namespace Sheet
                     lineItem.X2 = double.Parse(m[4]);
                     lineItem.Y2 = double.Parse(m[5]);
                     sheet.Lines.Add(lineItem);
+                }
+                if (m.Length == 7 && string.Compare(m[0], "RECTANGLE", true) == 0)
+                {
+                    var rectangleItem = new RectangleItem();
+                    rectangleItem.Id = int.Parse(m[1]);
+                    rectangleItem.X = double.Parse(m[2]);
+                    rectangleItem.Y = double.Parse(m[3]);
+                    rectangleItem.Width = double.Parse(m[4]);
+                    rectangleItem.Height = double.Parse(m[5]);
+                    rectangleItem.IsFilled = bool.Parse(m[6]);
+                    sheet.Rectangles.Add(rectangleItem);
                 }
                 else if (m.Length == 10 && string.Compare(m[0], "TEXT", true) == 0)
                 {
@@ -295,11 +349,13 @@ namespace Sheet
     {
         public string Name { get; set; }
         public List<Line> Lines { get; set; }
+        public List<Rectangle> Rectangles { get; set; }
         public List<Grid> Texts { get; set; }
         public List<Block> Blocks { get; set; }
         public void Init()
         {
             Lines = new List<Line>();
+            Rectangles = new List<Rectangle>();
             Texts = new List<Grid>();
             Blocks = new List<Block>();
         }
@@ -316,6 +372,7 @@ namespace Sheet
         Pan,
         Move,
         Line,
+        Rectangle,
         Text,
         Signal,
         AndGate,
@@ -564,6 +621,20 @@ namespace Sheet
             return lineItem;
         }
 
+        private static RectangleItem SerializeRectangle(Rectangle rectangle)
+        {
+            var rectangleItem = new RectangleItem();
+
+            rectangleItem.Id = 0;
+            rectangleItem.X = Canvas.GetLeft(rectangle);
+            rectangleItem.Y = Canvas.GetTop(rectangle);
+            rectangleItem.Width = rectangle.Width;
+            rectangleItem.Height = rectangle.Height;
+            rectangleItem.IsFilled = rectangle.Fill == Brushes.Transparent ? false : true;
+
+            return rectangleItem;
+        }
+
         private static TextItem SerializeText(Grid text)
         {
             var textItem = new TextItem();
@@ -585,17 +656,17 @@ namespace Sheet
 
         private static BlockItem SerializeBlock(Block parent)
         {
-            var blockItem = new BlockItem()
-            {
-                Name = parent.Name,
-                Lines = new List<LineItem>(),
-                Texts = new List<TextItem>(),
-                Blocks = new List<BlockItem>()
-            };
+            var blockItem = new BlockItem();
+            blockItem.Init(0, parent.Name);
 
             foreach (var line in parent.Lines)
             {
                 blockItem.Lines.Add(SerializeLine(line));
+            }
+
+            foreach (var rectangle in parent.Rectangles)
+            {
+                blockItem.Rectangles.Add(SerializeRectangle(rectangle));
             }
 
             foreach (var text in parent.Texts)
@@ -611,22 +682,29 @@ namespace Sheet
             return blockItem;
         }
 
-        private static BlockItem CreateSheet(int id, string name, IEnumerable<Line> lines, IEnumerable<Grid> texts, IEnumerable<Block> blocks)
+        private static BlockItem CreateSheet(int id, 
+            string name, 
+            IEnumerable<Line> lines, 
+            IEnumerable<Rectangle> rectangles, 
+            IEnumerable<Grid> texts, 
+            IEnumerable<Block> blocks)
         {
-            var sheet = new BlockItem()
-            {
-                Id = id,
-                Name = name,
-                Lines = new List<LineItem>(),
-                Texts = new List<TextItem>(),
-                Blocks = new List<BlockItem>()
-            };
+            var sheet = new BlockItem();
+            sheet.Init(id, name);
 
             if (lines != null)
             {
                 foreach (var line in lines)
                 {
                     sheet.Lines.Add(SerializeLine(line));
+                }
+            }
+
+            if (rectangles != null)
+            {
+                foreach (var rectangle in rectangles)
+                {
+                    sheet.Rectangles.Add(SerializeRectangle(rectangle));
                 }
             }
 
@@ -651,7 +729,7 @@ namespace Sheet
 
         private BlockItem CreateSheet()
         {
-            return CreateSheet(0, "LOGIC", logic.Lines, logic.Texts, logic.Blocks);
+            return CreateSheet(0, "LOGIC", logic.Lines, logic.Rectangles, logic.Texts, logic.Blocks);
         }
 
         #endregion
@@ -707,7 +785,26 @@ namespace Sheet
             return line;
         }
 
-        private static Rectangle CreateSelectionRect(double thickness, double x, double y, double width, double height)
+        private static Rectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled)
+        {
+            var rect = new Rectangle()
+            {
+                Fill = isFilled ? Brushes.Black : Brushes.Transparent,
+                Stroke = Brushes.Black,
+                StrokeThickness = thickness,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+                Width = width,
+                Height = height
+            };
+
+            Canvas.SetLeft(rect, x);
+            Canvas.SetTop(rect, y);
+
+            return rect;
+        }
+
+        private static Rectangle CreateSelectionRectangle(double thickness, double x, double y, double width, double height)
         {
             var rect = new Rectangle()
             {
@@ -736,6 +833,7 @@ namespace Sheet
             double thickness = lineThickness / Zoom;
             Load(sheet, block.Texts, logic, selected, select, thickness);
             Load(sheet, block.Lines, logic, selected, select, thickness);
+            Load(sheet, block.Rectangles, logic, selected, select, thickness);
             Load(sheet, block.Blocks, logic, selected, select, thickness);
         }
 
@@ -773,6 +871,26 @@ namespace Sheet
                 {
                     line.Stroke = Brushes.Red;
                     selected.Lines.Add(line);
+                }
+            }
+        }
+
+        private static void Load(ISheet sheet, IEnumerable<RectangleItem> rectangleItems, Block parent, Block selected, bool select, double thickness)
+        {
+            if (select)
+            {
+                selected.Rectangles = new List<Rectangle>();
+            }
+
+            foreach (var rectangleItem in rectangleItems)
+            {
+                var rectangle = LoadRectangleItem(sheet, parent, rectangleItem, thickness);
+
+                if (select)
+                {
+                    rectangle.Stroke = Brushes.Red;
+                    rectangle.Fill = rectangleItem.IsFilled ? Brushes.Red : Brushes.Transparent;
+                    selected.Rectangles.Add(rectangle);
                 }
             }
         }
@@ -816,6 +934,14 @@ namespace Sheet
             return line;
         }
 
+        private static Rectangle LoadRectangleItem(ISheet sheet, Block parent, RectangleItem rectangleItem, double thickness)
+        {
+            var rectangle = CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
+            parent.Rectangles.Add(rectangle);
+            sheet.Add(rectangle);
+            return rectangle;
+        }
+
         private static Block LoadBlockItem(ISheet sheet, Block parent, BlockItem blockItem, bool select, double thickness)
         {
             var block = new Block() { Name = blockItem.Name };
@@ -838,6 +964,17 @@ namespace Sheet
                 if (select)
                 {
                     line.Stroke = Brushes.Red;
+                }
+            }
+
+            foreach (var rectangleItem in blockItem.Rectangles)
+            {
+                var rectangle = LoadRectangleItem(sheet, block, rectangleItem, thickness);
+
+                if (select)
+                {
+                    rectangle.Stroke = Brushes.Red;
+                    rectangle.Fill = rectangleItem.IsFilled ? Brushes.Red : Brushes.Transparent;
                 }
             }
 
@@ -907,7 +1044,7 @@ namespace Sheet
         private void Copy()
         {
             var text = ItemSerializer.Serialize(HaveSelected(selected) ?
-                CreateSheet(0, "SELECTED", selected.Lines, selected.Texts, selected.Blocks) : CreateSheet());
+                CreateSheet(0, "SELECTED", selected.Lines, selected.Rectangles, selected.Texts, selected.Blocks) : CreateSheet());
             Clipboard.SetData(DataFormats.UnicodeText, text);
         }
 
@@ -967,6 +1104,14 @@ namespace Sheet
             }
         }
 
+        private static void RemoveRectangles(ISheet sheet, IEnumerable<Rectangle> rectangles)
+        {
+            foreach (var rectangle in rectangles)
+            {
+                sheet.Remove(rectangle);
+            }
+        }
+
         private static void RemoveTexts(ISheet sheet, IEnumerable<Grid> texts)
         {
             foreach (var text in texts)
@@ -980,6 +1125,7 @@ namespace Sheet
             foreach (var block in blocks)
             {
                 RemoveLines(sheet, block.Lines);
+                RemoveRectangles(sheet, block.Rectangles);
                 RemoveTexts(sheet, block.Texts);
                 RemoveBlocks(sheet, block.Blocks);
             }
@@ -999,6 +1145,18 @@ namespace Sheet
                 selected.Lines = null;
             }
 
+            if (selected.Rectangles != null)
+            {
+                RemoveRectangles(sheet, selected.Rectangles);
+
+                foreach (var rectangle in selected.Rectangles)
+                {
+                    parent.Rectangles.Remove(rectangle);
+                }
+
+                selected.Rectangles = null;
+            }
+
             if (selected.Texts != null)
             {
                 RemoveTexts(sheet, selected.Texts);
@@ -1016,6 +1174,7 @@ namespace Sheet
                 foreach (var block in selected.Blocks)
                 {
                     RemoveLines(sheet, block.Lines);
+                    RemoveRectangles(sheet, block.Rectangles);
                     RemoveTexts(sheet, block.Texts);
                     RemoveBlocks(sheet, block.Blocks);
 
@@ -1038,14 +1197,17 @@ namespace Sheet
         private void Reset()
         {
             RemoveLines(sheet, logic.Lines);
+            RemoveRectangles(sheet, logic.Rectangles);
             RemoveTexts(sheet, logic.Texts);
             RemoveBlocks(sheet, logic.Blocks);
 
             logic.Lines.Clear();
+            logic.Rectangles.Clear();
             logic.Texts.Clear();
             logic.Blocks.Clear();
 
             selected.Lines = null;
+            selected.Rectangles = null;
             selected.Texts = null;
             selected.Blocks = null;
         }
@@ -1059,7 +1221,7 @@ namespace Sheet
             var temp = new Block();
             HitTest(p, hitSize, sheet, selected, temp);
 
-            if (temp.Lines != null || temp.Texts != null || temp.Blocks != null)
+            if (HaveSelected(temp))
             {
                 return true;
             }
@@ -1117,6 +1279,11 @@ namespace Sheet
                 MoveLines(x, y, block.Lines);
             }
 
+            if (block.Rectangles != null)
+            {
+                MoveRectangles(x, y, block.Rectangles);
+            }
+
             if (block.Texts != null)
             {
                 MoveTexts(x, y, block.Texts);
@@ -1139,6 +1306,15 @@ namespace Sheet
             }
         }
 
+        private static void MoveRectangles(double x, double y, IEnumerable<Rectangle> rectangles)
+        {
+            foreach (var rectangle in rectangles)
+            {
+                Canvas.SetLeft(rectangle, Canvas.GetLeft(rectangle) + x);
+                Canvas.SetTop(rectangle, Canvas.GetTop(rectangle) + y);
+            }
+        }
+
         private static void MoveTexts(double x, double y, IEnumerable<Grid> texts)
         {
             foreach (var text in texts)
@@ -1153,6 +1329,7 @@ namespace Sheet
             foreach (var block in blocks)
             {
                 MoveLines(x, y, block.Lines);
+                MoveRectangles(x, y, block.Rectangles);
                 MoveTexts(x, y, block.Texts);
                 MoveBlocks(x, y, block.Blocks);
             }
@@ -1170,9 +1347,18 @@ namespace Sheet
             }
         }
 
+        private static void AdjustThickness(IEnumerable<Rectangle> rectangles, double thickness)
+        {
+            foreach (var rectangle in rectangles)
+            {
+                rectangle.StrokeThickness = thickness;
+            }
+        }
+
         private static void AdjustThickness(Block parent, double thickness)
         {
             AdjustThickness(parent.Lines, thickness);
+            AdjustThickness(parent.Rectangles, thickness);
 
             foreach (var block in parent.Blocks)
             {
@@ -1269,7 +1455,7 @@ namespace Sheet
             selectionStartPoint = p;
             double x = p.X;
             double y = p.Y;
-            selectionRect = CreateSelectionRect(selectionThickness / Zoom, x, y, 0.0, 0.0);
+            selectionRect = CreateSelectionRectangle(selectionThickness / Zoom, x, y, 0.0, 0.0);
             overlay.Add(selectionRect);
             overlay.Capture();
         }
@@ -1313,6 +1499,12 @@ namespace Sheet
                 line.Stroke = Brushes.Red;
             }
 
+            foreach (var rectangle in parent.Rectangles)
+            {
+                rectangle.Stroke = Brushes.Red;
+                rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+            }
+
             foreach (var text in parent.Texts)
             {
                 GetTextBlock(text).Foreground = Brushes.Red;
@@ -1331,6 +1523,12 @@ namespace Sheet
                 line.Stroke = Brushes.Black;
             }
 
+            foreach (var rectangle in parent.Rectangles)
+            {
+                rectangle.Stroke = Brushes.Black;
+                rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+            }
+
             foreach (var text in parent.Texts)
             {
                 GetTextBlock(text).Foreground = Brushes.Black;
@@ -1344,7 +1542,7 @@ namespace Sheet
 
         private static bool HaveSelected(Block selected)
         {
-            return (selected.Lines != null || selected.Texts != null || selected.Blocks != null);
+            return (selected.Lines != null || selected.Rectangles != null || selected.Texts != null || selected.Blocks != null);
         }
 
         private static void SelectAll(Block selected, Block logic)
@@ -1355,6 +1553,13 @@ namespace Sheet
             {
                 line.Stroke = Brushes.Red;
                 selected.Lines.Add(line);
+            }
+
+            foreach (var rectangle in logic.Rectangles)
+            {
+                rectangle.Stroke = Brushes.Red;
+                rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                selected.Rectangles.Add(rectangle);
             }
 
             foreach (var text in logic.Texts)
@@ -1368,6 +1573,12 @@ namespace Sheet
                 foreach (var line in parent.Lines)
                 {
                     line.Stroke = Brushes.Red;
+                }
+
+                foreach (var rectangle in parent.Rectangles)
+                {
+                    rectangle.Stroke = Brushes.Red;
+                    rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
                 }
 
                 foreach (var text in parent.Texts)
@@ -1396,6 +1607,17 @@ namespace Sheet
                 selected.Lines = null;
             }
 
+            if (selected.Rectangles != null)
+            {
+                foreach (var rectangle in selected.Rectangles)
+                {
+                    rectangle.Stroke = Brushes.Black;
+                    rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                }
+
+                selected.Rectangles = null;
+            }
+
             if (selected.Texts != null)
             {
                 foreach (var text in selected.Texts)
@@ -1413,6 +1635,12 @@ namespace Sheet
                     foreach (var line in parent.Lines)
                     {
                         line.Stroke = Brushes.Black;
+                    }
+
+                    foreach (var rectangle in parent.Rectangles)
+                    {
+                        rectangle.Stroke = Brushes.Black;
+                        rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
                     }
 
                     foreach (var text in parent.Texts)
@@ -1443,6 +1671,11 @@ namespace Sheet
                 HitTestLines(parent, selected, rect, false);
             }
 
+            if (parent.Rectangles != null)
+            {
+                HitTestRectangles(parent, selected, rect, false, sheet.GetParent());
+            }
+
             if (parent.Texts != null)
             {
                 HitTestTexts(parent, selected, rect, false, sheet.GetParent());
@@ -1456,6 +1689,11 @@ namespace Sheet
             if (selected.Lines.Count == 0)
             {
                 selected.Lines = null;
+            }
+
+            if (selected.Rectangles.Count == 0)
+            {
+                selected.Rectangles = null;
             }
 
             if (selected.Texts.Count == 0)
@@ -1482,13 +1720,21 @@ namespace Sheet
 
             if (selected.Lines.Count <= 0)
             {
+                if (parent.Rectangles != null)
+                {
+                    HitTestRectangles(parent, selected, rect, true, sheet.GetParent());
+                }
+            }
+
+            if (selected.Lines.Count <= 0 && selected.Rectangles.Count <= 0)
+            {
                 if (parent.Texts != null)
                 {
                     HitTestTexts(parent, selected, rect, true, sheet.GetParent());
                 }
             }
 
-            if (selected.Lines.Count <= 0 && selected.Texts.Count <= 0)
+            if (selected.Lines.Count <= 0 && selected.Rectangles.Count <= 0 && selected.Texts.Count <= 0)
             {
                 if (parent.Blocks != null)
                 {
@@ -1499,6 +1745,11 @@ namespace Sheet
             if (selected.Lines.Count == 0)
             {
                 selected.Lines = null;
+            }
+
+            if (selected.Rectangles.Count == 0)
+            {
+                selected.Rectangles = null;
             }
 
             if (selected.Texts.Count == 0)
@@ -1521,6 +1772,27 @@ namespace Sheet
                 {
                     line.Stroke = Brushes.Red;
                     selected.Lines.Add(line);
+
+                    if (onlyFirst)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        private static void HitTestRectangles(Block parent, Block selected, Rect rect, bool onlyFirst, UIElement relative)
+        {
+            foreach (var rectangle in parent.Rectangles)
+            {
+                var bounds = VisualTreeHelper.GetContentBounds(rectangle);
+                var offset = rectangle.TranslatePoint(new Point(0, 0), relative);
+                bounds.Offset(offset.X, offset.Y);
+                if (rect.IntersectsWith(bounds))
+                {
+                    rectangle.Stroke = Brushes.Red;
+                    rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                    selected.Rectangles.Add(rectangle);
 
                     if (onlyFirst)
                     {
@@ -1580,6 +1852,21 @@ namespace Sheet
                 {
                     isSelected = true;
                     break;
+                }
+            }
+
+            if (!isSelected)
+            {
+                foreach (var rectangle in parent.Rectangles)
+                {
+                    var bounds = VisualTreeHelper.GetContentBounds(rectangle);
+                    var offset = rectangle.TranslatePoint(new Point(0, 0), relative);
+                    bounds.Offset(offset.X, offset.Y);
+                    if (rect.IntersectsWith(bounds))
+                    {
+                        isSelected = true;
+                        break;
+                    }
                 }
             }
 
@@ -1800,7 +2087,7 @@ namespace Sheet
 
         private static string SerializeAsBlock(int id, string name, Block parent)
         {
-            var block = CreateSheet(id, name, parent.Lines, parent.Texts, parent.Blocks);
+            var block = CreateSheet(id, name, parent.Lines, parent.Rectangles, parent.Texts, parent.Blocks);
             var sb = new StringBuilder();
             ItemSerializer.Serialize(sb, block, "");
             return sb.ToString();
@@ -1815,7 +2102,7 @@ namespace Sheet
 
         private void BreakBlock()
         {
-            var text = ItemSerializer.Serialize(CreateSheet(0, "SELECTED", selected.Lines, selected.Texts, selected.Blocks));
+            var text = ItemSerializer.Serialize(CreateSheet(0, "SELECTED", selected.Lines, selected.Rectangles, selected.Texts, selected.Blocks));
             var parent = ItemSerializer.Deserialize(text);
 
             Push();
@@ -1825,11 +2112,13 @@ namespace Sheet
             
             Load(sheet, parent.Texts, logic, selected, true, thickness);
             Load(sheet, parent.Lines, logic, selected, true, thickness);
+            Load(sheet, parent.Rectangles, logic, selected, true, thickness);
 
             foreach(var block in parent.Blocks)
             {
                 Load(sheet, block.Texts, logic, selected, true, thickness);
                 Load(sheet, block.Lines, logic, selected, true, thickness);
+                Load(sheet, block.Rectangles, logic, selected, true, thickness);
                 Load(sheet, block.Blocks, logic, selected, true, thickness);
             }
         }
@@ -1895,6 +2184,14 @@ namespace Sheet
             {
                 FinishTempLine();
             }
+            else if (mode == Mode.Rectangle && !overlay.IsCaptured)
+            {
+                // TODO:
+            }
+            else if (mode == Mode.Rectangle && overlay.IsCaptured)
+            {
+                // TODO:
+            }
             else if (mode == Mode.Pan && overlay.IsCaptured)
             {
                 FinishPan();
@@ -1931,6 +2228,10 @@ namespace Sheet
             {
                 MoveTempLine(e.GetPosition(overlay.GetParent()));
             }
+            else if (mode == Mode.Rectangle && overlay.IsCaptured)
+            {
+                // TODO:
+            }
             else if (mode == Mode.Pan && overlay.IsCaptured)
             {
                 Pan(e.GetPosition(this));
@@ -1957,6 +2258,10 @@ namespace Sheet
             else if (mode == Mode.Line && overlay.IsCaptured)
             {
                 CancelTempLine();
+            }
+            else if (mode == Mode.Rectangle && overlay.IsCaptured)
+            {
+                // TODO:
             }
             else if (!overlay.IsCaptured)
             {
@@ -2014,8 +2319,17 @@ namespace Sheet
                     }
                     break;
                 // Del: Delete
+                // Ctrl+Del: Reset
                 case Key.Delete:
-                    Delete();
+                    if (ctrl)
+                    {
+                        Push();
+                        Reset();
+                    }
+                    else
+                    {
+                        Delete();
+                    }
                     break;
                 // Ctrl+A: Select All
                 // A: Mode AndGate
@@ -2046,11 +2360,6 @@ namespace Sheet
                         }
                     }
                     break;
-                // R: Reset
-                case Key.R:
-                    Push();
-                    Reset();
-                    break;
                 // Ctrls+S: Save
                 // S: Mode Selection
                 case Key.S:
@@ -2078,6 +2387,10 @@ namespace Sheet
                 // L: Mode Line
                 case Key.L:
                     mode = Mode.Line;
+                    break;
+                // R: Mode Rectangle
+                case Key.R:
+                    mode = Mode.Rectangle;
                     break;
                 // T: Mode Text
                 case Key.T:
