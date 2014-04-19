@@ -10,7 +10,7 @@
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <local:SheetControl x:Name="Sheet" ZoomIndex="9" PanX="0" PanY="0" ClipToBounds="False" Grid.Column="0"/>
-        <ListBox x:Name="Library" 
+        <ListBox x:Name="Library"
                  VerticalAlignment="Center" HorizontalAlignment="Left" 
                  SnapsToDevicePixels="True" 
                  Margin="6" Grid.Column="0"
