@@ -35,6 +35,9 @@ namespace Sheet
                 case Key.H:
                     Help.Visibility = Help.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
                     break;
+                case Key.J:
+                    Library.Visibility = Library.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
+                    break;
             }
         }
 

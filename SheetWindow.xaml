@@ -18,16 +18,6 @@
                  Width="150" Height="Auto"
                  HorizontalContentAlignment="Stretch"
                  Background="WhiteSmoke">
-            <ListBox.Style>
-                <Style TargetType="{x:Type ListBox}">
-                    <Setter Property="Visibility" Value="Visible"/>
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding HasItems, RelativeSource={RelativeSource Self}}" Value="False">
-                            <Setter Property="Visibility" Value="Hidden"/>
-                        </DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </ListBox.Style>
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding Name}" Padding="6" Margin="2"/>
@@ -149,10 +139,13 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <TextBlock Text="Help" TextDecorations="Underline" FontWeight="Medium" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Margin="2"/>
-                <TextBlock Text="Show Help" Grid.Column="0" Grid.Row="1" Margin="2"/>
+                <TextBlock Text="View" TextDecorations="Underline" FontWeight="Medium" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Margin="2"/>
+                <TextBlock Text="Help Panel" Grid.Column="0" Grid.Row="1" Margin="2"/>
                 <TextBlock Text="H" Grid.Column="1" Grid.Row="1" Margin="8,2,2,2"/>
+                <TextBlock Text="Blocks Panel" Grid.Column="0" Grid.Row="2" Margin="2"/>
+                <TextBlock Text="J" Grid.Column="1" Grid.Row="2" Margin="8,2,2,2"/>
             </Grid>
         </StackPanel>
         <Grid x:Name="TextGrid" Visibility="Collapsed" 
