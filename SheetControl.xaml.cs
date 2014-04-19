@@ -2363,15 +2363,17 @@ namespace Sheet
                 {
                     Push();
                     tb.Text = str;
-                    Deselect(temp);
                 };
 
-                Action cancel = () => { Deselect(temp); };
+                Action cancel = () => { };
 
                 EditText(ok, cancel, "Text:", tb.Text);
+
+                Deselect(temp);
                 return true;
             }
 
+            Deselect(temp);
             return false;
         }
 
