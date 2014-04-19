@@ -33,7 +33,7 @@ Keyboard  Shortcuts:
 
 Mouse:
 
-    Left Click            Create / Start Selection / Deselect
-    Right Click           Pan / Cancel / Deselect
+    Left Click            Create / (+Drag) Move / (+Drag) Selection / Select / Deselect
+    Right Click           Pan / Cancel Create / Cancel Selection / Deselect / Edit Text
     Mouse Wheel           Zoom
     Double Middle Click   Reset Pan and Zoom
