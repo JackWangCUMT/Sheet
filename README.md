@@ -9,12 +9,10 @@ Keyboard  Shortcuts:
     Ctrls+S         Save
     N               Mode None
     S               Mode Selection
+    I               Mode Insert
     L               Mode Line
     R               Mode Rectangle
     T               Mode Text
-    I               Mode Signal
-    A               Mode AndGate
-    O               Mode OrGate
     Ctrl+Z          Undo
     Ctrl+Y          Redo
     Ctrl+X          Cut
