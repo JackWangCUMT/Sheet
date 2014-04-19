@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO.Packaging;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -12,6 +13,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Xps;
+using System.Windows.Xps.Packaging;
 
 namespace Sheet
 {
@@ -1090,6 +1093,26 @@ namespace Sheet
             {
                 var text = ItemSerializer.Serialize(CreateSheet());
                 ItemSerializer.SaveText(dlg.FileName, text);
+            }
+        }
+
+        private void Export()
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog()
+            {
+                Filter = "XPS Documents (*.xps)|*.xps|All Files (*.*)|*.*",
+                FileName = "sheet"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                using (var package = Package.Open(dlg.FileName, System.IO.FileMode.Create))
+                {
+                    var doc = new XpsDocument(package);
+                    var writer = XpsDocument.CreateXpsDocumentWriter(doc);
+                    writer.Write(this);
+                    doc.Close();
+                }
             }
         }
 
@@ -2500,7 +2523,14 @@ namespace Sheet
                         }
                     }
                     break;
-                // Ctrls+S: Save
+                // Ctrl+E: Export
+                case Key.E:
+                    if (ctrl)
+                    {
+                        Export();
+                    }
+                    break;
+                // Ctrl+S: Save
                 // S: Mode Selection
                 case Key.S:
                     if (ctrl)
