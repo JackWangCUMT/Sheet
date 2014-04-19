@@ -372,14 +372,12 @@ namespace Sheet
     {
         None,
         Selection,
+        Insert,
         Pan,
         Move,
         Line,
         Rectangle,
         Text,
-        Signal,
-        AndGate,
-        OrGate
     }
 
     #endregion
@@ -553,6 +551,7 @@ namespace Sheet
                 CreateFrame(back, frameLines, gridSize, gridThickness);
                 AdjustThickness(gridLines, gridThickness / zoomFactors[zoomIndex]);
                 AdjustThickness(frameLines, frameThickness / zoomFactors[zoomIndex]);
+                LoadStandardLibrary();
                 Focus();
             };
         }
@@ -1114,6 +1113,230 @@ namespace Sheet
                     doc.Close();
                 }
             }
+        }
+
+        private void Library()
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog()
+            {
+                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                LoadLibrary(dlg.FileName);
+            }
+        }
+
+        #endregion
+
+        #region Normalize Position
+
+        private static void NormalizePosition(BlockItem block)
+        {
+            double minX = 1200.0;
+            double minY = 750.0;
+            double maxX = 0.0;
+            double maxY = 0.0;
+            GetMinMax(block, ref minX, ref minY, ref maxX, ref maxY);
+            Move(block, -(maxX - (maxX - minX)), -(maxY - (maxY - minY)));
+        }
+
+        private static void GetMinMax(IEnumerable<BlockItem> blocks, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        {
+            foreach (var block in blocks)
+            {
+                GetMinMax(block, ref minX, ref minY, ref maxX, ref maxY);
+            }
+        }
+
+        private static void GetMinMax(BlockItem block, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        {
+            GetMinMax(block.Lines, ref minX, ref minY, ref maxX, ref maxY);
+            GetMinMax(block.Rectangles, ref minX, ref minY, ref maxX, ref maxY);
+            GetMinMax(block.Texts, ref minX, ref minY, ref maxX, ref maxY);
+            GetMinMax(block.Blocks, ref minX, ref minY, ref maxX, ref maxY);
+        }
+
+        private static void GetMinMax(IEnumerable<LineItem> lines, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        {
+            foreach (var line in lines)
+            {
+                minX = Math.Min(minX, line.X1);
+                minX = Math.Min(minX, line.X2);
+                minY = Math.Min(minY, line.Y1);
+                minY = Math.Min(minY, line.Y2);
+                maxX = Math.Max(maxX, line.X1);
+                maxX = Math.Max(maxX, line.X2);
+                maxY = Math.Max(maxY, line.Y1);
+                maxY = Math.Max(maxY, line.Y2);
+            }
+        }
+
+        private static void GetMinMax(IEnumerable<RectangleItem> rectangles, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        {
+            foreach (var rectangle in rectangles)
+            {
+                minX = Math.Min(minX, rectangle.X);
+                minY = Math.Min(minY, rectangle.Y);
+                maxX = Math.Max(maxX, rectangle.X);
+                maxY = Math.Max(maxY, rectangle.Y);
+            }
+        }
+
+        private static void GetMinMax(IEnumerable<TextItem> texts, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        {
+            foreach (var text in texts)
+            {
+                minX = Math.Min(minX, text.X);
+                minY = Math.Min(minY, text.Y);
+                maxX = Math.Max(maxX, text.X);
+                maxY = Math.Max(maxY, text.Y);
+            }
+        }
+
+        private static void Move(IEnumerable<BlockItem> blocks, double x, double y)
+        {
+            foreach (var block in blocks)
+            {
+                Move(block, x, y);
+            }
+        }
+
+        private static void Move(BlockItem block, double x, double y)
+        {
+            Move(block.Lines, x, y);
+            Move(block.Rectangles, x, y);
+            Move(block.Texts, x, y);
+            Move(block.Blocks, x, y);
+        }
+
+        private static void Move(IEnumerable<LineItem> lines, double x, double y)
+        {
+            foreach (var line in lines)
+            {
+                Move(line, x, y);
+            }
+        }
+
+        private static void Move(IEnumerable<RectangleItem> rectangles, double x, double y)
+        {
+            foreach (var rectangle in rectangles)
+            {
+                Move(rectangle, x, y);
+            }
+        }
+
+        private static void Move(IEnumerable<TextItem> texts, double x, double y)
+        {
+            foreach (var text in texts)
+            {
+                Move(text, x, y);
+            }
+        }
+
+        private static void Move(LineItem line, double x, double y)
+        {
+            line.X1 += x;
+            line.Y1 += y;
+            line.X2 += x;
+            line.Y2 += y;
+        }
+
+        private static void Move(RectangleItem rect, double x, double y)
+        {
+            rect.X += x;
+            rect.Y += y;
+        }
+
+        private static void Move(TextItem text, double x, double y)
+        {
+            text.X += x;
+            text.Y += y;
+        }
+
+        #endregion
+
+        #region Library
+
+        private void Insert(Point p)
+        {
+            var library = GetOwner<SheetWindow>(this).Library;
+            if (library.SelectedIndex >= 0)
+            {
+                var blockItem = library.SelectedItem as BlockItem;
+                Insert(blockItem, p, true);
+            }
+        }
+
+        private void Insert(BlockItem blockItem, Point p, bool select)
+        {
+            DeselectAll(selected);
+            double thickness = lineThickness / Zoom;
+
+            if (select)
+            {
+                selected.Blocks = new List<Block>();
+            }
+
+            Push();
+
+            var block = LoadBlockItem(sheet, logic, blockItem, select, thickness);
+
+            if (select)
+            {
+                selected.Blocks.Add(block);
+            }
+
+            Move(Snap(p.X), Snap(p.Y), block);
+        }
+
+        private void LoadStandardLibrary()
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var resourceName = "Sheet.Libraries.Standard.txt";
+
+            using (var stream = assembly.GetManifestResourceStream(resourceName))
+            {
+                using (var reader = new System.IO.StreamReader(stream))
+                {
+                    string text = reader.ReadToEnd();
+                    if (text != null)
+                    {
+                        InitLibrary(text);
+                    }
+                }
+            }
+        }
+
+        private void LoadLibrary(string fileName)
+        {
+            var text = ItemSerializer.OpenText(fileName);
+            if (text != null)
+            {
+                InitLibrary(text);
+            }
+        }
+
+        private void InitLibrary(string text)
+        {
+            if (text != null)
+            {
+                var blocks = ItemSerializer.Deserialize(text).Blocks;
+                var library = GetOwner<SheetWindow>(this).Library;
+                library.ItemsSource = blocks;
+                library.SelectedIndex = 0;
+            }
+        }
+
+        private void AddToLibrary(BlockItem block)
+        {
+            var library = GetOwner<SheetWindow>(this).Library;
+            var items = library.ItemsSource as List<BlockItem>;
+            NormalizePosition(block);
+            items.Add(block);
+            library.ItemsSource = null;
+            library.ItemsSource = items;
         }
 
         #endregion
@@ -2062,92 +2285,6 @@ namespace Sheet
 
         #endregion
 
-        #region Blocks
-
-        private void AddSignal(Point p)
-        {
-            Push();
-            logic.Blocks.Add(CreateSignal(sheet, "SIGNAL", Snap(p.X), Snap(p.Y), lineThickness / Zoom, new string[] { "Text", "Text", "Text", "Text" }));
-        }
-
-        private static Block CreateSignal(ISheet sheet, string name, double x, double y, double thickness, string[] text)
-        {
-            var block = new Block() { Name = name };
-            block.Init();
-
-            AddTextToBlock(sheet, block, text[0], x + 5.0, y, 200.0, 15.0, HorizontalAlignment.Left, VerticalAlignment.Center, 11.0);
-            AddTextToBlock(sheet, block, text[1], x + 5.0, y + 15.0, 200.0, 15.0, HorizontalAlignment.Left, VerticalAlignment.Center, 11.0);
-            AddTextToBlock(sheet, block, text[2], x + 215.0, y, 80.0, 15.0, HorizontalAlignment.Left, VerticalAlignment.Center, 11.0);
-            AddTextToBlock(sheet, block, text[3], x + 215.0, y + 15.0, 80.0, 15.0, HorizontalAlignment.Left, VerticalAlignment.Center, 11.0);
-            AddLineToBlock(sheet, block, thickness, x, y, x + 300.0, y);
-            AddLineToBlock(sheet, block, thickness, x, y + 30.0, x + 300.0, y + 30.0);
-            AddLineToBlock(sheet, block, thickness, x, y, x, y + 30.0);
-            AddLineToBlock(sheet, block, thickness, x + 210.0, y, x + 210.0, y + 30.0);
-            AddLineToBlock(sheet, block, thickness, x + 300.0, y, x + 300.0, y + 30.0);
-
-            return block;
-        }
-
-        private void AddAndGate(Point p)
-        {
-            Push();
-            logic.Blocks.Add(CreateAndGateBlock(sheet, Snap(p.X), Snap(p.Y), lineThickness / Zoom));
-        }
-
-        private void AddOrGate(Point p)
-        {
-            Push();
-            logic.Blocks.Add(CreateOrGateBlock(sheet, Snap(p.X), Snap(p.Y), 1, lineThickness / Zoom));
-        }
-
-        private static Block CreateAndGateBlock(ISheet sheet, double x, double y, double thickness)
-        {
-            return CreateGenericGateBlock(sheet, "AND", x, y, "&", thickness);
-        }
-
-        private static Block CreateOrGateBlock(ISheet sheet, double x, double y, double count, double thickness)
-        {
-            return CreateGenericGateBlock(sheet, "OR", x, y, "≥" + count.ToString(), thickness);
-        }
-
-        private static Block CreateGenericGateBlock(ISheet sheet, string name, double x, double y, string text, double thickness)
-        {
-            var block = new Block() { Name = name };
-            block.Init();
-
-            AddTextToBlock(sheet, block, text, x, y, 30.0, 30.0, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0);
-            AddLineToBlock(sheet, block, thickness, x, y, x + 30.0, y);
-            AddLineToBlock(sheet, block, thickness, x, y + 30.0, x + 30.0, y + 30.0);
-            AddLineToBlock(sheet, block, thickness, x, y, x, y + 30.0);
-            AddLineToBlock(sheet, block, thickness, x + 30.0, y, x + 30.0, y + 30.0);
-
-            return block;
-        }
-
-        private void AddText(Point p)
-        {
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
-            Push();
-            AddTextToBlock(sheet, logic, "Text", x, y, 30.0, 15.0, System.Windows.HorizontalAlignment.Center, System.Windows.VerticalAlignment.Center, 11.0);
-        }
-
-        private static void AddTextToBlock(ISheet sheet, Block block, string str, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size)
-        {
-            var text = CreateText(str, x, y, width, height, halign, valign, size);
-            block.Texts.Add(text);
-            sheet.Add(text);
-        }
-
-        private static void AddLineToBlock(ISheet sheet, Block block, double thickness, double x1, double y1, double x2, double y2)
-        {
-            var line = CreateLine(thickness, x1, y1, x2, y2);
-            block.Lines.Add(line);
-            sheet.Add(line);
-        }
-
-        #endregion
-
         #region Edit Text
 
         private SheetWindow owner = null;
@@ -2244,6 +2381,16 @@ namespace Sheet
             return false;
         }
 
+        private void CreateText(Point p)
+        {
+            double x = Snap(p.X);
+            double y = Snap(p.Y);
+            Push();
+            var text = CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0);
+            logic.Texts.Add(text);
+            sheet.Add(text);
+        }
+
         #endregion
 
         #region Block
@@ -2253,7 +2400,8 @@ namespace Sheet
             Action<string> ok = (str) =>
             {
                 Push();
-                CreateBlock(str);
+                var block = CreateBlock(str);
+                AddToLibrary(block);
             };
 
             Action cancel = () => { };
@@ -2269,11 +2417,13 @@ namespace Sheet
             return sb.ToString();
         }
 
-        private void CreateBlock(string name)
+        private BlockItem CreateBlock(string name)
         {
             var text = SerializeAsBlock(0, name, selected);
             Delete();
-            Load(ItemSerializer.Deserialize(text), true);
+            var block = ItemSerializer.Deserialize(text);
+            Load(block, true);
+            return block.Blocks.FirstOrDefault();
         }
 
         private void BreakBlock()
@@ -2305,6 +2455,8 @@ namespace Sheet
 
         private void Overlay_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            Focus();
+
             if (mode == Mode.None)
             {
                 return;
@@ -2318,15 +2470,7 @@ namespace Sheet
 
             DeselectAll(selected);
 
-            if (mode == Mode.AndGate)
-            {
-                AddAndGate(e.GetPosition(overlay.GetParent()));
-            }
-            else if (mode == Mode.OrGate)
-            {
-                AddOrGate(e.GetPosition(overlay.GetParent()));
-            }
-            else if (mode == Mode.Selection)
+            if (mode == Mode.Selection)
             {
                 HitTest(e.GetPosition(overlay.GetParent()), hitSize, sheet, logic, selected);
                 if (!HaveSelected(selected))
@@ -2337,6 +2481,10 @@ namespace Sheet
                 {
                     InitMove(e.GetPosition(this));
                 }
+            }
+            else if (mode == Mode.Insert && !overlay.IsCaptured)
+            {
+                Insert(e.GetPosition(overlay.GetParent()));
             }
             else if (mode == Mode.Line && !overlay.IsCaptured)
             {
@@ -2360,11 +2508,7 @@ namespace Sheet
             }
             else if (mode == Mode.Text && !overlay.IsCaptured)
             {
-                AddText(e.GetPosition(overlay.GetParent()));
-            }
-            else if (mode == Mode.Signal && !overlay.IsCaptured)
-            {
-                AddSignal(e.GetPosition(overlay.GetParent()));
+                CreateText(e.GetPosition(overlay.GetParent()));
             }
         }
 
@@ -2406,6 +2550,8 @@ namespace Sheet
 
         private void Overlay_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
+            Focus();
+
             if (mode == Mode.None)
             {
                 return;
@@ -2499,15 +2645,10 @@ namespace Sheet
                     }
                     break;
                 // Ctrl+A: Select All
-                // A: Mode AndGate
                 case Key.A:
                     if (ctrl)
                     {
                         SelectAll(selected, logic);
-                    }
-                    else
-                    {
-                        mode = Mode.AndGate;
                     }
                     break;
                 // B: Create Block
@@ -2547,20 +2688,23 @@ namespace Sheet
                     }
                     break;
                 // Ctrl+O: Open
-                // O: Mode OrGate
                 case Key.O:
                     if (ctrl)
                     {
                         Open();
                     }
-                    else
-                    {
-                        mode = Mode.OrGate;
-                    }
                     break;
+                // Ctrl+L: Library
                 // L: Mode Line
                 case Key.L:
-                    mode = Mode.Line;
+                    if (ctrl)
+                    {
+                        Library();
+                    }
+                    else
+                    {
+                        mode = Mode.Line;
+                    }
                     break;
                 // R: Mode Rectangle
                 case Key.R:
@@ -2572,7 +2716,7 @@ namespace Sheet
                     break;
                 // I: Mode Signal
                 case Key.I:
-                    mode = Mode.Signal;
+                    mode = Mode.Insert;
                     break;
                 // N: Mode None
                 case Key.N:
