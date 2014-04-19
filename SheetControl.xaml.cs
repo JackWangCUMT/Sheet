@@ -702,6 +702,50 @@ namespace Sheet
 
         #endregion
 
+        #region Mode
+
+        public void ModeNone()
+        {
+            mode = Mode.None;
+        }
+
+        public void ModeSelection()
+        {
+            mode = Mode.Selection;
+        }
+
+        public void ModeInsert()
+        {
+            mode = Mode.Insert;
+        }
+
+        public void ModePan()
+        {
+            mode = Mode.Pan;
+        }
+
+        public void ModeMove()
+        {
+            mode = Mode.Move;
+        }
+
+        public void ModeLine()
+        {
+            mode = Mode.Line;
+        }
+
+        public void ModeRectangle()
+        {
+            mode = Mode.Rectangle;
+        }
+
+        public void ModeText()
+        {
+            mode = Mode.Text;
+        }
+
+        #endregion
+
         #region Back
 
         private static void AddLine(ISheet sheet, List<Line> lines, double thickness, double x1, double y1, double x2, double y2, Brush stroke)
@@ -1139,17 +1183,17 @@ namespace Sheet
 
         #region Undo/Redo
 
-        private void Push()
+        public void Push()
         {
             undos.Push(ItemSerializer.Serialize(CreateSheet()));
         }
 
-        private void Pop()
+        public void Pop()
         {
             undos.Pop();
         }
 
-        private void Undo()
+        public void Undo()
         {
             if (undos.Count > 0)
             {
@@ -1159,7 +1203,7 @@ namespace Sheet
             }
         }
 
-        private void Redo()
+        public void Redo()
         {
             if (redos.Count > 0)
             {
@@ -1173,7 +1217,7 @@ namespace Sheet
 
         #region Clipboard
 
-        private void Cut()
+        public void Cut()
         {
             Copy();
             Push();
@@ -1188,14 +1232,14 @@ namespace Sheet
             }
         }
 
-        private void Copy()
+        public void Copy()
         {
             var text = ItemSerializer.Serialize(HaveSelected(selected) ?
                 CreateSheet(0, "SELECTED", selected.Lines, selected.Rectangles, selected.Texts, selected.Blocks) : CreateSheet());
             Clipboard.SetData(DataFormats.UnicodeText, text);
         }
 
-        private void Paste()
+        public void Paste()
         {
             var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
             Load(ItemSerializer.Deserialize(text), true);
@@ -1205,7 +1249,7 @@ namespace Sheet
 
         #region File Dialogs
 
-        private void Open()
+        public void Open()
         {
             var dlg = new Microsoft.Win32.OpenFileDialog()
             {
@@ -1224,7 +1268,7 @@ namespace Sheet
             }
         }
 
-        private void Save()
+        public void Save()
         {
             var dlg = new Microsoft.Win32.SaveFileDialog()
             {
@@ -1239,7 +1283,7 @@ namespace Sheet
             }
         }
 
-        private void Export()
+        public void Export()
         {
             var dlg = new Microsoft.Win32.SaveFileDialog()
             {
@@ -1259,7 +1303,7 @@ namespace Sheet
             }
         }
 
-        private void Library()
+        public void Library()
         {
             var dlg = new Microsoft.Win32.OpenFileDialog()
             {
@@ -1278,8 +1322,8 @@ namespace Sheet
 
         private void Insert(Point p)
         {
-            var library = GetOwner<SheetWindow>(this).Library;
-            if (library.SelectedIndex >= 0)
+            var library = this == null ? null : GetOwner<SheetWindow>(this).Library;
+            if (library != null && library.SelectedIndex >= 0)
             {
                 var blockItem = library.SelectedItem as BlockItem;
                 Insert(blockItem, p, true);
@@ -1337,10 +1381,11 @@ namespace Sheet
 
         private void InitLibrary(string text)
         {
-            if (text != null)
+            var owner = this == null ? null : GetOwner<SheetWindow>(this);
+            if (owner != null && text != null)
             {
+                var library = owner.Library;
                 var blocks = ItemSerializer.Deserialize(text).Blocks;
-                var library = GetOwner<SheetWindow>(this).Library;
                 library.ItemsSource = blocks;
                 library.SelectedIndex = 0;
                 if (blocks.Count == 0)
@@ -1356,12 +1401,15 @@ namespace Sheet
 
         private void AddToLibrary(BlockItem block)
         {
-            var library = GetOwner<SheetWindow>(this).Library;
-            var items = library.ItemsSource as List<BlockItem>;
-            ItemEditor.NormalizePosition(block, 0.0, 0.0, 1200.0, 750.0);
-            items.Add(block);
-            library.ItemsSource = null;
-            library.ItemsSource = items;
+            var library = this == null ? null : GetOwner<SheetWindow>(this).Library;
+            if (library != null && block != null)
+            {
+                var items = library.ItemsSource as List<BlockItem>;
+                ItemEditor.NormalizePosition(block, 0.0, 0.0, 1200.0, 750.0);
+                items.Add(block);
+                library.ItemsSource = null;
+                library.ItemsSource = items;
+            }
         }
 
         #endregion
@@ -1457,7 +1505,7 @@ namespace Sheet
             }
         }
 
-        private void Delete()
+        public void Delete()
         {
             if (HaveSelected(selected))
             {
@@ -1466,7 +1514,7 @@ namespace Sheet
             }
         }
 
-        private void Reset()
+        public void Reset()
         {
             RemoveLines(sheet, logic.Lines);
             RemoveRectangles(sheet, logic.Rectangles);
@@ -1486,7 +1534,7 @@ namespace Sheet
 
         #endregion
 
-        #region Move
+        #region Move Mode
 
         private bool CanInitMove(Point p)
         {
@@ -1539,10 +1587,34 @@ namespace Sheet
             overlay.ReleaseCapture();
         }
 
+        #endregion
+
+        #region Move
+
         private void Move(double x, double y)
         {
             Push();
             Move(x, y, HaveSelected(selected) ? selected : logic);
+        }
+
+        public void MoveUp()
+        {
+            Move(0.0, -snapSize);
+        }
+
+        public void MoveDown()
+        {
+            Move(0.0, snapSize);
+        }
+
+        public void MoveLeft()
+        {
+            Move(-snapSize, 0.0);
+        }
+
+        public void MoveRight()
+        {
+            Move(snapSize, 0.0);
         }
 
         private static void Move(double x, double y, Block block)
@@ -1741,7 +1813,7 @@ namespace Sheet
 
         #endregion
 
-        #region Selection
+        #region Selection Mode
 
         private void InitSelectionRect(Point p)
         {
@@ -1784,6 +1856,10 @@ namespace Sheet
             overlay.Remove(selectionRect);
             selectionRect = null;
         }
+
+        #endregion
+
+        #region Selection
 
         private static void Select(Block parent)
         {
@@ -1956,6 +2032,11 @@ namespace Sheet
 
                 selected.Blocks = null;
             }
+        }
+
+        public void SelecteAll()
+        {
+            SelectAll(selected, logic);
         }
 
         #endregion
@@ -2202,7 +2283,7 @@ namespace Sheet
 
         #endregion
 
-        #region Temp Line
+        #region Line Mode
 
         private void InitTempLine(Point p)
         {
@@ -2252,7 +2333,7 @@ namespace Sheet
 
         #endregion
 
-        #region Temp Rectangle
+        #region Rectangle Mode
 
         private void InitTempRect(Point p)
         {
@@ -2350,6 +2431,9 @@ namespace Sheet
 
         private T GetOwner<T>(DependencyObject reference) where T : class
         {
+            if (reference == null)
+                return null;
+
             var parent = VisualTreeHelper.GetParent(reference);
             while (!(parent is T))
             {
@@ -2360,7 +2444,7 @@ namespace Sheet
 
         private void EditText(Action<string> ok, Action cancel, string label, string text)
         {
-            owner = GetOwner<SheetWindow>(this);
+            owner = this == null ? null : GetOwner<SheetWindow>(this);
             if (owner != null)
             {
                 okAction = ok;
@@ -2420,20 +2504,6 @@ namespace Sheet
 
         #region Block
 
-        private void CreateBlock()
-        {
-            Action<string> ok = (str) =>
-            {
-                Push();
-                var block = CreateBlock(str);
-                AddToLibrary(block);
-            };
-
-            Action cancel = () => { };
-
-            EditText(ok, cancel, "Name:", "BLOCK0");
-        }
-
         private static string SerializeAsBlock(int id, string name, Block parent)
         {
             var block = CreateSheet(id, name, parent.Lines, parent.Rectangles, parent.Texts, parent.Blocks);
@@ -2451,26 +2521,46 @@ namespace Sheet
             return block.Blocks.FirstOrDefault();
         }
 
-        private void BreakBlock()
+        public void CreateBlock()
         {
-            var text = ItemSerializer.Serialize(CreateSheet(0, "SELECTED", selected.Lines, selected.Rectangles, selected.Texts, selected.Blocks));
-            var parent = ItemSerializer.Deserialize(text);
-
-            Push();
-            Delete();
-
-            double thickness = lineThickness / Zoom;
-            
-            Load(sheet, parent.Texts, logic, selected, true, thickness);
-            Load(sheet, parent.Lines, logic, selected, true, thickness);
-            Load(sheet, parent.Rectangles, logic, selected, true, thickness);
-
-            foreach(var block in parent.Blocks)
+            if (HaveSelected(selected))
             {
-                Load(sheet, block.Texts, logic, selected, true, thickness);
-                Load(sheet, block.Lines, logic, selected, true, thickness);
-                Load(sheet, block.Rectangles, logic, selected, true, thickness);
-                Load(sheet, block.Blocks, logic, selected, true, thickness);
+                Action<string> ok = (str) =>
+                {
+                    Push();
+                    var block = CreateBlock(str);
+                    AddToLibrary(block);
+                };
+
+                Action cancel = () => { };
+
+                EditText(ok, cancel, "Name:", "BLOCK0");
+            }
+        }
+
+        public void BreakBlock()
+        {
+            if (HaveSelected(selected))
+            {
+                var text = ItemSerializer.Serialize(CreateSheet(0, "SELECTED", selected.Lines, selected.Rectangles, selected.Texts, selected.Blocks));
+                var parent = ItemSerializer.Deserialize(text);
+
+                Push();
+                Delete();
+
+                double thickness = lineThickness / Zoom;
+
+                Load(sheet, parent.Texts, logic, selected, true, thickness);
+                Load(sheet, parent.Lines, logic, selected, true, thickness);
+                Load(sheet, parent.Rectangles, logic, selected, true, thickness);
+
+                foreach (var block in parent.Blocks)
+                {
+                    Load(sheet, block.Texts, logic, selected, true, thickness);
+                    Load(sheet, block.Lines, logic, selected, true, thickness);
+                    Load(sheet, block.Rectangles, logic, selected, true, thickness);
+                    Load(sheet, block.Blocks, logic, selected, true, thickness);
+                }
             }
         }
 
@@ -2625,157 +2715,6 @@ namespace Sheet
             if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
             {
                 ResetPanAndZoom();
-            }
-        }
-
-        private void UserControl_PreviewKeyDown(object sender, KeyEventArgs e)
-        {
-            bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
-
-            switch (e.Key)
-            {
-                // Ctrl+Z: Undo
-                case Key.Z:
-                    if (ctrl)
-                    {
-                        Undo();
-                    }
-                    break;
-                // Ctrl+Y: Redo
-                case Key.Y:
-                    if (ctrl)
-                    {
-                        Redo();
-                    }
-                    break;
-                // Ctrl+X: Cut
-                case Key.X:
-                    if (ctrl)
-                    {
-                        Cut();
-                    }
-                    break;
-                // Ctrl+C: Copy
-                case Key.C:
-                    if (ctrl)
-                    {
-                        Copy();
-                    }
-                    break;
-                // Ctrl+V: Paste
-                case Key.V:
-                    if (ctrl)
-                    {
-                        Paste();
-                    }
-                    break;
-                // Del: Delete
-                // Ctrl+Del: Reset
-                case Key.Delete:
-                    if (ctrl)
-                    {
-                        Push();
-                        Reset();
-                    }
-                    else
-                    {
-                        Delete();
-                    }
-                    break;
-                // Ctrl+A: Select All
-                case Key.A:
-                    if (ctrl)
-                    {
-                        SelectAll(selected, logic);
-                    }
-                    break;
-                // B: Create Block
-                // Ctrl+B: Break Block
-                case Key.B:
-                    {
-                        if (HaveSelected(selected))
-                        {
-                            if (ctrl)
-                            {
-                                BreakBlock();
-                            }
-                            else
-                            {
-                                CreateBlock();
-                            }
-                        }
-                    }
-                    break;
-                // Ctrl+E: Export
-                case Key.E:
-                    if (ctrl)
-                    {
-                        Export();
-                    }
-                    break;
-                // Ctrl+S: Save
-                // S: Mode Selection
-                case Key.S:
-                    if (ctrl)
-                    {
-                        Save();
-                    }
-                    else
-                    {
-                        mode = Mode.Selection;
-                    }
-                    break;
-                // Ctrl+O: Open
-                case Key.O:
-                    if (ctrl)
-                    {
-                        Open();
-                    }
-                    break;
-                // Ctrl+L: Library
-                // L: Mode Line
-                case Key.L:
-                    if (ctrl)
-                    {
-                        Library();
-                    }
-                    else
-                    {
-                        mode = Mode.Line;
-                    }
-                    break;
-                // R: Mode Rectangle
-                case Key.R:
-                    mode = Mode.Rectangle;
-                    break;
-                // T: Mode Text
-                case Key.T:
-                    mode = Mode.Text;
-                    break;
-                // I: Mode Signal
-                case Key.I:
-                    mode = Mode.Insert;
-                    break;
-                // N: Mode None
-                case Key.N:
-                    mode = Mode.None;
-                    break;
-                // Up: Move Up
-                case Key.Up:
-                    Move(0.0, -snapSize);
-                    break;
-                // Down: Move Down
-                case Key.Down:
-                    Move(0.0, snapSize);
-                    break;
-                // Left: Move Left
-                case Key.Left:
-                    Move(-snapSize, 0.0);
-                    break;
-                // Right: Move Right
-                case Key.Right:
-                    Move(snapSize, 0.0);
-                    break;
             }
         }
 

@@ -8,8 +8,7 @@
              Focusable="True" FocusVisualStyle="{x:Null}"
              Background="White" 
              PreviewMouseWheel="UserControl_PreviewMouseWheel"
-             PreviewMouseDown="UserControl_PreviewMouseDown"
-             PreviewKeyDown="UserControl_PreviewKeyDown">
+             PreviewMouseDown="UserControl_PreviewMouseDown">
     <Canvas Width="1200" Height="750"
             Background="Transparent"
             ClipToBounds="False"
