@@ -2215,6 +2215,37 @@ namespace Sheet
 
         #endregion
 
+        #region Text
+
+        private bool TryToEditText(Point p)
+        {
+            var temp = new Block();
+            HitTest(p, hitSize, sheet, logic, temp);
+
+            if (HaveOneTextSelected(temp))
+            {
+                var tb = GetTextBlock(temp.Texts[0]);
+
+                Action<string> ok = (str) =>
+                {
+                    Push();
+                    tb.Text = str;
+                };
+
+                Action cancel = () => { };
+
+                EditText(ok, cancel, "Text:", tb.Text);
+
+                Deselect(temp);
+                return true;
+            }
+
+            Deselect(temp);
+            return false;
+        }
+
+        #endregion
+
         #region Block
 
         private void CreateBlock()
@@ -2371,33 +2402,6 @@ namespace Sheet
             {
                 Move(e.GetPosition(this));
             }
-        }
-
-        private bool TryToEditText(Point p)
-        {
-            var temp = new Block();
-            HitTest(p, hitSize, sheet, logic, temp);
-
-            if (HaveOneTextSelected(temp))
-            {
-                var tb = GetTextBlock(temp.Texts[0]);
-
-                Action<string> ok = (str) =>
-                {
-                    Push();
-                    tb.Text = str;
-                };
-
-                Action cancel = () => { };
-
-                EditText(ok, cancel, "Text:", tb.Text);
-
-                Deselect(temp);
-                return true;
-            }
-
-            Deselect(temp);
-            return false;
         }
 
         private void Overlay_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
