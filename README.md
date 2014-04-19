@@ -27,7 +27,8 @@ Keyboard  Shortcuts:
     Down            Move Down
     Left            Move Left
     Right           Move Right
-    H               Show Help
+    H               Help Panel
+    J               Blocks Panel
 
 Mouse:
 
