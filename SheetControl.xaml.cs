@@ -332,6 +332,150 @@ namespace Sheet
 
     #endregion
 
+    #region ItemEditor
+
+    public static class ItemEditor
+    {
+        #region Normalize Position
+
+        public static void NormalizePosition(BlockItem block, double originX, double originY, double width, double height)
+        {
+            double minX = width;
+            double minY = height;
+            double maxX = originX;
+            double maxY = originY;
+            MinMax(block, ref minX, ref minY, ref maxX, ref maxY);
+            double x = -(maxX - (maxX - minX));
+            double y = -(maxY - (maxY - minY));
+            Move(block, x, y);
+        }
+
+        #endregion
+
+        #region MinMax
+
+        public static void MinMax(BlockItem block, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        {
+            MinMax(block.Lines, ref minX, ref minY, ref maxX, ref maxY);
+            MinMax(block.Rectangles, ref minX, ref minY, ref maxX, ref maxY);
+            MinMax(block.Texts, ref minX, ref minY, ref maxX, ref maxY);
+            MinMax(block.Blocks, ref minX, ref minY, ref maxX, ref maxY);
+        }
+
+        public static void MinMax(IEnumerable<BlockItem> blocks, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        {
+            foreach (var block in blocks)
+            {
+                MinMax(block, ref minX, ref minY, ref maxX, ref maxY);
+            }
+        }
+
+        public static void MinMax(IEnumerable<LineItem> lines, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        {
+            foreach (var line in lines)
+            {
+                minX = Math.Min(minX, line.X1);
+                minX = Math.Min(minX, line.X2);
+                minY = Math.Min(minY, line.Y1);
+                minY = Math.Min(minY, line.Y2);
+                maxX = Math.Max(maxX, line.X1);
+                maxX = Math.Max(maxX, line.X2);
+                maxY = Math.Max(maxY, line.Y1);
+                maxY = Math.Max(maxY, line.Y2);
+            }
+        }
+
+        public static void MinMax(IEnumerable<RectangleItem> rectangles, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        {
+            foreach (var rectangle in rectangles)
+            {
+                minX = Math.Min(minX, rectangle.X);
+                minY = Math.Min(minY, rectangle.Y);
+                maxX = Math.Max(maxX, rectangle.X);
+                maxY = Math.Max(maxY, rectangle.Y);
+            }
+        }
+
+        public static void MinMax(IEnumerable<TextItem> texts, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        {
+            foreach (var text in texts)
+            {
+                minX = Math.Min(minX, text.X);
+                minY = Math.Min(minY, text.Y);
+                maxX = Math.Max(maxX, text.X);
+                maxY = Math.Max(maxY, text.Y);
+            }
+        }
+
+        #endregion
+
+        #region Move
+
+        public static void Move(IEnumerable<BlockItem> blocks, double x, double y)
+        {
+            foreach (var block in blocks)
+            {
+                Move(block, x, y);
+            }
+        }
+
+        public static void Move(BlockItem block, double x, double y)
+        {
+            Move(block.Lines, x, y);
+            Move(block.Rectangles, x, y);
+            Move(block.Texts, x, y);
+            Move(block.Blocks, x, y);
+        }
+
+        public static void Move(IEnumerable<LineItem> lines, double x, double y)
+        {
+            foreach (var line in lines)
+            {
+                Move(line, x, y);
+            }
+        }
+
+        public static void Move(IEnumerable<RectangleItem> rectangles, double x, double y)
+        {
+            foreach (var rectangle in rectangles)
+            {
+                Move(rectangle, x, y);
+            }
+        }
+
+        public static void Move(IEnumerable<TextItem> texts, double x, double y)
+        {
+            foreach (var text in texts)
+            {
+                Move(text, x, y);
+            }
+        }
+
+        public static void Move(LineItem line, double x, double y)
+        {
+            line.X1 += x;
+            line.Y1 += y;
+            line.X2 += x;
+            line.Y2 += y;
+        }
+
+        public static void Move(RectangleItem rect, double x, double y)
+        {
+            rect.X += x;
+            rect.Y += y;
+        }
+
+        public static void Move(TextItem text, double x, double y)
+        {
+            text.X += x;
+            text.Y += y;
+        }
+
+        #endregion
+    }
+
+    #endregion
+
     #region ISheet
 
     public interface ISheet
@@ -1130,133 +1274,6 @@ namespace Sheet
 
         #endregion
 
-        #region Normalize Position
-
-        private static void NormalizePosition(BlockItem block)
-        {
-            double minX = 1200.0;
-            double minY = 750.0;
-            double maxX = 0.0;
-            double maxY = 0.0;
-            GetMinMax(block, ref minX, ref minY, ref maxX, ref maxY);
-            Move(block, -(maxX - (maxX - minX)), -(maxY - (maxY - minY)));
-        }
-
-        private static void GetMinMax(IEnumerable<BlockItem> blocks, ref double minX, ref double minY, ref double maxX, ref double maxY)
-        {
-            foreach (var block in blocks)
-            {
-                GetMinMax(block, ref minX, ref minY, ref maxX, ref maxY);
-            }
-        }
-
-        private static void GetMinMax(BlockItem block, ref double minX, ref double minY, ref double maxX, ref double maxY)
-        {
-            GetMinMax(block.Lines, ref minX, ref minY, ref maxX, ref maxY);
-            GetMinMax(block.Rectangles, ref minX, ref minY, ref maxX, ref maxY);
-            GetMinMax(block.Texts, ref minX, ref minY, ref maxX, ref maxY);
-            GetMinMax(block.Blocks, ref minX, ref minY, ref maxX, ref maxY);
-        }
-
-        private static void GetMinMax(IEnumerable<LineItem> lines, ref double minX, ref double minY, ref double maxX, ref double maxY)
-        {
-            foreach (var line in lines)
-            {
-                minX = Math.Min(minX, line.X1);
-                minX = Math.Min(minX, line.X2);
-                minY = Math.Min(minY, line.Y1);
-                minY = Math.Min(minY, line.Y2);
-                maxX = Math.Max(maxX, line.X1);
-                maxX = Math.Max(maxX, line.X2);
-                maxY = Math.Max(maxY, line.Y1);
-                maxY = Math.Max(maxY, line.Y2);
-            }
-        }
-
-        private static void GetMinMax(IEnumerable<RectangleItem> rectangles, ref double minX, ref double minY, ref double maxX, ref double maxY)
-        {
-            foreach (var rectangle in rectangles)
-            {
-                minX = Math.Min(minX, rectangle.X);
-                minY = Math.Min(minY, rectangle.Y);
-                maxX = Math.Max(maxX, rectangle.X);
-                maxY = Math.Max(maxY, rectangle.Y);
-            }
-        }
-
-        private static void GetMinMax(IEnumerable<TextItem> texts, ref double minX, ref double minY, ref double maxX, ref double maxY)
-        {
-            foreach (var text in texts)
-            {
-                minX = Math.Min(minX, text.X);
-                minY = Math.Min(minY, text.Y);
-                maxX = Math.Max(maxX, text.X);
-                maxY = Math.Max(maxY, text.Y);
-            }
-        }
-
-        private static void Move(IEnumerable<BlockItem> blocks, double x, double y)
-        {
-            foreach (var block in blocks)
-            {
-                Move(block, x, y);
-            }
-        }
-
-        private static void Move(BlockItem block, double x, double y)
-        {
-            Move(block.Lines, x, y);
-            Move(block.Rectangles, x, y);
-            Move(block.Texts, x, y);
-            Move(block.Blocks, x, y);
-        }
-
-        private static void Move(IEnumerable<LineItem> lines, double x, double y)
-        {
-            foreach (var line in lines)
-            {
-                Move(line, x, y);
-            }
-        }
-
-        private static void Move(IEnumerable<RectangleItem> rectangles, double x, double y)
-        {
-            foreach (var rectangle in rectangles)
-            {
-                Move(rectangle, x, y);
-            }
-        }
-
-        private static void Move(IEnumerable<TextItem> texts, double x, double y)
-        {
-            foreach (var text in texts)
-            {
-                Move(text, x, y);
-            }
-        }
-
-        private static void Move(LineItem line, double x, double y)
-        {
-            line.X1 += x;
-            line.Y1 += y;
-            line.X2 += x;
-            line.Y2 += y;
-        }
-
-        private static void Move(RectangleItem rect, double x, double y)
-        {
-            rect.X += x;
-            rect.Y += y;
-        }
-
-        private static void Move(TextItem text, double x, double y)
-        {
-            text.X += x;
-            text.Y += y;
-        }
-
-        #endregion
-
         #region Library
 
         private void Insert(Point p)
@@ -1326,6 +1343,14 @@ namespace Sheet
                 var library = GetOwner<SheetWindow>(this).Library;
                 library.ItemsSource = blocks;
                 library.SelectedIndex = 0;
+                if (blocks.Count == 0)
+                {
+                    library.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    library.Visibility = Visibility.Visible;
+                }
             }
         }
 
@@ -1333,7 +1358,7 @@ namespace Sheet
         {
             var library = GetOwner<SheetWindow>(this).Library;
             var items = library.ItemsSource as List<BlockItem>;
-            NormalizePosition(block);
+            ItemEditor.NormalizePosition(block, 0.0, 0.0, 1200.0, 750.0);
             items.Add(block);
             library.ItemsSource = null;
             library.ItemsSource = items;
@@ -2590,6 +2615,19 @@ namespace Sheet
             }
         }
 
+        private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            ZoomTo(e.Delta, e.GetPosition(overlay.GetParent()));
+        }
+
+        private void UserControl_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
+            {
+                ResetPanAndZoom();
+            }
+        }
+
         private void UserControl_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
@@ -2738,19 +2776,6 @@ namespace Sheet
                 case Key.Right:
                     Move(snapSize, 0.0);
                     break;
-            }
-        }
-
-        private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            ZoomTo(e.Delta, e.GetPosition(overlay.GetParent()));
-        }
-
-        private void UserControl_PreviewMouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
-            {
-                ResetPanAndZoom();
             }
         }
 
