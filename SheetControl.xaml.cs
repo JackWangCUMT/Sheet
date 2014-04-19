@@ -1456,6 +1456,20 @@ namespace Sheet
 
         #endregion
 
+        #region Selection Rules
+
+        private static bool HaveSelected(Block selected)
+        {
+            return (selected.Lines != null || selected.Rectangles != null || selected.Texts != null || selected.Blocks != null);
+        }
+
+        private static bool HaveOneTextSelected(Block selected)
+        {
+            return (selected.Lines == null && selected.Rectangles == null && selected.Blocks == null &&  selected.Texts != null && selected.Texts.Count == 1);
+        }
+
+        #endregion
+
         #region Selection
 
         private void InitSelectionRect(Point p)
@@ -1526,31 +1540,38 @@ namespace Sheet
 
         private static void Deselect(Block parent)
         {
-            foreach (var line in parent.Lines)
+            if (parent.Lines != null)
             {
-                line.Stroke = Brushes.Black;
+                foreach (var line in parent.Lines)
+                {
+                    line.Stroke = Brushes.Black;
+                }
             }
 
-            foreach (var rectangle in parent.Rectangles)
+            if (parent.Rectangles != null)
             {
-                rectangle.Stroke = Brushes.Black;
-                rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                foreach (var rectangle in parent.Rectangles)
+                {
+                    rectangle.Stroke = Brushes.Black;
+                    rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                }
             }
 
-            foreach (var text in parent.Texts)
+            if (parent.Texts != null)
             {
-                GetTextBlock(text).Foreground = Brushes.Black;
+                foreach (var text in parent.Texts)
+                {
+                    GetTextBlock(text).Foreground = Brushes.Black;
+                }
             }
 
-            foreach (var block in parent.Blocks)
+            if (parent.Blocks != null)
             {
-                Deselect(block);
+                foreach (var block in parent.Blocks)
+                {
+                    Deselect(block);
+                }
             }
-        }
-
-        private static bool HaveSelected(Block selected)
-        {
-            return (selected.Lines != null || selected.Rectangles != null || selected.Texts != null || selected.Blocks != null);
         }
 
         private static void SelectAll(Block selected, Block logic)
@@ -2104,9 +2125,11 @@ namespace Sheet
 
         #endregion
 
-        #region Block
+        #region Edit Text
 
         private SheetWindow owner = null;
+        private Action<string> okAction = null;
+        private Action cancelAction = null;
 
         private void OK_Click(object sender, RoutedEventArgs e)
         {
@@ -2115,11 +2138,12 @@ namespace Sheet
                 owner.OK.Click -= OK_Click;
                 owner.Cancel.Click -= Cancel_Click;
                 owner.TextGrid.Visibility = Visibility.Collapsed;
-                Push();
-                CreateBlock(owner.TextValue.Text);
-                owner = null;
+                okAction(owner.TextValue.Text);
                 Focus();
                 mode = tempMode;
+                okAction = null;
+                cancelAction = null;
+                owner = null;
             }
         }
 
@@ -2131,24 +2155,56 @@ namespace Sheet
                 owner.Cancel.Click -= Cancel_Click;
                 owner.TextGrid.Visibility = Visibility.Collapsed;
                 owner = null;
+                cancelAction();
                 Focus();
                 mode = tempMode;
+                okAction = null;
+                cancelAction = null;
             }
         }
 
-        private void CreateBlock()
+        private T GetOwner<T>(DependencyObject reference) where T : class
+        {
+            var parent = VisualTreeHelper.GetParent(reference);
+            while (!(parent is T))
+            {
+                parent = VisualTreeHelper.GetParent(parent);
+            }
+            return parent as T;
+        }
+
+        private void EditText(Action<string> ok, Action cancel, string label, string text)
         {
             owner = GetOwner<SheetWindow>(this);
             if (owner != null)
             {
+                okAction = ok;
+                cancelAction = cancel;
                 tempMode = mode;
                 mode = Mode.None;
-                owner.TextLabel.Text = "Name:";
-                owner.TextValue.Text = "BLOCK0";
+                owner.TextLabel.Text = label;
+                owner.TextValue.Text = text;
                 owner.OK.Click += OK_Click;
                 owner.Cancel.Click += Cancel_Click;
                 owner.TextGrid.Visibility = Visibility.Visible;
             }
+        }
+
+        #endregion
+
+        #region Block
+
+        private void CreateBlock()
+        {
+            Action<string> ok = (str) =>
+            {
+                Push();
+                CreateBlock(str);
+            };
+
+            Action cancel = () => { };
+
+            EditText(ok, cancel, "Name:", "BLOCK0");
         }
 
         private static string SerializeAsBlock(int id, string name, Block parent)
@@ -2187,20 +2243,6 @@ namespace Sheet
                 Load(sheet, block.Rectangles, logic, selected, true, thickness);
                 Load(sheet, block.Blocks, logic, selected, true, thickness);
             }
-        }
-
-        #endregion
-
-        #region Owner
-
-        private T GetOwner<T>(DependencyObject reference) where T : class
-        {
-            var parent = VisualTreeHelper.GetParent(reference);
-            while (!(parent is T))
-            {
-                parent = VisualTreeHelper.GetParent(parent);
-            }
-            return parent as T;
         }
 
         #endregion
@@ -2308,9 +2350,39 @@ namespace Sheet
             }
         }
 
+        private bool TryToEditText(Point p)
+        {
+            var temp = new Block();
+            HitTest(p, hitSize, sheet, logic, temp);
+
+            if (HaveOneTextSelected(temp))
+            {
+                var tb = GetTextBlock(temp.Texts[0]);
+
+                Action<string> ok = (str) =>
+                {
+                    Push();
+                    tb.Text = str;
+                    Deselect(temp);
+                };
+
+                Action cancel = () => { Deselect(temp); };
+
+                EditText(ok, cancel, "Text:", tb.Text);
+                return true;
+            }
+
+            return false;
+        }
+
         private void Overlay_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             if (mode == Mode.None)
+            {
+                return;
+            }
+
+            if (TryToEditText(e.GetPosition(overlay.GetParent())))
             {
                 return;
             }
