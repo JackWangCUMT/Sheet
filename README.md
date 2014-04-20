@@ -12,6 +12,7 @@ Keyboard  Shortcuts:
     I               Mode Insert
     L               Mode Line
     R               Mode Rectangle
+    E               Mode Ellipse
     T               Mode Text
     Ctrl+Z          Undo
     Ctrl+Y          Redo

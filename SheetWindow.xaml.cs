@@ -113,10 +113,15 @@ namespace Sheet
                     }
                     break;
                 // Ctrl+E: Export
+                // E: Mode Ellipse
                 case Key.E:
                     if (ctrl)
                     {
                         GetSheet().Export();
+                    }
+                    else
+                    {
+                        GetSheet().ModeEllipse();
                     }
                     break;
                 // Ctrl+S: Save
