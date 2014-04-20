@@ -18,7 +18,7 @@ using System.Windows.Xps.Packaging;
 
 namespace Sheet
 {
-    #region Model
+    #region Item Model
 
     public abstract class Item
     {
@@ -74,7 +74,7 @@ namespace Sheet
 
     #endregion
 
-    #region ItemSerializer
+    #region Item Serializer
 
     public static class ItemSerializer
     {
@@ -332,7 +332,7 @@ namespace Sheet
 
     #endregion
 
-    #region ItemEditor
+    #region Item Editor
 
     public static class ItemEditor
     {
@@ -476,16 +476,18 @@ namespace Sheet
 
     #endregion
 
-    #region ISheet
+    #region Mode
 
-    public interface ISheet
+    public enum Mode
     {
-        FrameworkElement GetParent();
-        void Add(UIElement element);
-        void Remove(UIElement element);
-        void Capture();
-        void ReleaseCapture();
-        bool IsCaptured { get; }
+        None,
+        Selection,
+        Insert,
+        Pan,
+        Move,
+        Line,
+        Rectangle,
+        Text,
     }
 
     #endregion
@@ -510,23 +512,21 @@ namespace Sheet
 
     #endregion
 
-    #region Mode
+    #region ISheet
 
-    public enum Mode
+    public interface ISheet
     {
-        None,
-        Selection,
-        Insert,
-        Pan,
-        Move,
-        Line,
-        Rectangle,
-        Text,
+        FrameworkElement GetParent();
+        void Add(UIElement element);
+        void Remove(UIElement element);
+        void Capture();
+        void ReleaseCapture();
+        bool IsCaptured { get; }
     }
 
     #endregion
 
-    #region CanvasSheet
+    #region Canvas ISheet
 
     public class CanvasSheet : ISheet
     {
@@ -593,10 +593,6 @@ namespace Sheet
         private Stack<string> redos = new Stack<string>();
         private Mode mode = Mode.Selection;
         private Mode tempMode = Mode.None;
-        private int zoomIndex = 9;
-        private int defaultZoomIndex = 9;
-        private int maxZoomIndex = 21;
-        private double[] zoomFactors = { 0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64 };
         private double snapSize = 15;
         private double gridSize = 30;
         private double frameThickness = 1.0;
@@ -611,12 +607,18 @@ namespace Sheet
         private double hitSize = 3.5;
         private List<Line> gridLines = new List<Line>();
         private List<Line> frameLines = new List<Line>();
-        private Block logic = null;
-        private Block selected = null;
+        private SheetWindow owner = null;
+        private Action<string> okAction = null;
+        private Action cancelAction = null;
 
         #endregion
 
-        #region Properties
+        #region Pan & Zoom Properties
+
+        private int zoomIndex = 9;
+        private int defaultZoomIndex = 9;
+        private int maxZoomIndex = 21;
+        private double[] zoomFactors = { 0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64 };
 
         public int ZoomIndex
         {
@@ -664,6 +666,25 @@ namespace Sheet
 
         #endregion
 
+        #region Block Properties
+
+        private Block logic = null;
+        private Block selected = null;
+
+        public Block Logic
+        {
+            get { return logic; }
+            set { logic = value; }
+        }
+
+        public Block Selected
+        {
+            get { return selected; }
+            set { selected = value; }
+        }
+
+        #endregion
+
         #region Snap
 
         private double Snap(double val)
@@ -680,24 +701,34 @@ namespace Sheet
         {
             InitializeComponent();
 
+            Init();
+            Loaded += (s, e) => InitLoaded();
+        }
+
+        #endregion
+
+        #region Init
+
+        private void Init()
+        {
             back = new CanvasSheet(Back);
             sheet = new CanvasSheet(Sheet);
             overlay = new CanvasSheet(Overlay);
 
-            logic = new Block() { Name = "LOGIC" };
-            logic.Init();
+            Logic = new Block() { Name = "LOGIC" };
+            Logic.Init();
 
-            selected = new Block() { Name = "SELECTED" };
+            Selected = new Block() { Name = "SELECTED" };
+        }
 
-            Loaded += (s, e) =>
-            {
-                CreateGrid(back, gridLines, 300.0, 0.0, 600.0, 750.0, gridSize, gridThickness);
-                CreateFrame(back, frameLines, gridSize, gridThickness);
-                AdjustThickness(gridLines, gridThickness / zoomFactors[zoomIndex]);
-                AdjustThickness(frameLines, frameThickness / zoomFactors[zoomIndex]);
-                LoadStandardLibrary();
-                Focus();
-            };
+        private void InitLoaded()
+        {
+            CreateGrid(back, gridLines, 300.0, 0.0, 600.0, 750.0, gridSize, gridThickness);
+            CreateFrame(back, frameLines, gridSize, gridThickness);
+            AdjustThickness(gridLines, gridThickness / zoomFactors[zoomIndex]);
+            AdjustThickness(frameLines, frameThickness / zoomFactors[zoomIndex]);
+            LoadStandardLibrary();
+            Focus();
         }
 
         #endregion
@@ -742,57 +773,6 @@ namespace Sheet
         public void ModeText()
         {
             mode = Mode.Text;
-        }
-
-        #endregion
-
-        #region Back
-
-        private static void AddLine(ISheet sheet, List<Line> lines, double thickness, double x1, double y1, double x2, double y2, Brush stroke)
-        {
-            var line = new Line()
-            {
-                Stroke = stroke,
-                StrokeThickness = thickness,
-                X1 = x1,
-                Y1 = y1,
-                X2 = x2,
-                Y2 = y2
-            };
-            lines.Add(line);
-            sheet.Add(line);
-        }
-
-        private static void CreateFrame(ISheet sheet, List<Line> lines, double size, double thickness)
-        {
-            AddLine(sheet, lines, thickness, 210.0, 0.0, 210.0, 750.0, Brushes.DarkGray);
-            AddLine(sheet, lines, thickness, 300.0, 0.0, 300.0, 750.0, Brushes.DarkGray);
-
-            for (double y = 30.0; y < 750.0; y += size)
-            {
-                AddLine(sheet, lines, thickness, 0.0, y, 300.0, y, Brushes.DarkGray);
-            }
-
-            AddLine(sheet, lines, thickness, 900.0, 0.0, 900.0, 750.0, Brushes.DarkGray);
-            AddLine(sheet, lines, thickness, 1110.0, 0.0, 1110.0, 750.0, Brushes.DarkGray);
-
-            for (double y = 30.0; y < 750.0; y += size)
-            {
-                AddLine(sheet, lines, thickness, 900.0, y, 1200.0, y, Brushes.DarkGray);
-            }
-        }
-
-        private static void CreateGrid(ISheet sheet, List<Line> lines, double startX, double startY, double width, double height, double size, double thickness)
-        {
-            for (double y = startY + size; y < height + startY; y += size)
-            {
-                AddLine(sheet, lines, thickness, startX, y, width + startX, y, Brushes.LightGray);
-            }
-
-            for (double x = startX + size; x < startX + width; x += size)
-            {
-                AddLine(sheet, lines, thickness, x, startY, x, height + startY, Brushes.LightGray);
-            }
         }
 
         #endregion
@@ -873,13 +853,13 @@ namespace Sheet
             return blockItem;
         }
 
-        private static BlockItem CreateSheet(int id, 
-            string name, 
-            IEnumerable<Line> lines, 
-            IEnumerable<Rectangle> rectangles, 
-            IEnumerable<Grid> texts, 
-            IEnumerable<Block> blocks)
+        private static BlockItem CreateSheet(int id, string name, Block parent)
         {
+            var lines = parent.Lines;
+            var rectangles = parent.Rectangles;
+            var texts = parent.Texts;
+            var blocks = parent.Blocks;
+
             var sheet = new BlockItem();
             sheet.Init(id, name);
 
@@ -918,9 +898,9 @@ namespace Sheet
             return sheet;
         }
 
-        private BlockItem CreateSheet()
+        private BlockItem CreateLogicSheet()
         {
-            return CreateSheet(0, "LOGIC", logic.Lines, logic.Rectangles, logic.Texts, logic.Blocks);
+            return CreateSheet(0, "LOGIC", Logic);
         }
 
         #endregion
@@ -1014,19 +994,134 @@ namespace Sheet
             return rect;
         }
 
+        private void CreateText(Point p)
+        {
+            double x = Snap(p.X);
+            double y = Snap(p.Y);
+            Push();
+            var text = CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0);
+            Logic.Texts.Add(text);
+            sheet.Add(text);
+        }
+
+        #endregion
+
+        #region Back
+
+        private static void AddLine(ISheet sheet, List<Line> lines, double thickness, double x1, double y1, double x2, double y2, Brush stroke)
+        {
+            var line = new Line()
+            {
+                Stroke = stroke,
+                StrokeThickness = thickness,
+                X1 = x1,
+                Y1 = y1,
+                X2 = x2,
+                Y2 = y2
+            };
+            lines.Add(line);
+            sheet.Add(line);
+        }
+
+        private static void CreateFrame(ISheet sheet, List<Line> lines, double size, double thickness)
+        {
+            AddLine(sheet, lines, thickness, 210.0, 0.0, 210.0, 750.0, Brushes.DarkGray);
+            AddLine(sheet, lines, thickness, 300.0, 0.0, 300.0, 750.0, Brushes.DarkGray);
+
+            for (double y = 30.0; y < 750.0; y += size)
+            {
+                AddLine(sheet, lines, thickness, 0.0, y, 300.0, y, Brushes.DarkGray);
+            }
+
+            AddLine(sheet, lines, thickness, 900.0, 0.0, 900.0, 750.0, Brushes.DarkGray);
+            AddLine(sheet, lines, thickness, 1110.0, 0.0, 1110.0, 750.0, Brushes.DarkGray);
+
+            for (double y = 30.0; y < 750.0; y += size)
+            {
+                AddLine(sheet, lines, thickness, 900.0, y, 1200.0, y, Brushes.DarkGray);
+            }
+        }
+
+        private static void CreateGrid(ISheet sheet, List<Line> lines, double startX, double startY, double width, double height, double size, double thickness)
+        {
+            for (double y = startY + size; y < height + startY; y += size)
+            {
+                AddLine(sheet, lines, thickness, startX, y, width + startX, y, Brushes.LightGray);
+            }
+
+            for (double x = startX + size; x < startX + width; x += size)
+            {
+                AddLine(sheet, lines, thickness, x, startY, x, height + startY, Brushes.LightGray);
+            }
+        }
+
+        #endregion
+
+        #region Block
+
+        private static string SerializeAsBlock(int id, string name, Block parent)
+        {
+            var block = CreateSheet(id, name, parent);
+            var sb = new StringBuilder();
+            ItemSerializer.Serialize(sb, block, "");
+            return sb.ToString();
+        }
+
+        private BlockItem CreateBlock(string name)
+        {
+            var text = SerializeAsBlock(0, name, Selected);
+            Delete();
+            var block = ItemSerializer.Deserialize(text);
+            Load(block, true);
+            return block.Blocks.FirstOrDefault();
+        }
+
+        public void CreateBlock()
+        {
+            if (HaveSelected(Selected))
+            {
+                Action<string> ok = (str) =>
+                {
+                    Push();
+                    var block = CreateBlock(str);
+                    AddToLibrary(block);
+                };
+
+                Action cancel = () => { };
+
+                EditText(ok, cancel, "Name:", "BLOCK0");
+            }
+        }
+
+        public void BreakBlock()
+        {
+            if (HaveSelected(Selected))
+            {
+                var text = ItemSerializer.Serialize(CreateSheet(0, "SELECTED", Selected));
+                var parent = ItemSerializer.Deserialize(text);
+
+                Push();
+                Delete();
+
+                double thickness = lineThickness / Zoom;
+
+                Load(sheet, parent.Texts, Logic, Selected, true, thickness);
+                Load(sheet, parent.Lines, Logic, Selected, true, thickness);
+                Load(sheet, parent.Rectangles, Logic, Selected, true, thickness);
+
+                foreach (var block in parent.Blocks)
+                {
+                    Load(sheet, block.Texts, Logic, Selected, true, thickness);
+                    Load(sheet, block.Lines, Logic, Selected, true, thickness);
+                    Load(sheet, block.Rectangles, Logic, Selected, true, thickness);
+                    Load(sheet, block.Blocks, Logic, Selected, true, thickness);
+                }
+            }
+        }
+
         #endregion
 
         #region Load
-
-        private void Load(BlockItem block, bool select)
-        {
-            DeselectAll(selected);
-            double thickness = lineThickness / Zoom;
-            Load(sheet, block.Texts, logic, selected, select, thickness);
-            Load(sheet, block.Lines, logic, selected, select, thickness);
-            Load(sheet, block.Rectangles, logic, selected, select, thickness);
-            Load(sheet, block.Blocks, logic, selected, select, thickness);
-        }
 
         private static void Load(ISheet sheet, IEnumerable<TextItem> textItems, Block parent, Block selected, bool select, double thickness)
         {
@@ -1179,13 +1274,23 @@ namespace Sheet
             return block;
         }
 
+        private void Load(BlockItem block, bool select)
+        {
+            DeselectAll(Selected);
+            double thickness = lineThickness / Zoom;
+            Load(sheet, block.Texts, Logic, Selected, select, thickness);
+            Load(sheet, block.Lines, Logic, Selected, select, thickness);
+            Load(sheet, block.Rectangles, Logic, Selected, select, thickness);
+            Load(sheet, block.Blocks, Logic, Selected, select, thickness);
+        }
+
         #endregion
 
         #region Undo/Redo
 
         public void Push()
         {
-            undos.Push(ItemSerializer.Serialize(CreateSheet()));
+            undos.Push(ItemSerializer.Serialize(CreateLogicSheet()));
         }
 
         public void Pop()
@@ -1197,7 +1302,7 @@ namespace Sheet
         {
             if (undos.Count > 0)
             {
-                redos.Push(ItemSerializer.Serialize(CreateSheet()));
+                redos.Push(ItemSerializer.Serialize(CreateLogicSheet()));
                 Reset();
                 Load(ItemSerializer.Deserialize(undos.Pop()), false);
             }
@@ -1207,7 +1312,7 @@ namespace Sheet
         {
             if (redos.Count > 0)
             {
-                undos.Push(ItemSerializer.Serialize(CreateSheet()));
+                undos.Push(ItemSerializer.Serialize(CreateLogicSheet()));
                 Reset();
                 Load(ItemSerializer.Deserialize(redos.Pop()), false);
             }
@@ -1222,7 +1327,7 @@ namespace Sheet
             Copy();
             Push();
 
-            if (HaveSelected(selected))
+            if (HaveSelected(Selected))
             {
                 Delete();
             }
@@ -1234,8 +1339,8 @@ namespace Sheet
 
         public void Copy()
         {
-            var text = ItemSerializer.Serialize(HaveSelected(selected) ?
-                CreateSheet(0, "SELECTED", selected.Lines, selected.Rectangles, selected.Texts, selected.Blocks) : CreateSheet());
+            var text = ItemSerializer.Serialize(HaveSelected(Selected) ?
+                CreateSheet(0, "SELECTED", Selected) : CreateLogicSheet());
             Clipboard.SetData(DataFormats.UnicodeText, text);
         }
 
@@ -1243,77 +1348,6 @@ namespace Sheet
         {
             var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
             Load(ItemSerializer.Deserialize(text), true);
-        }
-
-        #endregion
-
-        #region File Dialogs
-
-        public void Open()
-        {
-            var dlg = new Microsoft.Win32.OpenFileDialog()
-            {
-                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*"
-            };
-
-            if (dlg.ShowDialog() == true)
-            {
-                var text = ItemSerializer.OpenText(dlg.FileName);
-                if (text != null)
-                {
-                    Push();
-                    Reset();
-                    Load(ItemSerializer.Deserialize(text), false);
-                }
-            }
-        }
-
-        public void Save()
-        {
-            var dlg = new Microsoft.Win32.SaveFileDialog()
-            {
-                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*",
-                FileName = "sheet"
-            };
-
-            if (dlg.ShowDialog() == true)
-            {
-                var text = ItemSerializer.Serialize(CreateSheet());
-                ItemSerializer.SaveText(dlg.FileName, text);
-            }
-        }
-
-        public void Export()
-        {
-            var dlg = new Microsoft.Win32.SaveFileDialog()
-            {
-                Filter = "XPS Documents (*.xps)|*.xps|All Files (*.*)|*.*",
-                FileName = "sheet"
-            };
-
-            if (dlg.ShowDialog() == true)
-            {
-                using (var package = Package.Open(dlg.FileName, System.IO.FileMode.Create))
-                {
-                    var doc = new XpsDocument(package);
-                    var writer = XpsDocument.CreateXpsDocumentWriter(doc);
-                    writer.Write(Root);
-                    doc.Close();
-                }
-            }
-        }
-
-        public void Library()
-        {
-            var dlg = new Microsoft.Win32.OpenFileDialog()
-            {
-                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*"
-            };
-
-            if (dlg.ShowDialog() == true)
-            {
-                LoadLibrary(dlg.FileName);
-            }
         }
 
         #endregion
@@ -1332,21 +1366,21 @@ namespace Sheet
 
         private void Insert(BlockItem blockItem, Point p, bool select)
         {
-            DeselectAll(selected);
+            DeselectAll(Selected);
             double thickness = lineThickness / Zoom;
 
             if (select)
             {
-                selected.Blocks = new List<Block>();
+                Selected.Blocks = new List<Block>();
             }
 
             Push();
 
-            var block = LoadBlockItem(sheet, logic, blockItem, select, thickness);
+            var block = LoadBlockItem(sheet, Logic, blockItem, select, thickness);
 
             if (select)
             {
-                selected.Blocks.Add(block);
+                Selected.Blocks.Add(block);
             }
 
             Move(Snap(p.X), Snap(p.Y), block);
@@ -1355,9 +1389,9 @@ namespace Sheet
         private void LoadStandardLibrary()
         {
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var resourceName = "Sheet.Libraries.Standard.txt";
+            var name = "Sheet.Libraries.Standard.txt";
 
-            using (var stream = assembly.GetManifestResourceStream(resourceName))
+            using (var stream = assembly.GetManifestResourceStream(name))
             {
                 using (var reader = new System.IO.StreamReader(stream))
                 {
@@ -1507,115 +1541,34 @@ namespace Sheet
 
         public void Delete()
         {
-            if (HaveSelected(selected))
+            if (HaveSelected(Selected))
             {
                 Push();
-                Remove(sheet, logic, selected);
+                Remove(sheet, Logic, Selected);
             }
         }
 
         public void Reset()
         {
-            RemoveLines(sheet, logic.Lines);
-            RemoveRectangles(sheet, logic.Rectangles);
-            RemoveTexts(sheet, logic.Texts);
-            RemoveBlocks(sheet, logic.Blocks);
+            RemoveLines(sheet, Logic.Lines);
+            RemoveRectangles(sheet, Logic.Rectangles);
+            RemoveTexts(sheet, Logic.Texts);
+            RemoveBlocks(sheet, Logic.Blocks);
 
-            logic.Lines.Clear();
-            logic.Rectangles.Clear();
-            logic.Texts.Clear();
-            logic.Blocks.Clear();
+            Logic.Lines.Clear();
+            Logic.Rectangles.Clear();
+            Logic.Texts.Clear();
+            Logic.Blocks.Clear();
 
-            selected.Lines = null;
-            selected.Rectangles = null;
-            selected.Texts = null;
-            selected.Blocks = null;
-        }
-
-        #endregion
-
-        #region Move Mode
-
-        private bool CanInitMove(Point p)
-        {
-            var temp = new Block();
-            HitTest(p, hitSize, sheet, selected, temp, false);
-
-            if (HaveSelected(temp))
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private void InitMove(Point p)
-        {
-            Push();
-            tempMode = mode;
-            mode = Mode.Move;
-            p.X = Snap(p.X);
-            p.Y = Snap(p.Y);
-            panStartPoint = p;
-            tempLine = null;
-            tempRectangle = null;
-            selectionRect = null;
-            overlay.Capture();
-        }
-
-        private void Move(Point p)
-        {
-            p.X = Snap(p.X);
-            p.Y = Snap(p.Y);
-
-            double x = p.X - panStartPoint.X;
-            double y = p.Y - panStartPoint.Y;
-            double z = zoomFactors[zoomIndex];
-
-            if (x != 0.0 || y != 0.0)
-            {
-                x = x / z;
-                y = y / z;
-                Move(x, y, selected);
-                panStartPoint = p;
-            }  
-        }
-
-        private void FinishMove()
-        {
-            mode = tempMode;
-            overlay.ReleaseCapture();
+            Selected.Lines = null;
+            Selected.Rectangles = null;
+            Selected.Texts = null;
+            Selected.Blocks = null;
         }
 
         #endregion
 
         #region Move
-
-        private void Move(double x, double y)
-        {
-            Push();
-            Move(x, y, HaveSelected(selected) ? selected : logic);
-        }
-
-        public void MoveUp()
-        {
-            Move(0.0, -snapSize);
-        }
-
-        public void MoveDown()
-        {
-            Move(0.0, snapSize);
-        }
-
-        public void MoveLeft()
-        {
-            Move(-snapSize, 0.0);
-        }
-
-        public void MoveRight()
-        {
-            Move(snapSize, 0.0);
-        }
 
         private static void Move(double x, double y, Block block)
         {
@@ -1680,126 +1633,35 @@ namespace Sheet
             }
         }
 
-        #endregion
-
-        #region Pan & Zoom
-
-        private static void AdjustThickness(IEnumerable<Line> lines, double thickness)
+        private void Move(double x, double y)
         {
-            foreach (var line in lines)
-            {
-                line.StrokeThickness = thickness;
-            }
+            Push();
+            Move(x, y, HaveSelected(Selected) ? Selected : Logic);
         }
 
-        private static void AdjustThickness(IEnumerable<Rectangle> rectangles, double thickness)
+        public void MoveUp()
         {
-            foreach (var rectangle in rectangles)
-            {
-                rectangle.StrokeThickness = thickness;
-            }
+            Move(0.0, -snapSize);
         }
 
-        private static void AdjustThickness(Block parent, double thickness)
+        public void MoveDown()
         {
-            AdjustThickness(parent.Lines, thickness);
-            AdjustThickness(parent.Rectangles, thickness);
-
-            foreach (var block in parent.Blocks)
-            {
-                AdjustThickness(block, thickness);
-            }
+            Move(0.0, snapSize);
         }
 
-        private void AdjustThickness(double zoom)
+        public void MoveLeft()
         {
-            double gridThicknessZoomed = gridThickness / zoom;
-            double frameThicknessZoomed = frameThickness / zoom;
-            double lineThicknessZoomed = lineThickness / zoom;
-            double selectionThicknessZoomed = selectionThickness / zoom;
-
-            AdjustThickness(gridLines, gridThicknessZoomed);
-            AdjustThickness(frameLines, frameThicknessZoomed);
-            AdjustThickness(logic, lineThicknessZoomed);
-
-            if (tempLine != null)
-            {
-                tempLine.StrokeThickness = lineThicknessZoomed;
-            }
-
-            if (tempRectangle != null)
-            {
-                tempRectangle.StrokeThickness = lineThicknessZoomed;
-            }
-
-            if (selectionRect != null)
-            {
-                selectionRect.StrokeThickness = selectionThicknessZoomed;
-            }
+            Move(-snapSize, 0.0);
         }
 
-        private void ZoomTo(double x, double y, int oldZoomIndex)
+        public void MoveRight()
         {
-            double oldZoom = zoomFactors[oldZoomIndex];
-            double newZoom = zoomFactors[zoomIndex];
-            Zoom = newZoom;
-            PanX = (x * oldZoom + PanX) - x * newZoom;
-            PanY = (y * oldZoom + PanY) - y * newZoom;
-        }
-
-        private void ZoomTo(int delta, Point p)
-        {
-            if (delta > 0)
-            {
-                if (zoomIndex < maxZoomIndex)
-                {
-                    ZoomTo(p.X, p.Y, zoomIndex++);
-                }
-            }
-            else
-            {
-                if (zoomIndex > 0)
-                {
-                    ZoomTo(p.X, p.Y, zoomIndex--);
-                }
-            }
-        }
-
-        private void InitPan(Point p)
-        {
-            tempMode = mode;
-            mode = Mode.Pan;
-            panStartPoint = p;
-            tempLine = null;
-            tempRectangle = null;
-            selectionRect = null;
-            overlay.Capture();
-        }
-
-        private void Pan(Point p)
-        {
-            PanX = PanX + p.X - panStartPoint.X;
-            PanY = PanY + p.Y - panStartPoint.Y;
-            panStartPoint = p;
-        }
-
-        private void FinishPan()
-        {
-            mode = tempMode;
-            overlay.ReleaseCapture();
-        }
-
-        private void ResetPanAndZoom()
-        {
-            zoomIndex = defaultZoomIndex;
-            Zoom = zoomFactors[zoomIndex];
-            PanX = 0.0;
-            PanY = 0.0;
+            Move(snapSize, 0.0);
         }
 
         #endregion
 
-        #region Selection Rules
+        #region Selection
 
         private static bool HaveSelected(Block selected)
         {
@@ -1808,58 +1670,8 @@ namespace Sheet
 
         private static bool HaveOneTextSelected(Block selected)
         {
-            return (selected.Lines == null && selected.Rectangles == null && selected.Blocks == null &&  selected.Texts != null && selected.Texts.Count == 1);
+            return (selected.Lines == null && selected.Rectangles == null && selected.Blocks == null && selected.Texts != null && selected.Texts.Count == 1);
         }
-
-        #endregion
-
-        #region Selection Mode
-
-        private void InitSelectionRect(Point p)
-        {
-            selectionStartPoint = p;
-            double x = p.X;
-            double y = p.Y;
-            selectionRect = CreateSelectionRectangle(selectionThickness / Zoom, x, y, 0.0, 0.0);
-            overlay.Add(selectionRect);
-            overlay.Capture();
-        }
-
-        private void MoveSelectionRect(Point p)
-        {
-            double sx = selectionStartPoint.X;
-            double sy = selectionStartPoint.Y;
-            double x = p.X;
-            double y = p.Y;
-            double width = Math.Abs(sx - x);
-            double height = Math.Abs(sy - y);
-            Canvas.SetLeft(selectionRect, Math.Min(sx, x));
-            Canvas.SetTop(selectionRect, Math.Min(sy, y));
-            selectionRect.Width = width;
-            selectionRect.Height = height;
-        }
-
-        private void FinishSelectionRect()
-        {
-            double x = Canvas.GetLeft(selectionRect);
-            double y = Canvas.GetTop(selectionRect);
-            double width = selectionRect.Width;
-            double height = selectionRect.Height;
-
-            CancelSelectionRect();
-            HitTest(new Rect(x, y, width, height), sheet, logic, selected);
-        }
-
-        private void CancelSelectionRect()
-        {
-            overlay.ReleaseCapture();
-            overlay.Remove(selectionRect);
-            selectionRect = null;
-        }
-
-        #endregion
-
-        #region Selection
 
         private static void Select(Block parent)
         {
@@ -1962,7 +1774,7 @@ namespace Sheet
                     GetTextBlock(text).Foreground = Brushes.Red;
                 }
 
-                foreach(var block in parent.Blocks)
+                foreach (var block in parent.Blocks)
                 {
                     Select(block);
                 }
@@ -2036,7 +1848,7 @@ namespace Sheet
 
         public void SelecteAll()
         {
-            SelectAll(selected, logic);
+            SelectAll(Selected, Logic);
         }
 
         #endregion
@@ -2260,7 +2072,7 @@ namespace Sheet
                 return true;
             }
 
-            foreach(var block in parent.Blocks)
+            foreach (var block in parent.Blocks)
             {
                 result = HitTestBlock(block, selected, rect, onlyFirst, selectInsideBlock, relative);
                 if (result && onlyFirst)
@@ -2270,6 +2082,224 @@ namespace Sheet
             }
 
             return false;
+        }
+
+        #endregion
+
+        #region Move Mode
+
+        private bool CanInitMove(Point p)
+        {
+            var temp = new Block();
+            HitTest(p, hitSize, sheet, Selected, temp, false);
+
+            if (HaveSelected(temp))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private void InitMove(Point p)
+        {
+            Push();
+            tempMode = mode;
+            mode = Mode.Move;
+            p.X = Snap(p.X);
+            p.Y = Snap(p.Y);
+            panStartPoint = p;
+            tempLine = null;
+            tempRectangle = null;
+            selectionRect = null;
+            overlay.Capture();
+        }
+
+        private void Move(Point p)
+        {
+            p.X = Snap(p.X);
+            p.Y = Snap(p.Y);
+
+            double x = p.X - panStartPoint.X;
+            double y = p.Y - panStartPoint.Y;
+            double z = zoomFactors[zoomIndex];
+
+            if (x != 0.0 || y != 0.0)
+            {
+                x = x / z;
+                y = y / z;
+                Move(x, y, Selected);
+                panStartPoint = p;
+            }  
+        }
+
+        private void FinishMove()
+        {
+            mode = tempMode;
+            overlay.ReleaseCapture();
+        }
+
+        #endregion
+
+        #region Pan & Zoom Mode
+
+        private static void AdjustThickness(IEnumerable<Line> lines, double thickness)
+        {
+            foreach (var line in lines)
+            {
+                line.StrokeThickness = thickness;
+            }
+        }
+
+        private static void AdjustThickness(IEnumerable<Rectangle> rectangles, double thickness)
+        {
+            foreach (var rectangle in rectangles)
+            {
+                rectangle.StrokeThickness = thickness;
+            }
+        }
+
+        private static void AdjustThickness(Block parent, double thickness)
+        {
+            AdjustThickness(parent.Lines, thickness);
+            AdjustThickness(parent.Rectangles, thickness);
+
+            foreach (var block in parent.Blocks)
+            {
+                AdjustThickness(block, thickness);
+            }
+        }
+
+        private void AdjustThickness(double zoom)
+        {
+            double gridThicknessZoomed = gridThickness / zoom;
+            double frameThicknessZoomed = frameThickness / zoom;
+            double lineThicknessZoomed = lineThickness / zoom;
+            double selectionThicknessZoomed = selectionThickness / zoom;
+
+            AdjustThickness(gridLines, gridThicknessZoomed);
+            AdjustThickness(frameLines, frameThicknessZoomed);
+            AdjustThickness(Logic, lineThicknessZoomed);
+
+            if (tempLine != null)
+            {
+                tempLine.StrokeThickness = lineThicknessZoomed;
+            }
+
+            if (tempRectangle != null)
+            {
+                tempRectangle.StrokeThickness = lineThicknessZoomed;
+            }
+
+            if (selectionRect != null)
+            {
+                selectionRect.StrokeThickness = selectionThicknessZoomed;
+            }
+        }
+
+        private void ZoomTo(double x, double y, int oldZoomIndex)
+        {
+            double oldZoom = zoomFactors[oldZoomIndex];
+            double newZoom = zoomFactors[zoomIndex];
+            Zoom = newZoom;
+            PanX = (x * oldZoom + PanX) - x * newZoom;
+            PanY = (y * oldZoom + PanY) - y * newZoom;
+        }
+
+        private void ZoomTo(int delta, Point p)
+        {
+            if (delta > 0)
+            {
+                if (zoomIndex < maxZoomIndex)
+                {
+                    ZoomTo(p.X, p.Y, zoomIndex++);
+                }
+            }
+            else
+            {
+                if (zoomIndex > 0)
+                {
+                    ZoomTo(p.X, p.Y, zoomIndex--);
+                }
+            }
+        }
+
+        private void InitPan(Point p)
+        {
+            tempMode = mode;
+            mode = Mode.Pan;
+            panStartPoint = p;
+            tempLine = null;
+            tempRectangle = null;
+            selectionRect = null;
+            overlay.Capture();
+        }
+
+        private void Pan(Point p)
+        {
+            PanX = PanX + p.X - panStartPoint.X;
+            PanY = PanY + p.Y - panStartPoint.Y;
+            panStartPoint = p;
+        }
+
+        private void FinishPan()
+        {
+            mode = tempMode;
+            overlay.ReleaseCapture();
+        }
+
+        private void ResetPanAndZoom()
+        {
+            zoomIndex = defaultZoomIndex;
+            Zoom = zoomFactors[zoomIndex];
+            PanX = 0.0;
+            PanY = 0.0;
+        }
+
+        #endregion
+
+        #region Selection Mode
+
+        private void InitSelectionRect(Point p)
+        {
+            selectionStartPoint = p;
+            double x = p.X;
+            double y = p.Y;
+            selectionRect = CreateSelectionRectangle(selectionThickness / Zoom, x, y, 0.0, 0.0);
+            overlay.Add(selectionRect);
+            overlay.Capture();
+        }
+
+        private void MoveSelectionRect(Point p)
+        {
+            double sx = selectionStartPoint.X;
+            double sy = selectionStartPoint.Y;
+            double x = p.X;
+            double y = p.Y;
+            double width = Math.Abs(sx - x);
+            double height = Math.Abs(sy - y);
+            Canvas.SetLeft(selectionRect, Math.Min(sx, x));
+            Canvas.SetTop(selectionRect, Math.Min(sy, y));
+            selectionRect.Width = width;
+            selectionRect.Height = height;
+        }
+
+        private void FinishSelectionRect()
+        {
+            double x = Canvas.GetLeft(selectionRect);
+            double y = Canvas.GetTop(selectionRect);
+            double width = selectionRect.Width;
+            double height = selectionRect.Height;
+
+            CancelSelectionRect();
+            HitTest(new Rect(x, y, width, height), sheet, Logic, Selected);
+        }
+
+        private void CancelSelectionRect()
+        {
+            overlay.ReleaseCapture();
+            overlay.Remove(selectionRect);
+            selectionRect = null;
         }
 
         #endregion
@@ -2308,7 +2338,7 @@ namespace Sheet
             {
                 overlay.ReleaseCapture();
                 overlay.Remove(tempLine);
-                logic.Lines.Add(tempLine);
+                Logic.Lines.Add(tempLine);
                 sheet.Add(tempLine);
                 tempLine = null;
             }
@@ -2366,7 +2396,7 @@ namespace Sheet
             {
                 overlay.ReleaseCapture();
                 overlay.Remove(tempRectangle);
-                logic.Rectangles.Add(tempRectangle);
+                Logic.Rectangles.Add(tempRectangle);
                 sheet.Add(tempRectangle);
                 tempRectangle = null;
             }
@@ -2384,9 +2414,18 @@ namespace Sheet
 
         #region Edit Text
 
-        private SheetWindow owner = null;
-        private Action<string> okAction = null;
-        private Action cancelAction = null;
+        private T GetOwner<T>(DependencyObject reference) where T : class
+        {
+            if (reference == null)
+                return null;
+
+            var parent = VisualTreeHelper.GetParent(reference);
+            while (!(parent is T))
+            {
+                parent = VisualTreeHelper.GetParent(parent);
+            }
+            return parent as T;
+        }
 
         private void OK_Click(object sender, RoutedEventArgs e)
         {
@@ -2420,19 +2459,6 @@ namespace Sheet
             }
         }
 
-        private T GetOwner<T>(DependencyObject reference) where T : class
-        {
-            if (reference == null)
-                return null;
-
-            var parent = VisualTreeHelper.GetParent(reference);
-            while (!(parent is T))
-            {
-                parent = VisualTreeHelper.GetParent(parent);
-            }
-            return parent as T;
-        }
-
         private void EditText(Action<string> ok, Action cancel, string label, string text)
         {
             owner = this == null ? null : GetOwner<SheetWindow>(this);
@@ -2450,14 +2476,10 @@ namespace Sheet
             }
         }
 
-        #endregion
-
-        #region Text
-
         private bool TryToEditText(Point p)
         {
             var temp = new Block();
-            HitTest(p, hitSize, sheet, logic, temp, true);
+            HitTest(p, hitSize, sheet, Logic, temp, true);
 
             if (HaveOneTextSelected(temp))
             {
@@ -2481,77 +2503,74 @@ namespace Sheet
             return false;
         }
 
-        private void CreateText(Point p)
-        {
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
-            Push();
-            var text = CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0);
-            logic.Texts.Add(text);
-            sheet.Add(text);
-        }
-
         #endregion
 
-        #region Block
+        #region File Dialogs
 
-        private static string SerializeAsBlock(int id, string name, Block parent)
+        public void Open()
         {
-            var block = CreateSheet(id, name, parent.Lines, parent.Rectangles, parent.Texts, parent.Blocks);
-            var sb = new StringBuilder();
-            ItemSerializer.Serialize(sb, block, "");
-            return sb.ToString();
-        }
-
-        private BlockItem CreateBlock(string name)
-        {
-            var text = SerializeAsBlock(0, name, selected);
-            Delete();
-            var block = ItemSerializer.Deserialize(text);
-            Load(block, true);
-            return block.Blocks.FirstOrDefault();
-        }
-
-        public void CreateBlock()
-        {
-            if (HaveSelected(selected))
+            var dlg = new Microsoft.Win32.OpenFileDialog()
             {
-                Action<string> ok = (str) =>
+                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                var text = ItemSerializer.OpenText(dlg.FileName);
+                if (text != null)
                 {
                     Push();
-                    var block = CreateBlock(str);
-                    AddToLibrary(block);
-                };
-
-                Action cancel = () => { };
-
-                EditText(ok, cancel, "Name:", "BLOCK0");
+                    Reset();
+                    Load(ItemSerializer.Deserialize(text), false);
+                }
             }
         }
 
-        public void BreakBlock()
+        public void Save()
         {
-            if (HaveSelected(selected))
+            var dlg = new Microsoft.Win32.SaveFileDialog()
             {
-                var text = ItemSerializer.Serialize(CreateSheet(0, "SELECTED", selected.Lines, selected.Rectangles, selected.Texts, selected.Blocks));
-                var parent = ItemSerializer.Deserialize(text);
+                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*",
+                FileName = "sheet"
+            };
 
-                Push();
-                Delete();
+            if (dlg.ShowDialog() == true)
+            {
+                var text = ItemSerializer.Serialize(CreateLogicSheet());
+                ItemSerializer.SaveText(dlg.FileName, text);
+            }
+        }
 
-                double thickness = lineThickness / Zoom;
+        public void Export()
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog()
+            {
+                Filter = "XPS Documents (*.xps)|*.xps|All Files (*.*)|*.*",
+                FileName = "sheet"
+            };
 
-                Load(sheet, parent.Texts, logic, selected, true, thickness);
-                Load(sheet, parent.Lines, logic, selected, true, thickness);
-                Load(sheet, parent.Rectangles, logic, selected, true, thickness);
-
-                foreach (var block in parent.Blocks)
+            if (dlg.ShowDialog() == true)
+            {
+                using (var package = Package.Open(dlg.FileName, System.IO.FileMode.Create))
                 {
-                    Load(sheet, block.Texts, logic, selected, true, thickness);
-                    Load(sheet, block.Lines, logic, selected, true, thickness);
-                    Load(sheet, block.Rectangles, logic, selected, true, thickness);
-                    Load(sheet, block.Blocks, logic, selected, true, thickness);
+                    var doc = new XpsDocument(package);
+                    var writer = XpsDocument.CreateXpsDocumentWriter(doc);
+                    writer.Write(Root);
+                    doc.Close();
                 }
+            }
+        }
+
+        public void Library()
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog()
+            {
+                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                LoadLibrary(dlg.FileName);
             }
         }
 
@@ -2568,18 +2587,18 @@ namespace Sheet
                 return;
             }
 
-            if (HaveSelected(selected) && CanInitMove(e.GetPosition(overlay.GetParent())))
+            if (HaveSelected(Selected) && CanInitMove(e.GetPosition(overlay.GetParent())))
             {
                 InitMove(e.GetPosition(this));
                 return;
             }
 
-            DeselectAll(selected);
+            DeselectAll(Selected);
 
             if (mode == Mode.Selection)
             {
-                HitTest(e.GetPosition(overlay.GetParent()), hitSize, sheet, logic, selected, false);
-                if (!HaveSelected(selected))
+                HitTest(e.GetPosition(overlay.GetParent()), hitSize, sheet, Logic, Selected, false);
+                if (!HaveSelected(Selected))
                 {
                     InitSelectionRect(e.GetPosition(overlay.GetParent()));
                 }
@@ -2669,7 +2688,7 @@ namespace Sheet
                 return;
             }
 
-            DeselectAll(selected);
+            DeselectAll(Selected);
 
             if (mode == Mode.Selection && overlay.IsCaptured)
             {
