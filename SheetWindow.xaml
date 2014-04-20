@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Sheet"
         Title="Sheet" Height="820" Width="1230"
-        WindowStartupLocation="CenterScreen" WindowState="Normal"
+        WindowStartupLocation="CenterScreen" WindowState="Maximized"
         PreviewKeyDown="Window_PreviewKeyDown">
     <Grid>
         <Grid.ColumnDefinitions>
