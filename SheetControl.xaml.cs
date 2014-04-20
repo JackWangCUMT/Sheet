@@ -1539,7 +1539,7 @@ namespace Sheet
         private bool CanInitMove(Point p)
         {
             var temp = new Block();
-            HitTest(p, hitSize, sheet, selected, temp);
+            HitTest(p, hitSize, sheet, selected, temp, false);
 
             if (HaveSelected(temp))
             {
@@ -2049,22 +2049,22 @@ namespace Sheet
 
             if (parent.Lines != null)
             {
-                HitTestLines(parent, selected, rect, false);
+                HitTestLines(parent, selected, rect, false, true);
             }
 
             if (parent.Rectangles != null)
             {
-                HitTestRectangles(parent, selected, rect, false, sheet.GetParent());
+                HitTestRectangles(parent, selected, rect, false, true, sheet.GetParent());
             }
 
             if (parent.Texts != null)
             {
-                HitTestTexts(parent, selected, rect, false, sheet.GetParent());
+                HitTestTexts(parent, selected, rect, false, true, sheet.GetParent());
             }
 
             if (parent.Blocks != null)
             {
-                HitTestBlocks(parent, selected, rect, false, sheet.GetParent());
+                HitTestBlocks(parent, selected, rect, false, true, false, sheet.GetParent());
             }
 
             if (selected.Lines.Count == 0)
@@ -2088,7 +2088,7 @@ namespace Sheet
             }
         }
 
-        private static void HitTest(Point p, double size, ISheet sheet, Block parent, Block selected)
+        private static void HitTest(Point p, double size, ISheet sheet, Block parent, Block selected, bool selectInsideBlock)
         {
             selected.Init();
 
@@ -2096,14 +2096,14 @@ namespace Sheet
 
             if (parent.Lines != null)
             {
-                HitTestLines(parent, selected, rect, true);
+                HitTestLines(parent, selected, rect, true, true);
             }
 
             if (selected.Lines.Count <= 0)
             {
                 if (parent.Rectangles != null)
                 {
-                    HitTestRectangles(parent, selected, rect, true, sheet.GetParent());
+                    HitTestRectangles(parent, selected, rect, true, true, sheet.GetParent());
                 }
             }
 
@@ -2111,7 +2111,7 @@ namespace Sheet
             {
                 if (parent.Texts != null)
                 {
-                    HitTestTexts(parent, selected, rect, true, sheet.GetParent());
+                    HitTestTexts(parent, selected, rect, true, true, sheet.GetParent());
                 }
             }
 
@@ -2119,7 +2119,7 @@ namespace Sheet
             {
                 if (parent.Blocks != null)
                 {
-                    HitTestBlocks(parent, selected, rect, true, sheet.GetParent());
+                    HitTestBlocks(parent, selected, rect, true, true, selectInsideBlock, sheet.GetParent());
                 }
             }
 
@@ -2144,25 +2144,29 @@ namespace Sheet
             }
         }
 
-        private static void HitTestLines(Block parent, Block selected, Rect rect, bool onlyFirst)
+        private static bool HitTestLines(Block parent, Block selected, Rect rect, bool onlyFirst, bool select)
         {
             foreach (var line in parent.Lines)
             {
                 var bounds = VisualTreeHelper.GetContentBounds(line);
                 if (rect.IntersectsWith(bounds))
                 {
-                    line.Stroke = Brushes.Red;
-                    selected.Lines.Add(line);
+                    if (select)
+                    {
+                        line.Stroke = Brushes.Red;
+                        selected.Lines.Add(line);
+                    }
 
                     if (onlyFirst)
                     {
-                        break;
+                        return true;
                     }
                 }
             }
+            return false;
         }
 
-        private static void HitTestRectangles(Block parent, Block selected, Rect rect, bool onlyFirst, UIElement relative)
+        private static bool HitTestRectangles(Block parent, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
         {
             foreach (var rectangle in parent.Rectangles)
             {
@@ -2171,19 +2175,23 @@ namespace Sheet
                 bounds.Offset(offset.X, offset.Y);
                 if (rect.IntersectsWith(bounds))
                 {
-                    rectangle.Stroke = Brushes.Red;
-                    rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
-                    selected.Rectangles.Add(rectangle);
+                    if (select)
+                    {
+                        rectangle.Stroke = Brushes.Red;
+                        rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                        selected.Rectangles.Add(rectangle);
+                    }
 
                     if (onlyFirst)
                     {
-                        break;
+                        return true;
                     }
                 }
             }
+            return false;
         }
 
-        private static void HitTestTexts(Block parent, Block selected, Rect rect, bool onlyFirst, UIElement relative)
+        private static bool HitTestTexts(Block parent, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
         {
             foreach (var text in parent.Texts)
             {
@@ -2192,93 +2200,76 @@ namespace Sheet
                 bounds.Offset(offset.X, offset.Y);
                 if (rect.IntersectsWith(bounds))
                 {
-                    GetTextBlock(text).Foreground = Brushes.Red;
-                    selected.Texts.Add(text);
+                    if (select)
+                    {
+                        GetTextBlock(text).Foreground = Brushes.Red;
+                        selected.Texts.Add(text);
+                    }
 
                     if (onlyFirst)
                     {
-                        break;
+                        return true;
                     }
                 }
             }
+            return false;
         }
 
-        private static void HitTestBlocks(Block parent, Block selected, Rect rect, bool onlyFirst, UIElement relative)
+        private static bool HitTestBlocks(Block parent, Block selected, Rect rect, bool onlyFirst, bool select, bool selectInsideBlock, UIElement relative)
         {
             foreach (var block in parent.Blocks)
             {
-                bool isSelected = HitTestBlock(block, selected, rect, relative);
+                bool isSelected = HitTestBlock(block, selected, rect, true, selectInsideBlock, relative);
 
                 if (isSelected)
                 {
-                    selected.Blocks.Add(block);
-                    Select(block);
+                    if (select && !selectInsideBlock)
+                    {
+                        selected.Blocks.Add(block);
+                        Select(block);
+                    }
 
                     if (onlyFirst)
                     {
-                        break;
+                        return true;
                     }
                 }
             }
+            return false;
         }
 
-        private static bool HitTestBlock(Block parent, Block selected, Rect rect, UIElement relative)
+        private static bool HitTestBlock(Block parent, Block selected, Rect rect, bool onlyFirst, bool selectInsideBlock, UIElement relative)
         {
-            bool isSelected = false;
+            bool result = false;
 
-            foreach (var line in parent.Lines)
+            result = HitTestLines(parent, selected, rect, onlyFirst, selectInsideBlock);
+            if (result && onlyFirst)
             {
-                var bounds = VisualTreeHelper.GetContentBounds(line);
-                if (rect.IntersectsWith(bounds))
+                return true;
+            }
+
+            result = HitTestRectangles(parent, selected, rect, onlyFirst, selectInsideBlock, relative);
+            if (result && onlyFirst)
+            {
+                return true;
+            }
+
+            result = HitTestTexts(parent, selected, rect, onlyFirst, selectInsideBlock, relative);
+            if (result && onlyFirst)
+            {
+                return true;
+            }
+
+            foreach(var block in parent.Blocks)
+            {
+                result = HitTestBlock(block, selected, rect, onlyFirst, selectInsideBlock, relative);
+                if (result && onlyFirst)
                 {
-                    isSelected = true;
-                    break;
+                    return true;
                 }
             }
 
-            if (!isSelected)
-            {
-                foreach (var rectangle in parent.Rectangles)
-                {
-                    var bounds = VisualTreeHelper.GetContentBounds(rectangle);
-                    var offset = rectangle.TranslatePoint(new Point(0, 0), relative);
-                    bounds.Offset(offset.X, offset.Y);
-                    if (rect.IntersectsWith(bounds))
-                    {
-                        isSelected = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!isSelected)
-            {
-                foreach (var text in parent.Texts)
-                {
-                    var bounds = VisualTreeHelper.GetContentBounds(text);
-                    var offset = text.TranslatePoint(new Point(0, 0), relative);
-                    bounds.Offset(offset.X, offset.Y);
-                    if (rect.IntersectsWith(bounds))
-                    {
-                        isSelected = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!isSelected)
-            {
-                foreach(var block in parent.Blocks)
-                {
-                    if (HitTestBlock(block, selected, rect, relative))
-                    {
-                        isSelected = true;
-                        break;
-                    }
-                }
-            }
-
-            return isSelected;
+            return false;
         }
 
         #endregion
@@ -2466,7 +2457,7 @@ namespace Sheet
         private bool TryToEditText(Point p)
         {
             var temp = new Block();
-            HitTest(p, hitSize, sheet, logic, temp);
+            HitTest(p, hitSize, sheet, logic, temp, true);
 
             if (HaveOneTextSelected(temp))
             {
@@ -2587,7 +2578,7 @@ namespace Sheet
 
             if (mode == Mode.Selection)
             {
-                HitTest(e.GetPosition(overlay.GetParent()), hitSize, sheet, logic, selected);
+                HitTest(e.GetPosition(overlay.GetParent()), hitSize, sheet, logic, selected, false);
                 if (!HaveSelected(selected))
                 {
                     InitSelectionRect(e.GetPosition(overlay.GetParent()));
@@ -2674,6 +2665,7 @@ namespace Sheet
 
             if (TryToEditText(e.GetPosition(overlay.GetParent())))
             {
+                e.Handled = true;
                 return;
             }
 
