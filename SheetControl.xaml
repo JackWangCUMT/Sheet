@@ -9,8 +9,8 @@
              Background="White" 
              PreviewMouseWheel="UserControl_PreviewMouseWheel"
              PreviewMouseDown="UserControl_PreviewMouseDown">
-    <Canvas Width="1200" Height="750"
-            Background="Transparent"
+    <Canvas x:Name="Root" Background="Transparent"
+            Width="1200" Height="750"
             ClipToBounds="False"
             RenderTransformOrigin="0.0,0.0"
             SnapsToDevicePixels="True">

@@ -1297,7 +1297,7 @@ namespace Sheet
                 {
                     var doc = new XpsDocument(package);
                     var writer = XpsDocument.CreateXpsDocumentWriter(doc);
-                    writer.Write(this);
+                    writer.Write(Root);
                     doc.Close();
                 }
             }
