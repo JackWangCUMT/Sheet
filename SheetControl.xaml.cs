@@ -1855,110 +1855,9 @@ namespace Sheet
 
         #region HitTest
 
-        private static void HitTest(Rect rect, ISheet sheet, Block parent, Block selected)
+        private static bool HitTestLines(IEnumerable<Line> lines, Block selected, Rect rect, bool onlyFirst, bool select)
         {
-            selected.Init();
-
-            if (parent.Lines != null)
-            {
-                HitTestLines(parent, selected, rect, false, true);
-            }
-
-            if (parent.Rectangles != null)
-            {
-                HitTestRectangles(parent, selected, rect, false, true, sheet.GetParent());
-            }
-
-            if (parent.Texts != null)
-            {
-                HitTestTexts(parent, selected, rect, false, true, sheet.GetParent());
-            }
-
-            if (parent.Blocks != null)
-            {
-                HitTestBlocks(parent, selected, rect, false, true, false, sheet.GetParent());
-            }
-
-            if (selected.Lines.Count == 0)
-            {
-                selected.Lines = null;
-            }
-
-            if (selected.Rectangles.Count == 0)
-            {
-                selected.Rectangles = null;
-            }
-
-            if (selected.Texts.Count == 0)
-            {
-                selected.Texts = null;
-            }
-
-            if (selected.Blocks.Count == 0)
-            {
-                selected.Blocks = null;
-            }
-        }
-
-        private static void HitTest(Point p, double size, ISheet sheet, Block parent, Block selected, bool selectInsideBlock)
-        {
-            selected.Init();
-
-            var rect = new Rect(p.X - size, p.Y - size, 2 * size, 2 * size);
-
-            if (parent.Lines != null)
-            {
-                HitTestLines(parent, selected, rect, true, true);
-            }
-
-            if (selected.Lines.Count <= 0)
-            {
-                if (parent.Rectangles != null)
-                {
-                    HitTestRectangles(parent, selected, rect, true, true, sheet.GetParent());
-                }
-            }
-
-            if (selected.Lines.Count <= 0 && selected.Rectangles.Count <= 0)
-            {
-                if (parent.Texts != null)
-                {
-                    HitTestTexts(parent, selected, rect, true, true, sheet.GetParent());
-                }
-            }
-
-            if (selected.Lines.Count <= 0 && selected.Rectangles.Count <= 0 && selected.Texts.Count <= 0)
-            {
-                if (parent.Blocks != null)
-                {
-                    HitTestBlocks(parent, selected, rect, true, true, selectInsideBlock, sheet.GetParent());
-                }
-            }
-
-            if (selected.Lines.Count == 0)
-            {
-                selected.Lines = null;
-            }
-
-            if (selected.Rectangles.Count == 0)
-            {
-                selected.Rectangles = null;
-            }
-
-            if (selected.Texts.Count == 0)
-            {
-                selected.Texts = null;
-            }
-
-            if (selected.Blocks.Count == 0)
-            {
-                selected.Blocks = null;
-            }
-        }
-
-        private static bool HitTestLines(Block parent, Block selected, Rect rect, bool onlyFirst, bool select)
-        {
-            foreach (var line in parent.Lines)
+            foreach (var line in lines)
             {
                 var bounds = VisualTreeHelper.GetContentBounds(line);
                 if (rect.IntersectsWith(bounds))
@@ -1978,9 +1877,9 @@ namespace Sheet
             return false;
         }
 
-        private static bool HitTestRectangles(Block parent, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
+        private static bool HitTestRectangles(IEnumerable<Rectangle> rectangles, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
         {
-            foreach (var rectangle in parent.Rectangles)
+            foreach (var rectangle in rectangles)
             {
                 var bounds = VisualTreeHelper.GetContentBounds(rectangle);
                 var offset = rectangle.TranslatePoint(new Point(0, 0), relative);
@@ -2003,9 +1902,9 @@ namespace Sheet
             return false;
         }
 
-        private static bool HitTestTexts(Block parent, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
+        private static bool HitTestTexts(IEnumerable<Grid> texts, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
         {
-            foreach (var text in parent.Texts)
+            foreach (var text in texts)
             {
                 var bounds = VisualTreeHelper.GetContentBounds(text);
                 var offset = text.TranslatePoint(new Point(0, 0), relative);
@@ -2027,13 +1926,13 @@ namespace Sheet
             return false;
         }
 
-        private static bool HitTestBlocks(Block parent, Block selected, Rect rect, bool onlyFirst, bool select, bool selectInsideBlock, UIElement relative)
+        private static bool HitTestBlocks(IEnumerable<Block> blocks, Block selected, Rect rect, bool onlyFirst, bool select, bool selectInsideBlock, UIElement relative)
         {
-            foreach (var block in parent.Blocks)
+            foreach (var block in blocks)
             {
-                bool isSelected = HitTestBlock(block, selected, rect, true, selectInsideBlock, relative);
+                bool result = HitTestBlock(block, selected, rect, true, selectInsideBlock, relative);
 
-                if (isSelected)
+                if (result)
                 {
                     if (select && !selectInsideBlock)
                     {
@@ -2054,34 +1953,123 @@ namespace Sheet
         {
             bool result = false;
 
-            result = HitTestLines(parent, selected, rect, onlyFirst, selectInsideBlock);
+            result = HitTestLines(parent.Lines, selected, rect, onlyFirst, selectInsideBlock);
             if (result && onlyFirst)
             {
                 return true;
             }
 
-            result = HitTestRectangles(parent, selected, rect, onlyFirst, selectInsideBlock, relative);
+            result = HitTestRectangles(parent.Rectangles, selected, rect, onlyFirst, selectInsideBlock, relative);
             if (result && onlyFirst)
             {
                 return true;
             }
 
-            result = HitTestTexts(parent, selected, rect, onlyFirst, selectInsideBlock, relative);
+            result = HitTestTexts(parent.Texts, selected, rect, onlyFirst, selectInsideBlock, relative);
             if (result && onlyFirst)
             {
                 return true;
             }
 
-            foreach (var block in parent.Blocks)
+            result = HitTestBlocks(parent.Blocks, selected, rect, onlyFirst, false, selectInsideBlock, relative);
+            if (result && onlyFirst)
             {
-                result = HitTestBlock(block, selected, rect, onlyFirst, selectInsideBlock, relative);
-                if (result && onlyFirst)
-                {
-                    return true;
-                }
+                return true;
             }
 
             return false;
+        }
+
+        private static void HitTest(ISheet sheet, Block parent, Block selected, Point p, double size, bool selectInsideBlock)
+        {
+            selected.Init();
+
+            var rect = new Rect(p.X - size, p.Y - size, 2 * size, 2 * size);
+
+            if (parent.Lines != null)
+            {
+                HitTestLines(parent.Lines, selected, rect, true, true);
+            }
+
+            if (selected.Lines.Count <= 0 && parent.Rectangles != null)
+            {
+                HitTestRectangles(parent.Rectangles, selected, rect, true, true, sheet.GetParent());
+            }
+
+            if (selected.Lines.Count <= 0 && selected.Rectangles.Count <= 0 && parent.Texts != null)
+            {
+                HitTestTexts(parent.Texts, selected, rect, true, true, sheet.GetParent());
+            }
+
+            if (selected.Lines.Count <= 0 && selected.Rectangles.Count <= 0 && selected.Texts.Count <= 0 && parent.Blocks != null)
+            {
+                HitTestBlocks(parent.Blocks, selected, rect, true, true, selectInsideBlock, sheet.GetParent());
+            }
+
+            if (selected.Lines.Count == 0)
+            {
+                selected.Lines = null;
+            }
+
+            if (selected.Rectangles.Count == 0)
+            {
+                selected.Rectangles = null;
+            }
+
+            if (selected.Texts.Count == 0)
+            {
+                selected.Texts = null;
+            }
+
+            if (selected.Blocks.Count == 0)
+            {
+                selected.Blocks = null;
+            }
+        }
+
+        private static void HitTestSelectionRect(ISheet sheet, Block parent, Block selected, Rect rect)
+        {
+            selected.Init();
+
+            if (parent.Lines != null)
+            {
+                HitTestLines(parent.Lines, selected, rect, false, true);
+            }
+
+            if (parent.Rectangles != null)
+            {
+                HitTestRectangles(parent.Rectangles, selected, rect, false, true, sheet.GetParent());
+            }
+
+            if (parent.Texts != null)
+            {
+                HitTestTexts(parent.Texts, selected, rect, false, true, sheet.GetParent());
+            }
+
+            if (parent.Blocks != null)
+            {
+                HitTestBlocks(parent.Blocks, selected, rect, false, true, false, sheet.GetParent());
+            }
+
+            if (selected.Lines.Count == 0)
+            {
+                selected.Lines = null;
+            }
+
+            if (selected.Rectangles.Count == 0)
+            {
+                selected.Rectangles = null;
+            }
+
+            if (selected.Texts.Count == 0)
+            {
+                selected.Texts = null;
+            }
+
+            if (selected.Blocks.Count == 0)
+            {
+                selected.Blocks = null;
+            }
         }
 
         #endregion
@@ -2091,7 +2079,7 @@ namespace Sheet
         private bool CanInitMove(Point p)
         {
             var temp = new Block();
-            HitTest(p, hitSize, sheet, Selected, temp, false);
+            HitTest(sheet, Selected, temp, p, hitSize, false);
 
             if (HaveSelected(temp))
             {
@@ -2292,7 +2280,7 @@ namespace Sheet
             double height = selectionRect.Height;
 
             CancelSelectionRect();
-            HitTest(new Rect(x, y, width, height), sheet, Logic, Selected);
+            HitTestSelectionRect(sheet, Logic, Selected, new Rect(x, y, width, height));
         }
 
         private void CancelSelectionRect()
@@ -2479,7 +2467,7 @@ namespace Sheet
         private bool TryToEditText(Point p)
         {
             var temp = new Block();
-            HitTest(p, hitSize, sheet, Logic, temp, true);
+            HitTest(sheet, Logic, temp, p, hitSize, true);
 
             if (HaveOneTextSelected(temp))
             {
@@ -2597,7 +2585,7 @@ namespace Sheet
 
             if (mode == Mode.Selection)
             {
-                HitTest(e.GetPosition(overlay.GetParent()), hitSize, sheet, Logic, Selected, false);
+                HitTest(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), hitSize, false);
                 if (!HaveSelected(Selected))
                 {
                     InitSelectionRect(e.GetPosition(overlay.GetParent()));
