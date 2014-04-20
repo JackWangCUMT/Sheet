@@ -938,7 +938,7 @@ namespace Sheet
             var tb = new TextBlock();
             tb.HorizontalAlignment = halign;
             tb.VerticalAlignment = valign;
-            tb.Background = Brushes.White;
+            tb.Background = Brushes.Transparent;
             tb.Foreground = Brushes.Black;
             tb.FontSize = size;
             tb.FontFamily = new FontFamily("Calibri");
@@ -1417,7 +1417,7 @@ namespace Sheet
         private void LoadStandardLibrary()
         {
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            var name = "Sheet.Libraries.Standard.txt";
+            var name = "Sheet.Libraries.Digital.txt";
 
             using (var stream = assembly.GetManifestResourceStream(name))
             {

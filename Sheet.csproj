@@ -100,7 +100,13 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Libraries\Standard.txt" />
+    <EmbeddedResource Include="Libraries\Analog.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Libraries\Digital.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Libraries\Device.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
