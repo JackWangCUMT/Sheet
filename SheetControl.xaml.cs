@@ -512,6 +512,16 @@ namespace Sheet
 
     #endregion
 
+    #region Action Item
+
+    public class ActionItem : Item
+    {
+        public string Message { get; set; }
+        public string Model { get; set; }
+    }
+
+    #endregion
+
     #region ISheet
 
     public interface ISheet
@@ -589,8 +599,8 @@ namespace Sheet
         private ISheet back = null;
         private ISheet sheet = null;
         private ISheet overlay = null;
-        private Stack<string> undos = new Stack<string>();
-        private Stack<string> redos = new Stack<string>();
+        private Stack<ActionItem> undos = new Stack<ActionItem>();
+        private Stack<ActionItem> redos = new Stack<ActionItem>();
         private Mode mode = Mode.Selection;
         private Mode tempMode = Mode.None;
         private double snapSize = 15;
@@ -998,7 +1008,7 @@ namespace Sheet
         {
             double x = Snap(p.X);
             double y = Snap(p.Y);
-            Push();
+            PushUndo("Create Text");
             var text = CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0);
             Logic.Texts.Add(text);
             sheet.Add(text);
@@ -1080,10 +1090,10 @@ namespace Sheet
         {
             if (HaveSelected(Selected))
             {
-                Action<string> ok = (str) =>
+                Action<string> ok = (name) =>
                 {
-                    Push();
-                    var block = CreateBlock(str);
+                    PushUndo("Create Block");
+                    var block = CreateBlock(name);
                     AddToLibrary(block);
                 };
 
@@ -1100,7 +1110,7 @@ namespace Sheet
                 var text = ItemSerializer.Serialize(CreateSheet(0, "SELECTED", Selected));
                 var parent = ItemSerializer.Deserialize(text);
 
-                Push();
+                PushUndo("Break Block");
                 Delete();
 
                 double thickness = lineThickness / Zoom;
@@ -1288,23 +1298,38 @@ namespace Sheet
 
         #region Undo/Redo
 
-        public void Push()
+        private ActionItem CreateActionItem(string message)
         {
-            undos.Push(ItemSerializer.Serialize(CreateLogicSheet()));
+            var item = new ActionItem()
+            {
+                Message = message,
+                Model = ItemSerializer.Serialize(CreateLogicSheet())
+            };
+            return item;
         }
 
-        public void Pop()
+        public void PushUndo(string message)
         {
-            undos.Pop();
+            //Debug.Print("Push Undo: " + message);
+            undos.Push(CreateActionItem(message));
+        }
+
+        public void PushRedo(string message)
+        {
+            //Debug.Print("Push Redo: " + message);
+            redos.Push(CreateActionItem(message));
         }
 
         public void Undo()
         {
             if (undos.Count > 0)
             {
-                redos.Push(ItemSerializer.Serialize(CreateLogicSheet()));
+                PushRedo("Redo");
                 Reset();
-                Load(ItemSerializer.Deserialize(undos.Pop()), false);
+
+                var undo = undos.Pop();
+                //Debug.Print("Undo: " + undo.Message);
+                Load(ItemSerializer.Deserialize(undo.Model), false);
             }
         }
 
@@ -1312,9 +1337,12 @@ namespace Sheet
         {
             if (redos.Count > 0)
             {
-                undos.Push(ItemSerializer.Serialize(CreateLogicSheet()));
+                PushUndo("Undo");
                 Reset();
-                Load(ItemSerializer.Deserialize(redos.Pop()), false);
+
+                var redo = redos.Pop();
+                //Debug.Print("Redo: " + redo.Message);
+                Load(ItemSerializer.Deserialize(redo.Model), false);
             }
         }
 
@@ -1325,7 +1353,7 @@ namespace Sheet
         public void Cut()
         {
             Copy();
-            Push();
+            PushUndo("Cut");
 
             if (HaveSelected(Selected))
             {
@@ -1374,7 +1402,7 @@ namespace Sheet
                 Selected.Blocks = new List<Block>();
             }
 
-            Push();
+            PushUndo("Insert Block");
 
             var block = LoadBlockItem(sheet, Logic, blockItem, select, thickness);
 
@@ -1543,7 +1571,7 @@ namespace Sheet
         {
             if (HaveSelected(Selected))
             {
-                Push();
+                PushUndo("Delete");
                 Remove(sheet, Logic, Selected);
             }
         }
@@ -1635,7 +1663,7 @@ namespace Sheet
 
         private void Move(double x, double y)
         {
-            Push();
+            PushUndo("Move");
             Move(x, y, HaveSelected(Selected) ? Selected : Logic);
         }
 
@@ -2091,7 +2119,7 @@ namespace Sheet
 
         private void InitMove(Point p)
         {
-            Push();
+            PushUndo("Move");
             tempMode = mode;
             mode = Mode.Move;
             p.X = Snap(p.X);
@@ -2296,7 +2324,6 @@ namespace Sheet
 
         private void InitTempLine(Point p)
         {
-            Push();
             double x = Snap(p.X);
             double y = Snap(p.Y);
             tempLine = CreateLine(lineThickness / Zoom, x, y, x, y);
@@ -2326,6 +2353,7 @@ namespace Sheet
             {
                 overlay.ReleaseCapture();
                 overlay.Remove(tempLine);
+                PushUndo("Create Line");
                 Logic.Lines.Add(tempLine);
                 sheet.Add(tempLine);
                 tempLine = null;
@@ -2334,7 +2362,6 @@ namespace Sheet
 
         private void CancelTempLine()
         {
-            Pop();
             overlay.ReleaseCapture();
             overlay.Remove(tempLine);
             tempLine = null;
@@ -2346,7 +2373,6 @@ namespace Sheet
 
         private void InitTempRect(Point p)
         {
-            Push();
             double x = Snap(p.X);
             double y = Snap(p.Y);
             selectionStartPoint = new Point(x, y);
@@ -2384,6 +2410,7 @@ namespace Sheet
             {
                 overlay.ReleaseCapture();
                 overlay.Remove(tempRectangle);
+                PushUndo("Create Rectangle");
                 Logic.Rectangles.Add(tempRectangle);
                 sheet.Add(tempRectangle);
                 tempRectangle = null;
@@ -2392,7 +2419,6 @@ namespace Sheet
 
         private void CancelTempRect()
         {
-            Pop();
             overlay.ReleaseCapture();
             overlay.Remove(tempRectangle);
             tempRectangle = null;
@@ -2473,10 +2499,10 @@ namespace Sheet
             {
                 var tb = GetTextBlock(temp.Texts[0]);
 
-                Action<string> ok = (str) =>
+                Action<string> ok = (text) =>
                 {
-                    Push();
-                    tb.Text = str;
+                    PushUndo("Edit Text");
+                    tb.Text = text;
                 };
 
                 Action cancel = () => { };
@@ -2507,7 +2533,7 @@ namespace Sheet
                 var text = ItemSerializer.OpenText(dlg.FileName);
                 if (text != null)
                 {
-                    Push();
+                    PushUndo("Open");
                     Reset();
                     Load(ItemSerializer.Deserialize(text), false);
                 }

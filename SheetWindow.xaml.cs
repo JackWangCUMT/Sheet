@@ -83,7 +83,7 @@ namespace Sheet
                 case Key.Delete:
                     if (ctrl)
                     {
-                        GetSheet().Push();
+                        GetSheet().PushUndo("Reset");
                         GetSheet().Reset();
                     }
                     else
