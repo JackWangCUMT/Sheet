@@ -1029,6 +1029,32 @@ namespace Sheet
             }
         }
 
+        public static void InsertBlockContents(ISheet sheet, BlockItem blockItem, Block logic, Block selected, bool select, double thickness)
+        {
+            InsertTexts(sheet, blockItem.Texts, logic, selected, select, thickness);
+            InsertLines(sheet, blockItem.Lines, logic, selected, select, thickness);
+            InsertRectangles(sheet, blockItem.Rectangles, logic, selected, select, thickness);
+            InsertEllipses(sheet, blockItem.Ellipses, logic, selected, select, thickness);
+            InsertBlocks(sheet, blockItem.Blocks, logic, selected, select, thickness);
+        }
+
+        public static void InsertBrokenBlock(ISheet sheet, BlockItem blockItem, Block logic, Block selected, bool select, double thickness)
+        {
+            InsertTexts(sheet, blockItem.Texts, logic, selected, select, thickness);
+            InsertLines(sheet, blockItem.Lines, logic, selected, select, thickness);
+            InsertRectangles(sheet, blockItem.Rectangles, logic, selected, select, thickness);
+            InsertEllipses(sheet, blockItem.Ellipses, logic, selected, select, thickness);
+
+            foreach (var block in blockItem.Blocks)
+            {
+                InsertTexts(sheet, block.Texts, logic, selected, select, thickness);
+                InsertLines(sheet, block.Lines, logic, selected, select, thickness);
+                InsertRectangles(sheet, block.Rectangles, logic, selected, select, thickness);
+                InsertEllipses(sheet, block.Ellipses, logic, selected, select, thickness);
+                InsertBlocks(sheet, block.Blocks, logic, selected, select, thickness);
+            }
+        }
+
         #endregion
 
         #region Remove
@@ -2119,6 +2145,12 @@ namespace Sheet
 
         #region Block
 
+        private void InsertBlock(BlockItem block, bool select)
+        {
+            BlockEditor.DeselectAll(Selected);
+            BlockEditor.InsertBlockContents(sheet, block, Logic, Selected, select, lineThickness / Zoom);
+        }
+
         private BlockItem SerializeLogicBlock()
         {
             return BlockEditor.SerializerBlockContents(Logic, 0, "LOGIC");
@@ -2137,7 +2169,7 @@ namespace Sheet
             var text = SerializeBlockContents(0, name, Selected);
             Delete();
             var block = ItemEditor.Deserialize(text);
-            Insert(block, true);
+            InsertBlock(block, true);
             return block.Blocks.FirstOrDefault();
         }
 
@@ -2163,42 +2195,11 @@ namespace Sheet
             if (BlockEditor.HaveSelected(Selected))
             {
                 var text = ItemEditor.Serialize(BlockEditor.SerializerBlockContents(Selected, 0, "SELECTED"));
-                var parent = ItemEditor.Deserialize(text);
-
+                var block = ItemEditor.Deserialize(text);
                 PushUndo("Break Block");
                 Delete();
-
-                double thickness = lineThickness / Zoom;
-
-                BlockEditor.InsertTexts(sheet, parent.Texts, Logic, Selected, true, thickness);
-                BlockEditor.InsertLines(sheet, parent.Lines, Logic, Selected, true, thickness);
-                BlockEditor.InsertRectangles(sheet, parent.Rectangles, Logic, Selected, true, thickness);
-                BlockEditor.InsertEllipses(sheet, parent.Ellipses, Logic, Selected, true, thickness);
-
-                foreach (var block in parent.Blocks)
-                {
-                    BlockEditor.InsertTexts(sheet, block.Texts, Logic, Selected, true, thickness);
-                    BlockEditor.InsertLines(sheet, block.Lines, Logic, Selected, true, thickness);
-                    BlockEditor.InsertRectangles(sheet, block.Rectangles, Logic, Selected, true, thickness);
-                    BlockEditor.InsertEllipses(sheet, block.Ellipses, Logic, Selected, true, thickness);
-                    BlockEditor.InsertBlocks(sheet, block.Blocks, Logic, Selected, true, thickness);
-                }
+                BlockEditor.InsertBrokenBlock(sheet, block, Logic, Selected, true, lineThickness / Zoom);
             }
-        }
-
-        #endregion
-
-        #region Insert
-
-        private void Insert(BlockItem block, bool select)
-        {
-            BlockEditor.DeselectAll(Selected);
-            double thickness = lineThickness / Zoom;
-            BlockEditor.InsertTexts(sheet, block.Texts, Logic, Selected, select, thickness);
-            BlockEditor.InsertLines(sheet, block.Lines, Logic, Selected, select, thickness);
-            BlockEditor.InsertRectangles(sheet, block.Rectangles, Logic, Selected, select, thickness);
-            BlockEditor.InsertEllipses(sheet, block.Ellipses, Logic, Selected, select, thickness);
-            BlockEditor.InsertBlocks(sheet, block.Blocks, Logic, Selected, select, thickness);
         }
 
         #endregion
@@ -2236,7 +2237,7 @@ namespace Sheet
 
                 var undo = undos.Pop();
                 //Debug.Print("Undo: " + undo.Message);
-                Insert(ItemEditor.Deserialize(undo.Model), false);
+                InsertBlock(ItemEditor.Deserialize(undo.Model), false);
             }
         }
 
@@ -2249,7 +2250,7 @@ namespace Sheet
 
                 var redo = redos.Pop();
                 //Debug.Print("Redo: " + redo.Message);
-                Insert(ItemEditor.Deserialize(redo.Model), false);
+                InsertBlock(ItemEditor.Deserialize(redo.Model), false);
             }
         }
 
@@ -2282,7 +2283,7 @@ namespace Sheet
         public void Paste()
         {
             var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
-            Insert(ItemEditor.Deserialize(text), true);
+            InsertBlock(ItemEditor.Deserialize(text), true);
         }
 
         #endregion
@@ -2977,7 +2978,7 @@ namespace Sheet
                 {
                     PushUndo("Open");
                     Reset();
-                    Insert(ItemEditor.Deserialize(text), false);
+                    InsertBlock(ItemEditor.Deserialize(text), false);
                 }
             }
         }
