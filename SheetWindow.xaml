@@ -174,8 +174,8 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Button x:Name="OK" Content="OK" Width="60" VerticalAlignment="Center" Padding="2" Margin="4" Grid.Column="0"/>
-                <Button x:Name="Cancel" Content="Cancel" Width="60" VerticalAlignment="Center" Padding="2" Margin="4" Grid.Column="1"/>
+                <Button x:Name="OK" Content="OK" Background="WhiteSmoke" Width="60" VerticalAlignment="Center" Padding="2" Margin="4" Grid.Column="0"/>
+                <Button x:Name="Cancel" Content="Cancel" Background="WhiteSmoke" Width="60" VerticalAlignment="Center" Padding="2" Margin="4" Grid.Column="1"/>
             </Grid>
         </Grid>
     </Grid>
