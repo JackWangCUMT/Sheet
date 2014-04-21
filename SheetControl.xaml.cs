@@ -724,6 +724,104 @@ namespace Sheet
 
         #endregion
 
+        #region Deserialize
+
+        public static Line DeserializeLineItem(ISheet sheet, Block parent, LineItem lineItem, double thickness)
+        {
+            var line = BlockEditor.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
+            parent.Lines.Add(line);
+            sheet.Add(line);
+            return line;
+        }
+
+        public static Rectangle DeserializeRectangleItem(ISheet sheet, Block parent, RectangleItem rectangleItem, double thickness)
+        {
+            var rectangle = BlockEditor.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
+            parent.Rectangles.Add(rectangle);
+            sheet.Add(rectangle);
+            return rectangle;
+        }
+
+        public static Ellipse DeserializeEllipseItem(ISheet sheet, Block parent, EllipseItem ellipseItem, double thickness)
+        {
+            var ellipse = BlockEditor.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
+            parent.Ellipses.Add(ellipse);
+            sheet.Add(ellipse);
+            return ellipse;
+        }
+
+        public static Grid DeserializeTextItem(ISheet sheet, Block parent, TextItem textItem)
+        {
+            var text = BlockEditor.CreateText(textItem.Text,
+                textItem.X, textItem.Y,
+                textItem.Width, textItem.Height,
+                (HorizontalAlignment)textItem.HAlign,
+                (VerticalAlignment)textItem.VAlign,
+                textItem.Size);
+            parent.Texts.Add(text);
+            sheet.Add(text);
+            return text;
+        }
+
+        public static Block DeserializeBlockItem(ISheet sheet, Block parent, BlockItem blockItem, bool select, double thickness)
+        {
+            var block = new Block() { Name = blockItem.Name };
+            block.Init();
+
+            foreach (var textItem in blockItem.Texts)
+            {
+                var text = DeserializeTextItem(sheet, block, textItem);
+
+                if (select)
+                {
+                    BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
+                }
+            }
+
+            foreach (var lineItem in blockItem.Lines)
+            {
+                var line = DeserializeLineItem(sheet, block, lineItem, thickness);
+
+                if (select)
+                {
+                    line.Stroke = Brushes.Red;
+                }
+            }
+
+            foreach (var rectangleItem in blockItem.Rectangles)
+            {
+                var rectangle = DeserializeRectangleItem(sheet, block, rectangleItem, thickness);
+
+                if (select)
+                {
+                    rectangle.Stroke = Brushes.Red;
+                    rectangle.Fill = rectangleItem.IsFilled ? Brushes.Red : Brushes.Transparent;
+                }
+            }
+
+            foreach (var ellipseItem in blockItem.Ellipses)
+            {
+                var ellipse = DeserializeEllipseItem(sheet, block, ellipseItem, thickness);
+
+                if (select)
+                {
+                    ellipse.Stroke = Brushes.Red;
+                    ellipse.Fill = ellipseItem.IsFilled ? Brushes.Red : Brushes.Transparent;
+                }
+            }
+
+            foreach (var childBlockItem in blockItem.Blocks)
+            {
+                DeserializeBlockItem(sheet, block, childBlockItem, select, thickness);
+            }
+
+            parent.Blocks.Add(block);
+
+            return block;
+        }
+
+        #endregion
+
         #region Create
 
         public static TextBlock GetTextBlock(Grid text)
@@ -829,6 +927,106 @@ namespace Sheet
             Canvas.SetTop(rect, y);
 
             return rect;
+        }
+
+        #endregion
+
+        #region Insert
+
+        public static void InsertLines(ISheet sheet, IEnumerable<LineItem> lineItems, Block parent, Block selected, bool select, double thickness)
+        {
+            if (select)
+            {
+                selected.Lines = new List<Line>();
+            }
+
+            foreach (var lineItem in lineItems)
+            {
+                var line = DeserializeLineItem(sheet, parent, lineItem, thickness);
+
+                if (select)
+                {
+                    line.Stroke = Brushes.Red;
+                    selected.Lines.Add(line);
+                }
+            }
+        }
+
+        public static void InsertRectangles(ISheet sheet, IEnumerable<RectangleItem> rectangleItems, Block parent, Block selected, bool select, double thickness)
+        {
+            if (select)
+            {
+                selected.Rectangles = new List<Rectangle>();
+            }
+
+            foreach (var rectangleItem in rectangleItems)
+            {
+                var rectangle = DeserializeRectangleItem(sheet, parent, rectangleItem, thickness);
+
+                if (select)
+                {
+                    rectangle.Stroke = Brushes.Red;
+                    rectangle.Fill = rectangleItem.IsFilled ? Brushes.Red : Brushes.Transparent;
+                    selected.Rectangles.Add(rectangle);
+                }
+            }
+        }
+
+        public static void InsertEllipses(ISheet sheet, IEnumerable<EllipseItem> ellipseItems, Block parent, Block selected, bool select, double thickness)
+        {
+            if (select)
+            {
+                selected.Ellipses = new List<Ellipse>();
+            }
+
+            foreach (var ellipseItem in ellipseItems)
+            {
+                var ellipse = DeserializeEllipseItem(sheet, parent, ellipseItem, thickness);
+
+                if (select)
+                {
+                    ellipse.Stroke = Brushes.Red;
+                    ellipse.Fill = ellipseItem.IsFilled ? Brushes.Red : Brushes.Transparent;
+                    selected.Ellipses.Add(ellipse);
+                }
+            }
+        }
+
+        public static void InsertTexts(ISheet sheet, IEnumerable<TextItem> textItems, Block parent, Block selected, bool select, double thickness)
+        {
+            if (select)
+            {
+                selected.Texts = new List<Grid>();
+            }
+
+            foreach (var textItem in textItems)
+            {
+                var text = DeserializeTextItem(sheet, parent, textItem);
+
+                if (select)
+                {
+                    BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
+                    selected.Texts.Add(text);
+                }
+            }
+        }
+
+        public static void InsertBlocks(ISheet sheet, IEnumerable<BlockItem> blockItems, Block parent, Block selected, bool select, double thickness)
+        {
+            if (select)
+            {
+                selected.Blocks = new List<Block>();
+            }
+
+            foreach (var blockItem in blockItems)
+            {
+                var block = DeserializeBlockItem(sheet, parent, blockItem, select, thickness);
+
+                if (select)
+                {
+                    selected.Blocks.Add(block);
+                }
+            }
         }
 
         #endregion
@@ -1552,200 +1750,6 @@ namespace Sheet
         }
 
         #endregion
-
-        #region Load
-
-        public static void Load(ISheet sheet, IEnumerable<TextItem> textItems, Block parent, Block selected, bool select, double thickness)
-        {
-            if (select)
-            {
-                selected.Texts = new List<Grid>();
-            }
-
-            foreach (var textItem in textItems)
-            {
-                var text = LoadTextItem(sheet, parent, textItem);
-
-                if (select)
-                {
-                    BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
-                    selected.Texts.Add(text);
-                }
-            }
-        }
-
-        public static void Load(ISheet sheet, IEnumerable<LineItem> lineItems, Block parent, Block selected, bool select, double thickness)
-        {
-            if (select)
-            {
-                selected.Lines = new List<Line>();
-            }
-
-            foreach (var lineItem in lineItems)
-            {
-                var line = LoadLineItem(sheet, parent, lineItem, thickness);
-
-                if (select)
-                {
-                    line.Stroke = Brushes.Red;
-                    selected.Lines.Add(line);
-                }
-            }
-        }
-
-        public static void Load(ISheet sheet, IEnumerable<RectangleItem> rectangleItems, Block parent, Block selected, bool select, double thickness)
-        {
-            if (select)
-            {
-                selected.Rectangles = new List<Rectangle>();
-            }
-
-            foreach (var rectangleItem in rectangleItems)
-            {
-                var rectangle = LoadRectangleItem(sheet, parent, rectangleItem, thickness);
-
-                if (select)
-                {
-                    rectangle.Stroke = Brushes.Red;
-                    rectangle.Fill = rectangleItem.IsFilled ? Brushes.Red : Brushes.Transparent;
-                    selected.Rectangles.Add(rectangle);
-                }
-            }
-        }
-
-        public static void Load(ISheet sheet, IEnumerable<EllipseItem> ellipseItems, Block parent, Block selected, bool select, double thickness)
-        {
-            if (select)
-            {
-                selected.Ellipses = new List<Ellipse>();
-            }
-
-            foreach (var ellipseItem in ellipseItems)
-            {
-                var ellipse = LoadEllipseItem(sheet, parent, ellipseItem, thickness);
-
-                if (select)
-                {
-                    ellipse.Stroke = Brushes.Red;
-                    ellipse.Fill = ellipseItem.IsFilled ? Brushes.Red : Brushes.Transparent;
-                    selected.Ellipses.Add(ellipse);
-                }
-            }
-        }
-
-        public static void Load(ISheet sheet, IEnumerable<BlockItem> blockItems, Block parent, Block selected, bool select, double thickness)
-        {
-            if (select)
-            {
-                selected.Blocks = new List<Block>();
-            }
-
-            foreach (var blockItem in blockItems)
-            {
-                var block = LoadBlockItem(sheet, parent, blockItem, select, thickness);
-
-                if (select)
-                {
-                    selected.Blocks.Add(block);
-                }
-            }
-        }
-
-        public static Grid LoadTextItem(ISheet sheet, Block parent, TextItem textItem)
-        {
-            var text = BlockEditor.CreateText(textItem.Text,
-                textItem.X, textItem.Y,
-                textItem.Width, textItem.Height,
-                (HorizontalAlignment)textItem.HAlign,
-                (VerticalAlignment)textItem.VAlign,
-                textItem.Size);
-            parent.Texts.Add(text);
-            sheet.Add(text);
-            return text;
-        }
-
-        public static Line LoadLineItem(ISheet sheet, Block parent, LineItem lineItem, double thickness)
-        {
-            var line = BlockEditor.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
-            parent.Lines.Add(line);
-            sheet.Add(line);
-            return line;
-        }
-
-        public static Rectangle LoadRectangleItem(ISheet sheet, Block parent, RectangleItem rectangleItem, double thickness)
-        {
-            var rectangle = BlockEditor.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
-            parent.Rectangles.Add(rectangle);
-            sheet.Add(rectangle);
-            return rectangle;
-        }
-
-        public static Ellipse LoadEllipseItem(ISheet sheet, Block parent, EllipseItem ellipseItem, double thickness)
-        {
-            var ellipse = BlockEditor.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
-            parent.Ellipses.Add(ellipse);
-            sheet.Add(ellipse);
-            return ellipse;
-        }
-
-        public static Block LoadBlockItem(ISheet sheet, Block parent, BlockItem blockItem, bool select, double thickness)
-        {
-            var block = new Block() { Name = blockItem.Name };
-            block.Init();
-
-            foreach (var textItem in blockItem.Texts)
-            {
-                var text = LoadTextItem(sheet, block, textItem);
-
-                if (select)
-                {
-                    BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
-                }
-            }
-
-            foreach (var lineItem in blockItem.Lines)
-            {
-                var line = LoadLineItem(sheet, block, lineItem, thickness);
-
-                if (select)
-                {
-                    line.Stroke = Brushes.Red;
-                }
-            }
-
-            foreach (var rectangleItem in blockItem.Rectangles)
-            {
-                var rectangle = LoadRectangleItem(sheet, block, rectangleItem, thickness);
-
-                if (select)
-                {
-                    rectangle.Stroke = Brushes.Red;
-                    rectangle.Fill = rectangleItem.IsFilled ? Brushes.Red : Brushes.Transparent;
-                }
-            }
-
-            foreach (var ellipseItem in blockItem.Ellipses)
-            {
-                var ellipse = LoadEllipseItem(sheet, block, ellipseItem, thickness);
-
-                if (select)
-                {
-                    ellipse.Stroke = Brushes.Red;
-                    ellipse.Fill = ellipseItem.IsFilled ? Brushes.Red : Brushes.Transparent;
-                }
-            }
-
-            foreach (var childBlockItem in blockItem.Blocks)
-            {
-                LoadBlockItem(sheet, block, childBlockItem, select, thickness);
-            }
-
-            parent.Blocks.Add(block);
-
-            return block;
-        }
-
-        #endregion
     }
 
     #endregion
@@ -2133,7 +2137,7 @@ namespace Sheet
             var text = SerializeBlockContents(0, name, Selected);
             Delete();
             var block = ItemEditor.Deserialize(text);
-            Load(block, true);
+            Insert(block, true);
             return block.Blocks.FirstOrDefault();
         }
 
@@ -2166,35 +2170,35 @@ namespace Sheet
 
                 double thickness = lineThickness / Zoom;
 
-                BlockEditor.Load(sheet, parent.Texts, Logic, Selected, true, thickness);
-                BlockEditor.Load(sheet, parent.Lines, Logic, Selected, true, thickness);
-                BlockEditor.Load(sheet, parent.Rectangles, Logic, Selected, true, thickness);
-                BlockEditor.Load(sheet, parent.Ellipses, Logic, Selected, true, thickness);
+                BlockEditor.InsertTexts(sheet, parent.Texts, Logic, Selected, true, thickness);
+                BlockEditor.InsertLines(sheet, parent.Lines, Logic, Selected, true, thickness);
+                BlockEditor.InsertRectangles(sheet, parent.Rectangles, Logic, Selected, true, thickness);
+                BlockEditor.InsertEllipses(sheet, parent.Ellipses, Logic, Selected, true, thickness);
 
                 foreach (var block in parent.Blocks)
                 {
-                    BlockEditor.Load(sheet, block.Texts, Logic, Selected, true, thickness);
-                    BlockEditor.Load(sheet, block.Lines, Logic, Selected, true, thickness);
-                    BlockEditor.Load(sheet, block.Rectangles, Logic, Selected, true, thickness);
-                    BlockEditor.Load(sheet, block.Ellipses, Logic, Selected, true, thickness);
-                    BlockEditor.Load(sheet, block.Blocks, Logic, Selected, true, thickness);
+                    BlockEditor.InsertTexts(sheet, block.Texts, Logic, Selected, true, thickness);
+                    BlockEditor.InsertLines(sheet, block.Lines, Logic, Selected, true, thickness);
+                    BlockEditor.InsertRectangles(sheet, block.Rectangles, Logic, Selected, true, thickness);
+                    BlockEditor.InsertEllipses(sheet, block.Ellipses, Logic, Selected, true, thickness);
+                    BlockEditor.InsertBlocks(sheet, block.Blocks, Logic, Selected, true, thickness);
                 }
             }
         }
 
         #endregion
 
-        #region Load
+        #region Insert
 
-        private void Load(BlockItem block, bool select)
+        private void Insert(BlockItem block, bool select)
         {
             BlockEditor.DeselectAll(Selected);
             double thickness = lineThickness / Zoom;
-            BlockEditor.Load(sheet, block.Texts, Logic, Selected, select, thickness);
-            BlockEditor.Load(sheet, block.Lines, Logic, Selected, select, thickness);
-            BlockEditor.Load(sheet, block.Rectangles, Logic, Selected, select, thickness);
-            BlockEditor.Load(sheet, block.Ellipses, Logic, Selected, select, thickness);
-            BlockEditor.Load(sheet, block.Blocks, Logic, Selected, select, thickness);
+            BlockEditor.InsertTexts(sheet, block.Texts, Logic, Selected, select, thickness);
+            BlockEditor.InsertLines(sheet, block.Lines, Logic, Selected, select, thickness);
+            BlockEditor.InsertRectangles(sheet, block.Rectangles, Logic, Selected, select, thickness);
+            BlockEditor.InsertEllipses(sheet, block.Ellipses, Logic, Selected, select, thickness);
+            BlockEditor.InsertBlocks(sheet, block.Blocks, Logic, Selected, select, thickness);
         }
 
         #endregion
@@ -2232,7 +2236,7 @@ namespace Sheet
 
                 var undo = undos.Pop();
                 //Debug.Print("Undo: " + undo.Message);
-                Load(ItemEditor.Deserialize(undo.Model), false);
+                Insert(ItemEditor.Deserialize(undo.Model), false);
             }
         }
 
@@ -2245,7 +2249,7 @@ namespace Sheet
 
                 var redo = redos.Pop();
                 //Debug.Print("Redo: " + redo.Message);
-                Load(ItemEditor.Deserialize(redo.Model), false);
+                Insert(ItemEditor.Deserialize(redo.Model), false);
             }
         }
 
@@ -2278,7 +2282,7 @@ namespace Sheet
         public void Paste()
         {
             var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
-            Load(ItemEditor.Deserialize(text), true);
+            Insert(ItemEditor.Deserialize(text), true);
         }
 
         #endregion
@@ -2307,7 +2311,7 @@ namespace Sheet
 
             PushUndo("Insert Block");
 
-            var block = BlockEditor.LoadBlockItem(sheet, Logic, blockItem, select, thickness);
+            var block = BlockEditor.DeserializeBlockItem(sheet, Logic, blockItem, select, thickness);
 
             if (select)
             {
@@ -2973,7 +2977,7 @@ namespace Sheet
                 {
                     PushUndo("Open");
                     Reset();
-                    Load(ItemEditor.Deserialize(text), false);
+                    Insert(ItemEditor.Deserialize(text), false);
                 }
             }
         }
