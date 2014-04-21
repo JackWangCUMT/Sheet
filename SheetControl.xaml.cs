@@ -85,9 +85,9 @@ namespace Sheet
 
     #endregion
 
-    #region Item Serializer
+    #region Item Editor
 
-    public static class ItemSerializer
+    public static class ItemEditor
     {
         #region Fields
 
@@ -259,7 +259,7 @@ namespace Sheet
         #endregion
 
         #region Deserialize
-     
+
         private static BlockItem Deserialize(string[] lines, int length, ref int end, string name, int id)
         {
             var sheet = new BlockItem();
@@ -379,14 +379,7 @@ namespace Sheet
         }
 
         #endregion
-    }
 
-    #endregion
-
-    #region Item Editor
-
-    public static class ItemEditor
-    {
         #region Normalize Position
 
         public static void NormalizePosition(BlockItem block, double originX, double originY, double width, double height)
@@ -554,104 +547,7 @@ namespace Sheet
 
     #endregion
 
-    #region Mode
-
-    public enum Mode
-    {
-        None,
-        Selection,
-        Insert,
-        Pan,
-        Move,
-        Line,
-        Rectangle,
-        Ellipse,
-        Text,
-    }
-
-    #endregion
-
-    #region Action Item
-
-    public class ActionItem : Item
-    {
-        public string Message { get; set; }
-        public string Model { get; set; }
-    }
-
-    #endregion
-
-    #region ISheet
-
-    public interface ISheet
-    {
-        FrameworkElement GetParent();
-        void Add(UIElement element);
-        void Remove(UIElement element);
-        void Capture();
-        void ReleaseCapture();
-        bool IsCaptured { get; }
-    }
-
-    #endregion
-
-    #region Canvas ISheet
-
-    public class CanvasSheet : ISheet
-    {
-        #region Fields
-
-        private Canvas canvas = null;
-
-        #endregion
-
-        #region Constructor
-
-        public CanvasSheet(Canvas canvas)
-        {
-            this.canvas = canvas;
-        }
-
-        #endregion
-
-        #region ISheet
-
-        public FrameworkElement GetParent()
-        {
-            return canvas;
-        }
-
-        public void Add(UIElement element)
-        {
-            canvas.Children.Add(element);
-        }
-
-        public void Remove(UIElement element)
-        {
-            canvas.Children.Remove(element);
-        }
-
-        public void Capture()
-        {
-            canvas.CaptureMouse();
-        }
-
-        public void ReleaseCapture()
-        {
-            canvas.ReleaseMouseCapture();
-        }
-
-        public bool IsCaptured
-        {
-            get { return canvas.IsMouseCaptured; }
-        }
-
-        #endregion
-    }
-
-    #endregion
-
-    #region Block
+    #region Block Model
 
     public class Block
     {
@@ -673,10 +569,12 @@ namespace Sheet
 
     #endregion
 
-    #region Block Serializer
+    #region Block Editor
 
-    public static class BlockSerializer
+    public static class BlockEditor
     {
+        #region Serialize
+
         public static LineItem SerializeLine(Line line)
         {
             var lineItem = new LineItem();
@@ -728,7 +626,7 @@ namespace Sheet
             textItem.Width = text.Width;
             textItem.Height = text.Height;
 
-            var tb = BlockCreator.GetTextBlock(text);
+            var tb = BlockEditor.GetTextBlock(text);
             textItem.Text = tb.Text;
             textItem.HAlign = (int)tb.HorizontalAlignment;
             textItem.VAlign = (int)tb.VerticalAlignment;
@@ -770,7 +668,7 @@ namespace Sheet
             return blockItem;
         }
 
-        public static BlockItem CreateSheet(int id, string name, Block parent)
+        public static BlockItem SerializerBlockContents(Block parent, int id, string name)
         {
             var lines = parent.Lines;
             var rectangles = parent.Rectangles;
@@ -823,14 +721,11 @@ namespace Sheet
 
             return sheet;
         }
-    }
 
-    #endregion
+        #endregion
 
-    #region Block Creator
+        #region Create
 
-    public static class BlockCreator
-    {
         public static TextBlock GetTextBlock(Grid text)
         {
             return text.Children[0] as TextBlock;
@@ -935,12 +830,1025 @@ namespace Sheet
 
             return rect;
         }
+
+        #endregion
+
+        #region Remove
+
+        public static void RemoveLines(ISheet sheet, IEnumerable<Line> lines)
+        {
+            foreach (var line in lines)
+            {
+                sheet.Remove(line);
+            }
+        }
+
+        public static void RemoveRectangles(ISheet sheet, IEnumerable<Rectangle> rectangles)
+        {
+            foreach (var rectangle in rectangles)
+            {
+                sheet.Remove(rectangle);
+            }
+        }
+
+        public static void RemoveEllipses(ISheet sheet, IEnumerable<Ellipse> ellipses)
+        {
+            foreach (var ellipse in ellipses)
+            {
+                sheet.Remove(ellipse);
+            }
+        }
+
+        public static void RemoveTexts(ISheet sheet, IEnumerable<Grid> texts)
+        {
+            foreach (var text in texts)
+            {
+                sheet.Remove(text);
+            }
+        }
+
+        public static void RemoveBlocks(ISheet sheet, IEnumerable<Block> blocks)
+        {
+            foreach (var block in blocks)
+            {
+                RemoveLines(sheet, block.Lines);
+                RemoveRectangles(sheet, block.Rectangles);
+                RemoveEllipses(sheet, block.Ellipses);
+                RemoveTexts(sheet, block.Texts);
+                RemoveBlocks(sheet, block.Blocks);
+            }
+        }
+
+        public static void Remove(ISheet sheet, Block parent, Block selected)
+        {
+            if (selected.Lines != null)
+            {
+                RemoveLines(sheet, selected.Lines);
+
+                foreach (var line in selected.Lines)
+                {
+                    parent.Lines.Remove(line);
+                }
+
+                selected.Lines = null;
+            }
+
+            if (selected.Rectangles != null)
+            {
+                RemoveRectangles(sheet, selected.Rectangles);
+
+                foreach (var rectangle in selected.Rectangles)
+                {
+                    parent.Rectangles.Remove(rectangle);
+                }
+
+                selected.Rectangles = null;
+            }
+
+            if (selected.Ellipses != null)
+            {
+                RemoveEllipses(sheet, selected.Ellipses);
+
+                foreach (var ellipse in selected.Ellipses)
+                {
+                    parent.Ellipses.Remove(ellipse);
+                }
+
+                selected.Ellipses = null;
+            }
+
+            if (selected.Texts != null)
+            {
+                RemoveTexts(sheet, selected.Texts);
+
+                foreach (var text in selected.Texts)
+                {
+                    parent.Texts.Remove(text);
+                }
+
+                selected.Texts = null;
+            }
+
+            if (selected.Blocks != null)
+            {
+                foreach (var block in selected.Blocks)
+                {
+                    RemoveLines(sheet, block.Lines);
+                    RemoveRectangles(sheet, block.Rectangles);
+                    RemoveEllipses(sheet, block.Ellipses);
+                    RemoveTexts(sheet, block.Texts);
+                    RemoveBlocks(sheet, block.Blocks);
+
+                    parent.Blocks.Remove(block);
+                }
+
+                selected.Blocks = null;
+            }
+        }
+
+        #endregion
+
+        #region Move
+
+        public static void Move(double x, double y, Block block)
+        {
+            if (block.Lines != null)
+            {
+                MoveLines(x, y, block.Lines);
+            }
+
+            if (block.Rectangles != null)
+            {
+                MoveRectangles(x, y, block.Rectangles);
+            }
+
+            if (block.Ellipses != null)
+            {
+                MoveEllipses(x, y, block.Ellipses);
+            }
+
+            if (block.Texts != null)
+            {
+                MoveTexts(x, y, block.Texts);
+            }
+
+            if (block.Blocks != null)
+            {
+                MoveBlocks(x, y, block.Blocks);
+            }
+        }
+
+        public static void MoveLines(double x, double y, IEnumerable<Line> lines)
+        {
+            foreach (var line in lines)
+            {
+                line.X1 += x;
+                line.Y1 += y;
+                line.X2 += x;
+                line.Y2 += y;
+            }
+        }
+
+        public static void MoveRectangles(double x, double y, IEnumerable<Rectangle> rectangles)
+        {
+            foreach (var rectangle in rectangles)
+            {
+                Canvas.SetLeft(rectangle, Canvas.GetLeft(rectangle) + x);
+                Canvas.SetTop(rectangle, Canvas.GetTop(rectangle) + y);
+            }
+        }
+
+        public static void MoveEllipses(double x, double y, IEnumerable<Ellipse> ellipses)
+        {
+            foreach (var ellipse in ellipses)
+            {
+                Canvas.SetLeft(ellipse, Canvas.GetLeft(ellipse) + x);
+                Canvas.SetTop(ellipse, Canvas.GetTop(ellipse) + y);
+            }
+        }
+
+        public static void MoveTexts(double x, double y, IEnumerable<Grid> texts)
+        {
+            foreach (var text in texts)
+            {
+                Canvas.SetLeft(text, Canvas.GetLeft(text) + x);
+                Canvas.SetTop(text, Canvas.GetTop(text) + y);
+            }
+        }
+
+        public static void MoveBlocks(double x, double y, IEnumerable<Block> blocks)
+        {
+            foreach (var block in blocks)
+            {
+                MoveLines(x, y, block.Lines);
+                MoveRectangles(x, y, block.Rectangles);
+                MoveEllipses(x, y, block.Ellipses);
+                MoveTexts(x, y, block.Texts);
+                MoveBlocks(x, y, block.Blocks);
+            }
+        }
+
+        #endregion
+
+        #region Selection
+
+        public static bool HaveSelected(Block selected)
+        {
+            return (selected.Lines != null
+                || selected.Rectangles != null
+                || selected.Ellipses != null
+                || selected.Texts != null
+                || selected.Blocks != null);
+        }
+
+        public static bool HaveOneTextSelected(Block selected)
+        {
+            return (selected.Lines == null
+                && selected.Rectangles == null
+                && selected.Ellipses == null
+                && selected.Blocks == null
+                && selected.Texts != null
+                && selected.Texts.Count == 1);
+        }
+
+        public static void Select(Block parent)
+        {
+            foreach (var line in parent.Lines)
+            {
+                line.Stroke = Brushes.Red;
+            }
+
+            foreach (var rectangle in parent.Rectangles)
+            {
+                rectangle.Stroke = Brushes.Red;
+                rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+            }
+
+            foreach (var ellipse in parent.Ellipses)
+            {
+                ellipse.Stroke = Brushes.Red;
+                ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+            }
+
+            foreach (var text in parent.Texts)
+            {
+                BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
+            }
+
+            foreach (var block in parent.Blocks)
+            {
+                Select(block);
+            }
+        }
+
+        public static void Deselect(Block parent)
+        {
+            if (parent.Lines != null)
+            {
+                foreach (var line in parent.Lines)
+                {
+                    line.Stroke = Brushes.Black;
+                }
+            }
+
+            if (parent.Rectangles != null)
+            {
+                foreach (var rectangle in parent.Rectangles)
+                {
+                    rectangle.Stroke = Brushes.Black;
+                    rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                }
+            }
+
+            if (parent.Ellipses != null)
+            {
+                foreach (var ellipse in parent.Ellipses)
+                {
+                    ellipse.Stroke = Brushes.Black;
+                    ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                }
+            }
+
+            if (parent.Texts != null)
+            {
+                foreach (var text in parent.Texts)
+                {
+                    BlockEditor.GetTextBlock(text).Foreground = Brushes.Black;
+                }
+            }
+
+            if (parent.Blocks != null)
+            {
+                foreach (var block in parent.Blocks)
+                {
+                    Deselect(block);
+                }
+            }
+        }
+
+        public static void SelectAll(Block selected, Block logic)
+        {
+            selected.Init();
+
+            foreach (var line in logic.Lines)
+            {
+                line.Stroke = Brushes.Red;
+                selected.Lines.Add(line);
+            }
+
+            foreach (var rectangle in logic.Rectangles)
+            {
+                rectangle.Stroke = Brushes.Red;
+                rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                selected.Rectangles.Add(rectangle);
+            }
+
+            foreach (var ellipse in logic.Ellipses)
+            {
+                ellipse.Stroke = Brushes.Red;
+                ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                selected.Ellipses.Add(ellipse);
+            }
+
+            foreach (var text in logic.Texts)
+            {
+                BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
+                selected.Texts.Add(text);
+            }
+
+            foreach (var parent in logic.Blocks)
+            {
+                foreach (var line in parent.Lines)
+                {
+                    line.Stroke = Brushes.Red;
+                }
+
+                foreach (var rectangle in parent.Rectangles)
+                {
+                    rectangle.Stroke = Brushes.Red;
+                    rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                }
+
+                foreach (var ellipse in parent.Ellipses)
+                {
+                    ellipse.Stroke = Brushes.Red;
+                    ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                }
+
+                foreach (var text in parent.Texts)
+                {
+                    BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
+                }
+
+                foreach (var block in parent.Blocks)
+                {
+                    Select(block);
+                }
+
+                selected.Blocks.Add(parent);
+            }
+        }
+
+        public static void DeselectAll(Block selected)
+        {
+            if (selected.Lines != null)
+            {
+                foreach (var line in selected.Lines)
+                {
+                    line.Stroke = Brushes.Black;
+                }
+
+                selected.Lines = null;
+            }
+
+            if (selected.Rectangles != null)
+            {
+                foreach (var rectangle in selected.Rectangles)
+                {
+                    rectangle.Stroke = Brushes.Black;
+                    rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                }
+
+                selected.Rectangles = null;
+            }
+
+            if (selected.Ellipses != null)
+            {
+                foreach (var ellipse in selected.Ellipses)
+                {
+                    ellipse.Stroke = Brushes.Black;
+                    ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                }
+
+                selected.Ellipses = null;
+            }
+
+            if (selected.Texts != null)
+            {
+                foreach (var text in selected.Texts)
+                {
+                    BlockEditor.GetTextBlock(text).Foreground = Brushes.Black;
+                }
+
+                selected.Texts = null;
+            }
+
+            if (selected.Blocks != null)
+            {
+                foreach (var parent in selected.Blocks)
+                {
+                    foreach (var line in parent.Lines)
+                    {
+                        line.Stroke = Brushes.Black;
+                    }
+
+                    foreach (var rectangle in parent.Rectangles)
+                    {
+                        rectangle.Stroke = Brushes.Black;
+                        rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                    }
+
+                    foreach (var ellipse in parent.Ellipses)
+                    {
+                        ellipse.Stroke = Brushes.Black;
+                        ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                    }
+
+                    foreach (var text in parent.Texts)
+                    {
+                        BlockEditor.GetTextBlock(text).Foreground = Brushes.Black;
+                    }
+
+                    foreach (var block in parent.Blocks)
+                    {
+                        Deselect(block);
+                    }
+                }
+
+                selected.Blocks = null;
+            }
+        }
+
+        #endregion
+
+        #region HitTest
+
+        public static bool HitTestLines(IEnumerable<Line> lines, Block selected, Rect rect, bool onlyFirst, bool select)
+        {
+            foreach (var line in lines)
+            {
+                var bounds = VisualTreeHelper.GetContentBounds(line);
+                if (rect.IntersectsWith(bounds))
+                {
+                    if (select)
+                    {
+                        line.Stroke = Brushes.Red;
+                        selected.Lines.Add(line);
+                    }
+
+                    if (onlyFirst)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public static bool HitTestRectangles(IEnumerable<Rectangle> rectangles, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
+        {
+            foreach (var rectangle in rectangles)
+            {
+                var bounds = VisualTreeHelper.GetContentBounds(rectangle);
+                var offset = rectangle.TranslatePoint(new Point(0, 0), relative);
+                bounds.Offset(offset.X, offset.Y);
+                if (rect.IntersectsWith(bounds))
+                {
+                    if (select)
+                    {
+                        rectangle.Stroke = Brushes.Red;
+                        rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                        selected.Rectangles.Add(rectangle);
+                    }
+
+                    if (onlyFirst)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public static bool HitTestEllipses(IEnumerable<Ellipse> ellipses, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
+        {
+            foreach (var ellipse in ellipses)
+            {
+                var bounds = VisualTreeHelper.GetContentBounds(ellipse);
+                var offset = ellipse.TranslatePoint(new Point(0, 0), relative);
+                bounds.Offset(offset.X, offset.Y);
+                if (rect.IntersectsWith(bounds))
+                {
+                    if (select)
+                    {
+                        ellipse.Stroke = Brushes.Red;
+                        ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                        selected.Ellipses.Add(ellipse);
+                    }
+
+                    if (onlyFirst)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public static bool HitTestTexts(IEnumerable<Grid> texts, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
+        {
+            foreach (var text in texts)
+            {
+                var bounds = VisualTreeHelper.GetContentBounds(text);
+                var offset = text.TranslatePoint(new Point(0, 0), relative);
+                bounds.Offset(offset.X, offset.Y);
+                if (rect.IntersectsWith(bounds))
+                {
+                    if (select)
+                    {
+                        BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
+                        selected.Texts.Add(text);
+                    }
+
+                    if (onlyFirst)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public static bool HitTestBlocks(IEnumerable<Block> blocks, Block selected, Rect rect, bool onlyFirst, bool select, bool selectInsideBlock, UIElement relative)
+        {
+            foreach (var block in blocks)
+            {
+                bool result = HitTestBlock(block, selected, rect, true, selectInsideBlock, relative);
+
+                if (result)
+                {
+                    if (select && !selectInsideBlock)
+                    {
+                        selected.Blocks.Add(block);
+                        Select(block);
+                    }
+
+                    if (onlyFirst)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public static bool HitTestBlock(Block parent, Block selected, Rect rect, bool onlyFirst, bool selectInsideBlock, UIElement relative)
+        {
+            bool result = false;
+
+            result = HitTestLines(parent.Lines, selected, rect, onlyFirst, selectInsideBlock);
+            if (result && onlyFirst)
+            {
+                return true;
+            }
+
+            result = HitTestRectangles(parent.Rectangles, selected, rect, onlyFirst, selectInsideBlock, relative);
+            if (result && onlyFirst)
+            {
+                return true;
+            }
+
+            result = HitTestEllipses(parent.Ellipses, selected, rect, onlyFirst, selectInsideBlock, relative);
+            if (result && onlyFirst)
+            {
+                return true;
+            }
+
+            result = HitTestTexts(parent.Texts, selected, rect, onlyFirst, selectInsideBlock, relative);
+            if (result && onlyFirst)
+            {
+                return true;
+            }
+
+            result = HitTestBlocks(parent.Blocks, selected, rect, onlyFirst, false, selectInsideBlock, relative);
+            if (result && onlyFirst)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static void HitTest(ISheet sheet, Block parent, Block selected, Point p, double size, bool selectInsideBlock)
+        {
+            selected.Init();
+
+            var rect = new Rect(p.X - size, p.Y - size, 2 * size, 2 * size);
+
+            if (parent.Lines != null)
+            {
+                HitTestLines(parent.Lines, selected, rect, true, true);
+            }
+
+            if (selected.Lines.Count <= 0
+                && parent.Rectangles != null)
+            {
+                HitTestRectangles(parent.Rectangles, selected, rect, true, true, sheet.GetParent());
+            }
+
+            if (selected.Lines.Count <= 0
+                && selected.Rectangles.Count <= 0
+                && parent.Ellipses != null)
+            {
+                HitTestEllipses(parent.Ellipses, selected, rect, true, true, sheet.GetParent());
+            }
+
+            if (selected.Lines.Count <= 0
+                && selected.Rectangles.Count <= 0
+                && selected.Ellipses.Count <= 0
+                && parent.Texts != null)
+            {
+                HitTestTexts(parent.Texts, selected, rect, true, true, sheet.GetParent());
+            }
+
+            if (selected.Lines.Count <= 0
+                && selected.Rectangles.Count <= 0
+                && selected.Ellipses.Count <= 0
+                && selected.Texts.Count <= 0
+                && parent.Blocks != null)
+            {
+                HitTestBlocks(parent.Blocks, selected, rect, true, true, selectInsideBlock, sheet.GetParent());
+            }
+
+            if (selected.Lines.Count == 0)
+            {
+                selected.Lines = null;
+            }
+
+            if (selected.Rectangles.Count == 0)
+            {
+                selected.Rectangles = null;
+            }
+
+            if (selected.Ellipses.Count == 0)
+            {
+                selected.Ellipses = null;
+            }
+
+            if (selected.Texts.Count == 0)
+            {
+                selected.Texts = null;
+            }
+
+            if (selected.Blocks.Count == 0)
+            {
+                selected.Blocks = null;
+            }
+        }
+
+        public static void HitTestSelectionRect(ISheet sheet, Block parent, Block selected, Rect rect)
+        {
+            selected.Init();
+
+            if (parent.Lines != null)
+            {
+                HitTestLines(parent.Lines, selected, rect, false, true);
+            }
+
+            if (parent.Rectangles != null)
+            {
+                HitTestRectangles(parent.Rectangles, selected, rect, false, true, sheet.GetParent());
+            }
+
+            if (parent.Ellipses != null)
+            {
+                HitTestEllipses(parent.Ellipses, selected, rect, false, true, sheet.GetParent());
+            }
+
+            if (parent.Texts != null)
+            {
+                HitTestTexts(parent.Texts, selected, rect, false, true, sheet.GetParent());
+            }
+
+            if (parent.Blocks != null)
+            {
+                HitTestBlocks(parent.Blocks, selected, rect, false, true, false, sheet.GetParent());
+            }
+
+            if (selected.Lines.Count == 0)
+            {
+                selected.Lines = null;
+            }
+
+            if (selected.Rectangles.Count == 0)
+            {
+                selected.Rectangles = null;
+            }
+
+            if (selected.Ellipses.Count == 0)
+            {
+                selected.Ellipses = null;
+            }
+
+            if (selected.Texts.Count == 0)
+            {
+                selected.Texts = null;
+            }
+
+            if (selected.Blocks.Count == 0)
+            {
+                selected.Blocks = null;
+            }
+        }
+
+        #endregion
+
+        #region Load
+
+        public static void Load(ISheet sheet, IEnumerable<TextItem> textItems, Block parent, Block selected, bool select, double thickness)
+        {
+            if (select)
+            {
+                selected.Texts = new List<Grid>();
+            }
+
+            foreach (var textItem in textItems)
+            {
+                var text = LoadTextItem(sheet, parent, textItem);
+
+                if (select)
+                {
+                    BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
+                    selected.Texts.Add(text);
+                }
+            }
+        }
+
+        public static void Load(ISheet sheet, IEnumerable<LineItem> lineItems, Block parent, Block selected, bool select, double thickness)
+        {
+            if (select)
+            {
+                selected.Lines = new List<Line>();
+            }
+
+            foreach (var lineItem in lineItems)
+            {
+                var line = LoadLineItem(sheet, parent, lineItem, thickness);
+
+                if (select)
+                {
+                    line.Stroke = Brushes.Red;
+                    selected.Lines.Add(line);
+                }
+            }
+        }
+
+        public static void Load(ISheet sheet, IEnumerable<RectangleItem> rectangleItems, Block parent, Block selected, bool select, double thickness)
+        {
+            if (select)
+            {
+                selected.Rectangles = new List<Rectangle>();
+            }
+
+            foreach (var rectangleItem in rectangleItems)
+            {
+                var rectangle = LoadRectangleItem(sheet, parent, rectangleItem, thickness);
+
+                if (select)
+                {
+                    rectangle.Stroke = Brushes.Red;
+                    rectangle.Fill = rectangleItem.IsFilled ? Brushes.Red : Brushes.Transparent;
+                    selected.Rectangles.Add(rectangle);
+                }
+            }
+        }
+
+        public static void Load(ISheet sheet, IEnumerable<EllipseItem> ellipseItems, Block parent, Block selected, bool select, double thickness)
+        {
+            if (select)
+            {
+                selected.Ellipses = new List<Ellipse>();
+            }
+
+            foreach (var ellipseItem in ellipseItems)
+            {
+                var ellipse = LoadEllipseItem(sheet, parent, ellipseItem, thickness);
+
+                if (select)
+                {
+                    ellipse.Stroke = Brushes.Red;
+                    ellipse.Fill = ellipseItem.IsFilled ? Brushes.Red : Brushes.Transparent;
+                    selected.Ellipses.Add(ellipse);
+                }
+            }
+        }
+
+        public static void Load(ISheet sheet, IEnumerable<BlockItem> blockItems, Block parent, Block selected, bool select, double thickness)
+        {
+            if (select)
+            {
+                selected.Blocks = new List<Block>();
+            }
+
+            foreach (var blockItem in blockItems)
+            {
+                var block = LoadBlockItem(sheet, parent, blockItem, select, thickness);
+
+                if (select)
+                {
+                    selected.Blocks.Add(block);
+                }
+            }
+        }
+
+        public static Grid LoadTextItem(ISheet sheet, Block parent, TextItem textItem)
+        {
+            var text = BlockEditor.CreateText(textItem.Text,
+                textItem.X, textItem.Y,
+                textItem.Width, textItem.Height,
+                (HorizontalAlignment)textItem.HAlign,
+                (VerticalAlignment)textItem.VAlign,
+                textItem.Size);
+            parent.Texts.Add(text);
+            sheet.Add(text);
+            return text;
+        }
+
+        public static Line LoadLineItem(ISheet sheet, Block parent, LineItem lineItem, double thickness)
+        {
+            var line = BlockEditor.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
+            parent.Lines.Add(line);
+            sheet.Add(line);
+            return line;
+        }
+
+        public static Rectangle LoadRectangleItem(ISheet sheet, Block parent, RectangleItem rectangleItem, double thickness)
+        {
+            var rectangle = BlockEditor.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
+            parent.Rectangles.Add(rectangle);
+            sheet.Add(rectangle);
+            return rectangle;
+        }
+
+        public static Ellipse LoadEllipseItem(ISheet sheet, Block parent, EllipseItem ellipseItem, double thickness)
+        {
+            var ellipse = BlockEditor.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
+            parent.Ellipses.Add(ellipse);
+            sheet.Add(ellipse);
+            return ellipse;
+        }
+
+        public static Block LoadBlockItem(ISheet sheet, Block parent, BlockItem blockItem, bool select, double thickness)
+        {
+            var block = new Block() { Name = blockItem.Name };
+            block.Init();
+
+            foreach (var textItem in blockItem.Texts)
+            {
+                var text = LoadTextItem(sheet, block, textItem);
+
+                if (select)
+                {
+                    BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
+                }
+            }
+
+            foreach (var lineItem in blockItem.Lines)
+            {
+                var line = LoadLineItem(sheet, block, lineItem, thickness);
+
+                if (select)
+                {
+                    line.Stroke = Brushes.Red;
+                }
+            }
+
+            foreach (var rectangleItem in blockItem.Rectangles)
+            {
+                var rectangle = LoadRectangleItem(sheet, block, rectangleItem, thickness);
+
+                if (select)
+                {
+                    rectangle.Stroke = Brushes.Red;
+                    rectangle.Fill = rectangleItem.IsFilled ? Brushes.Red : Brushes.Transparent;
+                }
+            }
+
+            foreach (var ellipseItem in blockItem.Ellipses)
+            {
+                var ellipse = LoadEllipseItem(sheet, block, ellipseItem, thickness);
+
+                if (select)
+                {
+                    ellipse.Stroke = Brushes.Red;
+                    ellipse.Fill = ellipseItem.IsFilled ? Brushes.Red : Brushes.Transparent;
+                }
+            }
+
+            foreach (var childBlockItem in blockItem.Blocks)
+            {
+                LoadBlockItem(sheet, block, childBlockItem, select, thickness);
+            }
+
+            parent.Blocks.Add(block);
+
+            return block;
+        }
+
+        #endregion
+    }
+
+    #endregion
+
+    #region ISheet Model
+
+    public interface ISheet
+    {
+        FrameworkElement GetParent();
+        void Add(UIElement element);
+        void Remove(UIElement element);
+        void Capture();
+        void ReleaseCapture();
+        bool IsCaptured { get; }
+    }
+
+    #endregion
+
+    #region ISheet Canvas
+
+    public class CanvasSheet : ISheet
+    {
+        #region Fields
+
+        private Canvas canvas = null;
+
+        #endregion
+
+        #region Constructor
+
+        public CanvasSheet(Canvas canvas)
+        {
+            this.canvas = canvas;
+        }
+
+        #endregion
+
+        #region ISheet
+
+        public FrameworkElement GetParent()
+        {
+            return canvas;
+        }
+
+        public void Add(UIElement element)
+        {
+            canvas.Children.Add(element);
+        }
+
+        public void Remove(UIElement element)
+        {
+            canvas.Children.Remove(element);
+        }
+
+        public void Capture()
+        {
+            canvas.CaptureMouse();
+        }
+
+        public void ReleaseCapture()
+        {
+            canvas.ReleaseMouseCapture();
+        }
+
+        public bool IsCaptured
+        {
+            get { return canvas.IsMouseCaptured; }
+        }
+
+        #endregion
     }
 
     #endregion
 
     public partial class SheetControl : UserControl
     {
+        #region Mode
+
+        public enum Mode
+        {
+            None,
+            Selection,
+            Insert,
+            Pan,
+            Move,
+            Line,
+            Rectangle,
+            Ellipse,
+            Text,
+        }
+
+        #endregion
+
+        #region Action Item
+
+        public class ActionItem : Item
+        {
+            public string Message { get; set; }
+            public string Model { get; set; }
+        }
+
+        #endregion
+
         #region Fields
 
         private ISheet back = null;
@@ -1140,15 +2048,6 @@ namespace Sheet
 
         #endregion
 
-        #region Serialize
-
-        private BlockItem CreateLogicSheet()
-        {
-            return BlockSerializer.CreateSheet(0, "LOGIC", Logic);
-        }
-
-        #endregion
-
         #region Text
 
         private void CreateText(Point p)
@@ -1156,7 +2055,7 @@ namespace Sheet
             double x = Snap(p.X);
             double y = Snap(p.Y);
             PushUndo("Create Text");
-            var text = BlockCreator.CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0);
+            var text = BlockEditor.CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0);
             Logic.Texts.Add(text);
             sheet.Add(text);
         }
@@ -1165,7 +2064,7 @@ namespace Sheet
 
         #region Back
 
-        private static void AddLine(ISheet sheet, List<Line> lines, double thickness, double x1, double y1, double x2, double y2, Brush stroke)
+        private static void CreateLine(ISheet sheet, List<Line> lines, double thickness, double x1, double y1, double x2, double y2, Brush stroke)
         {
             var line = new Line()
             {
@@ -1182,20 +2081,20 @@ namespace Sheet
 
         private static void CreateFrame(ISheet sheet, List<Line> lines, double size, double thickness)
         {
-            AddLine(sheet, lines, thickness, 210.0, 0.0, 210.0, 750.0, Brushes.DarkGray);
-            AddLine(sheet, lines, thickness, 300.0, 0.0, 300.0, 750.0, Brushes.DarkGray);
+            CreateLine(sheet, lines, thickness, 210.0, 0.0, 210.0, 750.0, Brushes.DarkGray);
+            CreateLine(sheet, lines, thickness, 300.0, 0.0, 300.0, 750.0, Brushes.DarkGray);
 
             for (double y = 30.0; y < 750.0; y += size)
             {
-                AddLine(sheet, lines, thickness, 0.0, y, 300.0, y, Brushes.DarkGray);
+                CreateLine(sheet, lines, thickness, 0.0, y, 300.0, y, Brushes.DarkGray);
             }
 
-            AddLine(sheet, lines, thickness, 900.0, 0.0, 900.0, 750.0, Brushes.DarkGray);
-            AddLine(sheet, lines, thickness, 1110.0, 0.0, 1110.0, 750.0, Brushes.DarkGray);
+            CreateLine(sheet, lines, thickness, 900.0, 0.0, 900.0, 750.0, Brushes.DarkGray);
+            CreateLine(sheet, lines, thickness, 1110.0, 0.0, 1110.0, 750.0, Brushes.DarkGray);
 
             for (double y = 30.0; y < 750.0; y += size)
             {
-                AddLine(sheet, lines, thickness, 900.0, y, 1200.0, y, Brushes.DarkGray);
+                CreateLine(sheet, lines, thickness, 900.0, y, 1200.0, y, Brushes.DarkGray);
             }
         }
 
@@ -1203,12 +2102,12 @@ namespace Sheet
         {
             for (double y = startY + size; y < height + startY; y += size)
             {
-                AddLine(sheet, lines, thickness, startX, y, width + startX, y, Brushes.LightGray);
+                CreateLine(sheet, lines, thickness, startX, y, width + startX, y, Brushes.LightGray);
             }
 
             for (double x = startX + size; x < startX + width; x += size)
             {
-                AddLine(sheet, lines, thickness, x, startY, x, height + startY, Brushes.LightGray);
+                CreateLine(sheet, lines, thickness, x, startY, x, height + startY, Brushes.LightGray);
             }
         }
 
@@ -1216,31 +2115,36 @@ namespace Sheet
 
         #region Block
 
-        private static string SerializeAsBlock(int id, string name, Block parent)
+        private BlockItem SerializeLogicBlock()
         {
-            var block = BlockSerializer.CreateSheet(id, name, parent);
+            return BlockEditor.SerializerBlockContents(Logic, 0, "LOGIC");
+        }
+
+        private static string SerializeBlockContents(int id, string name, Block parent)
+        {
+            var block = BlockEditor.SerializerBlockContents(parent, id, name);
             var sb = new StringBuilder();
-            ItemSerializer.Serialize(sb, block, "");
+            ItemEditor.Serialize(sb, block, "");
             return sb.ToString();
         }
 
-        private BlockItem CreateBlock(string name)
+        private BlockItem CreateBlockItem(string name)
         {
-            var text = SerializeAsBlock(0, name, Selected);
+            var text = SerializeBlockContents(0, name, Selected);
             Delete();
-            var block = ItemSerializer.Deserialize(text);
+            var block = ItemEditor.Deserialize(text);
             Load(block, true);
             return block.Blocks.FirstOrDefault();
         }
 
         public void CreateBlock()
         {
-            if (HaveSelected(Selected))
+            if (BlockEditor.HaveSelected(Selected))
             {
                 Action<string> ok = (name) =>
                 {
                     PushUndo("Create Block");
-                    var block = CreateBlock(name);
+                    var block = CreateBlockItem(name);
                     AddToLibrary(block);
                 };
 
@@ -1252,28 +2156,28 @@ namespace Sheet
 
         public void BreakBlock()
         {
-            if (HaveSelected(Selected))
+            if (BlockEditor.HaveSelected(Selected))
             {
-                var text = ItemSerializer.Serialize(BlockSerializer.CreateSheet(0, "SELECTED", Selected));
-                var parent = ItemSerializer.Deserialize(text);
+                var text = ItemEditor.Serialize(BlockEditor.SerializerBlockContents(Selected, 0, "SELECTED"));
+                var parent = ItemEditor.Deserialize(text);
 
                 PushUndo("Break Block");
                 Delete();
 
                 double thickness = lineThickness / Zoom;
 
-                Load(sheet, parent.Texts, Logic, Selected, true, thickness);
-                Load(sheet, parent.Lines, Logic, Selected, true, thickness);
-                Load(sheet, parent.Rectangles, Logic, Selected, true, thickness);
-                Load(sheet, parent.Ellipses, Logic, Selected, true, thickness);
+                BlockEditor.Load(sheet, parent.Texts, Logic, Selected, true, thickness);
+                BlockEditor.Load(sheet, parent.Lines, Logic, Selected, true, thickness);
+                BlockEditor.Load(sheet, parent.Rectangles, Logic, Selected, true, thickness);
+                BlockEditor.Load(sheet, parent.Ellipses, Logic, Selected, true, thickness);
 
                 foreach (var block in parent.Blocks)
                 {
-                    Load(sheet, block.Texts, Logic, Selected, true, thickness);
-                    Load(sheet, block.Lines, Logic, Selected, true, thickness);
-                    Load(sheet, block.Rectangles, Logic, Selected, true, thickness);
-                    Load(sheet, block.Ellipses, Logic, Selected, true, thickness);
-                    Load(sheet, block.Blocks, Logic, Selected, true, thickness);
+                    BlockEditor.Load(sheet, block.Texts, Logic, Selected, true, thickness);
+                    BlockEditor.Load(sheet, block.Lines, Logic, Selected, true, thickness);
+                    BlockEditor.Load(sheet, block.Rectangles, Logic, Selected, true, thickness);
+                    BlockEditor.Load(sheet, block.Ellipses, Logic, Selected, true, thickness);
+                    BlockEditor.Load(sheet, block.Blocks, Logic, Selected, true, thickness);
                 }
             }
         }
@@ -1282,205 +2186,15 @@ namespace Sheet
 
         #region Load
 
-        private static void Load(ISheet sheet, IEnumerable<TextItem> textItems, Block parent, Block selected, bool select, double thickness)
-        {
-            if (select)
-            {
-                selected.Texts = new List<Grid>();
-            }
-
-            foreach (var textItem in textItems)
-            {
-                var text = LoadTextItem(sheet, parent, textItem);
-
-                if (select)
-                {
-                    BlockCreator.GetTextBlock(text).Foreground = Brushes.Red;
-                    selected.Texts.Add(text);
-                }
-            }
-        }
-
-        private static void Load(ISheet sheet, IEnumerable<LineItem> lineItems, Block parent, Block selected, bool select, double thickness)
-        {
-            if (select)
-            {
-                selected.Lines = new List<Line>();
-            }
-
-            foreach (var lineItem in lineItems)
-            {
-                var line = LoadLineItem(sheet, parent, lineItem, thickness);
-
-                if (select)
-                {
-                    line.Stroke = Brushes.Red;
-                    selected.Lines.Add(line);
-                }
-            }
-        }
-
-        private static void Load(ISheet sheet, IEnumerable<RectangleItem> rectangleItems, Block parent, Block selected, bool select, double thickness)
-        {
-            if (select)
-            {
-                selected.Rectangles = new List<Rectangle>();
-            }
-
-            foreach (var rectangleItem in rectangleItems)
-            {
-                var rectangle = LoadRectangleItem(sheet, parent, rectangleItem, thickness);
-
-                if (select)
-                {
-                    rectangle.Stroke = Brushes.Red;
-                    rectangle.Fill = rectangleItem.IsFilled ? Brushes.Red : Brushes.Transparent;
-                    selected.Rectangles.Add(rectangle);
-                }
-            }
-        }
-
-        private static void Load(ISheet sheet, IEnumerable<EllipseItem> ellipseItems, Block parent, Block selected, bool select, double thickness)
-        {
-            if (select)
-            {
-                selected.Ellipses = new List<Ellipse>();
-            }
-
-            foreach (var ellipseItem in ellipseItems)
-            {
-                var ellipse = LoadEllipseItem(sheet, parent, ellipseItem, thickness);
-
-                if (select)
-                {
-                    ellipse.Stroke = Brushes.Red;
-                    ellipse.Fill = ellipseItem.IsFilled ? Brushes.Red : Brushes.Transparent;
-                    selected.Ellipses.Add(ellipse);
-                }
-            }
-        }
-
-        private static void Load(ISheet sheet, IEnumerable<BlockItem> blockItems, Block parent, Block selected, bool select, double thickness)
-        {
-            if (select)
-            {
-                selected.Blocks = new List<Block>();
-            }
-
-            foreach (var blockItem in blockItems)
-            {
-                var block = LoadBlockItem(sheet, parent, blockItem, select, thickness);
-
-                if (select)
-                {
-                    selected.Blocks.Add(block);
-                }
-            }
-        }
-
-        private static Grid LoadTextItem(ISheet sheet, Block parent, TextItem textItem)
-        {
-            var text = BlockCreator.CreateText(textItem.Text,
-                textItem.X, textItem.Y,
-                textItem.Width, textItem.Height,
-                (HorizontalAlignment)textItem.HAlign,
-                (VerticalAlignment)textItem.VAlign,
-                textItem.Size);
-            parent.Texts.Add(text);
-            sheet.Add(text);
-            return text;
-        }
-
-        private static Line LoadLineItem(ISheet sheet, Block parent, LineItem lineItem, double thickness)
-        {
-            var line = BlockCreator.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
-            parent.Lines.Add(line);
-            sheet.Add(line);
-            return line;
-        }
-
-        private static Rectangle LoadRectangleItem(ISheet sheet, Block parent, RectangleItem rectangleItem, double thickness)
-        {
-            var rectangle = BlockCreator.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
-            parent.Rectangles.Add(rectangle);
-            sheet.Add(rectangle);
-            return rectangle;
-        }
-
-        private static Ellipse LoadEllipseItem(ISheet sheet, Block parent, EllipseItem ellipseItem, double thickness)
-        {
-            var ellipse = BlockCreator.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
-            parent.Ellipses.Add(ellipse);
-            sheet.Add(ellipse);
-            return ellipse;
-        }
-
-        private static Block LoadBlockItem(ISheet sheet, Block parent, BlockItem blockItem, bool select, double thickness)
-        {
-            var block = new Block() { Name = blockItem.Name };
-            block.Init();
-
-            foreach (var textItem in blockItem.Texts)
-            {
-                var text = LoadTextItem(sheet, block, textItem);
-
-                if (select)
-                {
-                    BlockCreator.GetTextBlock(text).Foreground = Brushes.Red;
-                }
-            }
-
-            foreach (var lineItem in blockItem.Lines)
-            {
-                var line = LoadLineItem(sheet, block, lineItem, thickness);
-
-                if (select)
-                {
-                    line.Stroke = Brushes.Red;
-                }
-            }
-
-            foreach (var rectangleItem in blockItem.Rectangles)
-            {
-                var rectangle = LoadRectangleItem(sheet, block, rectangleItem, thickness);
-
-                if (select)
-                {
-                    rectangle.Stroke = Brushes.Red;
-                    rectangle.Fill = rectangleItem.IsFilled ? Brushes.Red : Brushes.Transparent;
-                }
-            }
-
-            foreach (var ellipseItem in blockItem.Ellipses)
-            {
-                var ellipse = LoadEllipseItem(sheet, block, ellipseItem, thickness);
-
-                if (select)
-                {
-                    ellipse.Stroke = Brushes.Red;
-                    ellipse.Fill = ellipseItem.IsFilled ? Brushes.Red : Brushes.Transparent;
-                }
-            }
-
-            foreach (var childBlockItem in blockItem.Blocks)
-            {
-                LoadBlockItem(sheet, block, childBlockItem, select, thickness);
-            }
-
-            parent.Blocks.Add(block);
-
-            return block;
-        }
-
         private void Load(BlockItem block, bool select)
         {
-            DeselectAll(Selected);
+            BlockEditor.DeselectAll(Selected);
             double thickness = lineThickness / Zoom;
-            Load(sheet, block.Texts, Logic, Selected, select, thickness);
-            Load(sheet, block.Lines, Logic, Selected, select, thickness);
-            Load(sheet, block.Rectangles, Logic, Selected, select, thickness);
-            Load(sheet, block.Ellipses, Logic, Selected, select, thickness);
-            Load(sheet, block.Blocks, Logic, Selected, select, thickness);
+            BlockEditor.Load(sheet, block.Texts, Logic, Selected, select, thickness);
+            BlockEditor.Load(sheet, block.Lines, Logic, Selected, select, thickness);
+            BlockEditor.Load(sheet, block.Rectangles, Logic, Selected, select, thickness);
+            BlockEditor.Load(sheet, block.Ellipses, Logic, Selected, select, thickness);
+            BlockEditor.Load(sheet, block.Blocks, Logic, Selected, select, thickness);
         }
 
         #endregion
@@ -1492,7 +2206,7 @@ namespace Sheet
             var item = new ActionItem()
             {
                 Message = message,
-                Model = ItemSerializer.Serialize(CreateLogicSheet())
+                Model = ItemEditor.Serialize(SerializeLogicBlock())
             };
             return item;
         }
@@ -1518,7 +2232,7 @@ namespace Sheet
 
                 var undo = undos.Pop();
                 //Debug.Print("Undo: " + undo.Message);
-                Load(ItemSerializer.Deserialize(undo.Model), false);
+                Load(ItemEditor.Deserialize(undo.Model), false);
             }
         }
 
@@ -1531,7 +2245,7 @@ namespace Sheet
 
                 var redo = redos.Pop();
                 //Debug.Print("Redo: " + redo.Message);
-                Load(ItemSerializer.Deserialize(redo.Model), false);
+                Load(ItemEditor.Deserialize(redo.Model), false);
             }
         }
 
@@ -1544,7 +2258,7 @@ namespace Sheet
             Copy();
             PushUndo("Cut");
 
-            if (HaveSelected(Selected))
+            if (BlockEditor.HaveSelected(Selected))
             {
                 Delete();
             }
@@ -1556,15 +2270,15 @@ namespace Sheet
 
         public void Copy()
         {
-            var text = ItemSerializer.Serialize(HaveSelected(Selected) ?
-                BlockSerializer.CreateSheet(0, "SELECTED", Selected) : CreateLogicSheet());
+            var text = ItemEditor.Serialize(BlockEditor.HaveSelected(Selected) ?
+                BlockEditor.SerializerBlockContents(Selected, 0, "SELECTED") : SerializeLogicBlock());
             Clipboard.SetData(DataFormats.UnicodeText, text);
         }
 
         public void Paste()
         {
             var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
-            Load(ItemSerializer.Deserialize(text), true);
+            Load(ItemEditor.Deserialize(text), true);
         }
 
         #endregion
@@ -1583,7 +2297,7 @@ namespace Sheet
 
         private void Insert(BlockItem blockItem, Point p, bool select)
         {
-            DeselectAll(Selected);
+            BlockEditor.DeselectAll(Selected);
             double thickness = lineThickness / Zoom;
 
             if (select)
@@ -1593,14 +2307,14 @@ namespace Sheet
 
             PushUndo("Insert Block");
 
-            var block = LoadBlockItem(sheet, Logic, blockItem, select, thickness);
+            var block = BlockEditor.LoadBlockItem(sheet, Logic, blockItem, select, thickness);
 
             if (select)
             {
                 Selected.Blocks.Add(block);
             }
 
-            Move(Snap(p.X), Snap(p.Y), block);
+            BlockEditor.Move(Snap(p.X), Snap(p.Y), block);
         }
 
         private void LoadStandardLibrary()
@@ -1623,7 +2337,7 @@ namespace Sheet
 
         private void LoadLibrary(string fileName)
         {
-            var text = ItemSerializer.OpenText(fileName);
+            var text = ItemEditor.OpenText(fileName);
             if (text != null)
             {
                 InitLibrary(text);
@@ -1636,7 +2350,7 @@ namespace Sheet
             if (owner != null && text != null)
             {
                 var library = owner.Library;
-                var blocks = ItemSerializer.Deserialize(text).Blocks;
+                var blocks = ItemEditor.Deserialize(text).Blocks;
                 library.ItemsSource = blocks;
                 library.SelectedIndex = 0;
                 if (blocks.Count == 0)
@@ -1665,135 +2379,24 @@ namespace Sheet
 
         #endregion
 
-        #region Remove
-
-        private static void RemoveLines(ISheet sheet, IEnumerable<Line> lines)
-        {
-            foreach (var line in lines)
-            {
-                sheet.Remove(line);
-            }
-        }
-
-        private static void RemoveRectangles(ISheet sheet, IEnumerable<Rectangle> rectangles)
-        {
-            foreach (var rectangle in rectangles)
-            {
-                sheet.Remove(rectangle);
-            }
-        }
-
-        private static void RemoveEllipses(ISheet sheet, IEnumerable<Ellipse> ellipses)
-        {
-            foreach (var ellipse in ellipses)
-            {
-                sheet.Remove(ellipse);
-            }
-        }
-
-        private static void RemoveTexts(ISheet sheet, IEnumerable<Grid> texts)
-        {
-            foreach (var text in texts)
-            {
-                sheet.Remove(text);
-            }
-        }
-
-        private static void RemoveBlocks(ISheet sheet, IEnumerable<Block> blocks)
-        {
-            foreach (var block in blocks)
-            {
-                RemoveLines(sheet, block.Lines);
-                RemoveRectangles(sheet, block.Rectangles);
-                RemoveEllipses(sheet, block.Ellipses);
-                RemoveTexts(sheet, block.Texts);
-                RemoveBlocks(sheet, block.Blocks);
-            }
-        }
-
-        private static void Remove(ISheet sheet, Block parent, Block selected)
-        {
-            if (selected.Lines != null)
-            {
-                RemoveLines(sheet, selected.Lines);
-
-                foreach (var line in selected.Lines)
-                {
-                    parent.Lines.Remove(line);
-                }
-
-                selected.Lines = null;
-            }
-
-            if (selected.Rectangles != null)
-            {
-                RemoveRectangles(sheet, selected.Rectangles);
-
-                foreach (var rectangle in selected.Rectangles)
-                {
-                    parent.Rectangles.Remove(rectangle);
-                }
-
-                selected.Rectangles = null;
-            }
-
-            if (selected.Ellipses != null)
-            {
-                RemoveEllipses(sheet, selected.Ellipses);
-
-                foreach (var ellipse in selected.Ellipses)
-                {
-                    parent.Ellipses.Remove(ellipse);
-                }
-
-                selected.Ellipses = null;
-            }
-
-            if (selected.Texts != null)
-            {
-                RemoveTexts(sheet, selected.Texts);
-
-                foreach (var text in selected.Texts)
-                {
-                    parent.Texts.Remove(text);
-                }
-
-                selected.Texts = null;
-            }
-
-            if (selected.Blocks != null)
-            {
-                foreach (var block in selected.Blocks)
-                {
-                    RemoveLines(sheet, block.Lines);
-                    RemoveRectangles(sheet, block.Rectangles);
-                    RemoveEllipses(sheet, block.Ellipses);
-                    RemoveTexts(sheet, block.Texts);
-                    RemoveBlocks(sheet, block.Blocks);
-
-                    parent.Blocks.Remove(block);
-                }
-
-                selected.Blocks = null;
-            }
-        }
+        #region Reset
 
         public void Delete()
         {
-            if (HaveSelected(Selected))
+            if (BlockEditor.HaveSelected(Selected))
             {
                 PushUndo("Delete");
-                Remove(sheet, Logic, Selected);
+                BlockEditor.Remove(sheet, Logic, Selected);
             }
         }
 
         public void Reset()
         {
-            RemoveLines(sheet, Logic.Lines);
-            RemoveRectangles(sheet, Logic.Rectangles);
-            RemoveEllipses(sheet, Logic.Ellipses);
-            RemoveTexts(sheet, Logic.Texts);
-            RemoveBlocks(sheet, Logic.Blocks);
+            BlockEditor.RemoveLines(sheet, Logic.Lines);
+            BlockEditor.RemoveRectangles(sheet, Logic.Rectangles);
+            BlockEditor.RemoveEllipses(sheet, Logic.Ellipses);
+            BlockEditor.RemoveTexts(sheet, Logic.Texts);
+            BlockEditor.RemoveBlocks(sheet, Logic.Blocks);
 
             Logic.Lines.Clear();
             Logic.Rectangles.Clear();
@@ -1812,88 +2415,10 @@ namespace Sheet
 
         #region Move
 
-        private static void Move(double x, double y, Block block)
-        {
-            if (block.Lines != null)
-            {
-                MoveLines(x, y, block.Lines);
-            }
-
-            if (block.Rectangles != null)
-            {
-                MoveRectangles(x, y, block.Rectangles);
-            }
-
-            if (block.Ellipses != null)
-            {
-                MoveEllipses(x, y, block.Ellipses);
-            }
-
-            if (block.Texts != null)
-            {
-                MoveTexts(x, y, block.Texts);
-            }
-
-            if (block.Blocks != null)
-            {
-                MoveBlocks(x, y, block.Blocks);
-            }
-        }
-
-        private static void MoveLines(double x, double y, IEnumerable<Line> lines)
-        {
-            foreach (var line in lines)
-            {
-                line.X1 += x;
-                line.Y1 += y;
-                line.X2 += x;
-                line.Y2 += y;
-            }
-        }
-
-        private static void MoveRectangles(double x, double y, IEnumerable<Rectangle> rectangles)
-        {
-            foreach (var rectangle in rectangles)
-            {
-                Canvas.SetLeft(rectangle, Canvas.GetLeft(rectangle) + x);
-                Canvas.SetTop(rectangle, Canvas.GetTop(rectangle) + y);
-            }
-        }
-
-        private static void MoveEllipses(double x, double y, IEnumerable<Ellipse> ellipses)
-        {
-            foreach (var ellipse in ellipses)
-            {
-                Canvas.SetLeft(ellipse, Canvas.GetLeft(ellipse) + x);
-                Canvas.SetTop(ellipse, Canvas.GetTop(ellipse) + y);
-            }
-        }
-
-        private static void MoveTexts(double x, double y, IEnumerable<Grid> texts)
-        {
-            foreach (var text in texts)
-            {
-                Canvas.SetLeft(text, Canvas.GetLeft(text) + x);
-                Canvas.SetTop(text, Canvas.GetTop(text) + y);
-            }
-        }
-
-        private static void MoveBlocks(double x, double y, IEnumerable<Block> blocks)
-        {
-            foreach (var block in blocks)
-            {
-                MoveLines(x, y, block.Lines);
-                MoveRectangles(x, y, block.Rectangles);
-                MoveEllipses(x, y, block.Ellipses);
-                MoveTexts(x, y, block.Texts);
-                MoveBlocks(x, y, block.Blocks);
-            }
-        }
-
         private void Move(double x, double y)
         {
             PushUndo("Move");
-            Move(x, y, HaveSelected(Selected) ? Selected : Logic);
+            BlockEditor.Move(x, y, BlockEditor.HaveSelected(Selected) ? Selected : Logic);
         }
 
         public void MoveUp()
@@ -1920,528 +2445,9 @@ namespace Sheet
 
         #region Selection
 
-        private static bool HaveSelected(Block selected)
-        {
-            return (selected.Lines != null 
-                || selected.Rectangles != null
-                || selected.Ellipses != null 
-                || selected.Texts != null 
-                || selected.Blocks != null);
-        }
-
-        private static bool HaveOneTextSelected(Block selected)
-        {
-            return (selected.Lines == null 
-                && selected.Rectangles == null 
-                && selected.Ellipses == null
-                && selected.Blocks == null 
-                && selected.Texts != null 
-                && selected.Texts.Count == 1);
-        }
-
-        private static void Select(Block parent)
-        {
-            foreach (var line in parent.Lines)
-            {
-                line.Stroke = Brushes.Red;
-            }
-
-            foreach (var rectangle in parent.Rectangles)
-            {
-                rectangle.Stroke = Brushes.Red;
-                rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
-            }
-
-            foreach (var ellipse in parent.Ellipses)
-            {
-                ellipse.Stroke = Brushes.Red;
-                ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
-            }
-
-            foreach (var text in parent.Texts)
-            {
-                BlockCreator.GetTextBlock(text).Foreground = Brushes.Red;
-            }
-
-            foreach (var block in parent.Blocks)
-            {
-                Select(block);
-            }
-        }
-
-        private static void Deselect(Block parent)
-        {
-            if (parent.Lines != null)
-            {
-                foreach (var line in parent.Lines)
-                {
-                    line.Stroke = Brushes.Black;
-                }
-            }
-
-            if (parent.Rectangles != null)
-            {
-                foreach (var rectangle in parent.Rectangles)
-                {
-                    rectangle.Stroke = Brushes.Black;
-                    rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
-                }
-            }
-
-            if (parent.Ellipses != null)
-            {
-                foreach (var ellipse in parent.Ellipses)
-                {
-                    ellipse.Stroke = Brushes.Black;
-                    ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
-                }
-            }
-
-            if (parent.Texts != null)
-            {
-                foreach (var text in parent.Texts)
-                {
-                    BlockCreator.GetTextBlock(text).Foreground = Brushes.Black;
-                }
-            }
-
-            if (parent.Blocks != null)
-            {
-                foreach (var block in parent.Blocks)
-                {
-                    Deselect(block);
-                }
-            }
-        }
-
-        private static void SelectAll(Block selected, Block logic)
-        {
-            selected.Init();
-
-            foreach (var line in logic.Lines)
-            {
-                line.Stroke = Brushes.Red;
-                selected.Lines.Add(line);
-            }
-
-            foreach (var rectangle in logic.Rectangles)
-            {
-                rectangle.Stroke = Brushes.Red;
-                rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
-                selected.Rectangles.Add(rectangle);
-            }
-
-            foreach (var ellipse in logic.Ellipses)
-            {
-                ellipse.Stroke = Brushes.Red;
-                ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
-                selected.Ellipses.Add(ellipse);
-            }
-
-            foreach (var text in logic.Texts)
-            {
-                BlockCreator.GetTextBlock(text).Foreground = Brushes.Red;
-                selected.Texts.Add(text);
-            }
-
-            foreach (var parent in logic.Blocks)
-            {
-                foreach (var line in parent.Lines)
-                {
-                    line.Stroke = Brushes.Red;
-                }
-
-                foreach (var rectangle in parent.Rectangles)
-                {
-                    rectangle.Stroke = Brushes.Red;
-                    rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
-                }
-
-                foreach (var ellipse in parent.Ellipses)
-                {
-                    ellipse.Stroke = Brushes.Red;
-                    ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
-                }
-
-                foreach (var text in parent.Texts)
-                {
-                    BlockCreator.GetTextBlock(text).Foreground = Brushes.Red;
-                }
-
-                foreach (var block in parent.Blocks)
-                {
-                    Select(block);
-                }
-
-                selected.Blocks.Add(parent);
-            }
-        }
-
-        private static void DeselectAll(Block selected)
-        {
-            if (selected.Lines != null)
-            {
-                foreach (var line in selected.Lines)
-                {
-                    line.Stroke = Brushes.Black;
-                }
-
-                selected.Lines = null;
-            }
-
-            if (selected.Rectangles != null)
-            {
-                foreach (var rectangle in selected.Rectangles)
-                {
-                    rectangle.Stroke = Brushes.Black;
-                    rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
-                }
-
-                selected.Rectangles = null;
-            }
-
-            if (selected.Ellipses != null)
-            {
-                foreach (var ellipse in selected.Ellipses)
-                {
-                    ellipse.Stroke = Brushes.Black;
-                    ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
-                }
-
-                selected.Ellipses = null;
-            }
-
-            if (selected.Texts != null)
-            {
-                foreach (var text in selected.Texts)
-                {
-                    BlockCreator.GetTextBlock(text).Foreground = Brushes.Black;
-                }
-
-                selected.Texts = null;
-            }
-
-            if (selected.Blocks != null)
-            {
-                foreach (var parent in selected.Blocks)
-                {
-                    foreach (var line in parent.Lines)
-                    {
-                        line.Stroke = Brushes.Black;
-                    }
-
-                    foreach (var rectangle in parent.Rectangles)
-                    {
-                        rectangle.Stroke = Brushes.Black;
-                        rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
-                    }
-
-                    foreach (var ellipse in parent.Ellipses)
-                    {
-                        ellipse.Stroke = Brushes.Black;
-                        ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
-                    }
-
-                    foreach (var text in parent.Texts)
-                    {
-                        BlockCreator.GetTextBlock(text).Foreground = Brushes.Black;
-                    }
-
-                    foreach (var block in parent.Blocks)
-                    {
-                        Deselect(block);
-                    }
-                }
-
-                selected.Blocks = null;
-            }
-        }
-
         public void SelecteAll()
         {
-            SelectAll(Selected, Logic);
-        }
-
-        #endregion
-
-        #region HitTest
-
-        private static bool HitTestLines(IEnumerable<Line> lines, Block selected, Rect rect, bool onlyFirst, bool select)
-        {
-            foreach (var line in lines)
-            {
-                var bounds = VisualTreeHelper.GetContentBounds(line);
-                if (rect.IntersectsWith(bounds))
-                {
-                    if (select)
-                    {
-                        line.Stroke = Brushes.Red;
-                        selected.Lines.Add(line);
-                    }
-
-                    if (onlyFirst)
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        private static bool HitTestRectangles(IEnumerable<Rectangle> rectangles, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
-        {
-            foreach (var rectangle in rectangles)
-            {
-                var bounds = VisualTreeHelper.GetContentBounds(rectangle);
-                var offset = rectangle.TranslatePoint(new Point(0, 0), relative);
-                bounds.Offset(offset.X, offset.Y);
-                if (rect.IntersectsWith(bounds))
-                {
-                    if (select)
-                    {
-                        rectangle.Stroke = Brushes.Red;
-                        rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
-                        selected.Rectangles.Add(rectangle);
-                    }
-
-                    if (onlyFirst)
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        private static bool HitTestEllipses(IEnumerable<Ellipse> ellipses, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
-        {
-            foreach (var ellipse in ellipses)
-            {
-                var bounds = VisualTreeHelper.GetContentBounds(ellipse);
-                var offset = ellipse.TranslatePoint(new Point(0, 0), relative);
-                bounds.Offset(offset.X, offset.Y);
-                if (rect.IntersectsWith(bounds))
-                {
-                    if (select)
-                    {
-                        ellipse.Stroke = Brushes.Red;
-                        ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
-                        selected.Ellipses.Add(ellipse);
-                    }
-
-                    if (onlyFirst)
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        private static bool HitTestTexts(IEnumerable<Grid> texts, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
-        {
-            foreach (var text in texts)
-            {
-                var bounds = VisualTreeHelper.GetContentBounds(text);
-                var offset = text.TranslatePoint(new Point(0, 0), relative);
-                bounds.Offset(offset.X, offset.Y);
-                if (rect.IntersectsWith(bounds))
-                {
-                    if (select)
-                    {
-                        BlockCreator.GetTextBlock(text).Foreground = Brushes.Red;
-                        selected.Texts.Add(text);
-                    }
-
-                    if (onlyFirst)
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        private static bool HitTestBlocks(IEnumerable<Block> blocks, Block selected, Rect rect, bool onlyFirst, bool select, bool selectInsideBlock, UIElement relative)
-        {
-            foreach (var block in blocks)
-            {
-                bool result = HitTestBlock(block, selected, rect, true, selectInsideBlock, relative);
-
-                if (result)
-                {
-                    if (select && !selectInsideBlock)
-                    {
-                        selected.Blocks.Add(block);
-                        Select(block);
-                    }
-
-                    if (onlyFirst)
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        private static bool HitTestBlock(Block parent, Block selected, Rect rect, bool onlyFirst, bool selectInsideBlock, UIElement relative)
-        {
-            bool result = false;
-
-            result = HitTestLines(parent.Lines, selected, rect, onlyFirst, selectInsideBlock);
-            if (result && onlyFirst)
-            {
-                return true;
-            }
-
-            result = HitTestRectangles(parent.Rectangles, selected, rect, onlyFirst, selectInsideBlock, relative);
-            if (result && onlyFirst)
-            {
-                return true;
-            }
-
-            result = HitTestEllipses(parent.Ellipses, selected, rect, onlyFirst, selectInsideBlock, relative);
-            if (result && onlyFirst)
-            {
-                return true;
-            }
-
-            result = HitTestTexts(parent.Texts, selected, rect, onlyFirst, selectInsideBlock, relative);
-            if (result && onlyFirst)
-            {
-                return true;
-            }
-
-            result = HitTestBlocks(parent.Blocks, selected, rect, onlyFirst, false, selectInsideBlock, relative);
-            if (result && onlyFirst)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private static void HitTest(ISheet sheet, Block parent, Block selected, Point p, double size, bool selectInsideBlock)
-        {
-            selected.Init();
-
-            var rect = new Rect(p.X - size, p.Y - size, 2 * size, 2 * size);
-
-            if (parent.Lines != null)
-            {
-                HitTestLines(parent.Lines, selected, rect, true, true);
-            }
-
-            if (selected.Lines.Count <= 0 
-                && parent.Rectangles != null)
-            {
-                HitTestRectangles(parent.Rectangles, selected, rect, true, true, sheet.GetParent());
-            }
-
-            if (selected.Lines.Count <= 0 
-                && selected.Rectangles.Count <= 0 
-                && parent.Ellipses != null)
-            {
-                HitTestEllipses(parent.Ellipses, selected, rect, true, true, sheet.GetParent());
-            }
-
-            if (selected.Lines.Count <= 0 
-                && selected.Rectangles.Count <= 0 
-                && selected.Ellipses.Count <= 0 
-                && parent.Texts != null)
-            {
-                HitTestTexts(parent.Texts, selected, rect, true, true, sheet.GetParent());
-            }
-
-            if (selected.Lines.Count <= 0 
-                && selected.Rectangles.Count <= 0 
-                && selected.Ellipses.Count <= 0 
-                && selected.Texts.Count <= 0 
-                && parent.Blocks != null)
-            {
-                HitTestBlocks(parent.Blocks, selected, rect, true, true, selectInsideBlock, sheet.GetParent());
-            }
-
-            if (selected.Lines.Count == 0)
-            {
-                selected.Lines = null;
-            }
-
-            if (selected.Rectangles.Count == 0)
-            {
-                selected.Rectangles = null;
-            }
-
-            if (selected.Ellipses.Count == 0)
-            {
-                selected.Ellipses = null;
-            }
-
-            if (selected.Texts.Count == 0)
-            {
-                selected.Texts = null;
-            }
-
-            if (selected.Blocks.Count == 0)
-            {
-                selected.Blocks = null;
-            }
-        }
-
-        private static void HitTestSelectionRect(ISheet sheet, Block parent, Block selected, Rect rect)
-        {
-            selected.Init();
-
-            if (parent.Lines != null)
-            {
-                HitTestLines(parent.Lines, selected, rect, false, true);
-            }
-
-            if (parent.Rectangles != null)
-            {
-                HitTestRectangles(parent.Rectangles, selected, rect, false, true, sheet.GetParent());
-            }
-
-            if (parent.Ellipses != null)
-            {
-                HitTestEllipses(parent.Ellipses, selected, rect, false, true, sheet.GetParent());
-            }
-
-            if (parent.Texts != null)
-            {
-                HitTestTexts(parent.Texts, selected, rect, false, true, sheet.GetParent());
-            }
-
-            if (parent.Blocks != null)
-            {
-                HitTestBlocks(parent.Blocks, selected, rect, false, true, false, sheet.GetParent());
-            }
-
-            if (selected.Lines.Count == 0)
-            {
-                selected.Lines = null;
-            }
-
-            if (selected.Rectangles.Count == 0)
-            {
-                selected.Rectangles = null;
-            }
-
-            if (selected.Ellipses.Count == 0)
-            {
-                selected.Ellipses = null;
-            }
-
-            if (selected.Texts.Count == 0)
-            {
-                selected.Texts = null;
-            }
-
-            if (selected.Blocks.Count == 0)
-            {
-                selected.Blocks = null;
-            }
+            BlockEditor.SelectAll(Selected, Logic);
         }
 
         #endregion
@@ -2451,9 +2457,9 @@ namespace Sheet
         private bool CanInitMove(Point p)
         {
             var temp = new Block();
-            HitTest(sheet, Selected, temp, p, hitSize, false);
+            BlockEditor.HitTest(sheet, Selected, temp, p, hitSize, false);
 
-            if (HaveSelected(temp))
+            if (BlockEditor.HaveSelected(temp))
             {
                 return true;
             }
@@ -2488,7 +2494,7 @@ namespace Sheet
             {
                 x = x / z;
                 y = y / z;
-                Move(x, y, Selected);
+                BlockEditor.Move(x, y, Selected);
                 panStartPoint = p;
             }  
         }
@@ -2639,7 +2645,7 @@ namespace Sheet
             selectionStartPoint = p;
             double x = p.X;
             double y = p.Y;
-            selectionRect = BlockCreator.CreateSelectionRectangle(selectionThickness / Zoom, x, y, 0.0, 0.0);
+            selectionRect = BlockEditor.CreateSelectionRectangle(selectionThickness / Zoom, x, y, 0.0, 0.0);
             overlay.Add(selectionRect);
             overlay.Capture();
         }
@@ -2666,7 +2672,7 @@ namespace Sheet
             double height = selectionRect.Height;
 
             CancelSelectionRect();
-            HitTestSelectionRect(sheet, Logic, Selected, new Rect(x, y, width, height));
+            BlockEditor.HitTestSelectionRect(sheet, Logic, Selected, new Rect(x, y, width, height));
         }
 
         private void CancelSelectionRect()
@@ -2684,7 +2690,7 @@ namespace Sheet
         {
             double x = Snap(p.X);
             double y = Snap(p.Y);
-            tempLine = BlockCreator.CreateLine(lineThickness / Zoom, x, y, x, y);
+            tempLine = BlockEditor.CreateLine(lineThickness / Zoom, x, y, x, y);
             overlay.Add(tempLine);
             overlay.Capture();
         }
@@ -2734,7 +2740,7 @@ namespace Sheet
             double x = Snap(p.X);
             double y = Snap(p.Y);
             selectionStartPoint = new Point(x, y);
-            tempRectangle = BlockCreator.CreateRectangle(selectionThickness / Zoom, x, y, 0.0, 0.0, true);
+            tempRectangle = BlockEditor.CreateRectangle(selectionThickness / Zoom, x, y, 0.0, 0.0, true);
             overlay.Add(tempRectangle);
             overlay.Capture();
         }
@@ -2791,7 +2797,7 @@ namespace Sheet
             double x = Snap(p.X);
             double y = Snap(p.Y);
             selectionStartPoint = new Point(x, y);
-            tempEllipse = BlockCreator.CreateEllipse(selectionThickness / Zoom, x, y, 0.0, 0.0, true);
+            tempEllipse = BlockEditor.CreateEllipse(selectionThickness / Zoom, x, y, 0.0, 0.0, true);
             overlay.Add(tempEllipse);
             overlay.Capture();
         }
@@ -2908,11 +2914,11 @@ namespace Sheet
         private bool TryToEditText(Point p)
         {
             var temp = new Block();
-            HitTest(sheet, Logic, temp, p, hitSize, true);
+            BlockEditor.HitTest(sheet, Logic, temp, p, hitSize, true);
 
-            if (HaveOneTextSelected(temp))
+            if (BlockEditor.HaveOneTextSelected(temp))
             {
-                var tb = BlockCreator.GetTextBlock(temp.Texts[0]);
+                var tb = BlockEditor.GetTextBlock(temp.Texts[0]);
 
                 Action<string> ok = (text) =>
                 {
@@ -2924,11 +2930,11 @@ namespace Sheet
 
                 EditText(ok, cancel, "Text:", tb.Text);
 
-                Deselect(temp);
+                BlockEditor.Deselect(temp);
                 return true;
             }
 
-            Deselect(temp);
+            BlockEditor.Deselect(temp);
             return false;
         }
 
@@ -2945,12 +2951,12 @@ namespace Sheet
 
             if (dlg.ShowDialog() == true)
             {
-                var text = ItemSerializer.OpenText(dlg.FileName);
+                var text = ItemEditor.OpenText(dlg.FileName);
                 if (text != null)
                 {
                     PushUndo("Open");
                     Reset();
-                    Load(ItemSerializer.Deserialize(text), false);
+                    Load(ItemEditor.Deserialize(text), false);
                 }
             }
         }
@@ -2965,8 +2971,8 @@ namespace Sheet
 
             if (dlg.ShowDialog() == true)
             {
-                var text = ItemSerializer.Serialize(CreateLogicSheet());
-                ItemSerializer.SaveText(dlg.FileName, text);
+                var text = ItemEditor.Serialize(SerializeLogicBlock());
+                ItemEditor.SaveText(dlg.FileName, text);
             }
         }
 
@@ -3016,18 +3022,18 @@ namespace Sheet
                 return;
             }
 
-            if (HaveSelected(Selected) && CanInitMove(e.GetPosition(overlay.GetParent())))
+            if (BlockEditor.HaveSelected(Selected) && CanInitMove(e.GetPosition(overlay.GetParent())))
             {
                 InitMove(e.GetPosition(this));
                 return;
             }
 
-            DeselectAll(Selected);
+            BlockEditor.DeselectAll(Selected);
 
             if (mode == Mode.Selection)
             {
-                HitTest(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), hitSize, false);
-                if (!HaveSelected(Selected))
+                BlockEditor.HitTest(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), hitSize, false);
+                if (!BlockEditor.HaveSelected(Selected))
                 {
                     InitSelectionRect(e.GetPosition(overlay.GetParent()));
                 }
@@ -3129,7 +3135,7 @@ namespace Sheet
                 return;
             }
 
-            DeselectAll(Selected);
+            BlockEditor.DeselectAll(Selected);
 
             if (mode == Mode.Selection && overlay.IsCaptured)
             {
