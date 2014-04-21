@@ -2452,6 +2452,23 @@ namespace Sheet
 
         #endregion
 
+        #region Fill
+
+        public void ToggleFill()
+        {
+            if (tempRectangle != null)
+            {
+                tempRectangle.Fill = tempRectangle.Fill == Brushes.Transparent ? Brushes.Black : Brushes.Transparent;
+            }
+
+            if (tempEllipse != null)
+            {
+                tempEllipse.Fill = tempEllipse.Fill == Brushes.Transparent ? Brushes.Black : Brushes.Transparent;
+            }
+        }
+
+        #endregion
+
         #region Move Mode
 
         private bool CanInitMove(Point p)

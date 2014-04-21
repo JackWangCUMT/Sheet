@@ -171,6 +171,10 @@ namespace Sheet
                 case Key.N:
                     GetSheet().ModeNone();
                     break;
+                // F: Toggle Fill
+                case Key.F:
+                    GetSheet().ToggleFill();
+                    break;
                 // Up: Move Up
                 case Key.Up:
                     {
