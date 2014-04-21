@@ -1896,6 +1896,8 @@ namespace Sheet
         private double lineThickness = 2.0;
         private Point panStartPoint;
         private Line tempLine = null;
+        private Ellipse tempStartEllipse = null;
+        private Ellipse tempEndEllipse = null;
         private Rectangle tempRectangle = null;
         private Ellipse tempEllipse = null;
         private Point selectionStartPoint;
@@ -2474,6 +2476,20 @@ namespace Sheet
 
         #endregion
 
+        #region Overlay
+
+        private void ResetTempOverlayElements()
+        {
+            tempLine = null;
+            tempStartEllipse = null;
+            tempEndEllipse = null;
+            tempRectangle = null;
+            tempEllipse = null;
+            selectionRect = null;
+        }
+
+        #endregion
+
         #region Move Mode
 
         private bool CanInitMove(Point p)
@@ -2497,9 +2513,7 @@ namespace Sheet
             p.X = Snap(p.X);
             p.Y = Snap(p.Y);
             panStartPoint = p;
-            tempLine = null;
-            tempRectangle = null;
-            selectionRect = null;
+            ResetTempOverlayElements();
             overlay.Capture();
         }
 
@@ -2583,6 +2597,16 @@ namespace Sheet
                 tempLine.StrokeThickness = lineThicknessZoomed;
             }
 
+            if (tempStartEllipse != null)
+            {
+                tempStartEllipse.StrokeThickness = lineThicknessZoomed;
+            }
+
+            if (tempEndEllipse != null)
+            {
+                tempEndEllipse.StrokeThickness = lineThicknessZoomed;
+            }
+
             if (tempRectangle != null)
             {
                 tempRectangle.StrokeThickness = lineThicknessZoomed;
@@ -2631,9 +2655,7 @@ namespace Sheet
             tempMode = mode;
             mode = Mode.Pan;
             panStartPoint = p;
-            tempLine = null;
-            tempRectangle = null;
-            selectionRect = null;
+            ResetTempOverlayElements();
             overlay.Capture();
         }
 
@@ -2713,7 +2735,11 @@ namespace Sheet
             double x = Snap(p.X);
             double y = Snap(p.Y);
             tempLine = BlockEditor.CreateLine(lineThickness / Zoom, x, y, x, y);
+            tempStartEllipse = BlockEditor.CreateEllipse(lineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
+            tempEndEllipse = BlockEditor.CreateEllipse(lineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
             overlay.Add(tempLine);
+            overlay.Add(tempStartEllipse);
+            overlay.Add(tempEndEllipse);
             overlay.Capture();
         }
 
@@ -2721,10 +2747,13 @@ namespace Sheet
         {
             double x = Snap(p.X);
             double y = Snap(p.Y);
-            if (Math.Round(x, 1) != Math.Round(tempLine.X2, 1) || Math.Round(y, 1) != Math.Round(tempLine.Y2, 1))
+            if (Math.Round(x, 1) != Math.Round(tempLine.X2, 1) 
+                || Math.Round(y, 1) != Math.Round(tempLine.Y2, 1))
             {
                 tempLine.X2 = x;
                 tempLine.Y2 = y;
+                Canvas.SetLeft(tempEndEllipse, x - 4.0);
+                Canvas.SetTop(tempEndEllipse, y - 4.0);
             }
         }
 
@@ -2739,10 +2768,14 @@ namespace Sheet
             {
                 overlay.ReleaseCapture();
                 overlay.Remove(tempLine);
+                overlay.Remove(tempStartEllipse);
+                overlay.Remove(tempEndEllipse);
                 PushUndo("Create Line");
                 Logic.Lines.Add(tempLine);
                 sheet.Add(tempLine);
                 tempLine = null;
+                tempStartEllipse = null;
+                tempEndEllipse = null;
             }
         }
 
@@ -2750,7 +2783,11 @@ namespace Sheet
         {
             overlay.ReleaseCapture();
             overlay.Remove(tempLine);
+            overlay.Remove(tempStartEllipse);
+            overlay.Remove(tempEndEllipse);
             tempLine = null;
+            tempStartEllipse = null;
+            tempEndEllipse = null;
         }
 
         #endregion
