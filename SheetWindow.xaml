@@ -5,30 +5,25 @@
         Title="Sheet" Height="820" Width="1230"
         WindowStartupLocation="CenterScreen" WindowState="Maximized"
         PreviewKeyDown="Window_PreviewKeyDown">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
-        <local:SheetControl x:Name="Sheet" ZoomIndex="9" PanX="0" PanY="0" ClipToBounds="False" Grid.Column="0"/>
-        <ListBox x:Name="Library"
-                 VerticalAlignment="Center" HorizontalAlignment="Left" 
-                 SnapsToDevicePixels="True" 
-                 Margin="6" Grid.Column="0"
-                 BorderBrush="{x:Null}" BorderThickness="0" Padding="0"
+    <Grid SnapsToDevicePixels="True">
+        <local:SheetControl x:Name="Sheet" ZoomIndex="9" PanX="0" PanY="0"/>
+        <ListBox x:Name="Library" 
                  Width="150" Height="Auto"
-                 HorizontalContentAlignment="Stretch"
-                 Background="WhiteSmoke">
+                 Margin="6" Padding="0"
+                 Background="WhiteSmoke" BorderBrush="{x:Null}" BorderThickness="0" 
+                 VerticalAlignment="Center" HorizontalAlignment="Left" 
+                 HorizontalContentAlignment="Stretch">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding Name}" Padding="6" Margin="2"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <StackPanel x:Name="Help" Visibility="Visible" 
-                    VerticalAlignment="Center" HorizontalAlignment="Right" 
-                    SnapsToDevicePixels="True" 
-                    Margin="6" Grid.Column="0"
-                    Background="WhiteSmoke">
+        <StackPanel x:Name="Help" 
+                    Visibility="Visible" 
+                    Margin="6"
+                    Background="WhiteSmoke"
+                    VerticalAlignment="Center" HorizontalAlignment="Right">
             <Grid Margin="10,10,10,2">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -154,11 +149,11 @@
                 <TextBlock Text="J" Grid.Column="1" Grid.Row="2" Margin="8,2,2,2"/>
             </Grid>
         </StackPanel>
-        <Grid x:Name="TextGrid" Visibility="Collapsed" 
-              VerticalAlignment="Center" 
-              SnapsToDevicePixels="True" 
+        <Grid x:Name="TextGrid" 
+              Visibility="Collapsed" 
               Width="330" 
-              Background="WhiteSmoke">
+              Background="WhiteSmoke"
+              VerticalAlignment="Center">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
