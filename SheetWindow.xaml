@@ -12,7 +12,8 @@
     <Grid>
         <local:SheetControl x:Name="Sheet" ZoomIndex="9" PanX="0" PanY="0"/>
         <ListBox x:Name="Library" 
-                 Width="150" 
+                 Width="Auto" 
+                 MinWidth="150"
                  Height="Auto"
                  Margin="6" 
                  Padding="0"
@@ -24,7 +25,7 @@
                  HorizontalContentAlignment="Stretch">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding Name}" Padding="6" Margin="2"/>
+                    <TextBlock Text="{Binding Name}" Padding="6" Margin="2,2,6,2"/>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
