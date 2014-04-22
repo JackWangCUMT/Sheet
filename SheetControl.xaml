@@ -3,15 +3,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             mc:Ignorable="d"  
+             mc:Ignorable="d" 
              d:DesignHeight="750" d:DesignWidth="1200"
              Focusable="True" FocusVisualStyle="{x:Null}"
              Background="White" 
              PreviewMouseWheel="UserControl_PreviewMouseWheel"
              PreviewMouseDown="UserControl_PreviewMouseDown">
-    <Canvas x:Name="Root" Background="Transparent"
-            Width="1200" Height="750"
-            ClipToBounds="False"
+    <Canvas x:Name="Root" Background="Transparent" Width="1200" Height="750"
             RenderTransformOrigin="0.0,0.0"
             SnapsToDevicePixels="True">
         <Canvas.RenderTransform>
@@ -22,14 +20,9 @@
                 <TranslateTransform x:Name="pan" X="0" Y="0"/>
             </TransformGroup>
         </Canvas.RenderTransform>
-        <Canvas x:Name="Back" Background="Transparent" 
-                Width="1200" Height="750">
-        </Canvas>
-        <Canvas x:Name="Sheet" Background="Transparent" 
-                Width="1200" Height="750">
-        </Canvas>
-        <Canvas x:Name="Overlay" Background="Transparent" 
-                Width="1200" Height="750"
+        <Canvas x:Name="Back" Background="Transparent" Width="1200" Height="750"/>
+        <Canvas x:Name="Sheet" Background="Transparent" Width="1200" Height="750"/>
+        <Canvas x:Name="Overlay" Background="Transparent" Width="1200" Height="750"
                 PreviewMouseLeftButtonDown="Overlay_PreviewMouseLeftButtonDown"
                 PreviewMouseLeftButtonUp="Overlay_PreviewMouseLeftButtonUp"
                 PreviewMouseMove="Overlay_PreviewMouseMove"
