@@ -24,7 +24,7 @@
                            VerticalAlignment="Center" 
                            HorizontalAlignment="Right"/>
         <local:TextControl x:Name="Text"
-                           Visibility="Collapsed"
+                           Visibility="Hidden"
                            Background="WhiteSmoke"
                            Width="330" 
                            VerticalAlignment="Center"

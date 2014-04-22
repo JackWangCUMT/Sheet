@@ -32,6 +32,7 @@ namespace Sheet
         private void Init()
         {
             Sheet.Library = Library;
+            Sheet.TextEditor = Text;
         }
 
         #endregion
@@ -247,18 +248,18 @@ namespace Sheet
 
         private void ToggleHelpPanel()
         {
-            Help.Visibility = Help.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
+            Help.Visibility = Help.Visibility == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
         }
 
         private void ToggleBlocksPanel()
         {
             if (Library.Blocks.Items.Count > 0)
             {
-                Library.Visibility = Library.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
+                Library.Visibility = Library.Visibility == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
             }
             else
             {
-                Library.Visibility = Visibility.Collapsed;
+                Library.Visibility = Visibility.Hidden;
             }
         }
 

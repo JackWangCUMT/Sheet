@@ -63,7 +63,7 @@ namespace Sheet
 
                 if (source.Count() == 0)
                 {
-                    Visibility = Visibility.Collapsed;
+                    Visibility = Visibility.Hidden;
                 }
                 else
                 {

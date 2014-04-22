@@ -85,18 +85,6 @@ namespace Sheet
 
     #endregion
 
-    #region ILibrary
-
-    public interface ILibrary
-    {
-        BlockItem GetSelected();
-        void SetSelected(BlockItem block);
-        IEnumerable<BlockItem> GetSource();
-        void SetSource(IEnumerable<BlockItem> source);
-    }
-
-    #endregion
-
     #region Item Editor
 
     public static class ItemEditor
@@ -555,6 +543,27 @@ namespace Sheet
         }
 
         #endregion
+    }
+
+    #endregion
+
+    #region ILibrary
+
+    public interface ILibrary
+    {
+        BlockItem GetSelected();
+        void SetSelected(BlockItem block);
+        IEnumerable<BlockItem> GetSource();
+        void SetSource(IEnumerable<BlockItem> source);
+    }
+
+    #endregion
+
+    #region ITextEditor
+
+    public interface ITextEditor
+    {
+        void Show(Action<string> ok, Action cancel, string label, string text);
     }
 
     #endregion
@@ -1861,6 +1870,7 @@ namespace Sheet
     }
 
     #endregion
+
     public partial class SheetControl : UserControl
     {
         #region Mode
@@ -1916,15 +1926,13 @@ namespace Sheet
         private double hitSize = 3.5;
         private List<Line> gridLines = new List<Line>();
         private List<Line> frameLines = new List<Line>();
-        private SheetWindow owner = null;
-        private Action<string> okAction = null;
-        private Action cancelAction = null;
 
         #endregion
 
         #region Properties
 
         public ILibrary Library { get; set; }
+        public ITextEditor TextEditor { get; set; }
 
         #endregion
 
@@ -2196,16 +2204,26 @@ namespace Sheet
         {
             if (BlockEditor.HaveSelected(Selected))
             {
+                tempMode = mode;
+                mode = Mode.None;
+
                 Action<string> ok = (name) =>
                 {
                     PushUndo("Create Block");
                     var block = CreateBlockItem(name);
                     AddToLibrary(block);
+
+                    Focus();
+                    mode = tempMode;
                 };
 
-                Action cancel = () => { };
+                Action cancel = () => 
+                {
+                    Focus();
+                    mode = tempMode;
+                };
 
-                EditText(ok, cancel, "Name:", "BLOCK0");
+                ShowTextEditor(ok, cancel, "Name:", "BLOCK0");
             }
         }
 
@@ -2917,76 +2935,11 @@ namespace Sheet
 
         #region Edit Text
 
-        private T GetOwner<T>(DependencyObject reference) where T : class
+        private void ShowTextEditor(Action<string> ok, Action cancel, string label, string text)
         {
-            if (reference == null)
+            if (TextEditor != null)
             {
-                return null;
-            }
-
-            var parent = VisualTreeHelper.GetParent(reference);
-            if (parent == null)
-            {
-                return null;
-            }
-
-            while (!(parent is T))
-            {
-                parent = VisualTreeHelper.GetParent(parent);
-                if (parent == null)
-                {
-                    return null;
-                }
-            }
-            return parent as T;
-        }
-
-        private void OK_Click(object sender, RoutedEventArgs e)
-        {
-            if (owner != null)
-            {
-                owner.Text.OK.Click -= OK_Click;
-                owner.Text.Cancel.Click -= Cancel_Click;
-                owner.Text.Visibility = Visibility.Collapsed;
-                okAction(owner.Text.TextValue.Text);
-                Focus();
-                mode = tempMode;
-                okAction = null;
-                cancelAction = null;
-                owner = null;
-            }
-        }
-
-        private void Cancel_Click(object sender, RoutedEventArgs e)
-        {
-            if (owner != null)
-            {
-                owner.Text.OK.Click -= OK_Click;
-                owner.Text.Cancel.Click -= Cancel_Click;
-                owner.Text.Visibility = Visibility.Collapsed;
-                owner = null;
-                cancelAction();
-                Focus();
-                mode = tempMode;
-                okAction = null;
-                cancelAction = null;
-            }
-        }
-
-        private void EditText(Action<string> ok, Action cancel, string label, string text)
-        {
-            owner = this == null ? null : GetOwner<SheetWindow>(this);
-            if (owner != null)
-            {
-                okAction = ok;
-                cancelAction = cancel;
-                tempMode = mode;
-                mode = Mode.None;
-                owner.Text.TextLabel.Text = label;
-                owner.Text.TextValue.Text = text;
-                owner.Text.OK.Click += OK_Click;
-                owner.Text.Cancel.Click += Cancel_Click;
-                owner.Text.Visibility = Visibility.Visible;
+                TextEditor.Show(ok, cancel, label, text);
             }
         }
 
@@ -2999,15 +2952,25 @@ namespace Sheet
             {
                 var tb = BlockEditor.GetTextBlock(temp.Texts[0]);
 
+                tempMode = mode;
+                mode = Mode.None;
+
                 Action<string> ok = (text) =>
                 {
                     PushUndo("Edit Text");
                     tb.Text = text;
+
+                    Focus();
+                    mode = tempMode;
                 };
 
-                Action cancel = () => { };
+                Action cancel = () => 
+                {
+                    Focus();
+                    mode = tempMode;
+                };
 
-                EditText(ok, cancel, "Text:", tb.Text);
+                ShowTextEditor(ok, cancel, "Text:", tb.Text);
 
                 BlockEditor.Deselect(temp);
                 return true;
