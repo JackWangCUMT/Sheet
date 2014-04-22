@@ -4,14 +4,19 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              mc:Ignorable="d" 
-             d:DesignHeight="750" d:DesignWidth="1200"
-             Focusable="True" FocusVisualStyle="{x:Null}"
+             d:DesignHeight="750" 
+             d:DesignWidth="1200"
+             Focusable="True" 
+             FocusVisualStyle="{x:Null}"
              Background="White" 
+             SnapsToDevicePixels="True"
              PreviewMouseWheel="UserControl_PreviewMouseWheel"
              PreviewMouseDown="UserControl_PreviewMouseDown">
-    <Canvas x:Name="Root" Background="Transparent" Width="1200" Height="750"
-            RenderTransformOrigin="0.0,0.0"
-            SnapsToDevicePixels="True">
+    <Canvas x:Name="Root" 
+            Width="1200" 
+            Height="750"
+            Background="Transparent"
+            RenderTransformOrigin="0.0,0.0">
         <Canvas.RenderTransform>
             <TransformGroup>
                 <ScaleTransform x:Name="zoom" ScaleX="1" ScaleY="1"/>
@@ -20,9 +25,18 @@
                 <TranslateTransform x:Name="pan" X="0" Y="0"/>
             </TransformGroup>
         </Canvas.RenderTransform>
-        <Canvas x:Name="Back" Background="Transparent" Width="1200" Height="750"/>
-        <Canvas x:Name="Sheet" Background="Transparent" Width="1200" Height="750"/>
-        <Canvas x:Name="Overlay" Background="Transparent" Width="1200" Height="750"
+        <Canvas x:Name="Back" 
+                Width="1200" 
+                Height="750" 
+                Background="Transparent"/>
+        <Canvas x:Name="Sheet" 
+                Width="1200" 
+                Height="750" 
+                Background="Transparent"/>
+        <Canvas x:Name="Overlay" 
+                Width="1200"
+                Height="750"  
+                Background="Transparent"
                 PreviewMouseLeftButtonDown="Overlay_PreviewMouseLeftButtonDown"
                 PreviewMouseLeftButtonUp="Overlay_PreviewMouseLeftButtonUp"
                 PreviewMouseMove="Overlay_PreviewMouseMove"
