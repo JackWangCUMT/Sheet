@@ -2327,6 +2327,11 @@ namespace Sheet
         private void LoadStandardLibrary()
         {
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            if (assembly == null)
+            {
+                return;
+            }
+
             var name = "Sheet.Libraries.Digital.txt";
 
             using (var stream = assembly.GetManifestResourceStream(name))
@@ -2911,12 +2916,23 @@ namespace Sheet
         private T GetOwner<T>(DependencyObject reference) where T : class
         {
             if (reference == null)
+            {
                 return null;
+            }
 
             var parent = VisualTreeHelper.GetParent(reference);
+            if (parent == null)
+            {
+                return null;
+            }
+
             while (!(parent is T))
             {
                 parent = VisualTreeHelper.GetParent(parent);
+                if (parent == null)
+                {
+                    return null;
+                }
             }
             return parent as T;
         }
@@ -2925,10 +2941,10 @@ namespace Sheet
         {
             if (owner != null)
             {
-                owner.OK.Click -= OK_Click;
-                owner.Cancel.Click -= Cancel_Click;
-                owner.TextGrid.Visibility = Visibility.Collapsed;
-                okAction(owner.TextValue.Text);
+                owner.Text.OK.Click -= OK_Click;
+                owner.Text.Cancel.Click -= Cancel_Click;
+                owner.Text.Visibility = Visibility.Collapsed;
+                okAction(owner.Text.TextValue.Text);
                 Focus();
                 mode = tempMode;
                 okAction = null;
@@ -2941,9 +2957,9 @@ namespace Sheet
         {
             if (owner != null)
             {
-                owner.OK.Click -= OK_Click;
-                owner.Cancel.Click -= Cancel_Click;
-                owner.TextGrid.Visibility = Visibility.Collapsed;
+                owner.Text.OK.Click -= OK_Click;
+                owner.Text.Cancel.Click -= Cancel_Click;
+                owner.Text.Visibility = Visibility.Collapsed;
                 owner = null;
                 cancelAction();
                 Focus();
@@ -2962,11 +2978,11 @@ namespace Sheet
                 cancelAction = cancel;
                 tempMode = mode;
                 mode = Mode.None;
-                owner.TextLabel.Text = label;
-                owner.TextValue.Text = text;
-                owner.OK.Click += OK_Click;
-                owner.Cancel.Click += Cancel_Click;
-                owner.TextGrid.Visibility = Visibility.Visible;
+                owner.Text.TextLabel.Text = label;
+                owner.Text.TextValue.Text = text;
+                owner.Text.OK.Click += OK_Click;
+                owner.Text.Cancel.Click += Cancel_Click;
+                owner.Text.Visibility = Visibility.Visible;
             }
         }
 

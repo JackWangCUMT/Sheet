@@ -34,33 +34,11 @@
                            Background="WhiteSmoke" 
                            VerticalAlignment="Center" 
                            HorizontalAlignment="Right"/>
-        <Grid x:Name="TextGrid" 
-              Visibility="Collapsed" 
-              Width="330" 
-              Background="WhiteSmoke"
-              VerticalAlignment="Center"
-              HorizontalAlignment="Center">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Border BorderBrush="DarkGray" BorderThickness="1" Grid.RowSpan="2"/>
-            <Grid VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="4,6,4,0" Grid.Row="0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock x:Name="TextLabel" Text="" VerticalAlignment="Center" Margin="4" Grid.Column="0"/>
-                <TextBox x:Name="TextValue" Text="" VerticalAlignment="Center" Margin="4" Grid.Column="1"/>
-            </Grid>
-            <Grid VerticalAlignment="Center" HorizontalAlignment="Center" Margin="4,0,4,6" Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <Button x:Name="OK" Content="OK" Background="WhiteSmoke" Width="60" VerticalAlignment="Center" Padding="2" Margin="4" Grid.Column="0"/>
-                <Button x:Name="Cancel" Content="Cancel" Background="WhiteSmoke" Width="60" VerticalAlignment="Center" Padding="2" Margin="4" Grid.Column="1"/>
-            </Grid>
-        </Grid>
+        <local:TextControl x:Name="Text"
+                           Visibility="Collapsed"
+                           Background="WhiteSmoke"
+                           Width="330" 
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"/>
     </Grid>
 </Window>
