@@ -39,6 +39,11 @@ namespace Sheet
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            if (Text.Visibility == Visibility.Visible)
+            {
+                return;
+            }
+
             bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
 
             switch (e.Key)
