@@ -81,7 +81,19 @@ namespace Sheet
             Texts = new List<TextItem>();
             Blocks = new List<BlockItem>();
         }
-    } 
+    }
+
+    #endregion
+
+    #region ILibrary
+
+    public interface ILibrary
+    {
+        BlockItem GetSelected();
+        void SetSelected(BlockItem block);
+        IEnumerable<BlockItem> GetSource();
+        void SetSource(IEnumerable<BlockItem> source);
+    }
 
     #endregion
 
@@ -1849,7 +1861,6 @@ namespace Sheet
     }
 
     #endregion
-
     public partial class SheetControl : UserControl
     {
         #region Mode
@@ -1908,6 +1919,12 @@ namespace Sheet
         private SheetWindow owner = null;
         private Action<string> okAction = null;
         private Action cancelAction = null;
+
+        #endregion
+
+        #region Properties
+
+        public ILibrary Library { get; set; }
 
         #endregion
 
@@ -2294,10 +2311,9 @@ namespace Sheet
 
         private void Insert(Point p)
         {
-            var library = this == null ? null : GetOwner<SheetWindow>(this).Library;
-            if (library != null && library.Blocks.SelectedIndex >= 0)
+            if (Library != null)
             {
-                var blockItem = library.Blocks.SelectedItem as BlockItem;
+                var blockItem = Library.GetSelected() as BlockItem;
                 Insert(blockItem, p, true);
             }
         }
@@ -2358,34 +2374,22 @@ namespace Sheet
 
         private void InitLibrary(string text)
         {
-            var owner = this == null ? null : GetOwner<SheetWindow>(this);
-            if (owner != null && text != null)
+            if (Library != null && text != null)
             {
-                var library = owner.Library;
                 var blocks = ItemEditor.Deserialize(text).Blocks;
-                library.Blocks.ItemsSource = blocks;
-                library.Blocks.SelectedIndex = 0;
-                if (blocks.Count == 0)
-                {
-                    library.Visibility = Visibility.Collapsed;
-                }
-                else
-                {
-                    library.Visibility = Visibility.Visible;
-                }
+                Library.SetSource(blocks);
             }
         }
 
         private void AddToLibrary(BlockItem block)
         {
-            var library = this == null ? null : GetOwner<SheetWindow>(this).Library;
-            if (library != null && block != null)
+            if (Library != null && block != null)
             {
-                var items = library.Blocks.ItemsSource as List<BlockItem>;
+                var source = Library.GetSource() as IEnumerable<BlockItem>;
+                var items = new List<BlockItem>(source);
                 ItemEditor.NormalizePosition(block, 0.0, 0.0, 1200.0, 750.0);
                 items.Add(block);
-                library.Blocks.ItemsSource = null;
-                library.Blocks.ItemsSource = items;
+                Library.SetSource(items);
             }
         }
 
@@ -3071,7 +3075,7 @@ namespace Sheet
             }
         }
 
-        public void Library()
+        public void Load()
         {
             var dlg = new Microsoft.Win32.OpenFileDialog()
             {

@@ -22,6 +22,16 @@ namespace Sheet
         public SheetWindow()
         {
             InitializeComponent();
+            Init();
+        }
+
+        #endregion
+
+        #region Init
+
+        private void Init()
+        {
+            Sheet.Library = Library;
         }
 
         #endregion
@@ -153,7 +163,7 @@ namespace Sheet
                 case Key.L:
                     if (ctrl)
                     {
-                        GetSheet().Library();
+                        GetSheet().Load();
                     }
                     else
                     {
@@ -242,7 +252,14 @@ namespace Sheet
 
         private void ToggleBlocksPanel()
         {
-            Library.Visibility = Library.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
+            if (Library.Blocks.Items.Count > 0)
+            {
+                Library.Visibility = Library.Visibility == Visibility.Collapsed ? Visibility.Visible : Visibility.Collapsed;
+            }
+            else
+            {
+                Library.Visibility = Visibility.Collapsed;
+            }
         }
 
         #endregion
