@@ -2058,49 +2058,69 @@ namespace Sheet
 
         #region Mode
 
+        public Mode GetMode()
+        {
+            return mode;
+        }
+
+        public void SetMode(Mode m)
+        {
+            mode = m;
+        }
+
+        private void StoreTempMode()
+        {
+            tempMode = GetMode();
+        }
+
+        private void RestoreTempMode()
+        {
+            SetMode(tempMode);
+        }
+
         public void ModeNone()
         {
-            mode = Mode.None;
+            SetMode(Mode.None);
         }
 
         public void ModeSelection()
         {
-            mode = Mode.Selection;
+            SetMode(Mode.Selection);
         }
 
         public void ModeInsert()
         {
-            mode = Mode.Insert;
+            SetMode(Mode.Insert);
         }
 
         public void ModePan()
         {
-            mode = Mode.Pan;
+            SetMode(Mode.Pan);
         }
 
         public void ModeMove()
         {
-            mode = Mode.Move;
+            SetMode(Mode.Move);
         }
 
         public void ModeLine()
         {
-            mode = Mode.Line;
+            SetMode(Mode.Line);
         }
 
         public void ModeRectangle()
         {
-            mode = Mode.Rectangle;
+            SetMode(Mode.Rectangle);
         }
 
         public void ModeEllipse()
         {
-            mode = Mode.Ellipse;
+            SetMode(Mode.Ellipse);
         }
 
         public void ModeText()
         {
-            mode = Mode.Text;
+            SetMode(Mode.Text);
         }
 
         #endregion
@@ -2204,8 +2224,8 @@ namespace Sheet
         {
             if (BlockEditor.HaveSelected(Selected))
             {
-                tempMode = mode;
-                mode = Mode.None;
+                StoreTempMode();
+                ModeNone();
 
                 Action<string> ok = (name) =>
                 {
@@ -2214,13 +2234,13 @@ namespace Sheet
                     AddToLibrary(block);
 
                     Focus();
-                    mode = tempMode;
+                    RestoreTempMode();
                 };
 
                 Action cancel = () => 
                 {
                     Focus();
-                    mode = tempMode;
+                    RestoreTempMode();
                 };
 
                 ShowTextEditor(ok, cancel, "Name:", "BLOCK0");
@@ -2535,8 +2555,8 @@ namespace Sheet
         private void InitMove(Point p)
         {
             PushUndo("Move");
-            tempMode = mode;
-            mode = Mode.Move;
+            StoreTempMode();
+            ModeMove();
             p.X = Snap(p.X);
             p.Y = Snap(p.Y);
             panStartPoint = p;
@@ -2564,7 +2584,7 @@ namespace Sheet
 
         private void FinishMove()
         {
-            mode = tempMode;
+            RestoreTempMode();
             overlay.ReleaseCapture();
         }
 
@@ -2679,8 +2699,8 @@ namespace Sheet
 
         private void InitPan(Point p)
         {
-            tempMode = mode;
-            mode = Mode.Pan;
+            StoreTempMode();
+            ModePan();
             panStartPoint = p;
             ResetTempOverlayElements();
             overlay.Capture();
@@ -2695,7 +2715,7 @@ namespace Sheet
 
         private void FinishPan()
         {
-            mode = tempMode;
+            RestoreTempMode();
             overlay.ReleaseCapture();
         }
 
@@ -2952,8 +2972,8 @@ namespace Sheet
             {
                 var tb = BlockEditor.GetTextBlock(temp.Texts[0]);
 
-                tempMode = mode;
-                mode = Mode.None;
+                StoreTempMode();
+                ModeNone();
 
                 Action<string> ok = (text) =>
                 {
@@ -2961,13 +2981,13 @@ namespace Sheet
                     tb.Text = text;
 
                     Focus();
-                    mode = tempMode;
+                    RestoreTempMode();
                 };
 
                 Action cancel = () => 
                 {
                     Focus();
-                    mode = tempMode;
+                    RestoreTempMode();
                 };
 
                 ShowTextEditor(ok, cancel, "Text:", tb.Text);
@@ -3059,7 +3079,7 @@ namespace Sheet
         {
             Focus();
 
-            if (mode == Mode.None)
+            if (GetMode() == Mode.None)
             {
                 return;
             }
@@ -3072,7 +3092,7 @@ namespace Sheet
 
             BlockEditor.DeselectAll(Selected);
 
-            if (mode == Mode.Selection)
+            if (GetMode() == Mode.Selection)
             {
                 BlockEditor.HitTest(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), hitSize, false);
                 if (!BlockEditor.HaveSelected(Selected))
@@ -3084,39 +3104,39 @@ namespace Sheet
                     InitMove(e.GetPosition(this));
                 }
             }
-            else if (mode == Mode.Insert && !overlay.IsCaptured)
+            else if (GetMode() == Mode.Insert && !overlay.IsCaptured)
             {
                 Insert(e.GetPosition(overlay.GetParent()));
             }
-            else if (mode == Mode.Line && !overlay.IsCaptured)
+            else if (GetMode() == Mode.Line && !overlay.IsCaptured)
             {
                 InitTempLine(e.GetPosition(overlay.GetParent()));
             }
-            else if (mode == Mode.Line && overlay.IsCaptured)
+            else if (GetMode() == Mode.Line && overlay.IsCaptured)
             {
                 FinishTempLine();
             }
-            else if (mode == Mode.Rectangle && !overlay.IsCaptured)
+            else if (GetMode() == Mode.Rectangle && !overlay.IsCaptured)
             {
                 InitTempRect(e.GetPosition(overlay.GetParent()));
             }
-            else if (mode == Mode.Rectangle && overlay.IsCaptured)
+            else if (GetMode() == Mode.Rectangle && overlay.IsCaptured)
             {
                 FinishTempRect();
             }
-            else if (mode == Mode.Ellipse && !overlay.IsCaptured)
+            else if (GetMode() == Mode.Ellipse && !overlay.IsCaptured)
             {
                 InitTempEllipse(e.GetPosition(overlay.GetParent()));
             }
-            else if (mode == Mode.Ellipse && overlay.IsCaptured)
+            else if (GetMode() == Mode.Ellipse && overlay.IsCaptured)
             {
                 FinishTempEllipse();
             }
-            else if (mode == Mode.Pan && overlay.IsCaptured)
+            else if (GetMode() == Mode.Pan && overlay.IsCaptured)
             {
                 FinishPan();
             }
-            else if (mode == Mode.Text && !overlay.IsCaptured)
+            else if (GetMode() == Mode.Text && !overlay.IsCaptured)
             {
                 CreateText(e.GetPosition(overlay.GetParent()));
             }
@@ -3124,11 +3144,11 @@ namespace Sheet
 
         private void Overlay_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (mode == Mode.Selection && overlay.IsCaptured)
+            if (GetMode() == Mode.Selection && overlay.IsCaptured)
             {
                 FinishSelectionRect();
             }
-            else if (mode == Mode.Move && overlay.IsCaptured)
+            else if (GetMode() == Mode.Move && overlay.IsCaptured)
             {
                 FinishMove();
             }
@@ -3136,27 +3156,27 @@ namespace Sheet
 
         private void Overlay_PreviewMouseMove(object sender, MouseEventArgs e)
         {
-            if (mode == Mode.Selection && overlay.IsCaptured)
+            if (GetMode() == Mode.Selection && overlay.IsCaptured)
             {
                 MoveSelectionRect(e.GetPosition(overlay.GetParent()));
             }
-            else if (mode == Mode.Line && overlay.IsCaptured)
+            else if (GetMode() == Mode.Line && overlay.IsCaptured)
             {
                 MoveTempLine(e.GetPosition(overlay.GetParent()));
             }
-            else if (mode == Mode.Rectangle && overlay.IsCaptured)
+            else if (GetMode() == Mode.Rectangle && overlay.IsCaptured)
             {
                 MoveTempRect(e.GetPosition(overlay.GetParent()));
             }
-            else if (mode == Mode.Ellipse && overlay.IsCaptured)
+            else if (GetMode() == Mode.Ellipse && overlay.IsCaptured)
             {
                 MoveTempEllipse(e.GetPosition(overlay.GetParent()));
             }
-            else if (mode == Mode.Pan && overlay.IsCaptured)
+            else if (GetMode() == Mode.Pan && overlay.IsCaptured)
             {
                 Pan(e.GetPosition(this));
             }
-            else if (mode == Mode.Move && overlay.IsCaptured)
+            else if (GetMode() == Mode.Move && overlay.IsCaptured)
             {
                 Move(e.GetPosition(this));
             }
@@ -3166,7 +3186,7 @@ namespace Sheet
         {
             Focus();
 
-            if (mode == Mode.None)
+            if (GetMode() == Mode.None)
             {
                 return;
             }
@@ -3179,19 +3199,19 @@ namespace Sheet
 
             BlockEditor.DeselectAll(Selected);
 
-            if (mode == Mode.Selection && overlay.IsCaptured)
+            if (GetMode() == Mode.Selection && overlay.IsCaptured)
             {
                 CancelSelectionRect();
             }
-            else if (mode == Mode.Line && overlay.IsCaptured)
+            else if (GetMode() == Mode.Line && overlay.IsCaptured)
             {
                 CancelTempLine();
             }
-            else if (mode == Mode.Rectangle && overlay.IsCaptured)
+            else if (GetMode() == Mode.Rectangle && overlay.IsCaptured)
             {
                 CancelTempRect();
             }
-            else if (mode == Mode.Ellipse && overlay.IsCaptured)
+            else if (GetMode() == Mode.Ellipse && overlay.IsCaptured)
             {
                 CancelTempEllipse();
             }
@@ -3203,7 +3223,7 @@ namespace Sheet
 
         private void Overlay_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
-            if (mode == Mode.Pan && overlay.IsCaptured)
+            if (GetMode() == Mode.Pan && overlay.IsCaptured)
             {
                 FinishPan();
             }
