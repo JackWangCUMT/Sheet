@@ -2295,9 +2295,9 @@ namespace Sheet
         private void Insert(Point p)
         {
             var library = this == null ? null : GetOwner<SheetWindow>(this).Library;
-            if (library != null && library.SelectedIndex >= 0)
+            if (library != null && library.Blocks.SelectedIndex >= 0)
             {
-                var blockItem = library.SelectedItem as BlockItem;
+                var blockItem = library.Blocks.SelectedItem as BlockItem;
                 Insert(blockItem, p, true);
             }
         }
@@ -2363,8 +2363,8 @@ namespace Sheet
             {
                 var library = owner.Library;
                 var blocks = ItemEditor.Deserialize(text).Blocks;
-                library.ItemsSource = blocks;
-                library.SelectedIndex = 0;
+                library.Blocks.ItemsSource = blocks;
+                library.Blocks.SelectedIndex = 0;
                 if (blocks.Count == 0)
                 {
                     library.Visibility = Visibility.Collapsed;
@@ -2381,11 +2381,11 @@ namespace Sheet
             var library = this == null ? null : GetOwner<SheetWindow>(this).Library;
             if (library != null && block != null)
             {
-                var items = library.ItemsSource as List<BlockItem>;
+                var items = library.Blocks.ItemsSource as List<BlockItem>;
                 ItemEditor.NormalizePosition(block, 0.0, 0.0, 1200.0, 750.0);
                 items.Add(block);
-                library.ItemsSource = null;
-                library.ItemsSource = items;
+                library.Blocks.ItemsSource = null;
+                library.Blocks.ItemsSource = items;
             }
         }
 

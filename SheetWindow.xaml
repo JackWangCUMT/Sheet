@@ -11,24 +11,12 @@
         PreviewKeyDown="Window_PreviewKeyDown">
     <Grid>
         <local:SheetControl x:Name="Sheet" ZoomIndex="9" PanX="0" PanY="0"/>
-        <ListBox x:Name="Library" 
-                 Width="Auto" 
-                 MinWidth="150"
-                 Height="Auto"
-                 Margin="6" 
-                 Padding="0"
-                 Background="WhiteSmoke" 
-                 BorderBrush="{x:Null}" 
-                 BorderThickness="0" 
-                 VerticalAlignment="Center" 
-                 HorizontalAlignment="Left" 
-                 HorizontalContentAlignment="Stretch">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding Name}" Padding="6" Margin="2,2,6,2"/>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+        <local:LibraryControl x:Name="Library" 
+                              Visibility="Visible" 
+                              Margin="6" 
+                              Background="WhiteSmoke" 
+                              VerticalAlignment="Center" 
+                              HorizontalAlignment="Left"/>
         <local:HelpControl x:Name="Help" 
                            Visibility="Visible" 
                            Margin="6" 
