@@ -12,7 +12,7 @@
     <Grid>
         <local:SheetControl x:Name="Sheet" ZoomIndex="9" PanX="0" PanY="0"/>
         <local:LibraryControl x:Name="Library" 
-                              Visibility="Visible" 
+                              Visibility="Hidden" 
                               Margin="6" 
                               Background="WhiteSmoke" 
                               VerticalAlignment="Center" 
