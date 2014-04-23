@@ -6,6 +6,8 @@
              mc:Ignorable="d" 
              d:DesignHeight="891" 
              d:DesignWidth="1260"
+             Height="891"
+             Width="1260"
              Focusable="False" 
              FocusVisualStyle="{x:Null}"
              Background="Transparent" 
