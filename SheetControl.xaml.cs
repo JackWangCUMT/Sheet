@@ -2034,9 +2034,9 @@ namespace Sheet
 
         private void Init()
         {
-            back = new CanvasSheet(Back);
-            sheet = new CanvasSheet(Sheet);
-            overlay = new CanvasSheet(Overlay);
+            back = new CanvasSheet(Root.Back);
+            sheet = new CanvasSheet(Root.Sheet);
+            overlay = new CanvasSheet(Root.Overlay);
 
             Logic = new Block() { Name = "LOGIC" };
             Logic.Init();
@@ -2046,7 +2046,7 @@ namespace Sheet
 
         private void InitLoaded()
         {
-            CreateGrid(back, gridLines, 300.0, 0.0, 600.0, 750.0, gridSize, gridThickness);
+            CreateGrid(back, gridLines, 330.0, 30.0, 600.0, 720.0, gridSize, gridThickness);
             CreateFrame(back, frameLines, gridSize, gridThickness);
             AdjustThickness(gridLines, gridThickness / zoomFactors[zoomIndex]);
             AdjustThickness(frameLines, frameThickness / zoomFactors[zoomIndex]);
@@ -2158,21 +2158,25 @@ namespace Sheet
 
         private static void CreateFrame(ISheet sheet, List<Line> lines, double size, double thickness)
         {
-            CreateLine(sheet, lines, thickness, 210.0, 0.0, 210.0, 750.0, Brushes.DarkGray);
-            CreateLine(sheet, lines, thickness, 300.0, 0.0, 300.0, 750.0, Brushes.DarkGray);
-
-            for (double y = 30.0; y < 750.0; y += size)
+            for (double y = 30.0 + 30.0; y < 750.0; y += size)
             {
-                CreateLine(sheet, lines, thickness, 0.0, y, 300.0, y, Brushes.DarkGray);
+                CreateLine(sheet, lines, thickness, 0.0, y, 30.0 + 300.0, y, Brushes.DarkGray);
             }
 
-            CreateLine(sheet, lines, thickness, 900.0, 0.0, 900.0, 750.0, Brushes.DarkGray);
-            CreateLine(sheet, lines, thickness, 1110.0, 0.0, 1110.0, 750.0, Brushes.DarkGray);
-
-            for (double y = 30.0; y < 750.0; y += size)
+            for (double y = 30.0 + 30.0; y < 750.0; y += size)
             {
-                CreateLine(sheet, lines, thickness, 900.0, y, 1200.0, y, Brushes.DarkGray);
+                CreateLine(sheet, lines, thickness, 30.0 + 900.0, y, 30.0 + 30.0 + 1200.0, y, Brushes.DarkGray);
             }
+
+            CreateLine(sheet, lines, thickness, 30.0,                        30.0, 30.0,                        750.0, Brushes.DarkGray);
+            CreateLine(sheet, lines, thickness, 30.0 + 210.0,                30.0, 30.0 + 210.0,                750.0, Brushes.DarkGray);
+            CreateLine(sheet, lines, thickness, 30.0 + 210.0 + 90.0,          0.0, 30.0 + 210.0 + 90.0,         750.0, Brushes.DarkGray);
+
+            CreateLine(sheet, lines, thickness, 30.0 + 900.0,                 0.0, 30.0 + 900.0,                750.0, Brushes.DarkGray);
+            CreateLine(sheet, lines, thickness, 30.0 + 900.0 + 210.0,        30.0, 30.0 + 900.0 + 210.0,        750.0, Brushes.DarkGray);
+            CreateLine(sheet, lines, thickness, 30.0 + 900.0 + 210.0 + 90.0, 30.0, 30.0 + 900.0 + 210.0 + 90.0, 750.0, Brushes.DarkGray);
+
+            CreateLine(sheet, lines, thickness, 0.0, 30.0, 1260.0, 30.0, Brushes.DarkGray);
         }
 
         private static void CreateGrid(ISheet sheet, List<Line> lines, double startX, double startY, double width, double height, double size, double thickness)
@@ -3075,7 +3079,7 @@ namespace Sheet
 
         #region Events
 
-        private void Overlay_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void UserControl_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             Focus();
 
@@ -3142,7 +3146,7 @@ namespace Sheet
             }
         }
 
-        private void Overlay_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void UserControl_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (GetMode() == Mode.Selection && overlay.IsCaptured)
             {
@@ -3154,7 +3158,7 @@ namespace Sheet
             }
         }
 
-        private void Overlay_PreviewMouseMove(object sender, MouseEventArgs e)
+        private void UserControl_PreviewMouseMove(object sender, MouseEventArgs e)
         {
             if (GetMode() == Mode.Selection && overlay.IsCaptured)
             {
@@ -3182,7 +3186,7 @@ namespace Sheet
             }
         }
 
-        private void Overlay_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        private void UserControl_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
             Focus();
 
@@ -3221,7 +3225,7 @@ namespace Sheet
             }
         }
 
-        private void Overlay_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        private void UserControl_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (GetMode() == Mode.Pan && overlay.IsCaptured)
             {
@@ -3231,7 +3235,7 @@ namespace Sheet
 
         private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            ZoomTo(e.Delta, e.GetPosition(overlay.GetParent()));
+            ZoomTo(e.Delta, e.GetPosition(Layout));
         }
 
         private void UserControl_PreviewMouseDown(object sender, MouseButtonEventArgs e)

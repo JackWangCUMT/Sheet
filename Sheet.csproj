@@ -52,12 +52,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CanvasControl.xaml.cs">
+      <DependentUpon>CanvasControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="LibraryControl.xaml.cs">
       <DependentUpon>LibraryControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="TextControl.xaml.cs">
       <DependentUpon>TextControl.xaml</DependentUpon>
     </Compile>
+    <Page Include="CanvasControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="HelpControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
