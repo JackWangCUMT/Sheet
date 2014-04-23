@@ -750,24 +750,51 @@ namespace Sheet
         public static Line DeserializeLineItem(ISheet sheet, Block parent, LineItem lineItem, double thickness)
         {
             var line = BlockEditor.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
-            parent.Lines.Add(line);
-            sheet.Add(line);
+
+            if (parent != null)
+            {
+                parent.Lines.Add(line);
+            }
+
+            if (sheet != null)
+            {
+                sheet.Add(line);
+            }
+
             return line;
         }
 
         public static Rectangle DeserializeRectangleItem(ISheet sheet, Block parent, RectangleItem rectangleItem, double thickness)
         {
             var rectangle = BlockEditor.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
-            parent.Rectangles.Add(rectangle);
-            sheet.Add(rectangle);
+
+            if (parent != null)
+            {
+                parent.Rectangles.Add(rectangle);
+            }
+
+            if (sheet != null)
+            {
+                sheet.Add(rectangle);
+            }
+
             return rectangle;
         }
 
         public static Ellipse DeserializeEllipseItem(ISheet sheet, Block parent, EllipseItem ellipseItem, double thickness)
         {
             var ellipse = BlockEditor.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
-            parent.Ellipses.Add(ellipse);
-            sheet.Add(ellipse);
+
+            if (parent != null)
+            {
+                parent.Ellipses.Add(ellipse);
+            }
+
+            if (sheet != null)
+            {
+                sheet.Add(ellipse); 
+            }
+            
             return ellipse;
         }
 
@@ -779,8 +806,17 @@ namespace Sheet
                 (HorizontalAlignment)textItem.HAlign,
                 (VerticalAlignment)textItem.VAlign,
                 textItem.Size);
-            parent.Texts.Add(text);
-            sheet.Add(text);
+            
+            if (parent != null)
+            {
+                parent.Texts.Add(text);
+            }
+
+            if (sheet != null)
+            {
+                sheet.Add(text);
+            }
+
             return text;
         }
 
@@ -836,7 +872,10 @@ namespace Sheet
                 DeserializeBlockItem(sheet, block, childBlockItem, select, thickness);
             }
 
-            parent.Blocks.Add(block);
+            if (parent != null)
+            {
+                parent.Blocks.Add(block); 
+            }
 
             return block;
         }
@@ -2046,8 +2085,8 @@ namespace Sheet
 
         private void InitLoaded()
         {
-            CreateGrid(back, gridLines, 330.0, 30.0, 600.0, 720.0, gridSize, gridThickness);
-            CreateFrame(back, frameLines, gridSize, gridThickness);
+            CreateGrid(back, gridLines, 330.0, 30.0, 600.0, 720.0, gridSize, gridThickness, Brushes.LightGray);
+            CreateFrame(back, frameLines, gridSize, gridThickness, Brushes.DarkGray);
             AdjustThickness(gridLines, gridThickness / zoomFactors[zoomIndex]);
             AdjustThickness(frameLines, frameThickness / zoomFactors[zoomIndex]);
             LoadStandardLibrary();
@@ -2152,43 +2191,52 @@ namespace Sheet
                 X2 = x2,
                 Y2 = y2
             };
-            lines.Add(line);
-            sheet.Add(line);
+
+            if (lines != null)
+            {
+                lines.Add(line);
+            }
+
+
+            if (sheet != null)
+            {
+                sheet.Add(line); 
+            }
         }
 
-        private static void CreateFrame(ISheet sheet, List<Line> lines, double size, double thickness)
+        private static void CreateFrame(ISheet sheet, List<Line> lines, double size, double thickness, Brush stroke)
         {
             for (double y = 30.0 + 30.0; y < 750.0; y += size)
             {
-                CreateLine(sheet, lines, thickness, 0.0, y, 30.0 + 300.0, y, Brushes.DarkGray);
+                CreateLine(sheet, lines, thickness, 0.0, y, 30.0 + 300.0, y, stroke);
             }
 
             for (double y = 30.0 + 30.0; y < 750.0; y += size)
             {
-                CreateLine(sheet, lines, thickness, 30.0 + 900.0, y, 30.0 + 30.0 + 1200.0, y, Brushes.DarkGray);
+                CreateLine(sheet, lines, thickness, 30.0 + 900.0, y, 30.0 + 30.0 + 1200.0, y, stroke);
             }
 
-            CreateLine(sheet, lines, thickness, 30.0,                        30.0, 30.0,                        750.0, Brushes.DarkGray);
-            CreateLine(sheet, lines, thickness, 30.0 + 210.0,                30.0, 30.0 + 210.0,                750.0, Brushes.DarkGray);
-            CreateLine(sheet, lines, thickness, 30.0 + 210.0 + 90.0,          0.0, 30.0 + 210.0 + 90.0,         750.0, Brushes.DarkGray);
+            CreateLine(sheet, lines, thickness, 30.0,                        30.0, 30.0,                        750.0, stroke);
+            CreateLine(sheet, lines, thickness, 30.0 + 210.0,                30.0, 30.0 + 210.0,                750.0, stroke);
+            CreateLine(sheet, lines, thickness, 30.0 + 210.0 + 90.0,          0.0, 30.0 + 210.0 + 90.0,         750.0, stroke);
 
-            CreateLine(sheet, lines, thickness, 30.0 + 900.0,                 0.0, 30.0 + 900.0,                750.0, Brushes.DarkGray);
-            CreateLine(sheet, lines, thickness, 30.0 + 900.0 + 210.0,        30.0, 30.0 + 900.0 + 210.0,        750.0, Brushes.DarkGray);
-            CreateLine(sheet, lines, thickness, 30.0 + 900.0 + 210.0 + 90.0, 30.0, 30.0 + 900.0 + 210.0 + 90.0, 750.0, Brushes.DarkGray);
+            CreateLine(sheet, lines, thickness, 30.0 + 900.0,                 0.0, 30.0 + 900.0,                750.0, stroke);
+            CreateLine(sheet, lines, thickness, 30.0 + 900.0 + 210.0,        30.0, 30.0 + 900.0 + 210.0,        750.0, stroke);
+            CreateLine(sheet, lines, thickness, 30.0 + 900.0 + 210.0 + 90.0, 30.0, 30.0 + 900.0 + 210.0 + 90.0, 750.0, stroke);
 
-            CreateLine(sheet, lines, thickness, 0.0, 30.0, 1260.0, 30.0, Brushes.DarkGray);
+            CreateLine(sheet, lines, thickness, 0.0, 30.0, 1260.0, 30.0, stroke);
         }
 
-        private static void CreateGrid(ISheet sheet, List<Line> lines, double startX, double startY, double width, double height, double size, double thickness)
+        private static void CreateGrid(ISheet sheet, List<Line> lines, double startX, double startY, double width, double height, double size, double thickness, Brush stroke)
         {
             for (double y = startY + size; y < height + startY; y += size)
             {
-                CreateLine(sheet, lines, thickness, startX, y, width + startX, y, Brushes.LightGray);
+                CreateLine(sheet, lines, thickness, startX, y, width + startX, y, stroke);
             }
 
             for (double x = startX + size; x < startX + width; x += size)
             {
-                CreateLine(sheet, lines, thickness, x, startY, x, height + startY, Brushes.LightGray);
+                CreateLine(sheet, lines, thickness, x, startY, x, height + startY, stroke);
             }
         }
 
@@ -3006,6 +3054,40 @@ namespace Sheet
 
         #endregion
 
+        #region Export
+
+        private CanvasControl CreatePrintableRoot(Block parent)
+        {
+            var root = new CanvasControl();
+            var sheet = new CanvasSheet(root.Sheet);
+
+            //CreateGrid(sheet, null, 330.0, 30.0, 600.0, 720.0, gridSize, 0.013 * 96.0 / 2.54 /*gridThickness*/, Brushes.LightGray);
+            CreateFrame(sheet, null, gridSize, 0.013 * 96.0 / 2.54 /*gridThickness*/, Brushes.Black);
+
+            var block = BlockEditor.SerializerBlockContents(parent, 0, "LOGIC");
+            BlockEditor.InsertBlockContents(sheet, block, null, null, false, 0.035 * 96.0 / 2.54 /*lineThickness*/);
+
+            var vb = new Viewbox { Child = root };
+            vb.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            vb.Arrange(new Rect(vb.DesiredSize));
+
+            return root;
+        }
+
+        private void Export(string fileName)
+        {
+            using (var package = Package.Open(fileName, System.IO.FileMode.Create))
+            {
+                var doc = new XpsDocument(package);
+                var writer = XpsDocument.CreateXpsDocumentWriter(doc);
+                var root = CreatePrintableRoot(Logic);
+                writer.Write(root);
+                doc.Close();
+            }
+        }
+
+        #endregion
+
         #region File Dialogs
 
         public void Open()
@@ -3052,13 +3134,7 @@ namespace Sheet
 
             if (dlg.ShowDialog() == true)
             {
-                using (var package = Package.Open(dlg.FileName, System.IO.FileMode.Create))
-                {
-                    var doc = new XpsDocument(package);
-                    var writer = XpsDocument.CreateXpsDocumentWriter(doc);
-                    writer.Write(Root);
-                    doc.Close();
-                }
+                Export(dlg.FileName);
             }
         }
 
