@@ -42,7 +42,7 @@ namespace Sheet
             TextValue.Text = text;
             Visibility = Visibility.Visible;
             TextValue.Focus();
-            TextValue.CaretIndex = text.Length;
+            TextValue.SelectAll();
         }
 
         #endregion
