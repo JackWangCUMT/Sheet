@@ -124,6 +124,7 @@ namespace Sheet
                         }
                         else
                         {
+                            e.Handled = true;
                             GetSheet().CreateBlock();
                         }
                     }
