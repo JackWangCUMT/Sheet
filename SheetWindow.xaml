@@ -10,20 +10,78 @@
         SnapsToDevicePixels="True"
         PreviewKeyDown="Window_PreviewKeyDown">
     <Grid>
-        <local:SheetControl x:Name="Sheet" ZoomIndex="9" PanX="0" PanY="0"/>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Menu Visibility="Collapsed" Background="White" Grid.Row="0">
+            <MenuItem Header="_File">
+                <MenuItem Header="Open..." InputGestureText="Ctrl+O"/>
+                <MenuItem Header="Save..." InputGestureText="Ctrl+S"/>
+                <Separator/>
+                <MenuItem Header="Export..." InputGestureText="Ctrl+E"/>
+                <MenuItem Header="Library..." InputGestureText="Ctrl+L"/>
+                <Separator/>
+                <MenuItem Header="Exit" InputGestureText="Alf+F4"/>
+            </MenuItem>
+            <MenuItem Header="_Edit">
+                <MenuItem Header="Undo" InputGestureText="Ctrl+Z"/>
+                <MenuItem Header="Redo" InputGestureText="Ctrl+Y"/>
+                <Separator/>
+                <MenuItem Header="Cut" InputGestureText="Ctrl+X"/>
+                <MenuItem Header="Copy" InputGestureText="Ctrl+C"/>
+                <MenuItem Header="Paste" InputGestureText="Ctrl+V"/>
+                <Separator/>
+                <MenuItem Header="Delete" InputGestureText="Del"/>
+                <MenuItem Header="Reset" InputGestureText="Ctrl+Del"/>
+                <Separator/>
+                <MenuItem Header="Select All" InputGestureText="Ctrl+A"/>
+                <Separator/>
+                <MenuItem Header="Create Block..." InputGestureText="B"/>
+                <MenuItem Header="Break Block" InputGestureText="Ctrl+B"/>
+                <Separator/>
+                <MenuItem Header="Move Up" InputGestureText="Up"/>
+                <MenuItem Header="Move Down" InputGestureText="Down"/>
+                <MenuItem Header="Move Left" InputGestureText="Left"/>
+                <MenuItem Header="Move Right" InputGestureText="Right"/>
+                <Separator/>
+                <MenuItem Header="Toggle Fill" InputGestureText="F"/>
+            </MenuItem>
+            <MenuItem Header="_Mode">
+                <MenuItem Header="None" InputGestureText="N"/>
+                <MenuItem Header="Selection" InputGestureText="S"/>
+                <MenuItem Header="Insert" InputGestureText="I"/>
+                <MenuItem Header="Line" InputGestureText="L"/>
+                <MenuItem Header="Rectangle" InputGestureText="R"/>
+                <MenuItem Header="Ellipse" InputGestureText="E"/>
+                <MenuItem Header="Text" InputGestureText="T"/>
+            </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="Help Panel" InputGestureText="H"/>
+                <MenuItem Header="Blocks Panel" InputGestureText="J"/>
+            </MenuItem>
+        </Menu>
+        <local:SheetControl x:Name="Sheet" 
+                            Grid.Row="1" 
+                            ZoomIndex="9" 
+                            PanX="0" 
+                            PanY="0"/>
         <local:LibraryControl x:Name="Library" 
+                              Grid.Row="1"
                               Visibility="Hidden" 
                               Margin="6" 
                               Background="WhiteSmoke" 
                               VerticalAlignment="Center" 
                               HorizontalAlignment="Left"/>
         <local:HelpControl x:Name="Help" 
+                           Grid.Row="1"
                            Visibility="Visible" 
                            Margin="6" 
                            Background="WhiteSmoke" 
                            VerticalAlignment="Center" 
                            HorizontalAlignment="Right"/>
         <local:TextControl x:Name="Text"
+                           Grid.Row="1"
                            Visibility="Hidden"
                            Background="WhiteSmoke"
                            Width="330" 
