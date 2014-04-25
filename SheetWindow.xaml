@@ -16,13 +16,13 @@
         </Grid.RowDefinitions>
         <Menu Visibility="Collapsed" Background="White" Grid.Row="0">
             <MenuItem Header="_File">
-                <MenuItem Header="Open..." InputGestureText="Ctrl+O"/>
-                <MenuItem Header="Save..." InputGestureText="Ctrl+S"/>
+                <MenuItem x:Name="FileOpen" Header="Open..." InputGestureText="Ctrl+O"/>
+                <MenuItem x:Name="FileSave" Header="Save..." InputGestureText="Ctrl+S"/>
                 <Separator/>
-                <MenuItem Header="Export..." InputGestureText="Ctrl+E"/>
-                <MenuItem Header="Library..." InputGestureText="Ctrl+L"/>
+                <MenuItem x:Name="FileExport" Header="Export..." InputGestureText="Ctrl+E"/>
+                <MenuItem x:Name="FileLibrary" Header="Library..." InputGestureText="Ctrl+L"/>
                 <Separator/>
-                <MenuItem Header="Exit" InputGestureText="Alf+F4"/>
+                <MenuItem x:Name="FileExit" Header="Exit" InputGestureText="Alf+F4"/>
             </MenuItem>
             <MenuItem Header="_Edit">
                 <MenuItem Header="Undo" InputGestureText="Ctrl+Z"/>
