@@ -48,13 +48,13 @@
                 <MenuItem x:Name="EditToggleFill" Header="Toggle Fill" InputGestureText="F"/>
             </MenuItem>
             <MenuItem Header="_Mode">
-                <MenuItem Header="None" InputGestureText="N"/>
-                <MenuItem Header="Selection" InputGestureText="S"/>
-                <MenuItem Header="Insert" InputGestureText="I"/>
-                <MenuItem Header="Line" InputGestureText="L"/>
-                <MenuItem Header="Rectangle" InputGestureText="R"/>
-                <MenuItem Header="Ellipse" InputGestureText="E"/>
-                <MenuItem Header="Text" InputGestureText="T"/>
+                <MenuItem x:Name="ModeNone" Header="None" InputGestureText="N"/>
+                <MenuItem x:Name="ModeSelection" Header="Selection" InputGestureText="S"/>
+                <MenuItem x:Name="ModeInsert" Header="Insert" InputGestureText="I"/>
+                <MenuItem x:Name="ModeLine" Header="Line" InputGestureText="L"/>
+                <MenuItem x:Name="ModeRectangle" Header="Rectangle" InputGestureText="R"/>
+                <MenuItem x:Name="ModeEllipse" Header="Ellipse" InputGestureText="E"/>
+                <MenuItem x:Name="ModeText" Header="Text" InputGestureText="T"/>
             </MenuItem>
             <MenuItem Header="_View">
                 <MenuItem Header="Help Panel" InputGestureText="H"/>
