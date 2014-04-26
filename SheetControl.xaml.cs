@@ -1593,8 +1593,11 @@ namespace Sheet
                 {
                     if (select)
                     {
-                        line.Stroke = Brushes.Red;
-                        selected.Lines.Add(line);
+                        if (line.Stroke != Brushes.Red)
+                        {
+                            line.Stroke = Brushes.Red;
+                            selected.Lines.Add(line);
+                        }
                     }
 
                     if (onlyFirst)
@@ -1617,9 +1620,12 @@ namespace Sheet
                 {
                     if (select)
                     {
-                        rectangle.Stroke = Brushes.Red;
-                        rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
-                        selected.Rectangles.Add(rectangle);
+                        if (rectangle.Stroke != Brushes.Red)
+                        {
+                            rectangle.Stroke = Brushes.Red;
+                            rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                            selected.Rectangles.Add(rectangle);
+                        }
                     }
 
                     if (onlyFirst)
@@ -1642,9 +1648,12 @@ namespace Sheet
                 {
                     if (select)
                     {
-                        ellipse.Stroke = Brushes.Red;
-                        ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
-                        selected.Ellipses.Add(ellipse);
+                        if (ellipse.Stroke != Brushes.Red)
+                        {
+                            ellipse.Stroke = Brushes.Red;
+                            ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                            selected.Ellipses.Add(ellipse); 
+                        }
                     }
 
                     if (onlyFirst)
@@ -1667,8 +1676,12 @@ namespace Sheet
                 {
                     if (select)
                     {
-                        BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
-                        selected.Texts.Add(text);
+                        var tb = BlockEditor.GetTextBlock(text);
+                        if (tb.Foreground != Brushes.Red)
+                        {
+                            tb.Foreground = Brushes.Red;
+                            selected.Texts.Add(text);
+                        }
                     }
 
                     if (onlyFirst)
@@ -1690,8 +1703,11 @@ namespace Sheet
                 {
                     if (select && !selectInsideBlock)
                     {
-                        selected.Blocks.Add(block);
-                        Select(block);
+                        if (!selected.Blocks.Contains(block))
+                        {
+                            selected.Blocks.Add(block);
+                            Select(block);
+                        }
                     }
 
                     if (onlyFirst)
