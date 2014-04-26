@@ -1,7 +1,7 @@
 Sheet
 =====
 
-WPF  logic  drawing  application.
+Diagram drawing application.
 
 Keyboard  Shortcuts:
 
