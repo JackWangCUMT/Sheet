@@ -25,27 +25,27 @@
                 <MenuItem x:Name="FileExit" Header="Exit" InputGestureText="Alf+F4"/>
             </MenuItem>
             <MenuItem Header="_Edit">
-                <MenuItem Header="Undo" InputGestureText="Ctrl+Z"/>
-                <MenuItem Header="Redo" InputGestureText="Ctrl+Y"/>
+                <MenuItem x:Name="EditUndo" Header="Undo" InputGestureText="Ctrl+Z"/>
+                <MenuItem x:Name="EditRedo" Header="Redo" InputGestureText="Ctrl+Y"/>
                 <Separator/>
-                <MenuItem Header="Cut" InputGestureText="Ctrl+X"/>
-                <MenuItem Header="Copy" InputGestureText="Ctrl+C"/>
-                <MenuItem Header="Paste" InputGestureText="Ctrl+V"/>
+                <MenuItem x:Name="EditCut" Header="Cut" InputGestureText="Ctrl+X"/>
+                <MenuItem x:Name="EditCopy" Header="Copy" InputGestureText="Ctrl+C"/>
+                <MenuItem x:Name="EditPaste" Header="Paste" InputGestureText="Ctrl+V"/>
                 <Separator/>
-                <MenuItem Header="Delete" InputGestureText="Del"/>
-                <MenuItem Header="Reset" InputGestureText="Ctrl+Del"/>
+                <MenuItem x:Name="EditDelete" Header="Delete" InputGestureText="Del"/>
+                <MenuItem x:Name="EditReset" Header="Reset" InputGestureText="Ctrl+Del"/>
                 <Separator/>
-                <MenuItem Header="Select All" InputGestureText="Ctrl+A"/>
+                <MenuItem x:Name="EditSelectAll" Header="Select All" InputGestureText="Ctrl+A"/>
                 <Separator/>
-                <MenuItem Header="Create Block..." InputGestureText="B"/>
-                <MenuItem Header="Break Block" InputGestureText="Ctrl+B"/>
+                <MenuItem x:Name="EditCreateBlock" Header="Create Block..." InputGestureText="B"/>
+                <MenuItem x:Name="EditBreakBlock" Header="Break Block" InputGestureText="Ctrl+B"/>
                 <Separator/>
-                <MenuItem Header="Move Up" InputGestureText="Up"/>
-                <MenuItem Header="Move Down" InputGestureText="Down"/>
-                <MenuItem Header="Move Left" InputGestureText="Left"/>
-                <MenuItem Header="Move Right" InputGestureText="Right"/>
+                <MenuItem x:Name="EditMoveUp" Header="Move Up" InputGestureText="Up"/>
+                <MenuItem x:Name="EditMoveDown" Header="Move Down" InputGestureText="Down"/>
+                <MenuItem x:Name="EditMoveLeft" Header="Move Left" InputGestureText="Left"/>
+                <MenuItem x:Name="EditMoveRight" Header="Move Right" InputGestureText="Right"/>
                 <Separator/>
-                <MenuItem Header="Toggle Fill" InputGestureText="F"/>
+                <MenuItem x:Name="EditToggleFill" Header="Toggle Fill" InputGestureText="F"/>
             </MenuItem>
             <MenuItem Header="_Mode">
                 <MenuItem Header="None" InputGestureText="N"/>
