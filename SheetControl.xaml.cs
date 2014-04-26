@@ -3323,5 +3323,30 @@ namespace Sheet
         }
 
         #endregion
+
+        #region Drop
+
+        private void UserControl_DragEnter(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent("Block") || sender == e.Source)
+            {
+                e.Effects = DragDropEffects.None;
+            }
+        }
+
+        private void UserControl_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent("Block"))
+            {
+                var blockItem = e.Data.GetData("Block") as BlockItem;
+                if (blockItem != null)
+                {
+                    Insert(blockItem, e.GetPosition(overlay.GetParent()), true);
+                    e.Handled = true;
+                }
+            }
+        } 
+
+        #endregion
     }
 }

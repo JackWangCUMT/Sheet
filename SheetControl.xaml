@@ -17,7 +17,10 @@
              PreviewMouseMove="UserControl_PreviewMouseMove"
              PreviewMouseLeftButtonDown="UserControl_PreviewMouseLeftButtonDown"
              PreviewMouseLeftButtonUp="UserControl_PreviewMouseLeftButtonUp"
-             PreviewMouseRightButtonUp="UserControl_PreviewMouseRightButtonUp">
+             PreviewMouseRightButtonUp="UserControl_PreviewMouseRightButtonUp"
+             AllowDrop="True"
+             DragEnter="UserControl_DragEnter"
+             Drop="UserControl_Drop">
     <Grid x:Name="Layout" RenderTransformOrigin="0.0,0.0" Background="Transparent">
         <Grid.RenderTransform>
             <TransformGroup>

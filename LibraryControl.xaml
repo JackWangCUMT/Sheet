@@ -14,7 +14,9 @@
              Background="Transparent"
              BorderBrush="{x:Null}" 
              BorderThickness="0" 
-             HorizontalContentAlignment="Stretch">
+             HorizontalContentAlignment="Stretch"
+             PreviewMouseLeftButtonDown="Blocks_PreviewMouseLeftButtonDown"
+             PreviewMouseMove="Blocks_PreviewMouseMove">
         <ListBox.ItemTemplate>
             <DataTemplate>
                 <TextBlock Text="{Binding Name}" FocusVisualStyle="{x:Null}" Padding="6" Margin="2,2,6,2"/>

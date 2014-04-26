@@ -73,5 +73,52 @@ namespace Sheet
         } 
 
         #endregion
+
+        #region Fields
+
+        private Point dragStartPoint;
+
+        #endregion
+
+        #region Drag
+
+        private static T FindVisualParent<T>(DependencyObject child) where T : DependencyObject
+        {
+            DependencyObject parentObject = VisualTreeHelper.GetParent(child);
+            if (parentObject == null)
+                return null;
+
+            T parent = parentObject as T;
+            if (parent != null)
+                return parent;
+            else
+                return FindVisualParent<T>(parentObject);
+        }
+
+        private void Blocks_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            dragStartPoint = e.GetPosition(null);
+        }
+
+        private void Blocks_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            Point point = e.GetPosition(null);
+            Vector diff = dragStartPoint - point;
+            if (e.LeftButton == MouseButtonState.Pressed &&
+                (Math.Abs(diff.X) > SystemParameters.MinimumHorizontalDragDistance ||
+                 Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance))
+            {
+                var listBox = sender as ListBox;
+                var listBoxItem = FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
+                if (listBoxItem != null)
+                {
+                    BlockItem tag = (BlockItem)listBox.ItemContainerGenerator.ItemFromContainer(listBoxItem);
+                    DataObject dragData = new DataObject("Block", tag);
+                    DragDrop.DoDragDrop(listBoxItem, dragData, DragDropEffects.Move);
+                }
+            }
+        } 
+
+        #endregion
     }
 }
