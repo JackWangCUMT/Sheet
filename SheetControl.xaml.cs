@@ -586,6 +586,33 @@ namespace Sheet
             Texts = new List<Grid>();
             Blocks = new List<Block>();
         }
+        public void ReInit()
+        {
+            if (Lines == null)
+            {
+                Lines = new List<Line>(); 
+            }
+
+            if (Rectangles == null)
+            {
+                Rectangles = new List<Rectangle>(); 
+            }
+
+            if (Ellipses == null)
+            {
+                Ellipses = new List<Ellipse>(); 
+            }
+
+            if (Texts == null)
+            {
+                Texts = new List<Grid>(); 
+            }
+
+            if (Blocks == null)
+            {
+                Blocks = new List<Block>(); 
+            }
+        }
     }
 
     #endregion
@@ -1713,68 +1740,95 @@ namespace Sheet
             return false;
         }
 
-        public static void HitTest(ISheet sheet, Block parent, Block selected, Point p, double size, bool selectInsideBlock)
+        public static void HitTest(ISheet sheet, Block parent, Block selected, Point p, double size, bool selectInsideBlock, bool resetSelected)
         {
-            selected.Init();
+            if (resetSelected)
+            {
+                selected.Init();
+            }
+            else
+            {
+                selected.ReInit();
+            }
 
             var rect = new Rect(p.X - size, p.Y - size, 2 * size, 2 * size);
 
             if (parent.Lines != null)
             {
-                HitTestLines(parent.Lines, selected, rect, true, true);
+                bool result = HitTestLines(parent.Lines, selected, rect, true, true);
+                if (result)
+                {
+                    HitTestClean(selected);
+                    return;
+                }
             }
 
-            if (selected.Lines.Count <= 0
-                && parent.Rectangles != null)
+            if (parent.Rectangles != null)
             {
-                HitTestRectangles(parent.Rectangles, selected, rect, true, true, sheet.GetParent());
+                bool result = HitTestRectangles(parent.Rectangles, selected, rect, true, true, sheet.GetParent());
+                if (result)
+                {
+                    HitTestClean(selected);
+                    return;
+                }
             }
 
-            if (selected.Lines.Count <= 0
-                && selected.Rectangles.Count <= 0
-                && parent.Ellipses != null)
+            if (parent.Ellipses != null)
             {
-                HitTestEllipses(parent.Ellipses, selected, rect, true, true, sheet.GetParent());
+                bool result = HitTestEllipses(parent.Ellipses, selected, rect, true, true, sheet.GetParent());
+                if (result)
+                {
+                    HitTestClean(selected);
+                    return;
+                }
             }
 
-            if (selected.Lines.Count <= 0
-                && selected.Rectangles.Count <= 0
-                && selected.Ellipses.Count <= 0
-                && parent.Texts != null)
+            if (parent.Texts != null)
             {
-                HitTestTexts(parent.Texts, selected, rect, true, true, sheet.GetParent());
+                bool result = HitTestTexts(parent.Texts, selected, rect, true, true, sheet.GetParent());
+                if (result)
+                {
+                    HitTestClean(selected);
+                    return;
+                }
             }
 
-            if (selected.Lines.Count <= 0
-                && selected.Rectangles.Count <= 0
-                && selected.Ellipses.Count <= 0
-                && selected.Texts.Count <= 0
-                && parent.Blocks != null)
+            if (parent.Blocks != null)
             {
-                HitTestBlocks(parent.Blocks, selected, rect, true, true, selectInsideBlock, sheet.GetParent());
+                bool result = HitTestBlocks(parent.Blocks, selected, rect, true, true, selectInsideBlock, sheet.GetParent());
+                if (result)
+                {
+                    HitTestClean(selected);
+                    return;
+                }
             }
 
-            if (selected.Lines.Count == 0)
+            HitTestClean(selected);
+        }
+
+        private static void HitTestClean(Block selected)
+        {
+            if (selected.Lines != null && selected.Lines.Count == 0)
             {
                 selected.Lines = null;
             }
 
-            if (selected.Rectangles.Count == 0)
+            if (selected.Rectangles != null && selected.Rectangles.Count == 0)
             {
                 selected.Rectangles = null;
             }
 
-            if (selected.Ellipses.Count == 0)
+            if (selected.Ellipses != null && selected.Ellipses.Count == 0)
             {
                 selected.Ellipses = null;
             }
 
-            if (selected.Texts.Count == 0)
+            if (selected.Texts != null && selected.Texts.Count == 0)
             {
                 selected.Texts = null;
             }
 
-            if (selected.Blocks.Count == 0)
+            if (selected.Blocks != null && selected.Blocks.Count == 0)
             {
                 selected.Blocks = null;
             }
@@ -2594,7 +2648,7 @@ namespace Sheet
         private bool CanInitMove(Point p)
         {
             var temp = new Block();
-            BlockEditor.HitTest(sheet, Selected, temp, p, hitSize, false);
+            BlockEditor.HitTest(sheet, Selected, temp, p, hitSize, false, true);
 
             if (BlockEditor.HaveSelected(temp))
             {
@@ -3018,7 +3072,7 @@ namespace Sheet
         private bool TryToEditText(Point p)
         {
             var temp = new Block();
-            BlockEditor.HitTest(sheet, Logic, temp, p, hitSize, true);
+            BlockEditor.HitTest(sheet, Logic, temp, p, hitSize, true, true);
 
             if (BlockEditor.HaveOneTextSelected(temp))
             {
@@ -3170,11 +3224,18 @@ namespace Sheet
                 return;
             }
 
-            BlockEditor.DeselectAll(Selected);
+            bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
+
+            if (!ctrl)
+            {
+                BlockEditor.DeselectAll(Selected);
+            }
+
+            bool resetSelected = ctrl && BlockEditor.HaveSelected(Selected) ? false : true;
 
             if (GetMode() == Mode.Selection)
             {
-                BlockEditor.HitTest(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), hitSize, false);
+                BlockEditor.HitTest(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), hitSize, false, resetSelected);
                 if (!BlockEditor.HaveSelected(Selected))
                 {
                     InitSelectionRect(e.GetPosition(overlay.GetParent()));
