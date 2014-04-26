@@ -33,6 +33,7 @@ namespace Sheet
         {
             Sheet.Library = Library;
             Sheet.TextEditor = Text;
+            UpdateModeMenu();
         }
 
         #endregion
@@ -46,7 +47,44 @@ namespace Sheet
 
         #endregion
 
-        #region Events
+        #region Toggle Panels
+
+        private void ToggleHelpPanel()
+        {
+            Help.Visibility = Help.Visibility == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
+        }
+
+        private void ToggleBlocksPanel()
+        {
+            if (Library.Blocks.Items.Count > 0)
+            {
+                Library.Visibility = Library.Visibility == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
+            }
+            else
+            {
+                Library.Visibility = Visibility.Hidden;
+            }
+        }
+
+        #endregion
+
+        #region Mode Menu
+
+        private void UpdateModeMenu()
+        {
+            var mode = GetSheet().GetMode();
+            ModeNone.IsChecked = mode == SheetControl.Mode.None ? true : false;
+            ModeSelection.IsChecked = mode == SheetControl.Mode.Selection ? true : false;
+            ModeInsert.IsChecked = mode == SheetControl.Mode.Insert ? true : false;
+            ModeLine.IsChecked = mode == SheetControl.Mode.Line ? true : false;
+            ModeRectangle.IsChecked = mode == SheetControl.Mode.Rectangle ? true : false;
+            ModeEllipse.IsChecked = mode == SheetControl.Mode.Ellipse ? true : false;
+            ModeText.IsChecked = mode == SheetControl.Mode.Text ? true : false;
+        }
+
+        #endregion
+
+        #region Key Events
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
@@ -59,6 +97,52 @@ namespace Sheet
 
             switch (e.Key)
             {
+                // Ctrl+O: Open
+                case Key.O:
+                    if (ctrl)
+                    {
+                        GetSheet().Open();
+                    }
+                    break;
+                // Ctrl+S: Save
+                // S: Mode Selection
+                case Key.S:
+                    if (ctrl)
+                    {
+                        GetSheet().Save();
+                    }
+                    else
+                    {
+                        GetSheet().ModeSelection();
+                        UpdateModeMenu();
+                    }
+                    break;
+                // Ctrl+E: Export
+                // E: Mode Ellipse
+                case Key.E:
+                    if (ctrl)
+                    {
+                        GetSheet().Export();
+                    }
+                    else
+                    {
+                        GetSheet().ModeEllipse();
+                        UpdateModeMenu();
+                    }
+                    break;
+                // Ctrl+L: Library
+                // L: Mode Line
+                case Key.L:
+                    if (ctrl)
+                    {
+                        GetSheet().Load();
+                    }
+                    else
+                    {
+                        GetSheet().ModeLine();
+                        UpdateModeMenu();
+                    }
+                    break;
                 // Ctrl+Z: Undo
                 case Key.Z:
                     if (ctrl)
@@ -129,69 +213,6 @@ namespace Sheet
                         }
                     }
                     break;
-                // Ctrl+E: Export
-                // E: Mode Ellipse
-                case Key.E:
-                    if (ctrl)
-                    {
-                        GetSheet().Export();
-                    }
-                    else
-                    {
-                        GetSheet().ModeEllipse();
-                    }
-                    break;
-                // Ctrl+S: Save
-                // S: Mode Selection
-                case Key.S:
-                    if (ctrl)
-                    {
-                        GetSheet().Save();
-                    }
-                    else
-                    {
-                        GetSheet().ModeSelection();
-                    }
-                    break;
-                // Ctrl+O: Open
-                case Key.O:
-                    if (ctrl)
-                    {
-                        GetSheet().Open();
-                    }
-                    break;
-                // Ctrl+L: Library
-                // L: Mode Line
-                case Key.L:
-                    if (ctrl)
-                    {
-                        GetSheet().Load();
-                    }
-                    else
-                    {
-                        GetSheet().ModeLine();
-                    }
-                    break;
-                // R: Mode Rectangle
-                case Key.R:
-                    GetSheet().ModeRectangle();
-                    break;
-                // T: Mode Text
-                case Key.T:
-                    GetSheet().ModeText();
-                    break;
-                // I: Mode Signal
-                case Key.I:
-                    GetSheet().ModeInsert();
-                    break;
-                // N: Mode None
-                case Key.N:
-                    GetSheet().ModeNone();
-                    break;
-                // F: Toggle Fill
-                case Key.F:
-                    GetSheet().ToggleFill();
-                    break;
                 // Up: Move Up
                 case Key.Up:
                     {
@@ -232,6 +253,30 @@ namespace Sheet
                         }
                     }
                     break;
+                // F: Toggle Fill
+                case Key.F:
+                    GetSheet().ToggleFill();
+                    break;
+                // N: Mode None
+                case Key.N:
+                    GetSheet().ModeNone();
+                    UpdateModeMenu();
+                    break;
+                // I: Mode Insert
+                case Key.I:
+                    GetSheet().ModeInsert();
+                    UpdateModeMenu();
+                    break;
+                // R: Mode Rectangle
+                case Key.R:
+                    GetSheet().ModeRectangle();
+                    UpdateModeMenu();
+                    break;
+                // T: Mode Text
+                case Key.T:
+                    GetSheet().ModeText();
+                    UpdateModeMenu();
+                    break;
                 // Help Panel
                 case Key.H:
                     ToggleHelpPanel();
@@ -245,23 +290,183 @@ namespace Sheet
 
         #endregion
 
-        #region Panels
+        #region File Menu Events
 
-        private void ToggleHelpPanel()
+        private void FileOpen_Click(object sender, RoutedEventArgs e)
         {
-            Help.Visibility = Help.Visibility == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
+            GetSheet().Open();
         }
 
-        private void ToggleBlocksPanel()
+        private void FileSave_Click(object sender, RoutedEventArgs e)
         {
-            if (Library.Blocks.Items.Count > 0)
+            GetSheet().Save();
+        }
+
+        private void FileExport_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().Export();
+        }
+
+        private void FileLibrary_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().Load();
+        }
+
+        private void FileExit_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        #endregion
+
+        #region Edit Menu Events
+
+        private void EditUndo_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().Undo();
+        }
+
+        private void EditRedo_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().Redo();
+        }
+
+        private void EditCut_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().Cut();
+        }
+
+        private void EditCopy_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().Copy();
+        }
+
+        private void EditPaste_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().Paste();
+        }
+
+        private void EditDelete_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().Delete();
+        }
+
+        private void EditReset_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().PushUndo("Reset");
+            GetSheet().Reset();
+        }
+
+        private void EditSelectAll_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().SelecteAll();
+        }
+
+        private void EditCreateBlock_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().CreateBlock();
+        }
+
+        private void EditBreakBlock_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().BreakBlock();
+        }
+
+        private void EditMoveUp_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetSheet().IsFocused)
             {
-                Library.Visibility = Library.Visibility == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
+                GetSheet().MoveUp();
             }
-            else
+        }
+
+        private void EditMoveDown_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetSheet().IsFocused)
             {
-                Library.Visibility = Visibility.Hidden;
+                GetSheet().MoveDown();
             }
+        }
+
+        private void EditMoveLeft_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetSheet().IsFocused)
+            {
+                GetSheet().MoveLeft();
+            }
+        }
+
+        private void EditMoveRight_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetSheet().IsFocused)
+            {
+                GetSheet().MoveRight();
+            }
+        }
+
+        private void EditToggleFill_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().ToggleFill();
+        }
+
+        #endregion
+
+        #region Mode Menu Events
+
+        private void ModeNone_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().ModeNone();
+            UpdateModeMenu();
+        }
+
+        private void ModeSelection_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().ModeSelection();
+            UpdateModeMenu();
+        }
+
+        private void ModeInsert_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().ModeInsert();
+            UpdateModeMenu();
+        }
+
+        private void ModeLine_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().ModeLine();
+            UpdateModeMenu();
+        }
+
+        private void ModeRectangle_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().ModeRectangle();
+            UpdateModeMenu();
+        }
+
+        private void ModeEllipse_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().ModeEllipse();
+            UpdateModeMenu();
+        }
+
+        private void ModeText_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().ModeText();
+            UpdateModeMenu();
+        }
+
+        #endregion
+
+        #region View Menu Events
+
+        private void ViewHelpPanel_Click(object sender, RoutedEventArgs e)
+        {
+            ToggleHelpPanel();
+        }
+
+        private void ViewBlocksPanel_Click(object sender, RoutedEventArgs e)
+        {
+            ToggleBlocksPanel();
         }
 
         #endregion

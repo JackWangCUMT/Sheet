@@ -14,51 +14,54 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Menu Visibility="Collapsed" Background="White" Grid.Row="0">
+        <Menu x:Name="MainMenu" 
+              Visibility="Visible" 
+              Background="White" 
+              Grid.Row="0">
             <MenuItem Header="_File">
-                <MenuItem x:Name="FileOpen" Header="Open..." InputGestureText="Ctrl+O"/>
-                <MenuItem x:Name="FileSave" Header="Save..." InputGestureText="Ctrl+S"/>
+                <MenuItem x:Name="FileOpen" Header="Open..." InputGestureText="Ctrl+O" Click="FileOpen_Click"/>
+                <MenuItem x:Name="FileSave" Header="Save..." InputGestureText="Ctrl+S" Click="FileSave_Click"/>
                 <Separator/>
-                <MenuItem x:Name="FileExport" Header="Export..." InputGestureText="Ctrl+E"/>
-                <MenuItem x:Name="FileLibrary" Header="Library..." InputGestureText="Ctrl+L"/>
+                <MenuItem x:Name="FileExport" Header="Export..." InputGestureText="Ctrl+E" Click="FileExport_Click"/>
+                <MenuItem x:Name="FileLibrary" Header="Library..." InputGestureText="Ctrl+L" Click="FileLibrary_Click"/>
                 <Separator/>
-                <MenuItem x:Name="FileExit" Header="Exit" InputGestureText="Alf+F4"/>
+                <MenuItem x:Name="FileExit" Header="Exit" InputGestureText="Alf+F4" Click="FileExit_Click"/>
             </MenuItem>
             <MenuItem Header="_Edit">
-                <MenuItem x:Name="EditUndo" Header="Undo" InputGestureText="Ctrl+Z"/>
-                <MenuItem x:Name="EditRedo" Header="Redo" InputGestureText="Ctrl+Y"/>
+                <MenuItem x:Name="EditUndo" Header="Undo" InputGestureText="Ctrl+Z" Click="EditUndo_Click"/>
+                <MenuItem x:Name="EditRedo" Header="Redo" InputGestureText="Ctrl+Y" Click="EditRedo_Click"/>
                 <Separator/>
-                <MenuItem x:Name="EditCut" Header="Cut" InputGestureText="Ctrl+X"/>
-                <MenuItem x:Name="EditCopy" Header="Copy" InputGestureText="Ctrl+C"/>
-                <MenuItem x:Name="EditPaste" Header="Paste" InputGestureText="Ctrl+V"/>
+                <MenuItem x:Name="EditCut" Header="Cut" InputGestureText="Ctrl+X" Click="EditCut_Click"/>
+                <MenuItem x:Name="EditCopy" Header="Copy" InputGestureText="Ctrl+C" Click="EditCopy_Click"/>
+                <MenuItem x:Name="EditPaste" Header="Paste" InputGestureText="Ctrl+V" Click="EditPaste_Click"/>
                 <Separator/>
-                <MenuItem x:Name="EditDelete" Header="Delete" InputGestureText="Del"/>
-                <MenuItem x:Name="EditReset" Header="Reset" InputGestureText="Ctrl+Del"/>
+                <MenuItem x:Name="EditDelete" Header="Delete" InputGestureText="Del" Click="EditDelete_Click"/>
+                <MenuItem x:Name="EditReset" Header="Reset" InputGestureText="Ctrl+Del" Click="EditReset_Click"/>
                 <Separator/>
-                <MenuItem x:Name="EditSelectAll" Header="Select All" InputGestureText="Ctrl+A"/>
+                <MenuItem x:Name="EditSelectAll" Header="Select All" InputGestureText="Ctrl+A" Click="EditSelectAll_Click"/>
                 <Separator/>
-                <MenuItem x:Name="EditCreateBlock" Header="Create Block..." InputGestureText="B"/>
-                <MenuItem x:Name="EditBreakBlock" Header="Break Block" InputGestureText="Ctrl+B"/>
+                <MenuItem x:Name="EditCreateBlock" Header="Create Block..." InputGestureText="B" Click="EditCreateBlock_Click"/>
+                <MenuItem x:Name="EditBreakBlock" Header="Break Block" InputGestureText="Ctrl+B" Click="EditBreakBlock_Click"/>
                 <Separator/>
-                <MenuItem x:Name="EditMoveUp" Header="Move Up" InputGestureText="Up"/>
-                <MenuItem x:Name="EditMoveDown" Header="Move Down" InputGestureText="Down"/>
-                <MenuItem x:Name="EditMoveLeft" Header="Move Left" InputGestureText="Left"/>
-                <MenuItem x:Name="EditMoveRight" Header="Move Right" InputGestureText="Right"/>
+                <MenuItem x:Name="EditMoveUp" Header="Move Up" InputGestureText="Up" Click="EditMoveUp_Click"/>
+                <MenuItem x:Name="EditMoveDown" Header="Move Down" InputGestureText="Down" Click="EditMoveDown_Click"/>
+                <MenuItem x:Name="EditMoveLeft" Header="Move Left" InputGestureText="Left" Click="EditMoveLeft_Click"/>
+                <MenuItem x:Name="EditMoveRight" Header="Move Right" InputGestureText="Right" Click="EditMoveRight_Click"/>
                 <Separator/>
-                <MenuItem x:Name="EditToggleFill" Header="Toggle Fill" InputGestureText="F"/>
+                <MenuItem x:Name="EditToggleFill" Header="Toggle Fill" InputGestureText="F" Click="EditToggleFill_Click"/>
             </MenuItem>
             <MenuItem Header="_Mode">
-                <MenuItem x:Name="ModeNone" Header="None" InputGestureText="N"/>
-                <MenuItem x:Name="ModeSelection" Header="Selection" InputGestureText="S"/>
-                <MenuItem x:Name="ModeInsert" Header="Insert" InputGestureText="I"/>
-                <MenuItem x:Name="ModeLine" Header="Line" InputGestureText="L"/>
-                <MenuItem x:Name="ModeRectangle" Header="Rectangle" InputGestureText="R"/>
-                <MenuItem x:Name="ModeEllipse" Header="Ellipse" InputGestureText="E"/>
-                <MenuItem x:Name="ModeText" Header="Text" InputGestureText="T"/>
+                <MenuItem x:Name="ModeNone" Header="None" InputGestureText="N" Click="ModeNone_Click"/>
+                <MenuItem x:Name="ModeSelection" Header="Selection" InputGestureText="S" Click="ModeSelection_Click"/>
+                <MenuItem x:Name="ModeInsert" Header="Insert" InputGestureText="I" Click="ModeInsert_Click"/>
+                <MenuItem x:Name="ModeLine" Header="Line" InputGestureText="L" Click="ModeLine_Click"/>
+                <MenuItem x:Name="ModeRectangle" Header="Rectangle" InputGestureText="R" Click="ModeRectangle_Click"/>
+                <MenuItem x:Name="ModeEllipse" Header="Ellipse" InputGestureText="E" Click="ModeEllipse_Click"/>
+                <MenuItem x:Name="ModeText" Header="Text" InputGestureText="T" Click="ModeText_Click"/>
             </MenuItem>
             <MenuItem Header="_View">
-                <MenuItem x:Name="ViewHelpPanel" Header="Help Panel" InputGestureText="H"/>
-                <MenuItem x:Name="ViewBlocksPanel" Header="Blocks Panel" InputGestureText="J"/>
+                <MenuItem x:Name="ViewHelpPanel" Header="Help Panel" InputGestureText="H" Click="ViewHelpPanel_Click"/>
+                <MenuItem x:Name="ViewBlocksPanel" Header="Blocks Panel" InputGestureText="J" Click="ViewBlocksPanel_Click"/>
             </MenuItem>
         </Menu>
         <local:SheetControl x:Name="Sheet" 
@@ -75,7 +78,7 @@
                               HorizontalAlignment="Left"/>
         <local:HelpControl x:Name="Help" 
                            Grid.Row="1"
-                           Visibility="Visible" 
+                           Visibility="Hidden" 
                            Margin="6" 
                            Background="WhiteSmoke" 
                            VerticalAlignment="Center" 
