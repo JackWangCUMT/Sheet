@@ -57,8 +57,8 @@
                 <MenuItem x:Name="ModeText" Header="Text" InputGestureText="T"/>
             </MenuItem>
             <MenuItem Header="_View">
-                <MenuItem Header="Help Panel" InputGestureText="H"/>
-                <MenuItem Header="Blocks Panel" InputGestureText="J"/>
+                <MenuItem x:Name="ViewHelpPanel" Header="Help Panel" InputGestureText="H"/>
+                <MenuItem x:Name="ViewBlocksPanel" Header="Blocks Panel" InputGestureText="J"/>
             </MenuItem>
         </Menu>
         <local:SheetControl x:Name="Sheet" 
