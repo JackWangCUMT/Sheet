@@ -1598,6 +1598,11 @@ namespace Sheet
                             line.Stroke = Brushes.Red;
                             selected.Lines.Add(line);
                         }
+                        else
+                        {
+                            line.Stroke = Brushes.Black;
+                            selected.Lines.Remove(line);
+                        }
                     }
 
                     if (onlyFirst)
@@ -1624,6 +1629,12 @@ namespace Sheet
                         {
                             rectangle.Stroke = Brushes.Red;
                             rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                            selected.Rectangles.Add(rectangle);
+                        }
+                        else
+                        {
+                            rectangle.Stroke = Brushes.Black;
+                            rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
                             selected.Rectangles.Add(rectangle);
                         }
                     }
@@ -1654,6 +1665,12 @@ namespace Sheet
                             ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
                             selected.Ellipses.Add(ellipse); 
                         }
+                        else
+                        {
+                            ellipse.Stroke = Brushes.Black;
+                            ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                            selected.Ellipses.Remove(ellipse);
+                        }
                     }
 
                     if (onlyFirst)
@@ -1682,6 +1699,11 @@ namespace Sheet
                             tb.Foreground = Brushes.Red;
                             selected.Texts.Add(text);
                         }
+                        else
+                        {
+                            tb.Foreground = Brushes.Black;
+                            selected.Texts.Remove(text);
+                        }
                     }
 
                     if (onlyFirst)
@@ -1707,6 +1729,11 @@ namespace Sheet
                         {
                             selected.Blocks.Add(block);
                             Select(block);
+                        }
+                        else
+                        {
+                            selected.Blocks.Remove(block);
+                            Deselect(block);
                         }
                     }
 
@@ -1756,7 +1783,7 @@ namespace Sheet
             return false;
         }
 
-        public static void HitTest(ISheet sheet, Block parent, Block selected, Point p, double size, bool selectInsideBlock, bool resetSelected)
+        public static bool HitTest(ISheet sheet, Block parent, Block selected, Point p, double size, bool selectInsideBlock, bool resetSelected)
         {
             if (resetSelected)
             {
@@ -1775,7 +1802,7 @@ namespace Sheet
                 if (result)
                 {
                     HitTestClean(selected);
-                    return;
+                    return true;
                 }
             }
 
@@ -1785,7 +1812,7 @@ namespace Sheet
                 if (result)
                 {
                     HitTestClean(selected);
-                    return;
+                    return true;
                 }
             }
 
@@ -1795,7 +1822,7 @@ namespace Sheet
                 if (result)
                 {
                     HitTestClean(selected);
-                    return;
+                    return true;
                 }
             }
 
@@ -1805,7 +1832,7 @@ namespace Sheet
                 if (result)
                 {
                     HitTestClean(selected);
-                    return;
+                    return true;
                 }
             }
 
@@ -1815,11 +1842,12 @@ namespace Sheet
                 if (result)
                 {
                     HitTestClean(selected);
-                    return;
+                    return true;
                 }
             }
 
             HitTestClean(selected);
+            return false;
         }
 
         public static void HitTestSelectionRect(ISheet sheet, Block parent, Block selected, Rect rect, bool resetSelected)
@@ -3221,16 +3249,16 @@ namespace Sheet
                 return;
             }
 
-            if (BlockEditor.HaveSelected(Selected) && CanInitMove(e.GetPosition(overlay.GetParent())))
-            {
-                InitMove(e.GetPosition(this));
-                return;
-            }
-
             bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
 
             if (!ctrl)
             {
+                if (BlockEditor.HaveSelected(Selected) && CanInitMove(e.GetPosition(overlay.GetParent())))
+                {
+                    InitMove(e.GetPosition(this));
+                    return;
+                }
+
                 BlockEditor.DeselectAll(Selected);
             }
 
@@ -3238,8 +3266,8 @@ namespace Sheet
 
             if (GetMode() == Mode.Selection)
             {
-                BlockEditor.HitTest(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), hitSize, false, resetSelected);
-                if (ctrl || !BlockEditor.HaveSelected(Selected))
+                bool result = BlockEditor.HitTest(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), hitSize, false, resetSelected);
+                if ((ctrl || !BlockEditor.HaveSelected(Selected)) && !result)
                 {
                     InitSelectionRect(e.GetPosition(overlay.GetParent()));
                 }
