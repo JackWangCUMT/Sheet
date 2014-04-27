@@ -2279,7 +2279,6 @@ namespace Sheet
                 lines.Add(line);
             }
 
-
             if (sheet != null)
             {
                 sheet.Add(line); 
