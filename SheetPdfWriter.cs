@@ -20,7 +20,7 @@ namespace Sheet
 
         #region Create
 
-        public void Create(string fileName, BlockItem block)
+        public void Create(string fileName, double sourceWidth, double sourceHeight, BlockItem block)
         {
             PdfDocument document = new PdfDocument();
             PdfPage page = document.AddPage();
@@ -28,10 +28,8 @@ namespace Sheet
             page.Orientation = PageOrientation.Landscape;
             XGraphics gfx = XGraphics.FromPdfPage(page);
 
-            double width = 1260;
-            double height = 891;
-            double scaleX = page.Width.Value / width;
-            double scaleY = page.Height.Value / height;
+            double scaleX = page.Width.Value / sourceWidth;
+            double scaleY = page.Height.Value / sourceHeight;
 
             X = (x) => x * scaleX;
             Y = (y) => y * scaleY;

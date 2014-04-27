@@ -3225,7 +3225,7 @@ namespace Sheet
                         {
                             var writer = new SheetPdfWriter();
                             var block = BlockEditor.SerializerBlockContents(Logic, 0, "LOGIC");
-                            writer.Create(dlg.FileName, block);
+                            writer.Create(dlg.FileName, 1260.0, 891.0, block);
                         }
                         break;
                     case 2:
