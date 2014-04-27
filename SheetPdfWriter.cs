@@ -43,58 +43,69 @@ namespace Sheet
 
         #region Add
 
-        private void AddLine(XGraphics gfx, double x1, double y1, double x2, double y2)
+        private void AddLine(XGraphics gfx, LineItem line)
         {
-            gfx.DrawLine(XPens.Black, X(x1), Y(y1), X(x2), Y(y2));
+            var pen = new XPen(XColor.FromArgb(line.Stroke.Alpha, line.Stroke.Red, line.Stroke.Green, line.Stroke.Blue));
+            gfx.DrawLine(pen, X(line.X1), Y(line.Y1), X(line.X2), Y(line.Y2));
         }
 
-        private void AddEllipse(XGraphics gfx, double x, double y, double width, double height, bool isFilled)
+        private void AddRectangle(XGraphics gfx, RectangleItem rectangle)
         {
-            if (isFilled)
+            if (rectangle.IsFilled)
             {
-                gfx.DrawEllipse(XPens.Black, XBrushes.Black, X(x), Y(y), X(width), Y(height));
+                var pen = new XPen(XColor.FromArgb(rectangle.Stroke.Alpha, rectangle.Stroke.Red, rectangle.Stroke.Green, rectangle.Stroke.Blue));
+                var brush = new XSolidBrush(XColor.FromArgb(rectangle.Fill.Alpha, rectangle.Fill.Red, rectangle.Fill.Green, rectangle.Fill.Blue));
+                gfx.DrawRectangle(pen, brush, X(rectangle.X), Y(rectangle.Y), X(rectangle.Width), Y(rectangle.Height));
             }
             else
             {
-                gfx.DrawEllipse(XPens.Black, X(x), Y(y), X(width), Y(height));
+                var pen = new XPen(XColor.FromArgb(rectangle.Stroke.Alpha, rectangle.Stroke.Red, rectangle.Stroke.Green, rectangle.Stroke.Blue));
+                gfx.DrawRectangle(pen, X(rectangle.X), Y(rectangle.Y), X(rectangle.Width), Y(rectangle.Height));
             }
         }
 
-        private void AddRectangle(XGraphics gfx, double x, double y, double width, double height, bool isFilled)
+        private void AddEllipse(XGraphics gfx, EllipseItem ellipse)
         {
-            if (isFilled)
+            if (ellipse.IsFilled)
             {
-                gfx.DrawRectangle(XPens.Black, XBrushes.Black, X(x), Y(y), X(width), Y(height));
+                var pen = new XPen(XColor.FromArgb(ellipse.Stroke.Alpha, ellipse.Stroke.Red, ellipse.Stroke.Green, ellipse.Stroke.Blue));
+                var brush = new XSolidBrush(XColor.FromArgb(ellipse.Fill.Alpha, ellipse.Fill.Red, ellipse.Fill.Green, ellipse.Fill.Blue));
+                gfx.DrawEllipse(pen, brush, X(ellipse.X), Y(ellipse.Y), X(ellipse.Width), Y(ellipse.Height));
             }
             else
             {
-                gfx.DrawRectangle(XPens.Black, X(x), Y(y), X(width), Y(height));
+                var pen = new XPen(XColor.FromArgb(ellipse.Stroke.Alpha, ellipse.Stroke.Red, ellipse.Stroke.Green, ellipse.Stroke.Blue));
+                gfx.DrawEllipse(pen, X(ellipse.X), Y(ellipse.Y), X(ellipse.Width), Y(ellipse.Height));
             }
         }
 
-        private void AddText(XGraphics gfx, string text, double x, double y, double width, double height, int halign, int valign, double size)
+        private void AddText(XGraphics gfx, TextItem text)
         {
             XPdfFontOptions options = new XPdfFontOptions(PdfFontEncoding.Unicode, PdfFontEmbedding.Always);
-            XFont font = new XFont("Calibri", Y(size), XFontStyle.Regular, options);
+            XFont font = new XFont("Calibri", Y(text.Size), XFontStyle.Regular, options);
 
             XStringFormat format = new XStringFormat();
-            XRect rect = new XRect(X(x), Y(y), X(width), Y(height));
+            XRect rect = new XRect(X(text.X), Y(text.Y), X(text.Width), Y(text.Height));
 
-            switch (halign)
+            switch (text.HAlign)
             {
                 case 0: format.Alignment = XStringAlignment.Near; break;
                 case 1: format.Alignment = XStringAlignment.Center; break;
                 case 2: format.Alignment = XStringAlignment.Far; break;
             }
 
-            switch (valign)
+            switch (text.VAlign)
             {
                 case 0: format.LineAlignment = XLineAlignment.Near; break;
                 case 1: format.LineAlignment = XLineAlignment.Center; break;
                 case 2: format.LineAlignment = XLineAlignment.Far; break;
             }
 
-            gfx.DrawString(text, font, XBrushes.Black, rect, format);
+            //var brushBackground = new XSolidBrush(XColor.FromArgb(text.Backgroud.Alpha, text.Backgroud.Red, text.Backgroud.Green, text.Backgroud.Blue));
+            //gfx.DrawRectangle(brushBackground, rect);
+
+            var brushForeground = new XSolidBrush(XColor.FromArgb(text.Foreground.Alpha, text.Foreground.Red, text.Foreground.Green, text.Foreground.Blue));
+            gfx.DrawString(text.Text, font, brushForeground, rect, format);
         }
 
         #endregion
@@ -122,7 +133,7 @@ namespace Sheet
         {
             foreach (var line in lines)
             {
-                AddLine(gfx, line.X1, line.Y1, line.X2, line.Y2);
+                AddLine(gfx, line);
             }
         }
 
@@ -130,7 +141,7 @@ namespace Sheet
         {
             foreach (var rectangle in rectangles)
             {
-                AddRectangle(gfx, rectangle.X, rectangle.Y, rectangle.Width, rectangle.Height, rectangle.IsFilled);
+                AddRectangle(gfx, rectangle);
             }
         }
 
@@ -138,7 +149,7 @@ namespace Sheet
         {
             foreach (var ellipse in ellipses)
             {
-                AddEllipse(gfx, ellipse.X, ellipse.Y, ellipse.Width, ellipse.Height, ellipse.IsFilled);
+                AddEllipse(gfx, ellipse);
             }
         }
 
@@ -146,7 +157,7 @@ namespace Sheet
         {
             foreach (var text in texts)
             {
-                AddText(gfx, text.Text, text.X, text.Y, text.Width, text.Height, text.HAlign, text.VAlign, text.Size);
+                AddText(gfx, text);
             }
         }
 

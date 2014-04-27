@@ -25,12 +25,21 @@ namespace Sheet
         public int Id { get; set; }
     }
 
+    public class ItemColor
+    {
+        public int Alpha { get; set; }
+        public int Red { get; set; }
+        public int Green { get; set; }
+        public int Blue { get; set; }
+    }
+
     public class LineItem : Item
     {
         public double X1 { get; set; }
         public double Y1 { get; set; }
         public double X2 { get; set; }
         public double Y2 { get; set; }
+        public ItemColor Stroke { get; set; }
     }
 
     public class RectangleItem : Item
@@ -40,6 +49,8 @@ namespace Sheet
         public double Width { get; set; }
         public double Height { get; set; }
         public bool IsFilled { get; set; }
+        public ItemColor Stroke { get; set; }
+        public ItemColor Fill { get; set; }
     }
 
     public class EllipseItem : Item
@@ -49,6 +60,8 @@ namespace Sheet
         public double Width { get; set; }
         public double Height { get; set; }
         public bool IsFilled { get; set; }
+        public ItemColor Stroke { get; set; }
+        public ItemColor Fill { get; set; }
     } 
 
     public class TextItem : Item
@@ -61,11 +74,16 @@ namespace Sheet
         public int VAlign { get; set; }
         public double Size { get; set; }
         public string Text { get; set; }
+        public ItemColor Foreground { get; set; }
+        public ItemColor Backgroud { get; set; }
     }
 
     public class BlockItem : Item
     {
         public string Name { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public ItemColor Backgroud { get; set; }
         public List<LineItem> Lines { get; set; }
         public List<RectangleItem> Rectangles { get; set; }
         public List<EllipseItem> Ellipses { get; set; }
@@ -102,6 +120,17 @@ namespace Sheet
 
         #region Serialize
 
+        public static void Serialize(StringBuilder sb, ItemColor color)
+        {
+            sb.Append(color.Alpha);
+            sb.Append(modelSeparator);
+            sb.Append(color.Red);
+            sb.Append(modelSeparator);
+            sb.Append(color.Green);
+            sb.Append(modelSeparator);
+            sb.Append(color.Blue);
+        }
+
         public static void Serialize(StringBuilder sb, LineItem line, string indent)
         {
             sb.Append(indent);
@@ -116,6 +145,8 @@ namespace Sheet
             sb.Append(line.X2);
             sb.Append(modelSeparator);
             sb.Append(line.Y2);
+            sb.Append(modelSeparator);
+            Serialize(sb, line.Stroke);
             sb.Append(lineSeparator);
         }
 
@@ -135,6 +166,10 @@ namespace Sheet
             sb.Append(rectangle.Height);
             sb.Append(modelSeparator);
             sb.Append(rectangle.IsFilled);
+            sb.Append(modelSeparator);
+            Serialize(sb, rectangle.Stroke);
+            sb.Append(modelSeparator);
+            Serialize(sb, rectangle.Fill);
             sb.Append(lineSeparator);
         }
 
@@ -154,6 +189,10 @@ namespace Sheet
             sb.Append(ellipse.Height);
             sb.Append(modelSeparator);
             sb.Append(ellipse.IsFilled);
+            sb.Append(modelSeparator);
+            Serialize(sb, ellipse.Stroke);
+            sb.Append(modelSeparator);
+            Serialize(sb, ellipse.Fill);
             sb.Append(lineSeparator);
         }
 
@@ -178,6 +217,10 @@ namespace Sheet
             sb.Append(modelSeparator);
             sb.Append(text.Size);
             sb.Append(modelSeparator);
+            Serialize(sb, text.Foreground);
+            sb.Append(modelSeparator);
+            Serialize(sb, text.Backgroud);
+            sb.Append(modelSeparator);
             sb.Append(text.Text);
             sb.Append(lineSeparator);
         }
@@ -190,6 +233,12 @@ namespace Sheet
             sb.Append(block.Id);
             sb.Append(modelSeparator);
             sb.Append(block.Name);
+            sb.Append(modelSeparator);
+            sb.Append(block.Width);
+            sb.Append(modelSeparator);
+            sb.Append(block.Height);
+            sb.Append(modelSeparator);
+            Serialize(sb, block.Backgroud);
             sb.Append(lineSeparator);
 
             Serialize(sb, block.Lines, indent + indentWhiteSpace);
@@ -269,7 +318,7 @@ namespace Sheet
             {
                 string line = lines[end].TrimStart(whiteSpace);
                 var m = line.Split(modelSeparators);
-                if (m.Length == 6 && string.Compare(m[0], "LINE", true) == 0)
+                if ((m.Length == 6 || m.Length == 10) && string.Compare(m[0], "LINE", true) == 0)
                 {
                     var lineItem = new LineItem();
                     lineItem.Id = int.Parse(m[1]);
@@ -277,9 +326,29 @@ namespace Sheet
                     lineItem.Y1 = double.Parse(m[3]);
                     lineItem.X2 = double.Parse(m[4]);
                     lineItem.Y2 = double.Parse(m[5]);
+                    if (m.Length == 10)
+                    {
+                        lineItem.Stroke = new ItemColor()
+                        {
+                            Alpha = int.Parse(m[6]),
+                            Red = int.Parse(m[7]),
+                            Green = int.Parse(m[8]),
+                            Blue = int.Parse(m[9])
+                        };
+                    }
+                    else
+                    {
+                        lineItem.Stroke = new ItemColor()
+                        {
+                            Alpha = 255,
+                            Red = 0,
+                            Green = 0,
+                            Blue = 0
+                        };
+                    }
                     sheet.Lines.Add(lineItem);
                 }
-                if (m.Length == 7 && string.Compare(m[0], "RECTANGLE", true) == 0)
+                if ((m.Length == 7 || m.Length == 15) && string.Compare(m[0], "RECTANGLE", true) == 0)
                 {
                     var rectangleItem = new RectangleItem();
                     rectangleItem.Id = int.Parse(m[1]);
@@ -288,9 +357,43 @@ namespace Sheet
                     rectangleItem.Width = double.Parse(m[4]);
                     rectangleItem.Height = double.Parse(m[5]);
                     rectangleItem.IsFilled = bool.Parse(m[6]);
+                    if (m.Length == 15)
+                    {
+                        rectangleItem.Stroke = new ItemColor()
+                        {
+                            Alpha = int.Parse(m[7]),
+                            Red = int.Parse(m[8]),
+                            Green = int.Parse(m[9]),
+                            Blue = int.Parse(m[10])
+                        };
+                        rectangleItem.Fill = new ItemColor()
+                        {
+                            Alpha = int.Parse(m[11]),
+                            Red = int.Parse(m[12]),
+                            Green = int.Parse(m[13]),
+                            Blue = int.Parse(m[14])
+                        };
+                    }
+                    else
+                    {
+                        rectangleItem.Stroke = new ItemColor()
+                        {
+                            Alpha = 255,
+                            Red = 0,
+                            Green = 0,
+                            Blue = 0
+                        };
+                        rectangleItem.Fill = new ItemColor()
+                        {
+                            Alpha = 255,
+                            Red = 0,
+                            Green = 0,
+                            Blue = 0
+                        };
+                    }
                     sheet.Rectangles.Add(rectangleItem);
                 }
-                if (m.Length == 7 && string.Compare(m[0], "ELLIPSE", true) == 0)
+                if ((m.Length == 7 || m.Length == 15) && string.Compare(m[0], "ELLIPSE", true) == 0)
                 {
                     var ellipseItem = new EllipseItem();
                     ellipseItem.Id = int.Parse(m[1]);
@@ -299,9 +402,43 @@ namespace Sheet
                     ellipseItem.Width = double.Parse(m[4]);
                     ellipseItem.Height = double.Parse(m[5]);
                     ellipseItem.IsFilled = bool.Parse(m[6]);
+                    if (m.Length == 15)
+                    {
+                        ellipseItem.Stroke = new ItemColor()
+                        {
+                            Alpha = int.Parse(m[7]),
+                            Red = int.Parse(m[8]),
+                            Green = int.Parse(m[9]),
+                            Blue = int.Parse(m[10])
+                        };
+                        ellipseItem.Fill = new ItemColor()
+                        {
+                            Alpha = int.Parse(m[11]),
+                            Red = int.Parse(m[12]),
+                            Green = int.Parse(m[13]),
+                            Blue = int.Parse(m[14])
+                        };
+                    }
+                    else
+                    {
+                        ellipseItem.Stroke = new ItemColor()
+                        {
+                            Alpha = 255,
+                            Red = 0,
+                            Green = 0,
+                            Blue = 0
+                        };
+                        ellipseItem.Fill = new ItemColor()
+                        {
+                            Alpha = 255,
+                            Red = 0,
+                            Green = 0,
+                            Blue = 0
+                        };
+                    }
                     sheet.Ellipses.Add(ellipseItem);
                 }
-                else if (m.Length == 10 && string.Compare(m[0], "TEXT", true) == 0)
+                else if ((m.Length == 10 || m.Length == 18) && string.Compare(m[0], "TEXT", true) == 0)
                 {
                     var textItem = new TextItem();
                     textItem.Id = int.Parse(m[1]);
@@ -312,14 +449,73 @@ namespace Sheet
                     textItem.HAlign = int.Parse(m[6]);
                     textItem.VAlign = int.Parse(m[7]);
                     textItem.Size = double.Parse(m[8]);
-                    textItem.Text = m[9];
+                    if (m.Length == 18)
+                    {
+                        textItem.Foreground = new ItemColor()
+                        {
+                            Alpha = int.Parse(m[9]),
+                            Red = int.Parse(m[10]),
+                            Green = int.Parse(m[11]),
+                            Blue = int.Parse(m[12])
+                        };
+                        textItem.Backgroud = new ItemColor()
+                        {
+                            Alpha = int.Parse(m[13]),
+                            Red = int.Parse(m[14]),
+                            Green = int.Parse(m[15]),
+                            Blue = int.Parse(m[16])
+                        };
+                        textItem.Text = m[17];
+                    }
+                    else
+                    {
+                        textItem.Foreground = new ItemColor()
+                        {
+                            Alpha = 255,
+                            Red = 0,
+                            Green = 0,
+                            Blue = 0
+                        };
+                        textItem.Backgroud = new ItemColor()
+                        {
+                            Alpha = 255,
+                            Red = 0,
+                            Green = 0,
+                            Blue = 0
+                        };
+                        textItem.Text = m[9];
+                    }
                     sheet.Texts.Add(textItem);
                 }
-                else if (m.Length == 3 && string.Compare(m[0], "BLOCK", true) == 0)
+                else if ((m.Length == 3 || m.Length == 9) && string.Compare(m[0], "BLOCK", true) == 0)
                 {
                     end++;
-                    var block = Deserialize(lines, length, ref end, m[2], int.Parse(m[1]));
-                    sheet.Blocks.Add(block);
+                    var blockItem = Deserialize(lines, length, ref end, m[2], int.Parse(m[1]));
+                    if (m.Length == 9)
+                    {
+                        blockItem.Width = double.Parse(m[3]);
+                        blockItem.Width = double.Parse(m[4]);
+                        blockItem.Backgroud = new ItemColor()
+                        {
+                            Alpha = int.Parse(m[5]),
+                            Red = int.Parse(m[6]),
+                            Green = int.Parse(m[7]),
+                            Blue = int.Parse(m[8])
+                        };
+                    }
+                    else
+                    {
+                        blockItem.Width = 0.0;
+                        blockItem.Width = 0.0;
+                        blockItem.Backgroud = new ItemColor()
+                        {
+                            Alpha = 0,
+                            Red = 0,
+                            Green = 0,
+                            Blue = 0
+                        };
+                    }
+                    sheet.Blocks.Add(blockItem);
                     continue;
                 }
                 else if (m.Length == 1 && string.Compare(m[0], "END", true) == 0)
@@ -573,6 +769,9 @@ namespace Sheet
     public class Block
     {
         public string Name { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public Color Backgroud { get; set; }
         public List<Line> Lines { get; set; }
         public List<Rectangle> Rectangles { get; set; }
         public List<Ellipse> Ellipses { get; set; }
@@ -623,6 +822,23 @@ namespace Sheet
     {
         #region Serialize
 
+        private static ItemColor ToItemColor(Brush brush)
+        {
+            var color = (brush as SolidColorBrush).Color;
+            return ToItemColor(color);
+        }
+
+        private static ItemColor ToItemColor(Color color)
+        {
+            return new ItemColor()
+            {
+                Alpha = color.A,
+                Red = color.R,
+                Green = color.G,
+                Blue = color.B
+            };
+        }
+
         public static LineItem SerializeLine(Line line)
         {
             var lineItem = new LineItem();
@@ -632,6 +848,7 @@ namespace Sheet
             lineItem.Y1 = line.Y1;
             lineItem.X2 = line.X2;
             lineItem.Y2 = line.Y2;
+            lineItem.Stroke = ToItemColor(line.Stroke);
 
             return lineItem;
         }
@@ -646,6 +863,8 @@ namespace Sheet
             rectangleItem.Width = rectangle.Width;
             rectangleItem.Height = rectangle.Height;
             rectangleItem.IsFilled = rectangle.Fill == Brushes.Transparent ? false : true;
+            rectangleItem.Stroke = ToItemColor(rectangle.Stroke);
+            rectangleItem.Fill = ToItemColor(rectangle.Fill);
 
             return rectangleItem;
         }
@@ -660,6 +879,8 @@ namespace Sheet
             ellipseItem.Width = ellipse.Width;
             ellipseItem.Height = ellipse.Height;
             ellipseItem.IsFilled = ellipse.Fill == Brushes.Transparent ? false : true;
+            ellipseItem.Stroke = ToItemColor(ellipse.Stroke);
+            ellipseItem.Fill = ToItemColor(ellipse.Fill);
 
             return ellipseItem;
         }
@@ -679,6 +900,8 @@ namespace Sheet
             textItem.HAlign = (int)tb.HorizontalAlignment;
             textItem.VAlign = (int)tb.VerticalAlignment;
             textItem.Size = tb.FontSize;
+            textItem.Foreground = ToItemColor(tb.Foreground);
+            textItem.Backgroud = ToItemColor(tb.Background);
 
             return textItem;
         }
@@ -687,6 +910,9 @@ namespace Sheet
         {
             var blockItem = new BlockItem();
             blockItem.Init(0, parent.Name);
+            blockItem.Width = 0;
+            blockItem.Height = 0;
+            blockItem.Backgroud = ToItemColor(parent.Backgroud);
 
             foreach (var line in parent.Lines)
             {
@@ -3138,9 +3364,9 @@ namespace Sheet
 
         #endregion
 
-        #region Export
+        #region Export Xps
 
-        private CanvasControl CreatePrintableRoot(Block parent)
+        private CanvasControl CreateXpsRoot(Block parent)
         {
             var root = new CanvasControl();
             var sheet = new CanvasSheet(root.Sheet);
@@ -3158,16 +3384,58 @@ namespace Sheet
             return root;
         }
 
-        private void Export(string fileName)
+        private void ExportToXps(string fileName)
         {
             using (var package = Package.Open(fileName, System.IO.FileMode.Create))
             {
                 var doc = new XpsDocument(package);
                 var writer = XpsDocument.CreateXpsDocumentWriter(doc);
-                var root = CreatePrintableRoot(Logic);
+                var root = CreateXpsRoot(Logic);
                 writer.Write(root);
                 doc.Close();
             }
+        }
+
+        #endregion
+
+        #region Export Pdf
+
+        private void ExportToPdf(string fileName)
+        {
+            //var writer = new SheetPdfWriter();
+            //var block = BlockEditor.SerializerBlockContents(Logic, 0, "LOGIC");
+            //writer.Create(dlg.FileName, 1260.0, 891.0, block);
+
+            var writer = new SheetPdfWriter();
+
+            var page = new BlockItem();
+            page.Init(0, "");
+
+            var frame = new BlockItem();
+            frame.Init(0, "");
+
+            //var grid = new BlockItem();
+            //grid.Init(0, "");
+
+            foreach (var line in frameLines)
+            {
+                var lineItem = BlockEditor.SerializeLine(line);
+                frame.Lines.Add(lineItem);
+            }
+
+            //foreach (var line in gridLines)
+            //{
+            //    var lineItem = BlockEditor.SerializeLine(line);
+            //    grid.Lines.Add(lineItem);
+            //}
+
+            var logic = BlockEditor.SerializerBlockContents(Logic, 0, "LOGIC");
+
+            //page.Blocks.Add(grid);
+            page.Blocks.Add(frame);
+            page.Blocks.Add(logic);
+
+            writer.Create(fileName, 1260.0, 891.0, page);
         }
 
         #endregion
@@ -3221,17 +3489,11 @@ namespace Sheet
                 switch(dlg.FilterIndex)
                 {
                     case 1:
-                        {
-                            var writer = new SheetPdfWriter();
-                            var block = BlockEditor.SerializerBlockContents(Logic, 0, "LOGIC");
-                            writer.Create(dlg.FileName, 1260.0, 891.0, block);
-                        }
+                        ExportToPdf(dlg.FileName);
                         break;
                     case 2:
                     case 3:
-                        {
-                            Export(dlg.FileName);
-                        }
+                    ExportToXps(dlg.FileName);
                         break;
                 }
             }
