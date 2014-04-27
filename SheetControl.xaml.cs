@@ -3213,13 +3213,28 @@ namespace Sheet
         {
             var dlg = new Microsoft.Win32.SaveFileDialog()
             {
-                Filter = "XPS Documents (*.xps)|*.xps|All Files (*.*)|*.*",
+                Filter = "PDF Documents (*.pdf)|*.pdf|XPS Documents (*.xps)|*.xps|All Files (*.*)|*.*",
                 FileName = "sheet"
             };
 
             if (dlg.ShowDialog() == true)
             {
-                Export(dlg.FileName);
+                switch(dlg.FilterIndex)
+                {
+                    case 1:
+                        {
+                            var writer = new SheetPdfWriter();
+                            var block = BlockEditor.SerializerBlockContents(Logic, 0, "LOGIC");
+                            writer.Create(dlg.FileName, block);
+                        }
+                        break;
+                    case 2:
+                    case 3:
+                        {
+                            Export(dlg.FileName);
+                        }
+                        break;
+                }
             }
         }
 
