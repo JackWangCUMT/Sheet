@@ -2751,7 +2751,7 @@ namespace Sheet
             }
         }
 
-        private void Insert(BlockItem blockItem, Point p, bool select)
+        private Block Insert(BlockItem blockItem, Point p, bool select)
         {
             BlockEditor.DeselectAll(Selected);
             double thickness = lineThickness / Zoom;
@@ -2771,6 +2771,8 @@ namespace Sheet
             }
 
             BlockEditor.Move(Snap(p.X), Snap(p.Y), block);
+
+            return block;
         }
 
         private void LoadStandardLibrary()
@@ -3738,7 +3740,7 @@ namespace Sheet
 
         #endregion
 
-        #region Tag
+        #region Tag Binding
 
         private bool BindTagToBlock(Point p, TagItem tagItem)
         {
@@ -3748,30 +3750,60 @@ namespace Sheet
             if (BlockEditor.HaveOneBlockSelected(temp))
             {
                 var block = temp.Blocks[0];
-
-                // TODO: Remove hardcoded SIGNAL block binding.
-                if (block.Texts != null && block.Texts.Count == 4)
-                {
-                    BlockEditor.GetTextBlock(block.Texts[0]).Text = tagItem.Data[1];
-                    BlockEditor.GetTextBlock(block.Texts[1]).Text = tagItem.Data[4];
-                    BlockEditor.GetTextBlock(block.Texts[2]).Text = tagItem.Data[2];
-                    BlockEditor.GetTextBlock(block.Texts[3]).Text = tagItem.Data[3];
-                }
-
-                //int i = 0;
-                //foreach(var text in block.Texts)
-                //{
-                //    var tb = BlockEditor.GetTextBlock(text);
-                //    tb.Text = tagItem.Data[i];
-                //    i++;
-                //}
-
+                BindTagToBlock(block, tagItem);
                 BlockEditor.Deselect(temp);
                 return true;
             }
 
             BlockEditor.Deselect(temp);
             return false;
+        }
+
+        private bool BindTagToBlock(Block block, TagItem tagItem)
+        {
+            if (block != null && block.Texts != null 
+                && tagItem != null && tagItem.Columns != null  && tagItem.Data != null
+                && block.Texts.Count == tagItem.Columns.Length - 1)
+            {
+                // skip index column
+                int i = 1;
+
+                foreach (var text in block.Texts)
+                {
+                    var tb = BlockEditor.GetTextBlock(text);
+                    tb.Text = tagItem.Data[i];
+                    i++;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private void TryToBindTag(Point p, TagItem tagItem)
+        {
+            // first try binding to existing block
+            bool firstTryResult = BindTagToBlock(p, tagItem);
+
+            // if failed insert selected block from library and try again to bind
+            if (!firstTryResult)
+            {
+                var blockItem = Library.GetSelected();
+                if (blockItem != null)
+                {
+                    var block = Insert(blockItem, p, false);
+                    bool secondTryResult = BindTagToBlock(block, tagItem);
+                    if (!secondTryResult)
+                    {
+                        // remove block if failed to bind
+                        var temp = new Block();
+                        temp.Init();
+                        temp.Blocks.Add(block);
+                        BlockEditor.Remove(sheet, Logic, temp);
+                    }
+                }
+            }
         }
 
         #endregion
@@ -3802,7 +3834,7 @@ namespace Sheet
                 var tagItem = e.Data.GetData("Tag") as TagItem;
                 if (tagItem != null)
                 {
-                    BindTagToBlock(e.GetPosition(overlay.GetParent()), tagItem);
+                    TryToBindTag(e.GetPosition(overlay.GetParent()), tagItem);
                     e.Handled = true;
                 }
             }
