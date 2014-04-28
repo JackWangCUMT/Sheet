@@ -40,6 +40,7 @@ namespace Sheet
         public double X2 { get; set; }
         public double Y2 { get; set; }
         public ItemColor Stroke { get; set; }
+        public double StrokeThickness { get; set; }
     }
 
     public class RectangleItem : Item
@@ -51,6 +52,7 @@ namespace Sheet
         public bool IsFilled { get; set; }
         public ItemColor Stroke { get; set; }
         public ItemColor Fill { get; set; }
+        public double StrokeThickness { get; set; }
     }
 
     public class EllipseItem : Item
@@ -62,6 +64,7 @@ namespace Sheet
         public bool IsFilled { get; set; }
         public ItemColor Stroke { get; set; }
         public ItemColor Fill { get; set; }
+        public double StrokeThickness { get; set; }
     } 
 
     public class TextItem : Item
@@ -3402,33 +3405,13 @@ namespace Sheet
 
         private void ExportToPdf(string fileName)
         {
-            //var writer = new SheetPdfWriter();
-            //var block = BlockEditor.SerializerBlockContents(Logic, 0, "LOGIC");
-            //writer.Create(dlg.FileName, 1260.0, 891.0, block);
-
             var writer = new SheetPdfWriter();
 
             var page = new BlockItem();
             page.Init(0, "");
 
-            var frame = new BlockItem();
-            frame.Init(0, "");
-
-            //var grid = new BlockItem();
-            //grid.Init(0, "");
-
-            foreach (var line in frameLines)
-            {
-                var lineItem = BlockEditor.SerializeLine(line);
-                frame.Lines.Add(lineItem);
-            }
-
-            //foreach (var line in gridLines)
-            //{
-            //    var lineItem = BlockEditor.SerializeLine(line);
-            //    grid.Lines.Add(lineItem);
-            //}
-
+            //var grid = CreateGridBlock();
+            var frame = CreateFrameBlock();
             var logic = BlockEditor.SerializerBlockContents(Logic, 0, "LOGIC");
 
             //page.Blocks.Add(grid);
@@ -3436,6 +3419,36 @@ namespace Sheet
             page.Blocks.Add(logic);
 
             writer.Create(fileName, 1260.0, 891.0, page);
+        }
+
+        private BlockItem CreateGridBlock()
+        {
+            var grid = new BlockItem();
+            grid.Init(0, "");
+
+            foreach (var line in gridLines)
+            {
+                var lineItem = BlockEditor.SerializeLine(line);
+                lineItem.StrokeThickness = 0.013 * 72.0 / 2.54;// 0.13mm
+                //lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
+                grid.Lines.Add(lineItem);
+            }
+            return grid;
+        }
+
+        private BlockItem CreateFrameBlock()
+        {
+            var frame = new BlockItem();
+            frame.Init(0, "");
+
+            foreach (var line in frameLines)
+            {
+                var lineItem = BlockEditor.SerializeLine(line);
+                lineItem.StrokeThickness = 0.018 * 72.0 / 2.54; // 0.18mm
+                lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
+                frame.Lines.Add(lineItem);
+            }
+            return frame;
         }
 
         #endregion

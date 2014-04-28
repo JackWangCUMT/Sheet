@@ -13,7 +13,14 @@ namespace Sheet
     {
         #region Fields
 
+        /// <summary>
+        /// Convert user X coordinates to PDF coordinates in 72 dpi.
+        /// </summary>
         private Func<double, double> X;
+
+        /// <summary>
+        /// Convert user Y coordinates to PDF coordinates in 72 dpi.
+        /// </summary>
         private Func<double, double> Y;
 
         #endregion
@@ -43,9 +50,15 @@ namespace Sheet
 
         #region Add
 
+        /// <summary>
+        /// Default XPen stroke thickness in millimeters.
+        /// </summary>
+        private double DefaultStrokeThickness = 1.20;
+
         private void AddLine(XGraphics gfx, LineItem line)
         {
-            var pen = new XPen(XColor.FromArgb(line.Stroke.Alpha, line.Stroke.Red, line.Stroke.Green, line.Stroke.Blue));
+            var pen = new XPen(XColor.FromArgb(line.Stroke.Alpha, line.Stroke.Red, line.Stroke.Green, line.Stroke.Blue),
+                X(line.StrokeThickness == 0.0 ? XUnit.FromMillimeter(DefaultStrokeThickness).Value : line.StrokeThickness)) { LineCap = XLineCap.Round };
             gfx.DrawLine(pen, X(line.X1), Y(line.Y1), X(line.X2), Y(line.Y2));
         }
 
@@ -53,13 +66,15 @@ namespace Sheet
         {
             if (rectangle.IsFilled)
             {
-                var pen = new XPen(XColor.FromArgb(rectangle.Stroke.Alpha, rectangle.Stroke.Red, rectangle.Stroke.Green, rectangle.Stroke.Blue));
+                var pen = new XPen(XColor.FromArgb(rectangle.Stroke.Alpha, rectangle.Stroke.Red, rectangle.Stroke.Green, rectangle.Stroke.Blue),
+                    X(rectangle.StrokeThickness == 0.0 ? XUnit.FromMillimeter(DefaultStrokeThickness).Value : rectangle.StrokeThickness)) { LineCap = XLineCap.Round };
                 var brush = new XSolidBrush(XColor.FromArgb(rectangle.Fill.Alpha, rectangle.Fill.Red, rectangle.Fill.Green, rectangle.Fill.Blue));
                 gfx.DrawRectangle(pen, brush, X(rectangle.X), Y(rectangle.Y), X(rectangle.Width), Y(rectangle.Height));
             }
             else
             {
-                var pen = new XPen(XColor.FromArgb(rectangle.Stroke.Alpha, rectangle.Stroke.Red, rectangle.Stroke.Green, rectangle.Stroke.Blue));
+                var pen = new XPen(XColor.FromArgb(rectangle.Stroke.Alpha, rectangle.Stroke.Red, rectangle.Stroke.Green, rectangle.Stroke.Blue),
+                    X(rectangle.StrokeThickness == 0.0 ? XUnit.FromMillimeter(DefaultStrokeThickness).Value : rectangle.StrokeThickness)) { LineCap = XLineCap.Round };
                 gfx.DrawRectangle(pen, X(rectangle.X), Y(rectangle.Y), X(rectangle.Width), Y(rectangle.Height));
             }
         }
@@ -68,13 +83,15 @@ namespace Sheet
         {
             if (ellipse.IsFilled)
             {
-                var pen = new XPen(XColor.FromArgb(ellipse.Stroke.Alpha, ellipse.Stroke.Red, ellipse.Stroke.Green, ellipse.Stroke.Blue));
+                var pen = new XPen(XColor.FromArgb(ellipse.Stroke.Alpha, ellipse.Stroke.Red, ellipse.Stroke.Green, ellipse.Stroke.Blue),
+                    X(ellipse.StrokeThickness == 0.0 ? XUnit.FromMillimeter(DefaultStrokeThickness).Value : ellipse.StrokeThickness)) { LineCap = XLineCap.Round };
                 var brush = new XSolidBrush(XColor.FromArgb(ellipse.Fill.Alpha, ellipse.Fill.Red, ellipse.Fill.Green, ellipse.Fill.Blue));
                 gfx.DrawEllipse(pen, brush, X(ellipse.X), Y(ellipse.Y), X(ellipse.Width), Y(ellipse.Height));
             }
             else
             {
-                var pen = new XPen(XColor.FromArgb(ellipse.Stroke.Alpha, ellipse.Stroke.Red, ellipse.Stroke.Green, ellipse.Stroke.Blue));
+                var pen = new XPen(XColor.FromArgb(ellipse.Stroke.Alpha, ellipse.Stroke.Red, ellipse.Stroke.Green, ellipse.Stroke.Blue),
+                    X(ellipse.StrokeThickness == 0.0 ? XUnit.FromMillimeter(DefaultStrokeThickness).Value : ellipse.StrokeThickness)) { LineCap = XLineCap.Round };
                 gfx.DrawEllipse(pen, X(ellipse.X), Y(ellipse.Y), X(ellipse.Width), Y(ellipse.Height));
             }
         }
