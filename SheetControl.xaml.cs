@@ -96,6 +96,9 @@ namespace Sheet
         {
             Id = id;
             Name = name;
+            Width = 0.0;
+            Height = 0.0;
+            Backgroud = new ItemColor() { Alpha = 0, Red = 0, Green = 0, Blue = 0 };
             Lines = new List<LineItem>();
             Rectangles = new List<RectangleItem>();
             Ellipses = new List<EllipseItem>();
@@ -953,7 +956,7 @@ namespace Sheet
             var texts = parent.Texts;
             var blocks = parent.Blocks;
 
-            var sheet = new BlockItem();
+            var sheet = new BlockItem() { Backgroud = new ItemColor() };
             sheet.Init(id, name);
 
             if (lines != null)
