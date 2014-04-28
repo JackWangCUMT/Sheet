@@ -18,6 +18,7 @@
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
                 <TextBlock Text="File" TextDecorations="Underline" FontWeight="Medium" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" Margin="2"/>
                 <TextBlock Text="Open" Grid.Column="0" Grid.Row="1" Margin="2"/>
@@ -28,6 +29,8 @@
                 <TextBlock Text="Ctrl+E" Grid.Column="1" Grid.Row="3" Margin="8,2,2,2"/>
                 <TextBlock Text="Library" Grid.Column="0" Grid.Row="4" Margin="2"/>
                 <TextBlock Text="Ctrl+L" Grid.Column="1" Grid.Row="4" Margin="8,2,2,2"/>
+                <TextBlock Text="Database" Grid.Column="0" Grid.Row="5" Margin="2"/>
+                <TextBlock Text="Ctrl+D" Grid.Column="1" Grid.Row="5" Margin="8,2,2,2"/>
             </Grid>
             <Grid Margin="10,2,10,2">
                 <Grid.ColumnDefinitions>

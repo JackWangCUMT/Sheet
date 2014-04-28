@@ -143,6 +143,13 @@ namespace Sheet
                         UpdateModeMenu();
                     }
                     break;
+                // Ctrl+D: Database
+                case Key.D:
+                    if (ctrl)
+                    {
+                        Database();
+                    }
+                    break;
                 // Ctrl+Z: Undo
                 case Key.Z:
                     if (ctrl)
@@ -290,6 +297,31 @@ namespace Sheet
 
         #endregion
 
+        #region Database
+
+        public void Database()
+        {
+            var database = new CsvControl();
+            string result = database.Open();
+
+            if (result != null)
+            {
+                var window = new Window()
+                {
+                    Title = "Database: " + result,
+                    Width = 600,
+                    Height = 500,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen
+                };
+
+                window.Owner = this;
+                window.Content = database;
+                window.Show();
+            }
+        }
+
+        #endregion
+
         #region File Menu Events
 
         private void FileOpen_Click(object sender, RoutedEventArgs e)
@@ -310,6 +342,11 @@ namespace Sheet
         private void FileLibrary_Click(object sender, RoutedEventArgs e)
         {
             GetSheet().Load();
+        }
+
+        private void FileDatabase_Click(object sender, RoutedEventArgs e)
+        {
+            Database();
         }
 
         private void FileExit_Click(object sender, RoutedEventArgs e)

@@ -112,8 +112,8 @@ namespace Sheet
                 var listBoxItem = FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
                 if (listBoxItem != null)
                 {
-                    BlockItem tag = (BlockItem)listBox.ItemContainerGenerator.ItemFromContainer(listBoxItem);
-                    DataObject dragData = new DataObject("Block", tag);
+                    BlockItem block = (BlockItem)listBox.ItemContainerGenerator.ItemFromContainer(listBoxItem);
+                    DataObject dragData = new DataObject("Block", block);
                     DragDrop.DoDragDrop(listBoxItem, dragData, DragDropEffects.Move);
                 }
             }

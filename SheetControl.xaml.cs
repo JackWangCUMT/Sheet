@@ -3712,7 +3712,7 @@ namespace Sheet
 
         private void UserControl_DragEnter(object sender, DragEventArgs e)
         {
-            if (!e.Data.GetDataPresent("Block") || sender == e.Source)
+            if (!e.Data.GetDataPresent("Block") || !e.Data.GetDataPresent("Tag") || sender == e.Source)
             {
                 e.Effects = DragDropEffects.None;
             }
@@ -3726,6 +3726,16 @@ namespace Sheet
                 if (blockItem != null)
                 {
                     Insert(blockItem, e.GetPosition(overlay.GetParent()), true);
+                    e.Handled = true;
+                }
+            }
+            else if (e.Data.GetDataPresent("Tag"))
+            {
+                var tagItem = e.Data.GetData("Tag") as TagItem;
+                if (tagItem != null)
+                {
+                    //Debug.Print(tagItem.Data[0]);
+                    // TODO:
                     e.Handled = true;
                 }
             }

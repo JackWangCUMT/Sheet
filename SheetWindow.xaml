@@ -24,6 +24,7 @@
                 <Separator/>
                 <MenuItem x:Name="FileExport" Header="Export..." InputGestureText="Ctrl+E" Click="FileExport_Click"/>
                 <MenuItem x:Name="FileLibrary" Header="Library..." InputGestureText="Ctrl+L" Click="FileLibrary_Click"/>
+                <MenuItem x:Name="FileDatabase" Header="Database..." InputGestureText="Ctrl+D" Click="FileDatabase_Click"/>
                 <Separator/>
                 <MenuItem x:Name="FileExit" Header="Exit" InputGestureText="Alf+F4" Click="FileExit_Click"/>
             </MenuItem>

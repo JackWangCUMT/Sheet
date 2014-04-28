@@ -6,7 +6,10 @@ Diagram drawing application.
 Keyboard  Shortcuts:
 
     Ctrl+O          Open
-    Ctrls+S         Save
+    Ctrl+S          Save
+    Ctrl+E          Export
+    Ctrl+L          Library
+    Ctrl+D          Database
     N               Mode None
     S               Mode Selection
     I               Mode Insert

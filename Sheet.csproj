@@ -35,6 +35,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="MigraDoc.DocumentObjectModel-WPF">
       <HintPath>packages\PDFsharp-MigraDoc-WPF.1.32.2608.0\lib\net20\MigraDoc.DocumentObjectModel-WPF.dll</HintPath>
     </Reference>
@@ -71,6 +72,9 @@
     <Compile Include="CanvasControl.xaml.cs">
       <DependentUpon>CanvasControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="CsvControl.xaml.cs">
+      <DependentUpon>CsvControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="LibraryControl.xaml.cs">
       <DependentUpon>LibraryControl.xaml</DependentUpon>
     </Compile>
@@ -79,6 +83,10 @@
       <DependentUpon>TextControl.xaml</DependentUpon>
     </Compile>
     <Page Include="CanvasControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="CsvControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
