@@ -1594,6 +1594,16 @@ namespace Sheet
                 && selected.Texts.Count == 1);
         }
 
+        public static bool HaveOneBlockSelected(Block selected)
+        {
+            return (selected.Lines == null
+                && selected.Rectangles == null
+                && selected.Ellipses == null
+                && selected.Blocks != null
+                && selected.Texts == null
+                && selected.Blocks.Count == 1);
+        }
+
         public static void Select(Block parent)
         {
             foreach (var line in parent.Lines)
@@ -2015,7 +2025,7 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(ISheet sheet, Block parent, Block selected, Point p, double size, bool selectInsideBlock, bool resetSelected)
+        public static bool HitTestClick(ISheet sheet, Block parent, Block selected, Point p, double size, bool selectInsideBlock, bool resetSelected)
         {
             if (resetSelected)
             {
@@ -2071,6 +2081,26 @@ namespace Sheet
             if (parent.Blocks != null)
             {
                 bool result = HitTestBlocks(parent.Blocks, selected, rect, true, true, selectInsideBlock, sheet.GetParent());
+                if (result)
+                {
+                    HitTestClean(selected);
+                    return true;
+                }
+            }
+
+            HitTestClean(selected);
+            return false;
+        }
+
+        public static bool HitTestForBlocks(ISheet sheet, Block parent, Block selected, Point p, double size)
+        {
+            selected.Init();
+
+            var rect = new Rect(p.X - size, p.Y - size, 2 * size, 2 * size);
+
+            if (parent.Blocks != null)
+            {
+                bool result = HitTestBlocks(parent.Blocks, selected, rect, true, true, false, sheet.GetParent());
                 if (result)
                 {
                     HitTestClean(selected);
@@ -2907,7 +2937,7 @@ namespace Sheet
         private bool CanInitMove(Point p)
         {
             var temp = new Block();
-            BlockEditor.HitTest(sheet, Selected, temp, p, hitSize, false, true);
+            BlockEditor.HitTestClick(sheet, Selected, temp, p, hitSize, false, true);
 
             if (BlockEditor.HaveSelected(temp))
             {
@@ -3334,7 +3364,7 @@ namespace Sheet
         private bool TryToEditText(Point p)
         {
             var temp = new Block();
-            BlockEditor.HitTest(sheet, Logic, temp, p, hitSize, true, true);
+            BlockEditor.HitTestClick(sheet, Logic, temp, p, hitSize, true, true);
 
             if (BlockEditor.HaveOneTextSelected(temp))
             {
@@ -3352,7 +3382,7 @@ namespace Sheet
                     RestoreTempMode();
                 };
 
-                Action cancel = () => 
+                Action cancel = () =>
                 {
                     Focus();
                     RestoreTempMode();
@@ -3558,7 +3588,7 @@ namespace Sheet
 
             if (GetMode() == Mode.Selection)
             {
-                bool result = BlockEditor.HitTest(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), hitSize, false, resetSelected);
+                bool result = BlockEditor.HitTestClick(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), hitSize, false, resetSelected);
                 if ((ctrl || !BlockEditor.HaveSelected(Selected)) && !result)
                 {
                     InitSelectionRect(e.GetPosition(overlay.GetParent()));
@@ -3708,6 +3738,44 @@ namespace Sheet
 
         #endregion
 
+        #region Tag
+
+        private bool BindTagToBlock(Point p, TagItem tagItem)
+        {
+            var temp = new Block();
+            BlockEditor.HitTestForBlocks(sheet, Logic, temp, p, hitSize);
+
+            if (BlockEditor.HaveOneBlockSelected(temp))
+            {
+                var block = temp.Blocks[0];
+
+                // TODO: Remove hardcoded SIGNAL block binding.
+                if (block.Texts != null && block.Texts.Count == 4)
+                {
+                    BlockEditor.GetTextBlock(block.Texts[0]).Text = tagItem.Data[1];
+                    BlockEditor.GetTextBlock(block.Texts[1]).Text = tagItem.Data[4];
+                    BlockEditor.GetTextBlock(block.Texts[2]).Text = tagItem.Data[2];
+                    BlockEditor.GetTextBlock(block.Texts[3]).Text = tagItem.Data[3];
+                }
+
+                //int i = 0;
+                //foreach(var text in block.Texts)
+                //{
+                //    var tb = BlockEditor.GetTextBlock(text);
+                //    tb.Text = tagItem.Data[i];
+                //    i++;
+                //}
+
+                BlockEditor.Deselect(temp);
+                return true;
+            }
+
+            BlockEditor.Deselect(temp);
+            return false;
+        }
+
+        #endregion
+
         #region Drop
 
         private void UserControl_DragEnter(object sender, DragEventArgs e)
@@ -3734,12 +3802,11 @@ namespace Sheet
                 var tagItem = e.Data.GetData("Tag") as TagItem;
                 if (tagItem != null)
                 {
-                    //Debug.Print(tagItem.Data[0]);
-                    // TODO:
+                    BindTagToBlock(e.GetPosition(overlay.GetParent()), tagItem);
                     e.Handled = true;
                 }
             }
-        } 
+        }
 
         #endregion
     }
