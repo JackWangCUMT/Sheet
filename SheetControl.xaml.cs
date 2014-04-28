@@ -1982,6 +1982,12 @@ namespace Sheet
         {
             bool result = false;
 
+            result = HitTestTexts(parent.Texts, selected, rect, onlyFirst, selectInsideBlock, relative);
+            if (result && onlyFirst)
+            {
+                return true;
+            }
+
             result = HitTestLines(parent.Lines, selected, rect, onlyFirst, selectInsideBlock);
             if (result && onlyFirst)
             {
@@ -1995,12 +2001,6 @@ namespace Sheet
             }
 
             result = HitTestEllipses(parent.Ellipses, selected, rect, onlyFirst, selectInsideBlock, relative);
-            if (result && onlyFirst)
-            {
-                return true;
-            }
-
-            result = HitTestTexts(parent.Texts, selected, rect, onlyFirst, selectInsideBlock, relative);
             if (result && onlyFirst)
             {
                 return true;
@@ -2028,6 +2028,16 @@ namespace Sheet
 
             var rect = new Rect(p.X - size, p.Y - size, 2 * size, 2 * size);
 
+            if (parent.Texts != null)
+            {
+                bool result = HitTestTexts(parent.Texts, selected, rect, true, true, sheet.GetParent());
+                if (result)
+                {
+                    HitTestClean(selected);
+                    return true;
+                }
+            }
+
             if (parent.Lines != null)
             {
                 bool result = HitTestLines(parent.Lines, selected, rect, true, true);
@@ -2051,16 +2061,6 @@ namespace Sheet
             if (parent.Ellipses != null)
             {
                 bool result = HitTestEllipses(parent.Ellipses, selected, rect, true, true, sheet.GetParent());
-                if (result)
-                {
-                    HitTestClean(selected);
-                    return true;
-                }
-            }
-
-            if (parent.Texts != null)
-            {
-                bool result = HitTestTexts(parent.Texts, selected, rect, true, true, sheet.GetParent());
                 if (result)
                 {
                     HitTestClean(selected);
