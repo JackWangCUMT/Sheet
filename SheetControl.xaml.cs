@@ -2549,7 +2549,7 @@ namespace Sheet
 
         private static void CreateFrame(ISheet sheet, List<Line> lines, double size, double thickness, Brush stroke)
         {
-            double padding = 2.0;
+            double padding = 6.0;
             double width = 1260.0;
             double height = 891.0;
             double startX = padding;
