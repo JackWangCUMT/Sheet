@@ -2554,16 +2554,17 @@ namespace Sheet
             double height = 891.0;
             double startX = padding;
             double startY = padding;
-            double rows = 780.0;
+            double rowsStart = 60;
+            double rowsEnd = 780.0;
 
             // frame left rows
-            for (double y = 60.0; y < rows; y += size)
+            for (double y = rowsStart; y < rowsEnd; y += size)
             {
                 CreateLine(sheet, lines, thickness, startX, y, 330.0, y, stroke);
             }
 
             // frame right rows
-            for (double y = 60.0; y < rows; y += size)
+            for (double y = rowsStart; y < rowsEnd; y += size)
             {
                 CreateLine(sheet, lines, thickness, 930.0, y, 1260.0 - padding, y, stroke);
             }
@@ -2571,7 +2572,7 @@ namespace Sheet
             // frame columns
             double[] columnWidth = {  30.0, 210.0,   90.0,  600.0, 210.0,  90.0 };
             double[] columnX     = {  30.0,  30.0, startY, startY,  30.0,  30.0 };
-            double[] columnY     = {  rows,  rows,   rows,   rows,  rows,  rows };
+            double[] columnY     = {  rowsEnd,  rowsEnd,   rowsEnd,   rowsEnd,  rowsEnd,  rowsEnd };
 
             double start = 0.0;
             for(int i = 0; i < columnWidth.Length; i++)
@@ -2584,7 +2585,7 @@ namespace Sheet
             CreateLine(sheet, lines, thickness, startX, 30.0, width - padding, 30.0, stroke);
             
             // frame footer
-            CreateLine(sheet, lines, thickness, startX, rows, width - padding, rows, stroke);
+            CreateLine(sheet, lines, thickness, startX, rowsEnd, width - padding, rowsEnd, stroke);
 
             // frame border
             CreateLine(sheet, lines, thickness, startX, startY, width - padding, startY, stroke);

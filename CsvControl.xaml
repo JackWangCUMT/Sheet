@@ -8,10 +8,7 @@
     <Grid>
         <ListView x:Name="Csv"
                   HorizontalContentAlignment="Stretch" 
-                  VerticalAlignment="Stretch"
-                  Width="Auto" 
-                  MinWidth="400"
-                  Height="Auto"
+                  VerticalAlignment="Stretch" 
                   Padding="0"
                   FocusVisualStyle="{x:Null}"
                   Background="Transparent"

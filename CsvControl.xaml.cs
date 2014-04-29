@@ -125,7 +125,11 @@ namespace Sheet
             int i = 0;
             foreach (var column in columns)
             {
-                gv.Columns.Add(new GridViewColumn { Header = column, Width = double.NaN, DisplayMemberBinding = new Binding("[" + i++ + "]") });
+                if (i > 0)
+                {
+                    gv.Columns.Add(new GridViewColumn { Header = column, Width = double.NaN, DisplayMemberBinding = new Binding("[" + i + "]") });
+                }
+                i++;
             }
             Csv.View = gv;
         }

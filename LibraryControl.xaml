@@ -6,9 +6,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="150">
     <ListBox x:Name="Blocks" 
-             Width="Auto" 
-             MinWidth="150"
-             Height="Auto"
              Padding="0"
              FocusVisualStyle="{x:Null}"
              Background="Transparent"

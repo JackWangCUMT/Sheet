@@ -301,6 +301,8 @@ namespace Sheet
 
         public void Database()
         {
+            Csv.Open();
+            /*
             var database = new CsvControl();
             string result = database.Open();
 
@@ -310,7 +312,7 @@ namespace Sheet
                 {
                     Title = "Database: " + result,
                     Width = 600,
-                    Height = 500,
+                    Height = 290,
                     WindowStartupLocation = WindowStartupLocation.CenterScreen
                 };
 
@@ -318,6 +320,7 @@ namespace Sheet
                 window.Content = database;
                 window.Show();
             }
+            */
         }
 
         #endregion

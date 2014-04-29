@@ -3,93 +3,153 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Sheet"
         Title="Sheet" 
-        Height="920" 
-        Width="1320"
+        Height="970" 
+        Width="1500"
+        Background="WhiteSmoke"
         WindowStartupLocation="CenterScreen" 
         WindowState="Maximized"
         SnapsToDevicePixels="True"
         PreviewKeyDown="Window_PreviewKeyDown">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="21"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="21"/>
+            <ColumnDefinition Width="0"/>
+        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Menu x:Name="MainMenu" 
+              Background="WhiteSmoke"
               Visibility="Visible" 
-              Background="White" 
-              Grid.Row="0">
+              Margin="0"
+              Grid.Row="0"
+              Grid.Column="0"
+              Grid.ColumnSpan="5">
             <MenuItem Header="_File">
-                <MenuItem x:Name="FileOpen" Header="Open..." InputGestureText="Ctrl+O" Click="FileOpen_Click"/>
-                <MenuItem x:Name="FileSave" Header="Save..." InputGestureText="Ctrl+S" Click="FileSave_Click"/>
+                <MenuItem x:Name="FileOpen" Header="_Open..." InputGestureText="Ctrl+O" Click="FileOpen_Click"/>
+                <MenuItem x:Name="FileSave" Header="_Save..." InputGestureText="Ctrl+S" Click="FileSave_Click"/>
                 <Separator/>
-                <MenuItem x:Name="FileExport" Header="Export..." InputGestureText="Ctrl+E" Click="FileExport_Click"/>
-                <MenuItem x:Name="FileLibrary" Header="Library..." InputGestureText="Ctrl+L" Click="FileLibrary_Click"/>
-                <MenuItem x:Name="FileDatabase" Header="Database..." InputGestureText="Ctrl+D" Click="FileDatabase_Click"/>
+                <MenuItem x:Name="FileExport" Header="_Export..." InputGestureText="Ctrl+E" Click="FileExport_Click"/>
+                <MenuItem x:Name="FileLibrary" Header="_Library..." InputGestureText="Ctrl+L" Click="FileLibrary_Click"/>
+                <MenuItem x:Name="FileDatabase" Header="_Database..." InputGestureText="Ctrl+D" Click="FileDatabase_Click"/>
                 <Separator/>
-                <MenuItem x:Name="FileExit" Header="Exit" InputGestureText="Alf+F4" Click="FileExit_Click"/>
+                <MenuItem x:Name="FileExit" Header="E_xit" InputGestureText="Alf+F4" Click="FileExit_Click"/>
             </MenuItem>
             <MenuItem Header="_Edit">
-                <MenuItem x:Name="EditUndo" Header="Undo" InputGestureText="Ctrl+Z" Click="EditUndo_Click"/>
-                <MenuItem x:Name="EditRedo" Header="Redo" InputGestureText="Ctrl+Y" Click="EditRedo_Click"/>
+                <MenuItem x:Name="EditUndo" Header="_Undo" InputGestureText="Ctrl+Z" Click="EditUndo_Click"/>
+                <MenuItem x:Name="EditRedo" Header="_Redo" InputGestureText="Ctrl+Y" Click="EditRedo_Click"/>
                 <Separator/>
-                <MenuItem x:Name="EditCut" Header="Cut" InputGestureText="Ctrl+X" Click="EditCut_Click"/>
-                <MenuItem x:Name="EditCopy" Header="Copy" InputGestureText="Ctrl+C" Click="EditCopy_Click"/>
-                <MenuItem x:Name="EditPaste" Header="Paste" InputGestureText="Ctrl+V" Click="EditPaste_Click"/>
+                <MenuItem x:Name="EditCut" Header="Cu_t" InputGestureText="Ctrl+X" Click="EditCut_Click"/>
+                <MenuItem x:Name="EditCopy" Header="_Copy" InputGestureText="Ctrl+C" Click="EditCopy_Click"/>
+                <MenuItem x:Name="EditPaste" Header="_Paste" InputGestureText="Ctrl+V" Click="EditPaste_Click"/>
                 <Separator/>
-                <MenuItem x:Name="EditDelete" Header="Delete" InputGestureText="Del" Click="EditDelete_Click"/>
-                <MenuItem x:Name="EditReset" Header="Reset" InputGestureText="Ctrl+Del" Click="EditReset_Click"/>
+                <MenuItem x:Name="EditDelete" Header="_Delete" InputGestureText="Del" Click="EditDelete_Click"/>
+                <MenuItem x:Name="EditReset" Header="R_eset" InputGestureText="Ctrl+Del" Click="EditReset_Click"/>
                 <Separator/>
-                <MenuItem x:Name="EditSelectAll" Header="Select All" InputGestureText="Ctrl+A" Click="EditSelectAll_Click"/>
+                <MenuItem x:Name="EditSelectAll" Header="_Select All" InputGestureText="Ctrl+A" Click="EditSelectAll_Click"/>
                 <Separator/>
-                <MenuItem x:Name="EditCreateBlock" Header="Create Block..." InputGestureText="B" Click="EditCreateBlock_Click"/>
-                <MenuItem x:Name="EditBreakBlock" Header="Break Block" InputGestureText="Ctrl+B" Click="EditBreakBlock_Click"/>
+                <MenuItem x:Name="EditCreateBlock" Header="Create _Block..." InputGestureText="B" Click="EditCreateBlock_Click"/>
+                <MenuItem x:Name="EditBreakBlock" Header="Break B_lock" InputGestureText="Ctrl+B" Click="EditBreakBlock_Click"/>
                 <Separator/>
-                <MenuItem x:Name="EditMoveUp" Header="Move Up" InputGestureText="Up" Click="EditMoveUp_Click"/>
-                <MenuItem x:Name="EditMoveDown" Header="Move Down" InputGestureText="Down" Click="EditMoveDown_Click"/>
-                <MenuItem x:Name="EditMoveLeft" Header="Move Left" InputGestureText="Left" Click="EditMoveLeft_Click"/>
-                <MenuItem x:Name="EditMoveRight" Header="Move Right" InputGestureText="Right" Click="EditMoveRight_Click"/>
+                <MenuItem x:Name="EditMoveUp" Header="Move U_p" InputGestureText="Up" Click="EditMoveUp_Click"/>
+                <MenuItem x:Name="EditMoveDown" Header="Move Do_wn" InputGestureText="Down" Click="EditMoveDown_Click"/>
+                <MenuItem x:Name="EditMoveLeft" Header="Move Le_ft" InputGestureText="Left" Click="EditMoveLeft_Click"/>
+                <MenuItem x:Name="EditMoveRight" Header="Move Ri_ght" InputGestureText="Right" Click="EditMoveRight_Click"/>
                 <Separator/>
-                <MenuItem x:Name="EditToggleFill" Header="Toggle Fill" InputGestureText="F" Click="EditToggleFill_Click"/>
+                <MenuItem x:Name="EditToggleFill" Header="Toggle _Fill" InputGestureText="F" Click="EditToggleFill_Click"/>
             </MenuItem>
             <MenuItem Header="_Mode">
-                <MenuItem x:Name="ModeNone" Header="None" InputGestureText="N" Click="ModeNone_Click"/>
-                <MenuItem x:Name="ModeSelection" Header="Selection" InputGestureText="S" Click="ModeSelection_Click"/>
-                <MenuItem x:Name="ModeInsert" Header="Insert" InputGestureText="I" Click="ModeInsert_Click"/>
-                <MenuItem x:Name="ModeLine" Header="Line" InputGestureText="L" Click="ModeLine_Click"/>
-                <MenuItem x:Name="ModeRectangle" Header="Rectangle" InputGestureText="R" Click="ModeRectangle_Click"/>
-                <MenuItem x:Name="ModeEllipse" Header="Ellipse" InputGestureText="E" Click="ModeEllipse_Click"/>
-                <MenuItem x:Name="ModeText" Header="Text" InputGestureText="T" Click="ModeText_Click"/>
+                <MenuItem x:Name="ModeNone" Header="_None" InputGestureText="N" Click="ModeNone_Click"/>
+                <MenuItem x:Name="ModeSelection" Header="_Selection" InputGestureText="S" Click="ModeSelection_Click"/>
+                <MenuItem x:Name="ModeInsert" Header="_Insert" InputGestureText="I" Click="ModeInsert_Click"/>
+                <MenuItem x:Name="ModeLine" Header="_Line" InputGestureText="L" Click="ModeLine_Click"/>
+                <MenuItem x:Name="ModeRectangle" Header="_Rectangle" InputGestureText="R" Click="ModeRectangle_Click"/>
+                <MenuItem x:Name="ModeEllipse" Header="_Ellipse" InputGestureText="E" Click="ModeEllipse_Click"/>
+                <MenuItem x:Name="ModeText" Header="_Text" InputGestureText="T" Click="ModeText_Click"/>
             </MenuItem>
             <MenuItem Header="_View">
-                <MenuItem x:Name="ViewHelpPanel" Header="Help Panel" InputGestureText="H" Click="ViewHelpPanel_Click"/>
-                <MenuItem x:Name="ViewBlocksPanel" Header="Blocks Panel" InputGestureText="J" Click="ViewBlocksPanel_Click"/>
+                <MenuItem x:Name="ViewHelpPanel" Header="_Help Panel" InputGestureText="H" Click="ViewHelpPanel_Click"/>
+                <MenuItem x:Name="ViewBlocksPanel" Header="_Blocks Panel" InputGestureText="J" Click="ViewBlocksPanel_Click"/>
             </MenuItem>
         </Menu>
+        <local:LibraryControl x:Name="Library" 
+                              Background="WhiteSmoke"
+                              Grid.Row="1"
+                              Grid.Column="0"
+                              Visibility="Hidden" 
+                              Margin="0" 
+                              VerticalAlignment="Center" 
+                              HorizontalAlignment="Stretch"/>
+        <local:HelpControl x:Name="Help" 
+                           Background="WhiteSmoke"
+                           Grid.Row="1"
+                           Grid.Column="0"
+                           Visibility="Hidden" 
+                           Margin="0" 
+                           VerticalAlignment="Center" 
+                           HorizontalAlignment="Stretch"/>
+        <GridSplitter Grid.Row="1" 
+                      Grid.Column="1" 
+                      FocusVisualStyle="{x:Null}"
+                      VerticalAlignment="Stretch" 
+                      HorizontalAlignment="Stretch" 
+                      Background="Transparent" 
+                      ResizeBehavior="PreviousAndNext"
+                      ResizeDirection="Columns">
+            <GridSplitter.Template>
+                <ControlTemplate>
+                    <Grid Background="Transparent">
+                        <Rectangle Width="3" Height="120" VerticalAlignment="Center" HorizontalAlignment="Center" Fill="LightGray"/>
+                    </Grid>
+                </ControlTemplate>
+            </GridSplitter.Template>
+        </GridSplitter>
         <local:SheetControl x:Name="Sheet" 
+                            Background="WhiteSmoke"
+                            ClipToBounds="True"
                             Grid.Row="1" 
+                            Grid.Column="2"
                             ZoomIndex="9" 
                             PanX="0" 
-                            PanY="0"/>
-        <local:LibraryControl x:Name="Library" 
-                              Grid.Row="1"
-                              Visibility="Hidden" 
-                              Margin="6" 
-                              Background="WhiteSmoke" 
-                              VerticalAlignment="Center" 
-                              HorizontalAlignment="Left"/>
-        <local:HelpControl x:Name="Help" 
-                           Grid.Row="1"
-                           Visibility="Hidden" 
-                           Margin="6" 
-                           Background="WhiteSmoke" 
-                           VerticalAlignment="Center" 
-                           HorizontalAlignment="Right"/>
+                            PanY="0"
+                            Margin="0"
+                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
         <local:TextControl x:Name="Text"
-                           Grid.Row="1"
-                           Visibility="Hidden"
                            Background="WhiteSmoke"
+                           Grid.Row="1"
+                           Grid.Column="2"
+                           Visibility="Hidden"
                            Width="330" 
                            VerticalAlignment="Center"
                            HorizontalAlignment="Center"/>
+        <GridSplitter Grid.Row="1" 
+                      Grid.Column="3" 
+                      FocusVisualStyle="{x:Null}"
+                      VerticalAlignment="Stretch" 
+                      HorizontalAlignment="Stretch" 
+                      Background="LightGray" 
+                      ResizeBehavior="PreviousAndNext"
+                      ResizeDirection="Columns">
+            <GridSplitter.Template>
+                <ControlTemplate>
+                    <Grid Background="Transparent">
+                        <Rectangle Width="3" Height="120" VerticalAlignment="Center" HorizontalAlignment="Center" Fill="LightGray"/>
+                    </Grid>
+                </ControlTemplate>
+            </GridSplitter.Template>
+        </GridSplitter>
+        <local:CsvControl x:Name="Csv" 
+                          Background="WhiteSmoke"
+                          FocusVisualStyle="{x:Null}"
+                          Grid.Row="1"
+                          Grid.Column="4"
+                          Visibility="Visible" 
+                          Margin="0" 
+                          VerticalAlignment="Stretch" 
+                          HorizontalAlignment="Stretch"/>
     </Grid>
 </Window>
