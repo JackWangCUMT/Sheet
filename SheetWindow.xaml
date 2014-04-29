@@ -90,7 +90,7 @@
                            Grid.Column="0"
                            Visibility="Hidden" 
                            Margin="0" 
-                           VerticalAlignment="Stretch" 
+                           VerticalAlignment="Center" 
                            HorizontalAlignment="Stretch"/>
         <GridSplitter Grid.Row="1" 
                       Grid.Column="1" 
@@ -109,15 +109,17 @@
             </GridSplitter.Template>
         </GridSplitter>
         <local:SheetControl x:Name="Sheet" 
-                            Background="WhiteSmoke"
-                            ClipToBounds="True"
+                            Background="Transparent"
+                            ClipToBounds="False"
                             Grid.Row="1" 
                             Grid.Column="2"
                             ZoomIndex="9" 
                             PanX="0" 
                             PanY="0"
+                            Width="4096"
+                            Height="4096"
                             Margin="0"
-                            VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+                            VerticalAlignment="Center" HorizontalAlignment="Center"/>
         <local:TextControl x:Name="Text"
                            Background="WhiteSmoke"
                            Grid.Row="1"
