@@ -9,7 +9,7 @@
              d:DesignWidth="1260"
              Focusable="True" 
              FocusVisualStyle="{x:Null}"
-             Background="White" 
+             Background="Transparent" 
              SnapsToDevicePixels="True"
              PreviewMouseWheel="UserControl_PreviewMouseWheel"
              PreviewMouseDown="UserControl_PreviewMouseDown"
@@ -21,7 +21,7 @@
              AllowDrop="True"
              DragEnter="UserControl_DragEnter"
              Drop="UserControl_Drop">
-    <Grid x:Name="Layout" RenderTransformOrigin="0.0,0.0" Background="Transparent">
+    <Grid x:Name="Layout" Width="1260" Height="891" RenderTransformOrigin="0.0,0.0" Background="Transparent" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
         <Grid.RenderTransform>
             <TransformGroup>
                 <ScaleTransform x:Name="zoom" ScaleX="1" ScaleY="1"/>
