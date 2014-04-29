@@ -869,7 +869,7 @@ namespace Sheet
             rectangleItem.Y = Canvas.GetTop(rectangle);
             rectangleItem.Width = rectangle.Width;
             rectangleItem.Height = rectangle.Height;
-            rectangleItem.IsFilled = rectangle.Fill == Brushes.Transparent ? false : true;
+            rectangleItem.IsFilled = rectangle.Fill == TransparentBrush ? false : true;
             rectangleItem.Stroke = ToItemColor(rectangle.Stroke);
             rectangleItem.Fill = ToItemColor(rectangle.Fill);
 
@@ -885,7 +885,7 @@ namespace Sheet
             ellipseItem.Y = Canvas.GetTop(ellipse);
             ellipseItem.Width = ellipse.Width;
             ellipseItem.Height = ellipse.Height;
-            ellipseItem.IsFilled = ellipse.Fill == Brushes.Transparent ? false : true;
+            ellipseItem.IsFilled = ellipse.Fill == TransparentBrush ? false : true;
             ellipseItem.Stroke = ToItemColor(ellipse.Stroke);
             ellipseItem.Fill = ToItemColor(ellipse.Fill);
 
@@ -1091,7 +1091,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
+                    MarkSelected(text);
                 }
             }
 
@@ -1101,7 +1101,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    line.Stroke = Brushes.Red;
+                    MarkSelected(line);
                 }
             }
 
@@ -1111,8 +1111,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    rectangle.Stroke = Brushes.Red;
-                    rectangle.Fill = rectangleItem.IsFilled ? Brushes.Red : Brushes.Transparent;
+                    MarkSelected(rectangle);
                 }
             }
 
@@ -1122,8 +1121,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    ellipse.Stroke = Brushes.Red;
-                    ellipse.Fill = ellipseItem.IsFilled ? Brushes.Red : Brushes.Transparent;
+                    MarkSelected(ellipse);
                 }
             }
 
@@ -1155,7 +1153,7 @@ namespace Sheet
             double fontSize)
         {
             var grid = new Grid();
-            grid.Background = Brushes.Transparent;
+            grid.Background = TransparentBrush;
             grid.Width = width;
             grid.Height = height;
             Canvas.SetLeft(grid, x);
@@ -1164,8 +1162,8 @@ namespace Sheet
             var tb = new TextBlock();
             tb.HorizontalAlignment = halign;
             tb.VerticalAlignment = valign;
-            tb.Background = Brushes.Transparent;
-            tb.Foreground = Brushes.Black;
+            tb.Background = TransparentBrush;
+            tb.Foreground = NormalBrush;
             tb.FontSize = fontSize;
             tb.FontFamily = new FontFamily("Calibri");
             tb.Text = text;
@@ -1179,7 +1177,7 @@ namespace Sheet
         {
             var line = new Line()
             {
-                Stroke = Brushes.Black,
+                Stroke = NormalBrush,
                 StrokeThickness = thickness,
                 StrokeStartLineCap = PenLineCap.Round,
                 StrokeEndLineCap = PenLineCap.Round,
@@ -1196,8 +1194,8 @@ namespace Sheet
         {
             var rectangle = new Rectangle()
             {
-                Fill = isFilled ? Brushes.Black : Brushes.Transparent,
-                Stroke = Brushes.Black,
+                Fill = isFilled ? NormalBrush : TransparentBrush,
+                Stroke = NormalBrush,
                 StrokeThickness = thickness,
                 StrokeStartLineCap = PenLineCap.Round,
                 StrokeEndLineCap = PenLineCap.Round,
@@ -1215,8 +1213,8 @@ namespace Sheet
         {
             var ellipse = new Ellipse()
             {
-                Fill = isFilled ? Brushes.Black : Brushes.Transparent,
-                Stroke = Brushes.Black,
+                Fill = isFilled ? NormalBrush : TransparentBrush,
+                Stroke = NormalBrush,
                 StrokeThickness = thickness,
                 StrokeStartLineCap = PenLineCap.Round,
                 StrokeEndLineCap = PenLineCap.Round,
@@ -1266,7 +1264,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    line.Stroke = Brushes.Red;
+                    MarkSelected(line);
                     selected.Lines.Add(line);
                 }
             }
@@ -1285,8 +1283,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    rectangle.Stroke = Brushes.Red;
-                    rectangle.Fill = rectangleItem.IsFilled ? Brushes.Red : Brushes.Transparent;
+                    MarkSelected(rectangle);
                     selected.Rectangles.Add(rectangle);
                 }
             }
@@ -1305,8 +1302,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    ellipse.Stroke = Brushes.Red;
-                    ellipse.Fill = ellipseItem.IsFilled ? Brushes.Red : Brushes.Transparent;
+                    MarkSelected(ellipse);
                     selected.Ellipses.Add(ellipse);
                 }
             }
@@ -1325,7 +1321,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
+                    MarkSelected(text);
                     selected.Texts.Add(text);
                 }
             }
@@ -1574,6 +1570,64 @@ namespace Sheet
 
         #endregion
 
+        #region Brushes
+
+        public static SolidColorBrush NormalBrush = Brushes.Black;
+        public static SolidColorBrush SelectedBrush = Brushes.Red;
+        public static SolidColorBrush TransparentBrush = Brushes.Transparent;
+        public static SolidColorBrush GridBrush = Brushes.LightGray;
+        public static SolidColorBrush FrameBrush = Brushes.DarkGray;
+
+        #endregion
+
+        #region Mark Selection
+
+        public static void MarkNormal(Line line)
+        {
+            line.Stroke = NormalBrush;
+        }
+
+        public static void MarkNormal(Rectangle rectangle)
+        {
+            rectangle.Stroke = NormalBrush;
+            rectangle.Fill = rectangle.Fill == TransparentBrush ? TransparentBrush : NormalBrush;
+        }
+
+        public static void MarkNormal(Ellipse ellipse)
+        {
+            ellipse.Stroke = NormalBrush;
+            ellipse.Fill = ellipse.Fill == TransparentBrush ? TransparentBrush : NormalBrush;
+        }
+
+        public static void MarkNormal(Grid text)
+        {
+            BlockEditor.GetTextBlock(text).Foreground = NormalBrush;
+        }
+
+        public static void MarkSelected(Line line)
+        {
+            line.Stroke = SelectedBrush;
+        }
+
+        public static void MarkSelected(Rectangle rectangle)
+        {
+            rectangle.Stroke = SelectedBrush;
+            rectangle.Fill = rectangle.Fill == TransparentBrush ? TransparentBrush : SelectedBrush;
+        }
+
+        public static void MarkSelected(Ellipse ellipse)
+        {
+            ellipse.Stroke = SelectedBrush;
+            ellipse.Fill = ellipse.Fill == TransparentBrush ? TransparentBrush : SelectedBrush;
+        }
+
+        public static void MarkSelected(Grid text)
+        {
+            BlockEditor.GetTextBlock(text).Foreground = SelectedBrush;
+        }
+
+        #endregion
+
         #region Selection
 
         public static bool HaveSelected(Block selected)
@@ -1609,24 +1663,22 @@ namespace Sheet
         {
             foreach (var line in parent.Lines)
             {
-                line.Stroke = Brushes.Red;
+                MarkSelected(line);
             }
 
             foreach (var rectangle in parent.Rectangles)
             {
-                rectangle.Stroke = Brushes.Red;
-                rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                MarkSelected(rectangle);
             }
 
             foreach (var ellipse in parent.Ellipses)
             {
-                ellipse.Stroke = Brushes.Red;
-                ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                MarkSelected(ellipse);
             }
 
             foreach (var text in parent.Texts)
             {
-                BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
+                MarkSelected(text);
             }
 
             foreach (var block in parent.Blocks)
@@ -1641,7 +1693,7 @@ namespace Sheet
             {
                 foreach (var line in parent.Lines)
                 {
-                    line.Stroke = Brushes.Black;
+                    MarkNormal(line);
                 }
             }
 
@@ -1649,8 +1701,7 @@ namespace Sheet
             {
                 foreach (var rectangle in parent.Rectangles)
                 {
-                    rectangle.Stroke = Brushes.Black;
-                    rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                    MarkNormal(rectangle);
                 }
             }
 
@@ -1658,8 +1709,7 @@ namespace Sheet
             {
                 foreach (var ellipse in parent.Ellipses)
                 {
-                    ellipse.Stroke = Brushes.Black;
-                    ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                    MarkNormal(ellipse);
                 }
             }
 
@@ -1667,7 +1717,7 @@ namespace Sheet
             {
                 foreach (var text in parent.Texts)
                 {
-                    BlockEditor.GetTextBlock(text).Foreground = Brushes.Black;
+                    MarkNormal(text);
                 }
             }
 
@@ -1686,27 +1736,25 @@ namespace Sheet
 
             foreach (var line in logic.Lines)
             {
-                line.Stroke = Brushes.Red;
+                MarkSelected(line);
                 selected.Lines.Add(line);
             }
 
             foreach (var rectangle in logic.Rectangles)
             {
-                rectangle.Stroke = Brushes.Red;
-                rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                MarkSelected(rectangle);
                 selected.Rectangles.Add(rectangle);
             }
 
             foreach (var ellipse in logic.Ellipses)
             {
-                ellipse.Stroke = Brushes.Red;
-                ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                MarkSelected(ellipse);
                 selected.Ellipses.Add(ellipse);
             }
 
             foreach (var text in logic.Texts)
             {
-                BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
+                MarkSelected(text);
                 selected.Texts.Add(text);
             }
 
@@ -1714,24 +1762,22 @@ namespace Sheet
             {
                 foreach (var line in parent.Lines)
                 {
-                    line.Stroke = Brushes.Red;
+                    MarkSelected(line);
                 }
 
                 foreach (var rectangle in parent.Rectangles)
                 {
-                    rectangle.Stroke = Brushes.Red;
-                    rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                    MarkSelected(rectangle);
                 }
 
                 foreach (var ellipse in parent.Ellipses)
                 {
-                    ellipse.Stroke = Brushes.Red;
-                    ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                    MarkSelected(ellipse);
                 }
 
                 foreach (var text in parent.Texts)
                 {
-                    BlockEditor.GetTextBlock(text).Foreground = Brushes.Red;
+                    MarkSelected(text);
                 }
 
                 foreach (var block in parent.Blocks)
@@ -1749,7 +1795,7 @@ namespace Sheet
             {
                 foreach (var line in selected.Lines)
                 {
-                    line.Stroke = Brushes.Black;
+                    MarkNormal(line);
                 }
 
                 selected.Lines = null;
@@ -1759,8 +1805,7 @@ namespace Sheet
             {
                 foreach (var rectangle in selected.Rectangles)
                 {
-                    rectangle.Stroke = Brushes.Black;
-                    rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                    MarkNormal(rectangle);
                 }
 
                 selected.Rectangles = null;
@@ -1770,8 +1815,7 @@ namespace Sheet
             {
                 foreach (var ellipse in selected.Ellipses)
                 {
-                    ellipse.Stroke = Brushes.Black;
-                    ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                    MarkNormal(ellipse);
                 }
 
                 selected.Ellipses = null;
@@ -1781,7 +1825,7 @@ namespace Sheet
             {
                 foreach (var text in selected.Texts)
                 {
-                    BlockEditor.GetTextBlock(text).Foreground = Brushes.Black;
+                    MarkNormal(text);
                 }
 
                 selected.Texts = null;
@@ -1793,24 +1837,22 @@ namespace Sheet
                 {
                     foreach (var line in parent.Lines)
                     {
-                        line.Stroke = Brushes.Black;
+                        MarkNormal(line);
                     }
 
                     foreach (var rectangle in parent.Rectangles)
                     {
-                        rectangle.Stroke = Brushes.Black;
-                        rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                        MarkNormal(rectangle);
                     }
 
                     foreach (var ellipse in parent.Ellipses)
                     {
-                        ellipse.Stroke = Brushes.Black;
-                        ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                        MarkNormal(ellipse);
                     }
 
                     foreach (var text in parent.Texts)
                     {
-                        BlockEditor.GetTextBlock(text).Foreground = Brushes.Black;
+                        MarkNormal(text);
                     }
 
                     foreach (var block in parent.Blocks)
@@ -1836,14 +1878,14 @@ namespace Sheet
                 {
                     if (select)
                     {
-                        if (line.Stroke != Brushes.Red)
+                        if (line.Stroke != SelectedBrush)
                         {
-                            line.Stroke = Brushes.Red;
+                            MarkSelected(line);
                             selected.Lines.Add(line);
                         }
                         else
                         {
-                            line.Stroke = Brushes.Black;
+                            MarkNormal(line);
                             selected.Lines.Remove(line);
                         }
                     }
@@ -1868,16 +1910,14 @@ namespace Sheet
                 {
                     if (select)
                     {
-                        if (rectangle.Stroke != Brushes.Red)
+                        if (rectangle.Stroke != SelectedBrush)
                         {
-                            rectangle.Stroke = Brushes.Red;
-                            rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                            MarkSelected(rectangle);
                             selected.Rectangles.Add(rectangle);
                         }
                         else
                         {
-                            rectangle.Stroke = Brushes.Black;
-                            rectangle.Fill = rectangle.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                            MarkNormal(rectangle);
                             selected.Rectangles.Add(rectangle);
                         }
                     }
@@ -1902,16 +1942,14 @@ namespace Sheet
                 {
                     if (select)
                     {
-                        if (ellipse.Stroke != Brushes.Red)
+                        if (ellipse.Stroke != SelectedBrush)
                         {
-                            ellipse.Stroke = Brushes.Red;
-                            ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Red;
+                            MarkSelected(ellipse);
                             selected.Ellipses.Add(ellipse); 
                         }
                         else
                         {
-                            ellipse.Stroke = Brushes.Black;
-                            ellipse.Fill = ellipse.Fill == Brushes.Transparent ? Brushes.Transparent : Brushes.Black;
+                            MarkNormal(ellipse);
                             selected.Ellipses.Remove(ellipse);
                         }
                     }
@@ -1937,14 +1975,14 @@ namespace Sheet
                     if (select)
                     {
                         var tb = BlockEditor.GetTextBlock(text);
-                        if (tb.Foreground != Brushes.Red)
+                        if (tb.Foreground != SelectedBrush)
                         {
-                            tb.Foreground = Brushes.Red;
+                            MarkSelected(text);
                             selected.Texts.Add(text);
                         }
                         else
                         {
-                            tb.Foreground = Brushes.Black;
+                            MarkNormal(text);
                             selected.Texts.Remove(text);
                         }
                     }
@@ -2430,8 +2468,8 @@ namespace Sheet
 
         private void InitLoaded()
         {
-            CreateGrid(back, gridLines, 330.0, 30.0, 600.0, 750.0, gridSize, gridThickness, Brushes.LightGray);
-            CreateFrame(back, frameLines, gridSize, gridThickness, Brushes.DarkGray);
+            CreateGrid(back, gridLines, 330.0, 30.0, 600.0, 750.0, gridSize, gridThickness, BlockEditor.GridBrush);
+            CreateFrame(back, frameLines, gridSize, gridThickness, BlockEditor.FrameBrush);
             AdjustThickness(gridLines, gridThickness / zoomFactors[zoomIndex]);
             AdjustThickness(frameLines, frameThickness / zoomFactors[zoomIndex]);
             LoadStandardLibrary();
@@ -2940,12 +2978,12 @@ namespace Sheet
         {
             if (tempRectangle != null)
             {
-                tempRectangle.Fill = tempRectangle.Fill == Brushes.Transparent ? Brushes.Black : Brushes.Transparent;
+                tempRectangle.Fill = tempRectangle.Fill == BlockEditor.TransparentBrush ? BlockEditor.NormalBrush : BlockEditor.TransparentBrush;
             }
 
             if (tempEllipse != null)
             {
-                tempEllipse.Fill = tempEllipse.Fill == Brushes.Transparent ? Brushes.Black : Brushes.Transparent;
+                tempEllipse.Fill = tempEllipse.Fill == BlockEditor.TransparentBrush ? BlockEditor.NormalBrush : BlockEditor.TransparentBrush;
             }
         }
 
@@ -3440,8 +3478,8 @@ namespace Sheet
             var root = new CanvasControl();
             var sheet = new CanvasSheet(root.Sheet);
 
-            //CreateGrid(sheet, null, 330.0, 30.0, 600.0, 720.0, gridSize, 0.013 * 96.0 / 2.54 /*gridThickness*/, Brushes.LightGray);
-            CreateFrame(sheet, null, gridSize, 0.013 * 96.0 / 2.54 /*gridThickness*/, Brushes.Black);
+            //CreateGrid(sheet, null, 330.0, 30.0, 600.0, 720.0, gridSize, 0.013 * 96.0 / 2.54 /*gridThickness*/, BlockEditor.GridBrush);
+            CreateFrame(sheet, null, gridSize, 0.013 * 96.0 / 2.54 /*gridThickness*/, BlockEditor.NormalBrush);
 
             var block = BlockEditor.SerializerBlockContents(parent, 0, "LOGIC");
             BlockEditor.InsertBlockContents(sheet, block, null, null, false, 0.035 * 96.0 / 2.54 /*lineThickness*/);
