@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Packaging;
@@ -2751,15 +2752,21 @@ namespace Sheet
 
         public void Copy()
         {
-            var text = ItemEditor.Serialize(BlockEditor.HaveSelected(Selected) ?
-                BlockEditor.SerializerBlockContents(Selected, 0, "SELECTED") : SerializeLogicBlock());
+            var block = BlockEditor.HaveSelected(Selected) ? 
+                BlockEditor.SerializerBlockContents(Selected, 0, "SELECTED") : SerializeLogicBlock();
+            var text = ItemEditor.Serialize(block);
             Clipboard.SetData(DataFormats.UnicodeText, text);
+            //string json = JsonConvert.SerializeObject(block, Formatting.Indented);
+            //Clipboard.SetData(DataFormats.UnicodeText, json);
         }
 
         public void Paste()
         {
             var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
-            InsertBlock(ItemEditor.Deserialize(text), true);
+            var block = ItemEditor.Deserialize(text);
+            InsertBlock(block, true);
+            //var block = JsonConvert.DeserializeObject<BlockItem>(text);
+            //InsertBlock(block, true);
         }
 
         #endregion
@@ -3518,7 +3525,7 @@ namespace Sheet
         {
             var dlg = new Microsoft.Win32.OpenFileDialog()
             {
-                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*"
+                Filter = "TXT Files (*.txt)|*.txt|JSON Files (*.json)|*.json|All Files (*.*)|*.*"
             };
 
             if (dlg.ShowDialog() == true)
@@ -3526,9 +3533,26 @@ namespace Sheet
                 var text = ItemEditor.OpenText(dlg.FileName);
                 if (text != null)
                 {
-                    PushUndo("Open");
-                    Reset();
-                    InsertBlock(ItemEditor.Deserialize(text), false);
+                    switch (dlg.FilterIndex)
+                    {
+                        case 1:
+                            {
+                                PushUndo("Open");
+                                Reset();
+                                var block = ItemEditor.Deserialize(text);
+                                InsertBlock(block, false);
+                            }
+                            break;
+                        case 2:
+                        case 3:
+                            {
+                                PushUndo("Open");
+                                Reset();
+                                var block = JsonConvert.DeserializeObject<BlockItem>(text);
+                                InsertBlock(block, false);
+                            }
+                            break;
+                    }
                 }
             }
         }
@@ -3537,14 +3561,30 @@ namespace Sheet
         {
             var dlg = new Microsoft.Win32.SaveFileDialog()
             {
-                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*",
+                Filter = "TXT Files (*.txt)|*.txt|JSON Files (*.json)|*.json|All Files (*.*)|*.*",
                 FileName = "sheet"
             };
 
             if (dlg.ShowDialog() == true)
             {
-                var text = ItemEditor.Serialize(SerializeLogicBlock());
-                ItemEditor.SaveText(dlg.FileName, text);
+                switch (dlg.FilterIndex)
+                {
+                    case 1:
+                        {
+                            var block = SerializeLogicBlock();
+                            var text = ItemEditor.Serialize(block);
+                            ItemEditor.SaveText(dlg.FileName, text);
+                        }
+                        break;
+                    case 2:
+                    case 3:
+                        {
+                            var block = SerializeLogicBlock();
+                            string text = JsonConvert.SerializeObject(block, Formatting.Indented);
+                            ItemEditor.SaveText(dlg.FileName, text);
+                        }
+                        break;
+                }
             }
         }
 
@@ -3561,11 +3601,15 @@ namespace Sheet
                 switch(dlg.FilterIndex)
                 {
                     case 1:
-                        ExportToPdf(dlg.FileName);
+                        {
+                            ExportToPdf(dlg.FileName);
+                        }
                         break;
                     case 2:
                     case 3:
-                    ExportToXps(dlg.FileName);
+                        {
+                            ExportToXps(dlg.FileName);
+                        }
                         break;
                 }
             }
