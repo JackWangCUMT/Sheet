@@ -46,17 +46,7 @@ namespace Sheet
 
     #endregion
 
-    #region TagItem
-
-    public class TagItem
-    {
-        public string[] Columns { get; set; }
-        public string[] Data { get; set; }
-    } 
-
-    #endregion
-
-    public partial class CsvControl : UserControl
+    public partial class CsvControl : UserControl, IDatabase
     {
         #region Fields
 
@@ -86,6 +76,25 @@ namespace Sheet
         public CsvControl()
         {
             InitializeComponent();
+        }
+
+        #endregion
+
+        #region IDatabase
+
+        public TagItem Get(int index)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool Update(int index, TagItem tag)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int Add(TagItem tag)
+        {
+            throw new NotImplementedException();
         }
 
         #endregion

@@ -32,6 +32,7 @@ namespace Sheet
         private void Init()
         {
             Sheet.Library = Library;
+            Sheet.Database = Csv;
             Sheet.TextEditor = Text;
             UpdateModeMenu();
         }
