@@ -3773,6 +3773,7 @@ namespace Sheet
 
             if (BlockEditor.HaveOneBlockSelected(temp))
             {
+                PushUndo("Bind Tag");
                 var block = temp.Blocks[0];
                 BindTagToBlock(block, tagItem);
                 BlockEditor.Deselect(temp);
