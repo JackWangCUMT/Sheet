@@ -90,7 +90,7 @@
                            Grid.Column="0"
                            Visibility="Hidden" 
                            Margin="0" 
-                           VerticalAlignment="Center" 
+                           VerticalAlignment="Stretch" 
                            HorizontalAlignment="Stretch"/>
         <GridSplitter Grid.Row="1" 
                       Grid.Column="1" 
