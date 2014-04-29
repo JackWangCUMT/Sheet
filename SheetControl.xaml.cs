@@ -1628,6 +1628,20 @@ namespace Sheet
 
         #endregion
 
+        #region Toggle Fill
+
+        public static void ToggleFill(Rectangle rectangle)
+        {
+            rectangle.Fill = rectangle.Fill == TransparentBrush ? NormalBrush : TransparentBrush;
+        }
+
+        public static void ToggleFill(Ellipse ellipse)
+        {
+            ellipse.Fill = ellipse.Fill == TransparentBrush ? NormalBrush : TransparentBrush;
+        }
+
+        #endregion
+
         #region Selection
 
         public static bool HaveSelected(Block selected)
@@ -2978,12 +2992,12 @@ namespace Sheet
         {
             if (tempRectangle != null)
             {
-                tempRectangle.Fill = tempRectangle.Fill == BlockEditor.TransparentBrush ? BlockEditor.NormalBrush : BlockEditor.TransparentBrush;
+                BlockEditor.ToggleFill(tempRectangle);
             }
 
             if (tempEllipse != null)
             {
-                tempEllipse.Fill = tempEllipse.Fill == BlockEditor.TransparentBrush ? BlockEditor.NormalBrush : BlockEditor.TransparentBrush;
+                BlockEditor.ToggleFill(tempEllipse);
             }
         }
 
