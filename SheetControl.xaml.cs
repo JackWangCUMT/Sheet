@@ -2429,7 +2429,7 @@ namespace Sheet
 
         private void InitLoaded()
         {
-            CreateGrid(back, gridLines, 330.0, 30.0, 600.0, 720.0, gridSize, gridThickness, Brushes.LightGray);
+            CreateGrid(back, gridLines, 330.0, 30.0, 600.0, 750.0, gridSize, gridThickness, Brushes.LightGray);
             CreateFrame(back, frameLines, gridSize, gridThickness, Brushes.DarkGray);
             AdjustThickness(gridLines, gridThickness / zoomFactors[zoomIndex]);
             AdjustThickness(frameLines, frameThickness / zoomFactors[zoomIndex]);
@@ -2549,25 +2549,48 @@ namespace Sheet
 
         private static void CreateFrame(ISheet sheet, List<Line> lines, double size, double thickness, Brush stroke)
         {
-            for (double y = 30.0 + 30.0; y < 750.0; y += size)
+            double padding = 2.0;
+            double width = 1260.0;
+            double height = 891.0;
+            double startX = padding;
+            double startY = padding;
+            double rows = 780.0;
+
+            // frame left rows
+            for (double y = 60.0; y < rows; y += size)
             {
-                CreateLine(sheet, lines, thickness, 0.0, y, 30.0 + 300.0, y, stroke);
+                CreateLine(sheet, lines, thickness, startX, y, 330.0, y, stroke);
             }
 
-            for (double y = 30.0 + 30.0; y < 750.0; y += size)
+            // frame right rows
+            for (double y = 60.0; y < rows; y += size)
             {
-                CreateLine(sheet, lines, thickness, 30.0 + 900.0, y, 30.0 + 30.0 + 1200.0, y, stroke);
+                CreateLine(sheet, lines, thickness, 930.0, y, 1260.0 - padding, y, stroke);
             }
 
-            CreateLine(sheet, lines, thickness, 30.0,                        30.0, 30.0,                        750.0, stroke);
-            CreateLine(sheet, lines, thickness, 30.0 + 210.0,                30.0, 30.0 + 210.0,                750.0, stroke);
-            CreateLine(sheet, lines, thickness, 30.0 + 210.0 + 90.0,          0.0, 30.0 + 210.0 + 90.0,         750.0, stroke);
+            // frame columns
+            double[] columnWidth = {  30.0, 210.0,   90.0,  600.0, 210.0,  90.0 };
+            double[] columnX     = {  30.0,  30.0, startY, startY,  30.0,  30.0 };
+            double[] columnY     = {  rows,  rows,   rows,   rows,  rows,  rows };
 
-            CreateLine(sheet, lines, thickness, 30.0 + 900.0,                 0.0, 30.0 + 900.0,                750.0, stroke);
-            CreateLine(sheet, lines, thickness, 30.0 + 900.0 + 210.0,        30.0, 30.0 + 900.0 + 210.0,        750.0, stroke);
-            CreateLine(sheet, lines, thickness, 30.0 + 900.0 + 210.0 + 90.0, 30.0, 30.0 + 900.0 + 210.0 + 90.0, 750.0, stroke);
+            double start = 0.0;
+            for(int i = 0; i < columnWidth.Length; i++)
+            {
+                start += columnWidth[i];
+                CreateLine(sheet, lines, thickness, start, columnX[i], start, columnY[i], stroke);
+            }
 
-            CreateLine(sheet, lines, thickness, 0.0, 30.0, 1260.0, 30.0, stroke);
+            // frame header
+            CreateLine(sheet, lines, thickness, startX, 30.0, width - padding, 30.0, stroke);
+            
+            // frame footer
+            CreateLine(sheet, lines, thickness, startX, rows, width - padding, rows, stroke);
+
+            // frame border
+            CreateLine(sheet, lines, thickness, startX, startY, width - padding, startY, stroke);
+            CreateLine(sheet, lines, thickness, startX, height - padding, width - padding, height - padding, stroke);
+            CreateLine(sheet, lines, thickness, startX, startY, startX, height - padding, stroke);
+            CreateLine(sheet, lines, thickness, width - padding, startY, width - padding, height - padding, stroke);
         }
 
         private static void CreateGrid(ISheet sheet, List<Line> lines, double startX, double startY, double width, double height, double size, double thickness, Brush stroke)
