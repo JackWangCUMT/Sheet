@@ -75,11 +75,6 @@ namespace Sheet
 
         #region Toggle Panels
 
-        private void ToggleHelpPanel()
-        {
-            Help.Visibility = Help.Visibility == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
-        }
-
         private void ToggleBlocksPanel()
         {
             if (Library.Blocks.Items.Count > 0)
@@ -310,10 +305,6 @@ namespace Sheet
                     GetSheet().ModeText();
                     UpdateModeMenu();
                     break;
-                // Help Panel
-                case Key.H:
-                    ToggleHelpPanel();
-                    break;
                 // Blocks Panel
                 case Key.J:
                     ToggleBlocksPanel();
@@ -496,11 +487,6 @@ namespace Sheet
         #endregion
 
         #region View Menu Events
-
-        private void ViewHelpPanel_Click(object sender, RoutedEventArgs e)
-        {
-            ToggleHelpPanel();
-        }
 
         private void ViewBlocksPanel_Click(object sender, RoutedEventArgs e)
         {

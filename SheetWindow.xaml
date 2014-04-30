@@ -72,7 +72,6 @@
                 <MenuItem x:Name="ModeText" Header="_Text" InputGestureText="T" Click="ModeText_Click"/>
             </MenuItem>
             <MenuItem Header="_View">
-                <MenuItem x:Name="ViewHelpPanel" Header="_Help Panel" InputGestureText="H" Click="ViewHelpPanel_Click"/>
                 <MenuItem x:Name="ViewBlocksPanel" Header="_Blocks Panel" InputGestureText="J" Click="ViewBlocksPanel_Click"/>
             </MenuItem>
         </Menu>
@@ -84,14 +83,6 @@
                               Margin="0" 
                               VerticalAlignment="Center" 
                               HorizontalAlignment="Stretch"/>
-        <local:HelpControl x:Name="Help" 
-                           Background="WhiteSmoke"
-                           Grid.Row="1"
-                           Grid.Column="0"
-                           Visibility="Hidden" 
-                           Margin="0" 
-                           VerticalAlignment="Center" 
-                           HorizontalAlignment="Stretch"/>
         <GridSplitter Grid.Row="1" 
                       Grid.Column="1" 
                       FocusVisualStyle="{x:Null}"
@@ -145,13 +136,13 @@
             </GridSplitter.Template>
         </GridSplitter>
         <local:DatabaseControl x:Name="Csv" 
-                          Background="WhiteSmoke"
-                          FocusVisualStyle="{x:Null}"
-                          Grid.Row="1"
-                          Grid.Column="4"
-                          Visibility="Visible" 
-                          Margin="0" 
-                          VerticalAlignment="Stretch" 
-                          HorizontalAlignment="Stretch"/>
+                               Background="WhiteSmoke"
+                               FocusVisualStyle="{x:Null}"
+                               Grid.Row="1"
+                               Grid.Column="4"
+                               Visibility="Visible" 
+                               Margin="0" 
+                               VerticalAlignment="Stretch" 
+                               HorizontalAlignment="Stretch"/>
     </Grid>
 </Window>

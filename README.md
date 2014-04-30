@@ -32,7 +32,6 @@ Keyboard  Shortcuts:
     Left            Move Left
     Right           Move Right
     F               Toggle Fill
-    H               Help Panel
     J               Blocks Panel
 
 Mouse:
