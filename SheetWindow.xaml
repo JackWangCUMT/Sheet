@@ -144,7 +144,7 @@
                 </ControlTemplate>
             </GridSplitter.Template>
         </GridSplitter>
-        <local:CsvControl x:Name="Csv" 
+        <local:DatabaseControl x:Name="Csv" 
                           Background="WhiteSmoke"
                           FocusVisualStyle="{x:Null}"
                           Grid.Row="1"

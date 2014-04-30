@@ -76,8 +76,8 @@
     <Compile Include="CanvasControl.xaml.cs">
       <DependentUpon>CanvasControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="CsvControl.xaml.cs">
-      <DependentUpon>CsvControl.xaml</DependentUpon>
+    <Compile Include="DatabaseControl.xaml.cs">
+      <DependentUpon>DatabaseControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="LibraryControl.xaml.cs">
       <DependentUpon>LibraryControl.xaml</DependentUpon>
@@ -90,7 +90,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="CsvControl.xaml">
+    <Page Include="DatabaseControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -304,7 +304,7 @@ namespace Sheet
         {
             Csv.Open();
             /*
-            var database = new CsvControl();
+            var database = new DatabaseControl();
             string result = database.Open();
 
             if (result != null)

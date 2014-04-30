@@ -20,7 +20,7 @@ namespace Sheet
 
     public static class CsvReader
     {
-        public static IEnumerable<string[]> Read(string path, bool skipOverHeaderLine)
+        public static IEnumerable<string[]> Read(string path)
         {
             // reference Microsoft.VisualBasic, namespace Microsoft.VisualBasic.FileIO
             using (TextFieldParser parser = new TextFieldParser(path))
@@ -28,13 +28,6 @@ namespace Sheet
                 parser.CommentTokens = new string[] { "#" };
                 parser.SetDelimiters(new string[] { ";" });
                 parser.HasFieldsEnclosedInQuotes = true;
-
-                // skip over header line
-                if (skipOverHeaderLine)
-                {
-                    parser.ReadLine();
-                }
-
                 while (!parser.EndOfData)
                 {
                     string[] fields = parser.ReadFields();
@@ -46,7 +39,7 @@ namespace Sheet
 
     #endregion
 
-    public partial class CsvControl : UserControl, IDatabase
+    public partial class DatabaseControl : UserControl, IDatabase
     {
         #region Fields
 
@@ -73,7 +66,7 @@ namespace Sheet
 
         #region Constructor
 
-        public CsvControl()
+        public DatabaseControl()
         {
             InitializeComponent();
         }
@@ -119,7 +112,7 @@ namespace Sheet
 
         public void Open(string fileName)
         {
-            var fields = CsvReader.Read(fileName, false);
+            var fields = CsvReader.Read(fileName);
 
             columns = fields.FirstOrDefault();
             data = fields.Skip(1).ToList();
@@ -140,13 +133,13 @@ namespace Sheet
                 }
                 i++;
             }
-            Csv.View = gv;
+            Database.View = gv;
         }
 
         private void SetData(List<string[]> data)
         {
-            Csv.ItemsSource = null;
-            Csv.ItemsSource = data;
+            Database.ItemsSource = null;
+            Database.ItemsSource = data;
         }
 
         #endregion
