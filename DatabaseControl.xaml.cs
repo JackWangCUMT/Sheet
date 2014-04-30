@@ -85,14 +85,14 @@ namespace Sheet
 
         public string[] Get(int index)
         {
-            return Data.Where(x => int.Parse(x[0]) == index).FirstOrDefault();
+            return data.Where(x => int.Parse(x[0]) == index).FirstOrDefault();
         }
 
         public bool Update(int index, string[] item)
         {
-            for (int i = 0; i < Data.Count; i++)
+            for (int i = 0; i < data.Count; i++)
             {
-                if (int.Parse(Data[i][0]) == index)
+                if (int.Parse(data[i][0]) == index)
                 {
                     data[i] = item;
                     return true;
