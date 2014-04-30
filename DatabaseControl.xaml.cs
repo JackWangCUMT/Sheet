@@ -55,11 +55,19 @@ namespace Sheet
         public string[] Columns
         {
             get { return columns; }
+            set
+            {
+                columns = value;
+            }
         }
 
         public List<string[]> Data
         {
             get { return data;  }
+            set
+            {
+                data = value;
+            }
         }
 
         #endregion
@@ -75,19 +83,30 @@ namespace Sheet
 
         #region IDatabase
 
-        public TagItem Get(int index)
+        public string[] Get(int index)
         {
-            throw new NotImplementedException();
+            return Data.Where(x => int.Parse(x[0]) == index).FirstOrDefault();
         }
 
-        public bool Update(int index, TagItem tag)
+        public bool Update(int index, string[] item)
         {
-            throw new NotImplementedException();
+            for (int i = 0; i < Data.Count; i++)
+            {
+                if (int.Parse(Data[i][0]) == index)
+                {
+                    data[i] = item;
+                    return true;
+                }
+            }
+            return false;
         }
 
-        public int Add(TagItem tag)
+        public int Add(string[] item)
         {
-            throw new NotImplementedException();
+            int index = data.Max((x) => int.Parse(x[0])) + 1;
+            item[0] = index.ToString();
+            data.Add(item);
+            return index;
         }
 
         #endregion
@@ -113,15 +132,17 @@ namespace Sheet
         public void Open(string fileName)
         {
             var fields = CsvReader.Read(fileName);
-
-            columns = fields.FirstOrDefault();
-            data = fields.Skip(1).ToList();
-
-            SetColumns(columns);
-            SetData(data);
+            SetColumns(fields.FirstOrDefault());
+            SetData(fields.Skip(1).ToList());
         }
 
-        private void SetColumns(string[] columns)
+        public void SetColumns(string[] columns)
+        {
+            Columns = columns;
+            Database.View = CreateColumnsView(columns);
+        }
+
+        private GridView CreateColumnsView(string[] columns)
         {
             var gv = new GridView();
             int i = 0;
@@ -133,11 +154,12 @@ namespace Sheet
                 }
                 i++;
             }
-            Database.View = gv;
+            return gv;
         }
 
-        private void SetData(List<string[]> data)
+        public void SetData(List<string[]> data)
         {
+            Data = data;
             Database.ItemsSource = null;
             Database.ItemsSource = data;
         }

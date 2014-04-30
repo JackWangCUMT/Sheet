@@ -35,6 +35,23 @@ namespace Sheet
             Sheet.Database = Csv;
             Sheet.TextEditor = Text;
             UpdateModeMenu();
+
+            CreateTestDatabase();
+        }
+
+        private void CreateTestDatabase()
+        {
+            string[] columns = { "Index", "Designation", "Description", "Signal", "Condition" };
+
+            var data = new List<string[]>();
+            for (int i = 0; i < 10; i++)
+            {
+                string[] item = { i.ToString(), "Designation", "Description", "Signal", "Condition" };
+                data.Add(item);
+            }
+
+            Csv.SetColumns(columns);
+            Csv.SetData(data);
         }
 
         #endregion

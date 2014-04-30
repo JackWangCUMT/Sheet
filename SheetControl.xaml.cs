@@ -778,9 +778,9 @@ namespace Sheet
 
     public interface IDatabase
     {
-        TagItem Get(int index);
-        bool Update(int index, TagItem tag);
-        int Add(TagItem tag);
+        string[] Get(int index);
+        bool Update(int index, string[] item);
+        int Add(string[] item);
     }
 
     #endregion
