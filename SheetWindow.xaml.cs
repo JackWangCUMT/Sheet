@@ -35,8 +35,25 @@ namespace Sheet
             Sheet.Database = Csv;
             Sheet.TextEditor = Text;
             UpdateModeMenu();
-
             CreateTestDatabase();
+        }
+
+        #endregion
+
+        #region Sheet
+
+        private SheetControl GetSheet()
+        {
+            return Sheet;
+        }
+
+        #endregion
+
+        #region Database
+
+        public void Database()
+        {
+            Csv.Open();
         }
 
         private void CreateTestDatabase()
@@ -52,15 +69,6 @@ namespace Sheet
 
             Csv.SetColumns(columns);
             Csv.SetData(data);
-        }
-
-        #endregion
-
-        #region Sheet
-
-        private SheetControl GetSheet()
-        {
-            return Sheet;
         }
 
         #endregion
@@ -311,15 +319,6 @@ namespace Sheet
                     ToggleBlocksPanel();
                     break;
             }
-        }
-
-        #endregion
-
-        #region Database
-
-        public void Database()
-        {
-            Csv.Open();
         }
 
         #endregion
