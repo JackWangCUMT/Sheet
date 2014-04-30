@@ -587,9 +587,9 @@ namespace Sheet
 
         #endregion
 
-        #region Normalize Position
+        #region Reset Position
 
-        public static void NormalizePosition(BlockItem block, double originX, double originY, double width, double height)
+        public static void ResetPosition(BlockItem block, double originX, double originY, double width, double height)
         {
             double minX = width;
             double minY = height;
@@ -2935,7 +2935,7 @@ namespace Sheet
             {
                 var source = Library.GetSource() as IEnumerable<BlockItem>;
                 var items = new List<BlockItem>(source);
-                ItemEditor.NormalizePosition(block, 0.0, 0.0, 1200.0, 750.0);
+                ItemEditor.ResetPosition(block, 0.0, 0.0, 1200.0, 750.0);
                 items.Add(block);
                 Library.SetSource(items);
             }
