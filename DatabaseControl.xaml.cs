@@ -199,8 +199,8 @@ namespace Sheet
                 if (listViewItem != null)
                 {
                     string[] data = (string[])listView.ItemContainerGenerator.ItemFromContainer(listViewItem);
-                    var tag = new TagItem() { Columns = columns, Data = data };
-                    DataObject dragData = new DataObject("Tag", tag);
+                    var dataItem = new DataItem() { Columns = columns, Data = data };
+                    DataObject dragData = new DataObject("Data", dataItem);
                     DragDrop.DoDragDrop(listViewItem, dragData, DragDropEffects.Move);
                 }
             }

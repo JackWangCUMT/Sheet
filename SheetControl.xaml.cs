@@ -88,16 +88,16 @@ namespace Sheet
         public double Width { get; set; }
         public double Height { get; set; }
         public ItemColor Backgroud { get; set; }
-        public int TagId { get; set; }
+        public int DataId { get; set; }
         public List<LineItem> Lines { get; set; }
         public List<RectangleItem> Rectangles { get; set; }
         public List<EllipseItem> Ellipses { get; set; }
         public List<TextItem> Texts { get; set; }
         public List<BlockItem> Blocks { get; set; }
-        public void Init(int id, int tagId, string name)
+        public void Init(int id, int dataId, string name)
         {
             Id = id;
-            TagId = tagId;
+            DataId = dataId;
             Name = name;
             Width = 0.0;
             Height = 0.0;
@@ -249,7 +249,7 @@ namespace Sheet
             sb.Append(modelSeparator);
             Serialize(sb, block.Backgroud);
             sb.Append(modelSeparator);
-            sb.Append(block.TagId);
+            sb.Append(block.DataId);
             sb.Append(lineSeparator);
 
             Serialize(sb, block.Lines, indent + indentWhiteSpace);
@@ -320,10 +320,10 @@ namespace Sheet
 
         #region Deserialize
 
-        private static BlockItem Deserialize(string[] lines, int length, ref int end, string name, int id, int tagId)
+        private static BlockItem Deserialize(string[] lines, int length, ref int end, string name, int id, int dataId)
         {
             var sheet = new BlockItem();
-            sheet.Init(id, tagId, name);
+            sheet.Init(id, dataId, name);
 
             for (; end < length; end++)
             {
@@ -513,7 +513,7 @@ namespace Sheet
                             Green = int.Parse(m[7]),
                             Blue = int.Parse(m[8])
                         };
-                        blockItem.TagId = m.Length == 10 ? int.Parse(m[9]) : -1;
+                        blockItem.DataId = m.Length == 10 ? int.Parse(m[9]) : -1;
                     }
                     else
                     {
@@ -526,7 +526,7 @@ namespace Sheet
                             Green = 0,
                             Blue = 0
                         };
-                        blockItem.TagId = -1;
+                        blockItem.DataId = -1;
                     }
                     sheet.Blocks.Add(blockItem);
                     continue;
@@ -770,7 +770,7 @@ namespace Sheet
 
     #region IDatabase
 
-    public class TagItem
+    public class DataItem
     {
         public string[] Columns { get; set; }
         public string[] Data { get; set; }
@@ -803,16 +803,16 @@ namespace Sheet
         public double Width { get; set; }
         public double Height { get; set; }
         public Color Backgroud { get; set; }
-        public int TagId { get; set; }
+        public int DataId { get; set; }
         public List<Line> Lines { get; set; }
         public List<Rectangle> Rectangles { get; set; }
         public List<Ellipse> Ellipses { get; set; }
         public List<Grid> Texts { get; set; }
         public List<Block> Blocks { get; set; }
-        public Block(int id, int tagId, string name)
+        public Block(int id, int dataId, string name)
         {
             Id = id;
-            TagId = tagId;
+            DataId = dataId;
             Name = name;
         }
         public void Init()
@@ -947,7 +947,7 @@ namespace Sheet
         public static BlockItem SerializeBlock(Block parent)
         {
             var blockItem = new BlockItem();
-            blockItem.Init(0, parent.TagId, parent.Name);
+            blockItem.Init(0, parent.DataId, parent.Name);
             blockItem.Width = 0;
             blockItem.Height = 0;
             blockItem.Backgroud = ToItemColor(parent.Backgroud);
@@ -980,7 +980,7 @@ namespace Sheet
             return blockItem;
         }
 
-        public static BlockItem SerializerBlockContents(Block parent, int id, int tagId, string name)
+        public static BlockItem SerializerBlockContents(Block parent, int id, int dataId, string name)
         {
             var lines = parent.Lines;
             var rectangles = parent.Rectangles;
@@ -989,7 +989,7 @@ namespace Sheet
             var blocks = parent.Blocks;
 
             var sheet = new BlockItem() { Backgroud = new ItemColor() };
-            sheet.Init(id, tagId, name);
+            sheet.Init(id, dataId, name);
 
             if (lines != null)
             {
@@ -1113,7 +1113,7 @@ namespace Sheet
 
         public static Block DeserializeBlockItem(ISheet sheet, Block parent, BlockItem blockItem, bool select, double thickness)
         {
-            var block = new Block(blockItem.Id, blockItem.TagId, blockItem.Name);
+            var block = new Block(blockItem.Id, blockItem.DataId, blockItem.Name);
             block.Init();
 
             foreach (var textItem in blockItem.Texts)
@@ -2704,12 +2704,12 @@ namespace Sheet
 
         private BlockItem SerializeLogicBlock()
         {
-            return BlockEditor.SerializerBlockContents(Logic, 0, Logic.TagId, "LOGIC");
+            return BlockEditor.SerializerBlockContents(Logic, 0, Logic.DataId, "LOGIC");
         }
 
-        private static string SerializeBlockContents(int id, int tagId, string name, Block parent)
+        private static string SerializeBlockContents(int id, int dataId, string name, Block parent)
         {
-            var block = BlockEditor.SerializerBlockContents(parent, id, tagId, name);
+            var block = BlockEditor.SerializerBlockContents(parent, id, dataId, name);
             var sb = new StringBuilder();
             ItemEditor.Serialize(sb, block, "");
             return sb.ToString();
@@ -3562,7 +3562,7 @@ namespace Sheet
 
             //var grid = CreateGridBlock();
             var frame = CreateFrameBlock();
-            var logic = BlockEditor.SerializerBlockContents(Logic, 0, Logic.TagId, "LOGIC");
+            var logic = BlockEditor.SerializerBlockContents(Logic, 0, Logic.DataId, "LOGIC");
 
             //page.Blocks.Add(grid);
             page.Blocks.Add(frame);
@@ -3892,18 +3892,18 @@ namespace Sheet
 
         #endregion
 
-        #region Tag Binding
+        #region Data Binding
 
-        private bool BindTagToBlock(Point p, TagItem tagItem)
+        private bool BindDataToBlock(Point p, DataItem dataItem)
         {
             var temp = new Block(0, -1, "TEMP");
             BlockEditor.HitTestForBlocks(sheet, Logic, temp, p, hitSize);
 
             if (BlockEditor.HaveOneBlockSelected(temp))
             {
-                PushUndo("Bind Tag");
+                PushUndo("Bind Data");
                 var block = temp.Blocks[0];
-                BindTagToBlock(block, tagItem);
+                BindDataToBlock(block, dataItem);
                 BlockEditor.Deselect(temp);
                 return true;
             }
@@ -3912,14 +3912,14 @@ namespace Sheet
             return false;
         }
 
-        private bool BindTagToBlock(Block block, TagItem tagItem)
+        private bool BindDataToBlock(Block block, DataItem dataItem)
         {
             if (block != null && block.Texts != null 
-                && tagItem != null && tagItem.Columns != null  && tagItem.Data != null
-                && block.Texts.Count == tagItem.Columns.Length - 1)
+                && dataItem != null && dataItem.Columns != null  && dataItem.Data != null
+                && block.Texts.Count == dataItem.Columns.Length - 1)
             {
-                // assign block tag id
-                block.TagId = int.Parse(tagItem.Data[0]);
+                // assign block data id
+                block.DataId = int.Parse(dataItem.Data[0]);
 
                 // skip index column
                 int i = 1;
@@ -3927,7 +3927,7 @@ namespace Sheet
                 foreach (var text in block.Texts)
                 {
                     var tb = BlockEditor.GetTextBlock(text);
-                    tb.Text = tagItem.Data[i];
+                    tb.Text = dataItem.Data[i];
                     i++;
                 }
 
@@ -3937,10 +3937,10 @@ namespace Sheet
             return false;
         }
 
-        private void TryToBindTag(Point p, TagItem tagItem)
+        private void TryToBindData(Point p, DataItem dataItem)
         {
             // first try binding to existing block
-            bool firstTryResult = BindTagToBlock(p, tagItem);
+            bool firstTryResult = BindDataToBlock(p, dataItem);
 
             // if failed insert selected block from library and try again to bind
             if (!firstTryResult)
@@ -3949,7 +3949,7 @@ namespace Sheet
                 if (blockItem != null)
                 {
                     var block = Insert(blockItem, p, false);
-                    bool secondTryResult = BindTagToBlock(block, tagItem);
+                    bool secondTryResult = BindDataToBlock(block, dataItem);
                     if (!secondTryResult)
                     {
                         // remove block if failed to bind
@@ -3968,7 +3968,7 @@ namespace Sheet
 
         private void UserControl_DragEnter(object sender, DragEventArgs e)
         {
-            if (!e.Data.GetDataPresent("Block") || !e.Data.GetDataPresent("Tag") || sender == e.Source)
+            if (!e.Data.GetDataPresent("Block") || !e.Data.GetDataPresent("Data") || sender == e.Source)
             {
                 e.Effects = DragDropEffects.None;
             }
@@ -3985,12 +3985,12 @@ namespace Sheet
                     e.Handled = true;
                 }
             }
-            else if (e.Data.GetDataPresent("Tag"))
+            else if (e.Data.GetDataPresent("Data"))
             {
-                var tagItem = e.Data.GetData("Tag") as TagItem;
-                if (tagItem != null)
+                var dataItem = e.Data.GetData("Data") as DataItem;
+                if (dataItem != null)
                 {
-                    TryToBindTag(e.GetPosition(overlay.GetParent()), tagItem);
+                    TryToBindData(e.GetPosition(overlay.GetParent()), dataItem);
                     e.Handled = true;
                 }
             }
