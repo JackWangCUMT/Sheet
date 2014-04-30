@@ -55,11 +55,9 @@
     <Reference Include="PdfSharp.Charting-WPF">
       <HintPath>packages\PDFsharp-MigraDoc-WPF.1.32.2608.0\lib\net20\PdfSharp.Charting-WPF.dll</HintPath>
     </Reference>
-    <Reference Include="ReachFramework" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Printing" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

@@ -14,8 +14,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.Windows.Xps;
-using System.Windows.Xps.Packaging;
 
 namespace Sheet
 {
@@ -3517,36 +3515,37 @@ namespace Sheet
 
         #endregion
 
-        #region Export Xps
+        #region Preview
 
-        private CanvasControl CreateXpsRoot(Block parent)
+        private CanvasControl CreatePreview(Block parent)
         {
             var root = new CanvasControl();
             var sheet = new CanvasSheet(root.Sheet);
 
             //CreateGrid(sheet, null, 330.0, 30.0, 600.0, 720.0, gridSize, 0.013 * 96.0 / 2.54 /*gridThickness*/, BlockEditor.GridBrush);
-            CreateFrame(sheet, null, gridSize, 0.013 * 96.0 / 2.54 /*gridThickness*/, BlockEditor.NormalBrush);
+            CreateFrame(sheet, null, gridSize, /* 0.013 * 96.0 / 2.54 */ gridThickness, BlockEditor.NormalBrush);
 
             var block = BlockEditor.SerializerBlockContents(parent, 0, -1, "LOGIC");
-            BlockEditor.InsertBlockContents(sheet, block, null, null, false, 0.035 * 96.0 / 2.54 /*lineThickness*/);
+            BlockEditor.InsertBlockContents(sheet, block, null, null, false, /* 0.035 * 96.0 / 2.54 */ lineThickness);
 
-            var vb = new Viewbox { Child = root };
-            vb.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            vb.Arrange(new Rect(vb.DesiredSize));
+            //var vb = new Viewbox { Child = root };
+            //vb.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+            //vb.Arrange(new Rect(vb.DesiredSize));
 
             return root;
         }
 
-        private void ExportToXps(string fileName)
+        public void Preview()
         {
-            using (var package = Package.Open(fileName, System.IO.FileMode.Create))
+            var window = new Window()
             {
-                var doc = new XpsDocument(package);
-                var writer = XpsDocument.CreateXpsDocumentWriter(doc);
-                var root = CreateXpsRoot(Logic);
-                writer.Write(root);
-                doc.Close();
-            }
+                Title = "Preview",
+                SizeToContent = SizeToContent.WidthAndHeight,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen
+            };
+
+            window.Content = CreatePreview(Logic);
+            window.Show();
         }
 
         #endregion
@@ -3676,7 +3675,7 @@ namespace Sheet
         {
             var dlg = new Microsoft.Win32.SaveFileDialog()
             {
-                Filter = "PDF Documents (*.pdf)|*.pdf|XPS Documents (*.xps)|*.xps|All Files (*.*)|*.*",
+                Filter = "PDF Documents (*.pdf)|*.pdf|All Files (*.*)|*.*",
                 FileName = "sheet"
             };
 
@@ -3685,14 +3684,9 @@ namespace Sheet
                 switch(dlg.FilterIndex)
                 {
                     case 1:
+                    default:
                         {
                             ExportToPdf(dlg.FileName);
-                        }
-                        break;
-                    case 2:
-                    case 3:
-                        {
-                            ExportToXps(dlg.FileName);
                         }
                         break;
                 }
