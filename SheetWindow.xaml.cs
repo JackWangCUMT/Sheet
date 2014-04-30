@@ -320,25 +320,6 @@ namespace Sheet
         public void Database()
         {
             Csv.Open();
-            /*
-            var database = new DatabaseControl();
-            string result = database.Open();
-
-            if (result != null)
-            {
-                var window = new Window()
-                {
-                    Title = "Database: " + result,
-                    Width = 600,
-                    Height = 290,
-                    WindowStartupLocation = WindowStartupLocation.CenterScreen
-                };
-
-                window.Owner = this;
-                window.Content = database;
-                window.Show();
-            }
-            */
         }
 
         #endregion
