@@ -73,22 +73,6 @@ namespace Sheet
 
         #endregion
 
-        #region Toggle Panels
-
-        private void ToggleBlocksPanel()
-        {
-            if (Library.Blocks.Items.Count > 0)
-            {
-                Library.Visibility = Library.Visibility == Visibility.Hidden ? Visibility.Visible : Visibility.Hidden;
-            }
-            else
-            {
-                Library.Visibility = Visibility.Hidden;
-            }
-        }
-
-        #endregion
-
         #region Mode Menu
 
         private void UpdateModeMenu()
@@ -305,10 +289,6 @@ namespace Sheet
                     GetSheet().ModeText();
                     UpdateModeMenu();
                     break;
-                // Blocks Panel
-                case Key.J:
-                    ToggleBlocksPanel();
-                    break;
             }
         }
 
@@ -482,15 +462,6 @@ namespace Sheet
         {
             GetSheet().ModeText();
             UpdateModeMenu();
-        }
-
-        #endregion
-
-        #region View Menu Events
-
-        private void ViewBlocksPanel_Click(object sender, RoutedEventArgs e)
-        {
-            ToggleBlocksPanel();
         }
 
         #endregion
