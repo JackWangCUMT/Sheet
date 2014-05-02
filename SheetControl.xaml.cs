@@ -3090,15 +3090,17 @@ namespace Sheet
             p.X = Snap(p.X);
             p.Y = Snap(p.Y);
 
-            double x = p.X - panStartPoint.X;
-            double y = p.Y - panStartPoint.Y;
+            double dx = p.X - panStartPoint.X;
+            double dy = p.Y - panStartPoint.Y;
             double z = zoomFactors[zoomIndex];
 
-            if (x != 0.0 || y != 0.0)
+            Debug.Print(string.Format("{0} {1}", dx, dy));
+
+            if (dx != 0.0 || dy != 0.0)
             {
-                x = x / z;
-                y = y / z;
-                BlockEditor.Move(x, y, Selected);
+                //x = x / z;
+                //y = y / z;
+                BlockEditor.Move(dx, dy, Selected);
                 panStartPoint = p;
             }  
         }
@@ -3736,7 +3738,7 @@ namespace Sheet
             {
                 if (BlockEditor.HaveSelected(Selected) && CanInitMove(e.GetPosition(overlay.GetParent())))
                 {
-                    InitMove(e.GetPosition(this));
+                    InitMove(e.GetPosition(overlay.GetParent()));
                     return;
                 }
 
@@ -3754,7 +3756,7 @@ namespace Sheet
                 }
                 else
                 {
-                    InitMove(e.GetPosition(this));
+                    InitMove(e.GetPosition(overlay.GetParent()));
                 }
             }
             else if (GetMode() == Mode.Insert && !overlay.IsCaptured)
@@ -3844,7 +3846,7 @@ namespace Sheet
             }
             else if (GetMode() == Mode.Move && overlay.IsCaptured)
             {
-                Move(e.GetPosition(this));
+                Move(e.GetPosition(overlay.GetParent()));
             }
         }
 
