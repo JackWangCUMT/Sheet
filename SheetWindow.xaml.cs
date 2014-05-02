@@ -195,7 +195,7 @@ namespace Sheet
                 case Key.Delete:
                     if (ctrl)
                     {
-                        GetSheet().PushUndo("Reset");
+                        GetSheet().RegisterChange("Reset");
                         GetSheet().Reset();
                     }
                     else
@@ -362,7 +362,7 @@ namespace Sheet
 
         private void EditReset_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().PushUndo("Reset");
+            GetSheet().RegisterChange("Reset");
             GetSheet().Reset();
         }
 

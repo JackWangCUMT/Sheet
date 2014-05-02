@@ -2366,9 +2366,9 @@ namespace Sheet
 
         #endregion
 
-        #region Action Item
+        #region Change Item
 
-        public class ActionItem : Item
+        public class ChangeItem : Item
         {
             public string Message { get; set; }
             public string Model { get; set; }
@@ -2381,8 +2381,8 @@ namespace Sheet
         private ISheet back = null;
         private ISheet sheet = null;
         private ISheet overlay = null;
-        private Stack<ActionItem> undos = new Stack<ActionItem>();
-        private Stack<ActionItem> redos = new Stack<ActionItem>();
+        private Stack<ChangeItem> undos = new Stack<ChangeItem>();
+        private Stack<ChangeItem> redos = new Stack<ChangeItem>();
         private Mode mode = Mode.Selection;
         private Mode tempMode = Mode.None;
         private double snapSize = 15;
@@ -2609,7 +2609,7 @@ namespace Sheet
         {
             double x = Snap(p.X);
             double y = Snap(p.Y);
-            PushUndo("Create Text");
+            RegisterChange("Create Text");
             var text = BlockEditor.CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0);
             Logic.Texts.Add(text);
             sheet.Add(text);
@@ -2743,7 +2743,7 @@ namespace Sheet
 
                 Action<string> ok = (name) =>
                 {
-                    PushUndo("Create Block");
+                    RegisterChange("Create Block");
                     var block = CreateBlockItem(name);
                     AddToLibrary(block);
 
@@ -2767,7 +2767,7 @@ namespace Sheet
             {
                 var text = ItemEditor.SerializeOnlyContents(BlockEditor.SerializerBlockContents(Selected, 0, -1, "SELECTED"));
                 var block = ItemEditor.Deserialize(text);
-                PushUndo("Break Block");
+                RegisterChange("Break Block");
                 Delete();
                 BlockEditor.InsertBrokenBlock(sheet, block, Logic, Selected, true, lineThickness / Zoom);
             }
@@ -2775,11 +2775,11 @@ namespace Sheet
 
         #endregion
 
-        #region Undo/Redo
+        #region Undo/Redo Changes
 
-        private ActionItem CreateActionItem(string message)
+        private ChangeItem CreateChangeItem(string message)
         {
-            var item = new ActionItem()
+            var item = new ChangeItem()
             {
                 Message = message,
                 Model = ItemEditor.SerializeOnlyContents(SerializeLogicBlock())
@@ -2787,27 +2787,19 @@ namespace Sheet
             return item;
         }
 
-        public void PushUndo(string message)
+        public void RegisterChange(string message)
         {
-            //Debug.Print("Push Undo: " + message);
-            undos.Push(CreateActionItem(message));
-        }
-
-        public void PushRedo(string message)
-        {
-            //Debug.Print("Push Redo: " + message);
-            redos.Push(CreateActionItem(message));
+            undos.Push(CreateChangeItem(message));
+            redos.Clear();
         }
 
         public void Undo()
         {
             if (undos.Count > 0)
             {
-                PushRedo("Redo");
+                redos.Push(CreateChangeItem("Redo"));
                 Reset();
-
                 var undo = undos.Pop();
-                //Debug.Print("Undo: " + undo.Message);
                 InsertBlock(ItemEditor.Deserialize(undo.Model), false);
             }
         }
@@ -2816,11 +2808,9 @@ namespace Sheet
         {
             if (redos.Count > 0)
             {
-                PushUndo("Undo");
+                undos.Push(CreateChangeItem("Undo"));
                 Reset();
-
                 var redo = redos.Pop();
-                //Debug.Print("Redo: " + redo.Message);
                 InsertBlock(ItemEditor.Deserialize(redo.Model), false);
             }
         }
@@ -2832,7 +2822,7 @@ namespace Sheet
         public void Cut()
         {
             Copy();
-            PushUndo("Cut");
+            RegisterChange("Cut");
 
             if (BlockEditor.HaveSelected(Selected))
             {
@@ -2886,7 +2876,7 @@ namespace Sheet
                 Selected.Blocks = new List<Block>();
             }
 
-            PushUndo("Insert Block");
+            RegisterChange("Insert Block");
 
             var block = BlockEditor.DeserializeBlockItem(sheet, Logic, blockItem, select, thickness);
 
@@ -2961,7 +2951,7 @@ namespace Sheet
         {
             if (BlockEditor.HaveSelected(Selected))
             {
-                PushUndo("Delete");
+                RegisterChange("Delete");
                 BlockEditor.Remove(sheet, Logic, Selected);
             }
         }
@@ -2993,7 +2983,7 @@ namespace Sheet
 
         private void Move(double x, double y)
         {
-            PushUndo("Move");
+            RegisterChange("Move");
             BlockEditor.Move(x, y, BlockEditor.HaveSelected(Selected) ? Selected : Logic);
         }
 
@@ -3090,7 +3080,7 @@ namespace Sheet
         {
             if (isFirstMove)
             {
-                PushUndo("Move");
+                RegisterChange("Move");
                 isFirstMove = false;
                 Cursor = Cursors.SizeAll;
             }
@@ -3349,7 +3339,7 @@ namespace Sheet
                 overlay.Remove(tempLine);
                 overlay.Remove(tempStartEllipse);
                 overlay.Remove(tempEndEllipse);
-                PushUndo("Create Line");
+                RegisterChange("Create Line");
                 Logic.Lines.Add(tempLine);
                 sheet.Add(tempLine);
                 tempLine = null;
@@ -3412,7 +3402,7 @@ namespace Sheet
             {
                 overlay.ReleaseCapture();
                 overlay.Remove(tempRectangle);
-                PushUndo("Create Rectangle");
+                RegisterChange("Create Rectangle");
                 Logic.Rectangles.Add(tempRectangle);
                 sheet.Add(tempRectangle);
                 tempRectangle = null;
@@ -3469,7 +3459,7 @@ namespace Sheet
             {
                 overlay.ReleaseCapture();
                 overlay.Remove(tempEllipse);
-                PushUndo("Create Ellipse");
+                RegisterChange("Create Ellipse");
                 Logic.Ellipses.Add(tempEllipse);
                 sheet.Add(tempEllipse);
                 tempEllipse = null;
@@ -3509,7 +3499,7 @@ namespace Sheet
 
                 Action<string> ok = (text) =>
                 {
-                    PushUndo("Edit Text");
+                    RegisterChange("Edit Text");
                     tb.Text = text;
 
                     Focus();
@@ -3639,7 +3629,7 @@ namespace Sheet
                     {
                         case 1:
                             {
-                                PushUndo("Open");
+                                RegisterChange("Open");
                                 Reset();
                                 var block = ItemEditor.Deserialize(text);
                                 InsertBlock(block, false);
@@ -3648,7 +3638,7 @@ namespace Sheet
                         case 2:
                         case 3:
                             {
-                                PushUndo("Open");
+                                RegisterChange("Open");
                                 Reset();
                                 var block = JsonConvert.DeserializeObject<BlockItem>(text);
                                 InsertBlock(block, false);
@@ -3927,7 +3917,7 @@ namespace Sheet
 
             if (BlockEditor.HaveOneBlockSelected(temp))
             {
-                PushUndo("Bind Data");
+                RegisterChange("Bind Data");
                 var block = temp.Blocks[0];
                 BindDataToBlock(block, dataItem);
                 BlockEditor.Deselect(temp);
