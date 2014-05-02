@@ -108,12 +108,40 @@ namespace Sheet
         }
     }
 
+    public interface ILibrary
+    {
+        BlockItem GetSelected();
+        void SetSelected(BlockItem block);
+        IEnumerable<BlockItem> GetSource();
+        void SetSource(IEnumerable<BlockItem> source);
+    }
+
+    public class DataItem
+    {
+        public string[] Columns { get; set; }
+        public string[] Data { get; set; }
+    }
+
+    public interface IDatabase
+    {
+        string[] Get(int index);
+        bool Update(int index, string[] item);
+        int Add(string[] item);
+    }
+
+    public interface ITextEditor
+    {
+        void Show(Action<string> ok, Action cancel, string label, string text);
+    }
+
     #endregion
 
-    #region Item Serializer Options
+    #region Item Serializer
 
     public class ItemSerializeOptions
     {
+        #region Properties
+
         public string LineSeparator { get; set; }
         public string ModelSeparator { get; set; }
         public char[] LineSeparators { get; set; }
@@ -134,12 +162,10 @@ namespace Sheet
                     IndentWhiteSpace = "    "
                 };
             }
-        }
+        } 
+
+        #endregion
     }
-
-    #endregion
-
-    #region Item Serializer
 
     public static class ItemSerializer
     {
@@ -612,7 +638,7 @@ namespace Sheet
 
     public static class ItemEditor
     {
-        #region I/O
+        #region Text
 
         public static string OpenText(string fileName)
         {
@@ -651,7 +677,7 @@ namespace Sheet
 
         #endregion
 
-        #region Reset Position
+        #region Position
 
         public static void ResetPosition(BlockItem block, double originX, double originY, double width, double height)
         {
@@ -828,44 +854,6 @@ namespace Sheet
 
     #endregion
 
-    #region ILibrary
-
-    public interface ILibrary
-    {
-        BlockItem GetSelected();
-        void SetSelected(BlockItem block);
-        IEnumerable<BlockItem> GetSource();
-        void SetSource(IEnumerable<BlockItem> source);
-    }
-
-    #endregion
-
-    #region IDatabase
-
-    public class DataItem
-    {
-        public string[] Columns { get; set; }
-        public string[] Data { get; set; }
-    } 
-
-    public interface IDatabase
-    {
-        string[] Get(int index);
-        bool Update(int index, string[] item);
-        int Add(string[] item);
-    }
-
-    #endregion
-
-    #region ITextEditor
-
-    public interface ITextEditor
-    {
-        void Show(Action<string> ok, Action cancel, string label, string text);
-    }
-
-    #endregion
-
     #region Block Model
 
     public class Block
@@ -924,11 +912,111 @@ namespace Sheet
         }
     }
 
+    public enum Mode
+    {
+        None,
+        Selection,
+        Insert,
+        Pan,
+        Move,
+        Line,
+        Rectangle,
+        Ellipse,
+        Text,
+    }
+
+    public class SheetOptions
+    {
+        public double PageOriginX { get; set; }
+        public double PageOriginY { get; set; }
+        public double PageWidth { get; set; }
+        public double PageHeight { get; set; }
+        public double SnapSize { get; set; }
+        public double GridSize { get; set; }
+        public double FrameThickness { get; set; }
+        public double GridThickness { get; set; }
+        public double SelectionThickness { get; set; }
+        public double LineThickness { get; set; }
+        public double HitTestSize { get; set; }
+        public int DefaultZoomIndex { get; set; }
+        public int MaxZoomIndex { get; set; }
+        public double[] ZoomFactors { get; set; }
+
+    }
+
+    public class ChangeMessage
+    {
+        public string Message { get; set; }
+        public string Model { get; set; }
+    }
+
+    public interface ISheet
+    {
+        FrameworkElement GetParent();
+        void Add(UIElement element);
+        void Remove(UIElement element);
+        void Capture();
+        void ReleaseCapture();
+        bool IsCaptured { get; }
+    }
+
+    public class CanvasSheet : ISheet
+    {
+        #region Fields
+
+        private Canvas canvas = null;
+
+        #endregion
+
+        #region Constructor
+
+        public CanvasSheet(Canvas canvas)
+        {
+            this.canvas = canvas;
+        }
+
+        #endregion
+
+        #region ISheet
+
+        public FrameworkElement GetParent()
+        {
+            return canvas;
+        }
+
+        public void Add(UIElement element)
+        {
+            canvas.Children.Add(element);
+        }
+
+        public void Remove(UIElement element)
+        {
+            canvas.Children.Remove(element);
+        }
+
+        public void Capture()
+        {
+            canvas.CaptureMouse();
+        }
+
+        public void ReleaseCapture()
+        {
+            canvas.ReleaseMouseCapture();
+        }
+
+        public bool IsCaptured
+        {
+            get { return canvas.IsMouseCaptured; }
+        }
+
+        #endregion
+    }
+
     #endregion
 
-    #region Block Editor
+    #region Block Serializer
 
-    public static class BlockEditor
+    public static class BlockSerializer
     {
         #region Serialize
 
@@ -972,7 +1060,7 @@ namespace Sheet
             rectangleItem.Y = Canvas.GetTop(rectangle);
             rectangleItem.Width = rectangle.Width;
             rectangleItem.Height = rectangle.Height;
-            rectangleItem.IsFilled = rectangle.Fill == TransparentBrush ? false : true;
+            rectangleItem.IsFilled = rectangle.Fill == BlockFactory.TransparentBrush ? false : true;
             rectangleItem.Stroke = ToItemColor(rectangle.Stroke);
             rectangleItem.Fill = ToItemColor(rectangle.Fill);
 
@@ -988,7 +1076,7 @@ namespace Sheet
             ellipseItem.Y = Canvas.GetTop(ellipse);
             ellipseItem.Width = ellipse.Width;
             ellipseItem.Height = ellipse.Height;
-            ellipseItem.IsFilled = ellipse.Fill == TransparentBrush ? false : true;
+            ellipseItem.IsFilled = ellipse.Fill == BlockFactory.TransparentBrush ? false : true;
             ellipseItem.Stroke = ToItemColor(ellipse.Stroke);
             ellipseItem.Fill = ToItemColor(ellipse.Fill);
 
@@ -1005,7 +1093,7 @@ namespace Sheet
             textItem.Width = text.Width;
             textItem.Height = text.Height;
 
-            var tb = BlockEditor.GetTextBlock(text);
+            var tb = BlockFactory.GetTextBlock(text);
             textItem.Text = tb.Text;
             textItem.HAlign = (int)tb.HorizontalAlignment;
             textItem.VAlign = (int)tb.VerticalAlignment;
@@ -1112,7 +1200,7 @@ namespace Sheet
 
         public static Line DeserializeLineItem(ISheet sheet, Block parent, LineItem lineItem, double thickness)
         {
-            var line = BlockEditor.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
+            var line = BlockFactory.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2);
 
             if (parent != null)
             {
@@ -1129,7 +1217,7 @@ namespace Sheet
 
         public static Rectangle DeserializeRectangleItem(ISheet sheet, Block parent, RectangleItem rectangleItem, double thickness)
         {
-            var rectangle = BlockEditor.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
+            var rectangle = BlockFactory.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
 
             if (parent != null)
             {
@@ -1146,7 +1234,7 @@ namespace Sheet
 
         public static Ellipse DeserializeEllipseItem(ISheet sheet, Block parent, EllipseItem ellipseItem, double thickness)
         {
-            var ellipse = BlockEditor.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
+            var ellipse = BlockFactory.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
 
             if (parent != null)
             {
@@ -1155,21 +1243,21 @@ namespace Sheet
 
             if (sheet != null)
             {
-                sheet.Add(ellipse); 
+                sheet.Add(ellipse);
             }
-            
+
             return ellipse;
         }
 
         public static Grid DeserializeTextItem(ISheet sheet, Block parent, TextItem textItem)
         {
-            var text = BlockEditor.CreateText(textItem.Text,
+            var text = BlockFactory.CreateText(textItem.Text,
                 textItem.X, textItem.Y,
                 textItem.Width, textItem.Height,
                 (HorizontalAlignment)textItem.HAlign,
                 (VerticalAlignment)textItem.VAlign,
                 textItem.Size);
-            
+
             if (parent != null)
             {
                 parent.Texts.Add(text);
@@ -1194,7 +1282,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    MarkSelected(text);
+                    BlockEditor.MarkSelected(text);
                 }
             }
 
@@ -1204,7 +1292,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    MarkSelected(line);
+                    BlockEditor.MarkSelected(line);
                 }
             }
 
@@ -1214,7 +1302,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    MarkSelected(rectangle);
+                    BlockEditor.MarkSelected(rectangle);
                 }
             }
 
@@ -1224,7 +1312,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    MarkSelected(ellipse);
+                    BlockEditor.MarkSelected(ellipse);
                 }
             }
 
@@ -1235,123 +1323,21 @@ namespace Sheet
 
             if (parent != null)
             {
-                parent.Blocks.Add(block); 
+                parent.Blocks.Add(block);
             }
 
             return block;
         }
 
         #endregion
+    }
 
-        #region Create
+    #endregion
 
-        public static TextBlock GetTextBlock(Grid text)
-        {
-            return text.Children[0] as TextBlock;
-        }
+    #region Block Editor
 
-        public static Grid CreateText(string text,
-            double x, double y, double width, double height,
-            HorizontalAlignment halign, VerticalAlignment valign,
-            double fontSize)
-        {
-            var grid = new Grid();
-            grid.Background = TransparentBrush;
-            grid.Width = width;
-            grid.Height = height;
-            Canvas.SetLeft(grid, x);
-            Canvas.SetTop(grid, y);
-
-            var tb = new TextBlock();
-            tb.HorizontalAlignment = halign;
-            tb.VerticalAlignment = valign;
-            tb.Background = TransparentBrush;
-            tb.Foreground = NormalBrush;
-            tb.FontSize = fontSize;
-            tb.FontFamily = new FontFamily("Calibri");
-            tb.Text = text;
-
-            grid.Children.Add(tb);
-
-            return grid;
-        }
-
-        public static Line CreateLine(double thickness, double x1, double y1, double x2, double y2)
-        {
-            var line = new Line()
-            {
-                Stroke = NormalBrush,
-                StrokeThickness = thickness,
-                StrokeStartLineCap = PenLineCap.Round,
-                StrokeEndLineCap = PenLineCap.Round,
-                X1 = x1,
-                Y1 = y1,
-                X2 = x2,
-                Y2 = y2
-            };
-
-            return line;
-        }
-
-        public static Rectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled)
-        {
-            var rectangle = new Rectangle()
-            {
-                Fill = isFilled ? NormalBrush : TransparentBrush,
-                Stroke = NormalBrush,
-                StrokeThickness = thickness,
-                StrokeStartLineCap = PenLineCap.Round,
-                StrokeEndLineCap = PenLineCap.Round,
-                Width = width,
-                Height = height
-            };
-
-            Canvas.SetLeft(rectangle, x);
-            Canvas.SetTop(rectangle, y);
-
-            return rectangle;
-        }
-
-        public static Ellipse CreateEllipse(double thickness, double x, double y, double width, double height, bool isFilled)
-        {
-            var ellipse = new Ellipse()
-            {
-                Fill = isFilled ? NormalBrush : TransparentBrush,
-                Stroke = NormalBrush,
-                StrokeThickness = thickness,
-                StrokeStartLineCap = PenLineCap.Round,
-                StrokeEndLineCap = PenLineCap.Round,
-                Width = width,
-                Height = height
-            };
-
-            Canvas.SetLeft(ellipse, x);
-            Canvas.SetTop(ellipse, y);
-
-            return ellipse;
-        }
-
-        public static Rectangle CreateSelectionRectangle(double thickness, double x, double y, double width, double height)
-        {
-            var rect = new Rectangle()
-            {
-                Fill = new SolidColorBrush(Color.FromArgb(0x3A, 0x00, 0x00, 0xFF)),
-                Stroke = new SolidColorBrush(Color.FromArgb(0x7F, 0x00, 0x00, 0xFF)),
-                StrokeThickness = thickness,
-                StrokeStartLineCap = PenLineCap.Round,
-                StrokeEndLineCap = PenLineCap.Round,
-                Width = width,
-                Height = height
-            };
-
-            Canvas.SetLeft(rect, x);
-            Canvas.SetTop(rect, y);
-
-            return rect;
-        }
-
-        #endregion
-
+    public static class BlockEditor
+    {
         #region Insert
 
         public static void InsertLines(ISheet sheet, IEnumerable<LineItem> lineItems, Block parent, Block selected, bool select, double thickness)
@@ -1363,7 +1349,7 @@ namespace Sheet
 
             foreach (var lineItem in lineItems)
             {
-                var line = DeserializeLineItem(sheet, parent, lineItem, thickness);
+                var line = BlockSerializer.DeserializeLineItem(sheet, parent, lineItem, thickness);
 
                 if (select)
                 {
@@ -1382,7 +1368,7 @@ namespace Sheet
 
             foreach (var rectangleItem in rectangleItems)
             {
-                var rectangle = DeserializeRectangleItem(sheet, parent, rectangleItem, thickness);
+                var rectangle = BlockSerializer.DeserializeRectangleItem(sheet, parent, rectangleItem, thickness);
 
                 if (select)
                 {
@@ -1401,7 +1387,7 @@ namespace Sheet
 
             foreach (var ellipseItem in ellipseItems)
             {
-                var ellipse = DeserializeEllipseItem(sheet, parent, ellipseItem, thickness);
+                var ellipse = BlockSerializer.DeserializeEllipseItem(sheet, parent, ellipseItem, thickness);
 
                 if (select)
                 {
@@ -1420,7 +1406,7 @@ namespace Sheet
 
             foreach (var textItem in textItems)
             {
-                var text = DeserializeTextItem(sheet, parent, textItem);
+                var text = BlockSerializer.DeserializeTextItem(sheet, parent, textItem);
 
                 if (select)
                 {
@@ -1439,7 +1425,7 @@ namespace Sheet
 
             foreach (var blockItem in blockItems)
             {
-                var block = DeserializeBlockItem(sheet, parent, blockItem, select, thickness);
+                var block = BlockSerializer.DeserializeBlockItem(sheet, parent, blockItem, select, thickness);
 
                 if (select)
                 {
@@ -1673,16 +1659,6 @@ namespace Sheet
 
         #endregion
 
-        #region Brushes
-
-        public static SolidColorBrush NormalBrush = Brushes.Black;
-        public static SolidColorBrush SelectedBrush = Brushes.Red;
-        public static SolidColorBrush TransparentBrush = Brushes.Transparent;
-        public static SolidColorBrush GridBrush = Brushes.LightGray;
-        public static SolidColorBrush FrameBrush = Brushes.DarkGray;
-
-        #endregion
-
         #region Mark Selection
 
         private static int NormalZIndex = 0;
@@ -1690,68 +1666,54 @@ namespace Sheet
 
         public static void MarkNormal(Line line)
         {
-            line.Stroke = NormalBrush;
+            line.Stroke = BlockFactory.NormalBrush;
             Panel.SetZIndex(line, NormalZIndex);
         }
 
         public static void MarkNormal(Rectangle rectangle)
         {
-            rectangle.Stroke = NormalBrush;
-            rectangle.Fill = rectangle.Fill == TransparentBrush ? TransparentBrush : NormalBrush;
+            rectangle.Stroke = BlockFactory.NormalBrush;
+            rectangle.Fill = rectangle.Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.NormalBrush;
             Panel.SetZIndex(rectangle, NormalZIndex);
         }
 
         public static void MarkNormal(Ellipse ellipse)
         {
-            ellipse.Stroke = NormalBrush;
-            ellipse.Fill = ellipse.Fill == TransparentBrush ? TransparentBrush : NormalBrush;
+            ellipse.Stroke = BlockFactory.NormalBrush;
+            ellipse.Fill = ellipse.Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.NormalBrush;
             Panel.SetZIndex(ellipse, NormalZIndex);
         }
 
         public static void MarkNormal(Grid text)
         {
-            BlockEditor.GetTextBlock(text).Foreground = NormalBrush;
+            BlockFactory.GetTextBlock(text).Foreground = BlockFactory.NormalBrush;
             Panel.SetZIndex(text, NormalZIndex);
         }
 
         public static void MarkSelected(Line line)
         {
-            line.Stroke = SelectedBrush;
+            line.Stroke = BlockFactory.SelectedBrush;
             Panel.SetZIndex(line, SelectedZIndex);
         }
 
         public static void MarkSelected(Rectangle rectangle)
         {
-            rectangle.Stroke = SelectedBrush;
-            rectangle.Fill = rectangle.Fill == TransparentBrush ? TransparentBrush : SelectedBrush;
+            rectangle.Stroke = BlockFactory.SelectedBrush;
+            rectangle.Fill = rectangle.Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.SelectedBrush;
             Panel.SetZIndex(rectangle, SelectedZIndex);
         }
 
         public static void MarkSelected(Ellipse ellipse)
         {
-            ellipse.Stroke = SelectedBrush;
-            ellipse.Fill = ellipse.Fill == TransparentBrush ? TransparentBrush : SelectedBrush;
+            ellipse.Stroke = BlockFactory.SelectedBrush;
+            ellipse.Fill = ellipse.Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.SelectedBrush;
             Panel.SetZIndex(ellipse, SelectedZIndex);
         }
 
         public static void MarkSelected(Grid text)
         {
-            BlockEditor.GetTextBlock(text).Foreground = SelectedBrush;
+            BlockFactory.GetTextBlock(text).Foreground = BlockFactory.SelectedBrush;
             Panel.SetZIndex(text, SelectedZIndex);
-        }
-
-        #endregion
-
-        #region Toggle Fill
-
-        public static void ToggleFill(Rectangle rectangle)
-        {
-            rectangle.Fill = rectangle.Fill == TransparentBrush ? NormalBrush : TransparentBrush;
-        }
-
-        public static void ToggleFill(Ellipse ellipse)
-        {
-            ellipse.Fill = ellipse.Fill == TransparentBrush ? NormalBrush : TransparentBrush;
         }
 
         #endregion
@@ -2006,7 +1968,7 @@ namespace Sheet
                 {
                     if (select)
                     {
-                        if (line.Stroke != SelectedBrush)
+                        if (line.Stroke != BlockFactory.SelectedBrush)
                         {
                             MarkSelected(line);
                             selected.Lines.Add(line);
@@ -2038,7 +2000,7 @@ namespace Sheet
                 {
                     if (select)
                     {
-                        if (rectangle.Stroke != SelectedBrush)
+                        if (rectangle.Stroke != BlockFactory.SelectedBrush)
                         {
                             MarkSelected(rectangle);
                             selected.Rectangles.Add(rectangle);
@@ -2070,10 +2032,10 @@ namespace Sheet
                 {
                     if (select)
                     {
-                        if (ellipse.Stroke != SelectedBrush)
+                        if (ellipse.Stroke != BlockFactory.SelectedBrush)
                         {
                             MarkSelected(ellipse);
-                            selected.Ellipses.Add(ellipse); 
+                            selected.Ellipses.Add(ellipse);
                         }
                         else
                         {
@@ -2102,8 +2064,8 @@ namespace Sheet
                 {
                     if (select)
                     {
-                        var tb = BlockEditor.GetTextBlock(text);
-                        if (tb.Foreground != SelectedBrush)
+                        var tb = BlockFactory.GetTextBlock(text);
+                        if (tb.Foreground != BlockFactory.SelectedBrush)
                         {
                             MarkSelected(text);
                             selected.Texts.Add(text);
@@ -2347,73 +2309,17 @@ namespace Sheet
         }
 
         #endregion
-    }
 
-    #endregion
+        #region Toggle Fill
 
-    #region ISheet Model
-
-    public interface ISheet
-    {
-        FrameworkElement GetParent();
-        void Add(UIElement element);
-        void Remove(UIElement element);
-        void Capture();
-        void ReleaseCapture();
-        bool IsCaptured { get; }
-    }
-
-    #endregion
-
-    #region ISheet Canvas
-
-    public class CanvasSheet : ISheet
-    {
-        #region Fields
-
-        private Canvas canvas = null;
-
-        #endregion
-
-        #region Constructor
-
-        public CanvasSheet(Canvas canvas)
+        public static void ToggleFill(Rectangle rectangle)
         {
-            this.canvas = canvas;
+            rectangle.Fill = rectangle.Fill == BlockFactory.TransparentBrush ? BlockFactory.NormalBrush : BlockFactory.TransparentBrush;
         }
 
-        #endregion
-
-        #region ISheet
-
-        public FrameworkElement GetParent()
+        public static void ToggleFill(Ellipse ellipse)
         {
-            return canvas;
-        }
-
-        public void Add(UIElement element)
-        {
-            canvas.Children.Add(element);
-        }
-
-        public void Remove(UIElement element)
-        {
-            canvas.Children.Remove(element);
-        }
-
-        public void Capture()
-        {
-            canvas.CaptureMouse();
-        }
-
-        public void ReleaseCapture()
-        {
-            canvas.ReleaseMouseCapture();
-        }
-
-        public bool IsCaptured
-        {
-            get { return canvas.IsMouseCaptured; }
+            ellipse.Fill = ellipse.Fill == BlockFactory.TransparentBrush ? BlockFactory.NormalBrush : BlockFactory.TransparentBrush;
         }
 
         #endregion
@@ -2421,52 +2327,128 @@ namespace Sheet
 
     #endregion
 
-    #region Sheet Options
+    #region Block Factory
 
-    public class SheetOptions
+    public static class BlockFactory
     {
-        public double PageOriginX { get; set; }
-        public double PageOriginY { get; set; }
-        public double PageWidth { get; set; }
-        public double PageHeight { get; set; }
-        public double SnapSize { get; set; }
-        public double GridSize { get; set; }
-        public double FrameThickness { get; set; }
-        public double GridThickness { get; set; }
-        public double SelectionThickness { get; set; }
-        public double LineThickness { get; set; }
-        public double HitTestSize { get; set; }
-        public int DefaultZoomIndex { get; set; }
-        public int MaxZoomIndex { get; set; }
-        public double[] ZoomFactors { get; set; }
+        #region Brushes
 
-    } 
+        public static SolidColorBrush NormalBrush = Brushes.Black;
+        public static SolidColorBrush SelectedBrush = Brushes.Red;
+        public static SolidColorBrush TransparentBrush = Brushes.Transparent;
+        public static SolidColorBrush GridBrush = Brushes.LightGray;
+        public static SolidColorBrush FrameBrush = Brushes.DarkGray;
 
-    #endregion
+        #endregion
 
-    #region Mode Enum
+        #region Create
 
-    public enum Mode
-    {
-        None,
-        Selection,
-        Insert,
-        Pan,
-        Move,
-        Line,
-        Rectangle,
-        Ellipse,
-        Text,
-    }
+        public static TextBlock GetTextBlock(Grid text)
+        {
+            return text.Children[0] as TextBlock;
+        }
 
-    #endregion
+        public static Grid CreateText(string text,
+            double x, double y, double width, double height,
+            HorizontalAlignment halign, VerticalAlignment valign,
+            double fontSize)
+        {
+            var grid = new Grid();
+            grid.Background = TransparentBrush;
+            grid.Width = width;
+            grid.Height = height;
+            Canvas.SetLeft(grid, x);
+            Canvas.SetTop(grid, y);
 
-    #region Change Message
+            var tb = new TextBlock();
+            tb.HorizontalAlignment = halign;
+            tb.VerticalAlignment = valign;
+            tb.Background = TransparentBrush;
+            tb.Foreground = NormalBrush;
+            tb.FontSize = fontSize;
+            tb.FontFamily = new FontFamily("Calibri");
+            tb.Text = text;
 
-    public class ChangeMessage
-    {
-        public string Message { get; set; }
-        public string Model { get; set; }
+            grid.Children.Add(tb);
+
+            return grid;
+        }
+
+        public static Line CreateLine(double thickness, double x1, double y1, double x2, double y2)
+        {
+            var line = new Line()
+            {
+                Stroke = NormalBrush,
+                StrokeThickness = thickness,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+                X1 = x1,
+                Y1 = y1,
+                X2 = x2,
+                Y2 = y2
+            };
+
+            return line;
+        }
+
+        public static Rectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled)
+        {
+            var rectangle = new Rectangle()
+            {
+                Fill = isFilled ? NormalBrush : TransparentBrush,
+                Stroke = NormalBrush,
+                StrokeThickness = thickness,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+                Width = width,
+                Height = height
+            };
+
+            Canvas.SetLeft(rectangle, x);
+            Canvas.SetTop(rectangle, y);
+
+            return rectangle;
+        }
+
+        public static Ellipse CreateEllipse(double thickness, double x, double y, double width, double height, bool isFilled)
+        {
+            var ellipse = new Ellipse()
+            {
+                Fill = isFilled ? NormalBrush : TransparentBrush,
+                Stroke = NormalBrush,
+                StrokeThickness = thickness,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+                Width = width,
+                Height = height
+            };
+
+            Canvas.SetLeft(ellipse, x);
+            Canvas.SetTop(ellipse, y);
+
+            return ellipse;
+        }
+
+        public static Rectangle CreateSelectionRectangle(double thickness, double x, double y, double width, double height)
+        {
+            var rect = new Rectangle()
+            {
+                Fill = new SolidColorBrush(Color.FromArgb(0x3A, 0x00, 0x00, 0xFF)),
+                Stroke = new SolidColorBrush(Color.FromArgb(0x7F, 0x00, 0x00, 0xFF)),
+                StrokeThickness = thickness,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+                Width = width,
+                Height = height
+            };
+
+            Canvas.SetLeft(rect, x);
+            Canvas.SetTop(rect, y);
+
+            return rect;
+        }
+
+        #endregion
     }
 
     #endregion
@@ -2616,8 +2598,8 @@ namespace Sheet
 
         private void InitLoaded()
         {
-            CreateGrid(back, gridLines, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockEditor.GridBrush);
-            CreateFrame(back, frameLines, options.GridSize, options.GridThickness, BlockEditor.FrameBrush);
+            CreateGrid(back, gridLines, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
+            CreateFrame(back, frameLines, options.GridSize, options.GridThickness, BlockFactory.FrameBrush);
             AdjustThickness(gridLines, options.GridThickness / options.ZoomFactors[zoomIndex]);
             AdjustThickness(frameLines, options.FrameThickness / options.ZoomFactors[zoomIndex]);
             LoadStandardLibrary();
@@ -2702,7 +2684,7 @@ namespace Sheet
             double x = ItemEditor.Snap(p.X, options.SnapSize);
             double y = ItemEditor.Snap(p.Y, options.SnapSize);
             RegisterChange("Create Text");
-            var text = BlockEditor.CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0);
+            var text = BlockFactory.CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0);
             Logic.Texts.Add(text);
             sheet.Add(text);
         }
@@ -2806,12 +2788,12 @@ namespace Sheet
 
         private BlockItem SerializeLogicBlock()
         {
-            return BlockEditor.SerializerBlockContents(Logic, 0, Logic.DataId, "LOGIC");
+            return BlockSerializer.SerializerBlockContents(Logic, 0, Logic.DataId, "LOGIC");
         }
 
         private static string SerializeBlockContents(int id, int dataId, string name, Block parent)
         {
-            var block = BlockEditor.SerializerBlockContents(parent, id, dataId, name);
+            var block = BlockSerializer.SerializerBlockContents(parent, id, dataId, name);
             var sb = new StringBuilder();
             ItemSerializer.Serialize(sb, block, "", ItemSerializeOptions.Default);
             return sb.ToString();
@@ -2857,7 +2839,7 @@ namespace Sheet
         {
             if (BlockEditor.HaveSelected(Selected))
             {
-                var text = ItemSerializer.SerializeContents(BlockEditor.SerializerBlockContents(Selected, 0, -1, "SELECTED"));
+                var text = ItemSerializer.SerializeContents(BlockSerializer.SerializerBlockContents(Selected, 0, -1, "SELECTED"));
                 var block = ItemSerializer.DeserializeContents(text);
                 RegisterChange("Break Block");
                 Delete();
@@ -2928,8 +2910,8 @@ namespace Sheet
 
         public void Copy()
         {
-            var block = BlockEditor.HaveSelected(Selected) ? 
-                BlockEditor.SerializerBlockContents(Selected, 0, -1, "SELECTED") : SerializeLogicBlock();
+            var block = BlockEditor.HaveSelected(Selected) ?
+                BlockSerializer.SerializerBlockContents(Selected, 0, -1, "SELECTED") : SerializeLogicBlock();
             var text = ItemSerializer.SerializeContents(block);
             Clipboard.SetData(DataFormats.UnicodeText, text);
             //string json = JsonConvert.SerializeObject(block, Formatting.Indented);
@@ -2970,7 +2952,7 @@ namespace Sheet
 
             RegisterChange("Insert Block");
 
-            var block = BlockEditor.DeserializeBlockItem(sheet, Logic, blockItem, select, thickness);
+            var block = BlockSerializer.DeserializeBlockItem(sheet, Logic, blockItem, select, thickness);
 
             if (select)
             {
@@ -3347,7 +3329,7 @@ namespace Sheet
             selectionStartPoint = p;
             double x = p.X;
             double y = p.Y;
-            selectionRect = BlockEditor.CreateSelectionRectangle(options.SelectionThickness / Zoom, x, y, 0.0, 0.0);
+            selectionRect = BlockFactory.CreateSelectionRectangle(options.SelectionThickness / Zoom, x, y, 0.0, 0.0);
             overlay.Add(selectionRect);
             overlay.Capture();
         }
@@ -3395,9 +3377,9 @@ namespace Sheet
         {
             double x = ItemEditor.Snap(p.X, options.SnapSize);
             double y = ItemEditor.Snap(p.Y, options.SnapSize);
-            tempLine = BlockEditor.CreateLine(options.LineThickness / Zoom, x, y, x, y);
-            tempStartEllipse = BlockEditor.CreateEllipse(options.LineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
-            tempEndEllipse = BlockEditor.CreateEllipse(options.LineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
+            tempLine = BlockFactory.CreateLine(options.LineThickness / Zoom, x, y, x, y);
+            tempStartEllipse = BlockFactory.CreateEllipse(options.LineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
+            tempEndEllipse = BlockFactory.CreateEllipse(options.LineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
             overlay.Add(tempLine);
             overlay.Add(tempStartEllipse);
             overlay.Add(tempEndEllipse);
@@ -3460,7 +3442,7 @@ namespace Sheet
             double x = ItemEditor.Snap(p.X, options.SnapSize);
             double y = ItemEditor.Snap(p.Y, options.SnapSize);
             selectionStartPoint = new Point(x, y);
-            tempRectangle = BlockEditor.CreateRectangle(options.SelectionThickness / Zoom, x, y, 0.0, 0.0, true);
+            tempRectangle = BlockFactory.CreateRectangle(options.SelectionThickness / Zoom, x, y, 0.0, 0.0, true);
             overlay.Add(tempRectangle);
             overlay.Capture();
         }
@@ -3517,7 +3499,7 @@ namespace Sheet
             double x = ItemEditor.Snap(p.X, options.SnapSize);
             double y = ItemEditor.Snap(p.Y, options.SnapSize);
             selectionStartPoint = new Point(x, y);
-            tempEllipse = BlockEditor.CreateEllipse(options.SelectionThickness / Zoom, x, y, 0.0, 0.0, true);
+            tempEllipse = BlockFactory.CreateEllipse(options.SelectionThickness / Zoom, x, y, 0.0, 0.0, true);
             overlay.Add(tempEllipse);
             overlay.Capture();
         }
@@ -3584,7 +3566,7 @@ namespace Sheet
 
             if (BlockEditor.HaveOneTextSelected(temp))
             {
-                var tb = BlockEditor.GetTextBlock(temp.Texts[0]);
+                var tb = BlockFactory.GetTextBlock(temp.Texts[0]);
 
                 StoreTempMode();
                 ModeNone();
@@ -3624,9 +3606,9 @@ namespace Sheet
             var sheet = new CanvasSheet(root.Sheet);
 
             //CreateGrid(sheet, null, 330.0, 30.0, 600.0, 720.0, options.GridSize, 0.013 * 96.0 / 2.54 /*options.GridThickness*/, BlockEditor.GridBrush);
-            CreateFrame(sheet, null, options.GridSize, /* 0.013 * 96.0 / 2.54 */ options.GridThickness, BlockEditor.NormalBrush);
+            CreateFrame(sheet, null, options.GridSize, /* 0.013 * 96.0 / 2.54 */ options.GridThickness, BlockFactory.NormalBrush);
 
-            var block = BlockEditor.SerializerBlockContents(parent, 0, -1, "LOGIC");
+            var block = BlockSerializer.SerializerBlockContents(parent, 0, -1, "LOGIC");
             BlockEditor.InsertBlockContents(sheet, block, null, null, false, /* 0.035 * 96.0 / 2.54 */ options.LineThickness);
 
             //var vb = new Viewbox { Child = root };
@@ -3662,7 +3644,7 @@ namespace Sheet
 
             //var grid = CreateGridBlock();
             var frame = CreateFrameBlock();
-            var logic = BlockEditor.SerializerBlockContents(Logic, 0, Logic.DataId, "LOGIC");
+            var logic = BlockSerializer.SerializerBlockContents(Logic, 0, Logic.DataId, "LOGIC");
 
             //page.Blocks.Add(grid);
             page.Blocks.Add(frame);
@@ -3678,7 +3660,7 @@ namespace Sheet
 
             foreach (var line in gridLines)
             {
-                var lineItem = BlockEditor.SerializeLine(line);
+                var lineItem = BlockSerializer.SerializeLine(line);
                 lineItem.StrokeThickness = 0.013 * 72.0 / 2.54;// 0.13mm
                 //lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
                 grid.Lines.Add(lineItem);
@@ -3693,7 +3675,7 @@ namespace Sheet
 
             foreach (var line in frameLines)
             {
-                var lineItem = BlockEditor.SerializeLine(line);
+                var lineItem = BlockSerializer.SerializeLine(line);
                 lineItem.StrokeThickness = 0.018 * 72.0 / 2.54; // 0.18mm
                 lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
                 frame.Lines.Add(lineItem);
@@ -4034,7 +4016,7 @@ namespace Sheet
 
                 foreach (var text in block.Texts)
                 {
-                    var tb = BlockEditor.GetTextBlock(text);
+                    var tb = BlockFactory.GetTextBlock(text);
                     tb.Text = dataItem.Data[i];
                     i++;
                 }
