@@ -78,13 +78,13 @@ namespace Sheet
         private void UpdateModeMenu()
         {
             var mode = GetSheet().GetMode();
-            ModeNone.IsChecked = mode == SheetControl.Mode.None ? true : false;
-            ModeSelection.IsChecked = mode == SheetControl.Mode.Selection ? true : false;
-            ModeInsert.IsChecked = mode == SheetControl.Mode.Insert ? true : false;
-            ModeLine.IsChecked = mode == SheetControl.Mode.Line ? true : false;
-            ModeRectangle.IsChecked = mode == SheetControl.Mode.Rectangle ? true : false;
-            ModeEllipse.IsChecked = mode == SheetControl.Mode.Ellipse ? true : false;
-            ModeText.IsChecked = mode == SheetControl.Mode.Text ? true : false;
+            ModeNone.IsChecked = mode == Mode.None ? true : false;
+            ModeSelection.IsChecked = mode == Mode.Selection ? true : false;
+            ModeInsert.IsChecked = mode == Mode.Insert ? true : false;
+            ModeLine.IsChecked = mode == Mode.Line ? true : false;
+            ModeRectangle.IsChecked = mode == Mode.Rectangle ? true : false;
+            ModeEllipse.IsChecked = mode == Mode.Ellipse ? true : false;
+            ModeText.IsChecked = mode == Mode.Text ? true : false;
         }
 
         #endregion

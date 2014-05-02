@@ -750,6 +750,16 @@ namespace Sheet
         }
 
         #endregion
+
+        #region Snap
+
+        public static double Snap(double val, double snap)
+        {
+            double r = val % snap;
+            return r >= snap / 2.0 ? val + snap - r : val - r;
+        }
+
+        #endregion
     }
 
     #endregion
@@ -2347,57 +2357,66 @@ namespace Sheet
 
     #endregion
 
+    #region Sheet Options
+
+    public class SheetOptions
+    {
+        public double PageOriginX { get; set; }
+        public double PageOriginY { get; set; }
+        public double PageWidth { get; set; }
+        public double PageHeight { get; set; }
+        public double SnapSize { get; set; }
+        public double GridSize { get; set; }
+        public double FrameThickness { get; set; }
+        public double GridThickness { get; set; }
+        public double SelectionThickness { get; set; }
+        public double LineThickness { get; set; }
+        public double HitTestSize { get; set; }
+        public int DefaultZoomIndex { get; set; }
+        public int MaxZoomIndex { get; set; }
+        public double[] ZoomFactors { get; set; }
+
+    } 
+
+    #endregion
+
+    #region Mode Enum
+
+    public enum Mode
+    {
+        None,
+        Selection,
+        Insert,
+        Pan,
+        Move,
+        Line,
+        Rectangle,
+        Ellipse,
+        Text,
+    }
+
+    #endregion
+
+    #region Change Message
+
+    public class ChangeMessage
+    {
+        public string Message { get; set; }
+        public string Model { get; set; }
+    }
+
+    #endregion
+
     public partial class SheetControl : UserControl
     {
-        #region Mode
-
-        public enum Mode
-        {
-            None,
-            Selection,
-            Insert,
-            Pan,
-            Move,
-            Line,
-            Rectangle,
-            Ellipse,
-            Text,
-        }
-
-        #endregion
-
-        #region Change Item
-
-        public class ChangeItem : Item
-        {
-            public string Message { get; set; }
-            public string Model { get; set; }
-        }
-
-        #endregion
-
-        #region Defaults
-
-        private double defaultPageOriginX = 0.0;
-        private double defaultPageOriginY = 0.0;
-        private double defaultPageWidth = 1260.0;
-        private double defaultPageHeight = 891.0;
-        private double defaultSnapSize = 15;
-        private double defaultGridSize = 30;
-        private double defaultFrameThickness = 1.0;
-        private double defaultGridThickness = 1.0;
-        private double defaultSelectionThickness = 1.0;
-        private double defaultLineThickness = 2.0;
-
-        #endregion
-
         #region Fields
 
+        private SheetOptions options = null;
         private ISheet back = null;
         private ISheet sheet = null;
         private ISheet overlay = null;
-        private Stack<ChangeItem> undos = new Stack<ChangeItem>();
-        private Stack<ChangeItem> redos = new Stack<ChangeItem>();
+        private Stack<ChangeMessage> undos = new Stack<ChangeMessage>();
+        private Stack<ChangeMessage> redos = new Stack<ChangeMessage>();
         private Mode mode = Mode.Selection;
         private Mode tempMode = Mode.None;
         private Point panStartPoint;
@@ -2408,7 +2427,6 @@ namespace Sheet
         private Ellipse tempEllipse = null;
         private Point selectionStartPoint;
         private Rectangle selectionRect = null;
-        private double hitSize = 3.5;
         private bool isFirstMove = true;
         private List<Line> gridLines = new List<Line>();
         private List<Line> frameLines = new List<Line>();
@@ -2418,27 +2436,21 @@ namespace Sheet
         #region Properties
 
         public ILibrary Library { get; set; }
+
         public IDatabase Database { get; set; }
+
         public ITextEditor TextEditor { get; set; }
 
-        #endregion
-
-        #region Pan & Zoom Properties
-
-        private int zoomIndex = 9;
-        private int defaultZoomIndex = 9;
-        private int maxZoomIndex = 21;
-        private double[] zoomFactors = { 0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64 };
-
+        private int zoomIndex = -1;
         public int ZoomIndex
         {
             get { return zoomIndex; }
             set
             {
-                if (value >= 0 && value <= maxZoomIndex)
+                if (value >= 0 && value <= options.MaxZoomIndex)
                 {
                     zoomIndex = value;
-                    Zoom = zoomFactors[zoomIndex];
+                    Zoom = options.ZoomFactors[zoomIndex];
                 }
             }
         }
@@ -2449,8 +2461,9 @@ namespace Sheet
             set
             {
                 if (IsLoaded)
+                {
                     AdjustThickness(value);
-
+                }
                 zoom.ScaleX = value;
                 zoom.ScaleY = value;
             }
@@ -2459,48 +2472,27 @@ namespace Sheet
         public double PanX
         {
             get { return pan.X; }
-            set
-            {
-                pan.X = value;
-            }
+            set { pan.X = value; }
         }
 
         public double PanY
         {
             get { return pan.Y; }
-            set
-            {
-                pan.Y = value;
-            }
+            set { pan.Y = value; }
         }
 
-        #endregion
-
-        #region Block Properties
-
         private Block logic = null;
-        private Block selected = null;
-
         public Block Logic
         {
             get { return logic; }
             set { logic = value; }
         }
 
+        private Block selected = null;
         public Block Selected
         {
             get { return selected; }
             set { selected = value; }
-        }
-
-        #endregion
-
-        #region Snap
-
-        private double Snap(double val)
-        {
-            double r = val % defaultSnapSize;
-            return r >= defaultSnapSize / 2.0 ? val + defaultSnapSize - r : val - r;
         }
 
         #endregion
@@ -2510,9 +2502,33 @@ namespace Sheet
         public SheetControl()
         {
             InitializeComponent();
-
             Init();
             Loaded += (s, e) => InitLoaded();
+        }
+
+        #endregion
+
+        #region Default Options
+
+        private SheetOptions DefaultOptions()
+        {
+            return new SheetOptions()
+            {
+                PageOriginX = 0.0,
+                PageOriginY = 0.0,
+                PageWidth = 1260.0,
+                PageHeight = 891.0,
+                SnapSize = 15,
+                GridSize = 30,
+                FrameThickness = 1.0,
+                GridThickness = 1.0,
+                SelectionThickness = 1.0,
+                LineThickness = 2.0,
+                HitTestSize = 3.5,
+                DefaultZoomIndex = 9,
+                MaxZoomIndex = 21,
+                ZoomFactors = new double[] { 0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64 }
+            };
         }
 
         #endregion
@@ -2521,6 +2537,9 @@ namespace Sheet
 
         private void Init()
         {
+            options = DefaultOptions();
+            zoomIndex = options.DefaultZoomIndex;
+
             back = new CanvasSheet(Root.Back);
             sheet = new CanvasSheet(Root.Sheet);
             overlay = new CanvasSheet(Root.Overlay);
@@ -2533,10 +2552,10 @@ namespace Sheet
 
         private void InitLoaded()
         {
-            CreateGrid(back, gridLines, 330.0, 30.0, 600.0, 750.0, defaultGridSize, defaultGridThickness, BlockEditor.GridBrush);
-            CreateFrame(back, frameLines, defaultGridSize, defaultGridThickness, BlockEditor.FrameBrush);
-            AdjustThickness(gridLines, defaultGridThickness / zoomFactors[zoomIndex]);
-            AdjustThickness(frameLines, defaultFrameThickness / zoomFactors[zoomIndex]);
+            CreateGrid(back, gridLines, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockEditor.GridBrush);
+            CreateFrame(back, frameLines, options.GridSize, options.GridThickness, BlockEditor.FrameBrush);
+            AdjustThickness(gridLines, options.GridThickness / options.ZoomFactors[zoomIndex]);
+            AdjustThickness(frameLines, options.FrameThickness / options.ZoomFactors[zoomIndex]);
             LoadStandardLibrary();
             Focus();
         }
@@ -2616,8 +2635,8 @@ namespace Sheet
 
         private void CreateText(Point p)
         {
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
+            double x = ItemEditor.Snap(p.X, options.SnapSize);
+            double y = ItemEditor.Snap(p.Y, options.SnapSize);
             RegisterChange("Create Text");
             var text = BlockEditor.CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0);
             Logic.Texts.Add(text);
@@ -2718,7 +2737,7 @@ namespace Sheet
         private void InsertBlock(BlockItem block, bool select)
         {
             BlockEditor.DeselectAll(Selected);
-            BlockEditor.InsertBlockContents(sheet, block, Logic, Selected, select, defaultLineThickness / Zoom);
+            BlockEditor.InsertBlockContents(sheet, block, Logic, Selected, select, options.LineThickness / Zoom);
         }
 
         private BlockItem SerializeLogicBlock()
@@ -2778,7 +2797,7 @@ namespace Sheet
                 var block = ItemEditor.Deserialize(text);
                 RegisterChange("Break Block");
                 Delete();
-                BlockEditor.InsertBrokenBlock(sheet, block, Logic, Selected, true, defaultLineThickness / Zoom);
+                BlockEditor.InsertBrokenBlock(sheet, block, Logic, Selected, true, options.LineThickness / Zoom);
             }
         }
 
@@ -2786,19 +2805,19 @@ namespace Sheet
 
         #region Undo/Redo Changes
 
-        private ChangeItem CreateChangeItem(string message)
+        private ChangeMessage CreateChangeMessage(string message)
         {
-            var item = new ChangeItem()
+            var change = new ChangeMessage()
             {
                 Message = message,
                 Model = ItemEditor.SerializeOnlyContents(SerializeLogicBlock())
             };
-            return item;
+            return change;
         }
 
         public void RegisterChange(string message)
         {
-            undos.Push(CreateChangeItem(message));
+            undos.Push(CreateChangeMessage(message));
             redos.Clear();
         }
 
@@ -2806,7 +2825,7 @@ namespace Sheet
         {
             if (undos.Count > 0)
             {
-                redos.Push(CreateChangeItem("Redo"));
+                redos.Push(CreateChangeMessage("Redo"));
                 Reset();
                 var undo = undos.Pop();
                 InsertBlock(ItemEditor.Deserialize(undo.Model), false);
@@ -2817,7 +2836,7 @@ namespace Sheet
         {
             if (redos.Count > 0)
             {
-                undos.Push(CreateChangeItem("Undo"));
+                undos.Push(CreateChangeMessage("Undo"));
                 Reset();
                 var redo = redos.Pop();
                 InsertBlock(ItemEditor.Deserialize(redo.Model), false);
@@ -2878,7 +2897,7 @@ namespace Sheet
         private Block Insert(BlockItem blockItem, Point p, bool select)
         {
             BlockEditor.DeselectAll(Selected);
-            double thickness = defaultLineThickness / Zoom;
+            double thickness = options.LineThickness / Zoom;
 
             if (select)
             {
@@ -2894,7 +2913,7 @@ namespace Sheet
                 Selected.Blocks.Add(block);
             }
 
-            BlockEditor.Move(Snap(p.X), Snap(p.Y), block);
+            BlockEditor.Move(ItemEditor.Snap(p.X, options.SnapSize), ItemEditor.Snap(p.Y, options.SnapSize), block);
 
             return block;
         }
@@ -2946,7 +2965,7 @@ namespace Sheet
             {
                 var source = Library.GetSource() as IEnumerable<BlockItem>;
                 var items = new List<BlockItem>(source);
-                ItemEditor.ResetPosition(blockItem, defaultPageOriginX, defaultPageOriginY, defaultPageWidth, defaultPageHeight);
+                ItemEditor.ResetPosition(blockItem, options.PageOriginX, options.PageOriginY, options.PageWidth, options.PageHeight);
                 items.Add(blockItem);
                 Library.SetSource(items);
             }
@@ -2998,22 +3017,22 @@ namespace Sheet
 
         public void MoveUp()
         {
-            Move(0.0, -defaultSnapSize);
+            Move(0.0, -options.SnapSize);
         }
 
         public void MoveDown()
         {
-            Move(0.0, defaultSnapSize);
+            Move(0.0, options.SnapSize);
         }
 
         public void MoveLeft()
         {
-            Move(-defaultSnapSize, 0.0);
+            Move(-options.SnapSize, 0.0);
         }
 
         public void MoveRight()
         {
-            Move(defaultSnapSize, 0.0);
+            Move(options.SnapSize, 0.0);
         }
 
         #endregion
@@ -3063,7 +3082,7 @@ namespace Sheet
         private bool CanInitMove(Point p)
         {
             var temp = new Block(0, -1, "TEMP");
-            BlockEditor.HitTestClick(sheet, Selected, temp, p, hitSize, false, true);
+            BlockEditor.HitTestClick(sheet, Selected, temp, p, options.HitTestSize, false, true);
 
             if (BlockEditor.HaveSelected(temp))
             {
@@ -3078,8 +3097,8 @@ namespace Sheet
             isFirstMove = true;
             StoreTempMode();
             ModeMove();
-            p.X = Snap(p.X);
-            p.Y = Snap(p.Y);
+            p.X = ItemEditor.Snap(p.X, options.SnapSize);
+            p.Y = ItemEditor.Snap(p.Y, options.SnapSize);
             panStartPoint = p;
             ResetTempOverlayElements();
             overlay.Capture();
@@ -3094,8 +3113,8 @@ namespace Sheet
                 Cursor = Cursors.SizeAll;
             }
 
-            p.X = Snap(p.X);
-            p.Y = Snap(p.Y);
+            p.X = ItemEditor.Snap(p.X, options.SnapSize);
+            p.Y = ItemEditor.Snap(p.Y, options.SnapSize);
 
             double dx = p.X - panStartPoint.X;
             double dy = p.Y - panStartPoint.Y;
@@ -3156,10 +3175,10 @@ namespace Sheet
 
         private void AdjustThickness(double zoom)
         {
-            double gridThicknessZoomed = defaultGridThickness / zoom;
-            double frameThicknessZoomed = defaultFrameThickness / zoom;
-            double lineThicknessZoomed = defaultLineThickness / zoom;
-            double selectionThicknessZoomed = defaultSelectionThickness / zoom;
+            double gridThicknessZoomed = options.GridThickness / zoom;
+            double frameThicknessZoomed = options.FrameThickness / zoom;
+            double lineThicknessZoomed = options.LineThickness / zoom;
+            double selectionThicknessZoomed = options.SelectionThickness / zoom;
 
             AdjustThickness(gridLines, gridThicknessZoomed);
             AdjustThickness(frameLines, frameThicknessZoomed);
@@ -3198,8 +3217,8 @@ namespace Sheet
 
         private void ZoomTo(double x, double y, int oldZoomIndex)
         {
-            double oldZoom = zoomFactors[oldZoomIndex];
-            double newZoom = zoomFactors[zoomIndex];
+            double oldZoom = options.ZoomFactors[oldZoomIndex];
+            double newZoom = options.ZoomFactors[zoomIndex];
             Zoom = newZoom;
             PanX = (x * oldZoom + PanX) - x * newZoom;
             PanY = (y * oldZoom + PanY) - y * newZoom;
@@ -3209,7 +3228,7 @@ namespace Sheet
         {
             if (delta > 0)
             {
-                if (zoomIndex < maxZoomIndex)
+                if (zoomIndex < options.MaxZoomIndex)
                 {
                     ZoomTo(p.X, p.Y, zoomIndex++);
                 }
@@ -3249,8 +3268,8 @@ namespace Sheet
 
         private void ResetPanAndZoom()
         {
-            zoomIndex = defaultZoomIndex;
-            Zoom = zoomFactors[zoomIndex];
+            zoomIndex = options.DefaultZoomIndex;
+            Zoom = options.ZoomFactors[zoomIndex];
             PanX = 0.0;
             PanY = 0.0;
         }
@@ -3264,7 +3283,7 @@ namespace Sheet
             selectionStartPoint = p;
             double x = p.X;
             double y = p.Y;
-            selectionRect = BlockEditor.CreateSelectionRectangle(defaultSelectionThickness / Zoom, x, y, 0.0, 0.0);
+            selectionRect = BlockEditor.CreateSelectionRectangle(options.SelectionThickness / Zoom, x, y, 0.0, 0.0);
             overlay.Add(selectionRect);
             overlay.Capture();
         }
@@ -3310,11 +3329,11 @@ namespace Sheet
 
         private void InitTempLine(Point p)
         {
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
-            tempLine = BlockEditor.CreateLine(defaultLineThickness / Zoom, x, y, x, y);
-            tempStartEllipse = BlockEditor.CreateEllipse(defaultLineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
-            tempEndEllipse = BlockEditor.CreateEllipse(defaultLineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
+            double x = ItemEditor.Snap(p.X, options.SnapSize);
+            double y = ItemEditor.Snap(p.Y, options.SnapSize);
+            tempLine = BlockEditor.CreateLine(options.LineThickness / Zoom, x, y, x, y);
+            tempStartEllipse = BlockEditor.CreateEllipse(options.LineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
+            tempEndEllipse = BlockEditor.CreateEllipse(options.LineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
             overlay.Add(tempLine);
             overlay.Add(tempStartEllipse);
             overlay.Add(tempEndEllipse);
@@ -3323,8 +3342,8 @@ namespace Sheet
 
         private void MoveTempLine(Point p)
         {
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
+            double x = ItemEditor.Snap(p.X, options.SnapSize);
+            double y = ItemEditor.Snap(p.Y, options.SnapSize);
             if (Math.Round(x, 1) != Math.Round(tempLine.X2, 1) 
                 || Math.Round(y, 1) != Math.Round(tempLine.Y2, 1))
             {
@@ -3374,10 +3393,10 @@ namespace Sheet
 
         private void InitTempRect(Point p)
         {
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
+            double x = ItemEditor.Snap(p.X, options.SnapSize);
+            double y = ItemEditor.Snap(p.Y, options.SnapSize);
             selectionStartPoint = new Point(x, y);
-            tempRectangle = BlockEditor.CreateRectangle(defaultSelectionThickness / Zoom, x, y, 0.0, 0.0, true);
+            tempRectangle = BlockEditor.CreateRectangle(options.SelectionThickness / Zoom, x, y, 0.0, 0.0, true);
             overlay.Add(tempRectangle);
             overlay.Capture();
         }
@@ -3386,8 +3405,8 @@ namespace Sheet
         {
             double sx = selectionStartPoint.X;
             double sy = selectionStartPoint.Y;
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
+            double x = ItemEditor.Snap(p.X, options.SnapSize);
+            double y = ItemEditor.Snap(p.Y, options.SnapSize);
             double width = Math.Abs(sx - x);
             double height = Math.Abs(sy - y);
             Canvas.SetLeft(tempRectangle, Math.Min(sx, x));
@@ -3431,10 +3450,10 @@ namespace Sheet
 
         private void InitTempEllipse(Point p)
         {
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
+            double x = ItemEditor.Snap(p.X, options.SnapSize);
+            double y = ItemEditor.Snap(p.Y, options.SnapSize);
             selectionStartPoint = new Point(x, y);
-            tempEllipse = BlockEditor.CreateEllipse(defaultSelectionThickness / Zoom, x, y, 0.0, 0.0, true);
+            tempEllipse = BlockEditor.CreateEllipse(options.SelectionThickness / Zoom, x, y, 0.0, 0.0, true);
             overlay.Add(tempEllipse);
             overlay.Capture();
         }
@@ -3443,8 +3462,8 @@ namespace Sheet
         {
             double sx = selectionStartPoint.X;
             double sy = selectionStartPoint.Y;
-            double x = Snap(p.X);
-            double y = Snap(p.Y);
+            double x = ItemEditor.Snap(p.X, options.SnapSize);
+            double y = ItemEditor.Snap(p.Y, options.SnapSize);
             double width = Math.Abs(sx - x);
             double height = Math.Abs(sy - y);
             Canvas.SetLeft(tempEllipse, Math.Min(sx, x));
@@ -3497,7 +3516,7 @@ namespace Sheet
         private bool TryToEditText(Point p)
         {
             var temp = new Block(0, -1, "TEMP");
-            BlockEditor.HitTestClick(sheet, Logic, temp, p, hitSize, true, true);
+            BlockEditor.HitTestClick(sheet, Logic, temp, p, options.HitTestSize, true, true);
 
             if (BlockEditor.HaveOneTextSelected(temp))
             {
@@ -3540,11 +3559,11 @@ namespace Sheet
             var root = new CanvasControl();
             var sheet = new CanvasSheet(root.Sheet);
 
-            //CreateGrid(sheet, null, 330.0, 30.0, 600.0, 720.0, gridSize, 0.013 * 96.0 / 2.54 /*gridThickness*/, BlockEditor.GridBrush);
-            CreateFrame(sheet, null, defaultGridSize, /* 0.013 * 96.0 / 2.54 */ defaultGridThickness, BlockEditor.NormalBrush);
+            //CreateGrid(sheet, null, 330.0, 30.0, 600.0, 720.0, options.GridSize, 0.013 * 96.0 / 2.54 /*options.GridThickness*/, BlockEditor.GridBrush);
+            CreateFrame(sheet, null, options.GridSize, /* 0.013 * 96.0 / 2.54 */ options.GridThickness, BlockEditor.NormalBrush);
 
             var block = BlockEditor.SerializerBlockContents(parent, 0, -1, "LOGIC");
-            BlockEditor.InsertBlockContents(sheet, block, null, null, false, /* 0.035 * 96.0 / 2.54 */ defaultLineThickness);
+            BlockEditor.InsertBlockContents(sheet, block, null, null, false, /* 0.035 * 96.0 / 2.54 */ options.LineThickness);
 
             //var vb = new Viewbox { Child = root };
             //vb.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
@@ -3754,7 +3773,7 @@ namespace Sheet
 
             if (GetMode() == Mode.Selection)
             {
-                bool result = BlockEditor.HitTestClick(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), hitSize, false, resetSelected);
+                bool result = BlockEditor.HitTestClick(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), options.HitTestSize, false, resetSelected);
                 if ((ctrl || !BlockEditor.HaveSelected(Selected)) && !result)
                 {
                     InitSelectionRect(e.GetPosition(overlay.GetParent()));
@@ -3826,7 +3845,7 @@ namespace Sheet
                     BlockEditor.DeselectAll(Selected);
                 }
 
-                BlockEditor.HitTestClick(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), hitSize, false, false);
+                BlockEditor.HitTestClick(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), options.HitTestSize, false, false);
             }
 
             if (GetMode() == Mode.Selection && overlay.IsCaptured)
@@ -3922,7 +3941,7 @@ namespace Sheet
         private bool BindDataToBlock(Point p, DataItem dataItem)
         {
             var temp = new Block(0, -1, "TEMP");
-            BlockEditor.HitTestForBlocks(sheet, Logic, temp, p, hitSize);
+            BlockEditor.HitTestForBlocks(sheet, Logic, temp, p, options.HitTestSize);
 
             if (BlockEditor.HaveOneBlockSelected(temp))
             {
