@@ -3228,6 +3228,7 @@ namespace Sheet
             ModePan();
             panStartPoint = p;
             ResetTempOverlayElements();
+            Cursor = Cursors.ScrollAll;
             overlay.Capture();
         }
 
@@ -3241,6 +3242,7 @@ namespace Sheet
         private void FinishPan()
         {
             RestoreTempMode();
+            Cursor = Cursors.Arrow;
             overlay.ReleaseCapture();
         }
 
