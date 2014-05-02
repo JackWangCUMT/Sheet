@@ -1611,48 +1611,59 @@ namespace Sheet
 
         #region Mark Selection
 
+        private static int NormalZIndex = 0;
+        private static int SelectedZIndex = 1;
+
         public static void MarkNormal(Line line)
         {
             line.Stroke = NormalBrush;
+            Panel.SetZIndex(line, NormalZIndex);
         }
 
         public static void MarkNormal(Rectangle rectangle)
         {
             rectangle.Stroke = NormalBrush;
             rectangle.Fill = rectangle.Fill == TransparentBrush ? TransparentBrush : NormalBrush;
+            Panel.SetZIndex(rectangle, NormalZIndex);
         }
 
         public static void MarkNormal(Ellipse ellipse)
         {
             ellipse.Stroke = NormalBrush;
             ellipse.Fill = ellipse.Fill == TransparentBrush ? TransparentBrush : NormalBrush;
+            Panel.SetZIndex(ellipse, NormalZIndex);
         }
 
         public static void MarkNormal(Grid text)
         {
             BlockEditor.GetTextBlock(text).Foreground = NormalBrush;
+            Panel.SetZIndex(text, NormalZIndex);
         }
 
         public static void MarkSelected(Line line)
         {
             line.Stroke = SelectedBrush;
+            Panel.SetZIndex(line, SelectedZIndex);
         }
 
         public static void MarkSelected(Rectangle rectangle)
         {
             rectangle.Stroke = SelectedBrush;
             rectangle.Fill = rectangle.Fill == TransparentBrush ? TransparentBrush : SelectedBrush;
+            Panel.SetZIndex(rectangle, SelectedZIndex);
         }
 
         public static void MarkSelected(Ellipse ellipse)
         {
             ellipse.Stroke = SelectedBrush;
             ellipse.Fill = ellipse.Fill == TransparentBrush ? TransparentBrush : SelectedBrush;
+            Panel.SetZIndex(ellipse, SelectedZIndex);
         }
 
         public static void MarkSelected(Grid text)
         {
             BlockEditor.GetTextBlock(text).Foreground = SelectedBrush;
+            Panel.SetZIndex(text, SelectedZIndex);
         }
 
         #endregion
