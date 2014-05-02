@@ -8,7 +8,7 @@ using PdfSharp.Pdf;
 
 namespace Sheet
 {
-    public class SheetPdfWriter
+    public class BlockPdfWriter
     {
         #region Fields
 

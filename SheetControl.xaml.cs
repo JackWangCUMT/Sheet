@@ -3554,7 +3554,7 @@ namespace Sheet
 
         private void ExportToPdf(string fileName)
         {
-            var writer = new SheetPdfWriter();
+            var writer = new BlockPdfWriter();
 
             var page = new BlockItem();
             page.Init(0, -1, "");
