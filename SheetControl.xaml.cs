@@ -110,444 +110,508 @@ namespace Sheet
 
     #endregion
 
-    #region Item Editor
+    #region Item Serializer Options
 
-    public static class ItemEditor
+    public class ItemSerializeOptions
     {
-        #region Fields
+        public string LineSeparator { get; set; }
+        public string ModelSeparator { get; set; }
+        public char[] LineSeparators { get; set; }
+        public char[] ModelSeparators { get; set; }
+        public char[] WhiteSpace { get; set; }
+        public string IndentWhiteSpace { get; set; }
+        public static ItemSerializeOptions Default
+        {
+            get
+            {
+                return new ItemSerializeOptions()
+                {
+                    LineSeparator = "\r\n",
+                    ModelSeparator = ";",
+                    LineSeparators = new char[] { '\r', '\n' },
+                    ModelSeparators = new char[] { ';' },
+                    WhiteSpace = new char[] { ' ', '\t' },
+                    IndentWhiteSpace = "    "
+                };
+            }
+        }
+    }
 
-        private static string lineSeparator = "\r\n";
-        private static string modelSeparator = ";";
-        private static char[] lineSeparators = { '\r', '\n' };
-        private static char[] modelSeparators = { ';' };
-        private static char[] whiteSpace = { ' ', '\t' };
-        private static string indentWhiteSpace = "    ";
+    #endregion
 
-        #endregion
+    #region Item Serializer
 
+    public static class ItemSerializer
+    {
         #region Serialize
 
-        public static void Serialize(StringBuilder sb, ItemColor color)
+        public static void Serialize(StringBuilder sb, ItemColor color, ItemSerializeOptions options)
         {
             sb.Append(color.Alpha);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(color.Red);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(color.Green);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(color.Blue);
         }
 
-        public static void Serialize(StringBuilder sb, LineItem line, string indent)
+        public static void Serialize(StringBuilder sb, LineItem line, string indent, ItemSerializeOptions options)
         {
             sb.Append(indent);
             sb.Append("LINE");
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(line.Id);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(line.X1);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(line.Y1);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(line.X2);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(line.Y2);
-            sb.Append(modelSeparator);
-            Serialize(sb, line.Stroke);
-            sb.Append(lineSeparator);
+            sb.Append(options.ModelSeparator);
+            Serialize(sb, line.Stroke, options);
+            sb.Append(options.LineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, RectangleItem rectangle, string indent)
+        public static void Serialize(StringBuilder sb, RectangleItem rectangle, string indent, ItemSerializeOptions options)
         {
             sb.Append(indent);
             sb.Append("RECTANGLE");
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(rectangle.Id);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(rectangle.X);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(rectangle.Y);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(rectangle.Width);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(rectangle.Height);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(rectangle.IsFilled);
-            sb.Append(modelSeparator);
-            Serialize(sb, rectangle.Stroke);
-            sb.Append(modelSeparator);
-            Serialize(sb, rectangle.Fill);
-            sb.Append(lineSeparator);
+            sb.Append(options.ModelSeparator);
+            Serialize(sb, rectangle.Stroke, options);
+            sb.Append(options.ModelSeparator);
+            Serialize(sb, rectangle.Fill, options);
+            sb.Append(options.LineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, EllipseItem ellipse, string indent)
+        public static void Serialize(StringBuilder sb, EllipseItem ellipse, string indent, ItemSerializeOptions options)
         {
             sb.Append(indent);
             sb.Append("ELLIPSE");
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(ellipse.Id);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(ellipse.X);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(ellipse.Y);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(ellipse.Width);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(ellipse.Height);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(ellipse.IsFilled);
-            sb.Append(modelSeparator);
-            Serialize(sb, ellipse.Stroke);
-            sb.Append(modelSeparator);
-            Serialize(sb, ellipse.Fill);
-            sb.Append(lineSeparator);
+            sb.Append(options.ModelSeparator);
+            Serialize(sb, ellipse.Stroke, options);
+            sb.Append(options.ModelSeparator);
+            Serialize(sb, ellipse.Fill, options);
+            sb.Append(options.LineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, TextItem text, string indent)
+        public static void Serialize(StringBuilder sb, TextItem text, string indent, ItemSerializeOptions options)
         {
             sb.Append(indent);
             sb.Append("TEXT");
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(text.Id);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(text.X);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(text.Y);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(text.Width);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(text.Height);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(text.HAlign);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(text.VAlign);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(text.Size);
-            sb.Append(modelSeparator);
-            Serialize(sb, text.Foreground);
-            sb.Append(modelSeparator);
-            Serialize(sb, text.Backgroud);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
+            Serialize(sb, text.Foreground, options);
+            sb.Append(options.ModelSeparator);
+            Serialize(sb, text.Backgroud, options);
+            sb.Append(options.ModelSeparator);
             sb.Append(text.Text);
-            sb.Append(lineSeparator);
+            sb.Append(options.LineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, BlockItem block, string indent)
+        public static void Serialize(StringBuilder sb, BlockItem block, string indent, ItemSerializeOptions options)
         {
             sb.Append(indent);
             sb.Append("BLOCK");
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(block.Id);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(block.Name);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(block.Width);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
             sb.Append(block.Height);
-            sb.Append(modelSeparator);
-            Serialize(sb, block.Backgroud);
-            sb.Append(modelSeparator);
+            sb.Append(options.ModelSeparator);
+            Serialize(sb, block.Backgroud, options);
+            sb.Append(options.ModelSeparator);
             sb.Append(block.DataId);
-            sb.Append(lineSeparator);
+            sb.Append(options.LineSeparator);
 
-            Serialize(sb, block.Lines, indent + indentWhiteSpace);
-            Serialize(sb, block.Rectangles, indent + indentWhiteSpace);
-            Serialize(sb, block.Ellipses, indent + indentWhiteSpace);
-            Serialize(sb, block.Texts, indent + indentWhiteSpace);
-            Serialize(sb, block.Blocks, indent + indentWhiteSpace);
+            Serialize(sb, block.Lines, indent + options.IndentWhiteSpace, options);
+            Serialize(sb, block.Rectangles, indent + options.IndentWhiteSpace, options);
+            Serialize(sb, block.Ellipses, indent + options.IndentWhiteSpace, options);
+            Serialize(sb, block.Texts, indent + options.IndentWhiteSpace, options);
+            Serialize(sb, block.Blocks, indent + options.IndentWhiteSpace, options);
 
             sb.Append(indent);
             sb.Append("END");
-            sb.Append(lineSeparator);
+            sb.Append(options.LineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, List<LineItem> lines, string indent)
+        public static void Serialize(StringBuilder sb, IEnumerable<LineItem> lines, string indent, ItemSerializeOptions options)
         {
             foreach (var line in lines)
             {
-                Serialize(sb, line, indent);
+                Serialize(sb, line, indent, options);
             }
         }
 
-        public static void Serialize(StringBuilder sb, List<RectangleItem> rectangles, string indent)
+        public static void Serialize(StringBuilder sb, IEnumerable<RectangleItem> rectangles, string indent, ItemSerializeOptions options)
         {
             foreach (var rectangle in rectangles)
             {
-                Serialize(sb, rectangle, indent);
+                Serialize(sb, rectangle, indent, options);
             }
         }
 
-        public static void Serialize(StringBuilder sb, List<EllipseItem> ellipses, string indent)
+        public static void Serialize(StringBuilder sb, IEnumerable<EllipseItem> ellipses, string indent, ItemSerializeOptions options)
         {
             foreach (var ellipse in ellipses)
             {
-                Serialize(sb, ellipse, indent);
+                Serialize(sb, ellipse, indent, options);
             }
         }
 
-        public static void Serialize(StringBuilder sb, List<TextItem> texts, string indent)
+        public static void Serialize(StringBuilder sb, IEnumerable<TextItem> texts, string indent, ItemSerializeOptions options)
         {
             foreach (var text in texts)
             {
-                Serialize(sb, text, indent);
+                Serialize(sb, text, indent, options);
             }
         }
 
-        public static void Serialize(StringBuilder sb, List<BlockItem> blocks, string indent)
+        public static void Serialize(StringBuilder sb, IEnumerable<BlockItem> blocks, string indent, ItemSerializeOptions options)
         {
             foreach (var block in blocks)
             {
-                Serialize(sb, block, indent);
+                Serialize(sb, block, indent, options);
             }
         }
 
-        public static string SerializeOnlyContents(BlockItem block)
+        public static string SerializeContents(BlockItem block, ItemSerializeOptions options)
         {
             var sb = new StringBuilder();
 
-            Serialize(sb, block.Lines, "");
-            Serialize(sb, block.Rectangles, "");
-            Serialize(sb, block.Ellipses, "");
-            Serialize(sb, block.Texts, "");
-            Serialize(sb, block.Blocks, "");
+            Serialize(sb, block.Lines, "", options);
+            Serialize(sb, block.Rectangles, "", options);
+            Serialize(sb, block.Ellipses, "", options);
+            Serialize(sb, block.Texts, "", options);
+            Serialize(sb, block.Blocks, "", options);
 
             return sb.ToString();
+        }
+
+        public static string SerializeContents(BlockItem block)
+        {
+            return SerializeContents(block, ItemSerializeOptions.Default);
         }
 
         #endregion
 
         #region Deserialize
 
-        private static BlockItem Deserialize(string[] lines, int length, ref int end, string name, int id, int dataId)
+        private static LineItem DeserializeLine(string[] m)
         {
-            var sheet = new BlockItem();
-            sheet.Init(id, dataId, name);
+            var lineItem = new LineItem();
+            lineItem.Id = int.Parse(m[1]);
+            lineItem.X1 = double.Parse(m[2]);
+            lineItem.Y1 = double.Parse(m[3]);
+            lineItem.X2 = double.Parse(m[4]);
+            lineItem.Y2 = double.Parse(m[5]);
+            if (m.Length == 10)
+            {
+                lineItem.Stroke = new ItemColor()
+                {
+                    Alpha = int.Parse(m[6]),
+                    Red = int.Parse(m[7]),
+                    Green = int.Parse(m[8]),
+                    Blue = int.Parse(m[9])
+                };
+            }
+            else
+            {
+                lineItem.Stroke = new ItemColor()
+                {
+                    Alpha = 255,
+                    Red = 0,
+                    Green = 0,
+                    Blue = 0
+                };
+            }
+            return lineItem;
+        }
+        
+        private static RectangleItem DeserializeRectangle(string[] m)
+        {
+            var rectangleItem = new RectangleItem();
+            rectangleItem.Id = int.Parse(m[1]);
+            rectangleItem.X = double.Parse(m[2]);
+            rectangleItem.Y = double.Parse(m[3]);
+            rectangleItem.Width = double.Parse(m[4]);
+            rectangleItem.Height = double.Parse(m[5]);
+            rectangleItem.IsFilled = bool.Parse(m[6]);
+            if (m.Length == 15)
+            {
+                rectangleItem.Stroke = new ItemColor()
+                {
+                    Alpha = int.Parse(m[7]),
+                    Red = int.Parse(m[8]),
+                    Green = int.Parse(m[9]),
+                    Blue = int.Parse(m[10])
+                };
+                rectangleItem.Fill = new ItemColor()
+                {
+                    Alpha = int.Parse(m[11]),
+                    Red = int.Parse(m[12]),
+                    Green = int.Parse(m[13]),
+                    Blue = int.Parse(m[14])
+                };
+            }
+            else
+            {
+                rectangleItem.Stroke = new ItemColor()
+                {
+                    Alpha = 255,
+                    Red = 0,
+                    Green = 0,
+                    Blue = 0
+                };
+                rectangleItem.Fill = new ItemColor()
+                {
+                    Alpha = 255,
+                    Red = 0,
+                    Green = 0,
+                    Blue = 0
+                };
+            }
+            return rectangleItem;
+        }
+        
+        private static EllipseItem DeserializeEllipse(string[] m)
+        {
+            var ellipseItem = new EllipseItem();
+            ellipseItem.Id = int.Parse(m[1]);
+            ellipseItem.X = double.Parse(m[2]);
+            ellipseItem.Y = double.Parse(m[3]);
+            ellipseItem.Width = double.Parse(m[4]);
+            ellipseItem.Height = double.Parse(m[5]);
+            ellipseItem.IsFilled = bool.Parse(m[6]);
+            if (m.Length == 15)
+            {
+                ellipseItem.Stroke = new ItemColor()
+                {
+                    Alpha = int.Parse(m[7]),
+                    Red = int.Parse(m[8]),
+                    Green = int.Parse(m[9]),
+                    Blue = int.Parse(m[10])
+                };
+                ellipseItem.Fill = new ItemColor()
+                {
+                    Alpha = int.Parse(m[11]),
+                    Red = int.Parse(m[12]),
+                    Green = int.Parse(m[13]),
+                    Blue = int.Parse(m[14])
+                };
+            }
+            else
+            {
+                ellipseItem.Stroke = new ItemColor()
+                {
+                    Alpha = 255,
+                    Red = 0,
+                    Green = 0,
+                    Blue = 0
+                };
+                ellipseItem.Fill = new ItemColor()
+                {
+                    Alpha = 255,
+                    Red = 0,
+                    Green = 0,
+                    Blue = 0
+                };
+            }
+            return ellipseItem;
+        }
+        
+        private static TextItem DeserializeText(string[] m)
+        {
+            var textItem = new TextItem();
+            textItem.Id = int.Parse(m[1]);
+            textItem.X = double.Parse(m[2]);
+            textItem.Y = double.Parse(m[3]);
+            textItem.Width = double.Parse(m[4]);
+            textItem.Height = double.Parse(m[5]);
+            textItem.HAlign = int.Parse(m[6]);
+            textItem.VAlign = int.Parse(m[7]);
+            textItem.Size = double.Parse(m[8]);
+            if (m.Length == 18)
+            {
+                textItem.Foreground = new ItemColor()
+                {
+                    Alpha = int.Parse(m[9]),
+                    Red = int.Parse(m[10]),
+                    Green = int.Parse(m[11]),
+                    Blue = int.Parse(m[12])
+                };
+                textItem.Backgroud = new ItemColor()
+                {
+                    Alpha = int.Parse(m[13]),
+                    Red = int.Parse(m[14]),
+                    Green = int.Parse(m[15]),
+                    Blue = int.Parse(m[16])
+                };
+                textItem.Text = m[17];
+            }
+            else
+            {
+                textItem.Foreground = new ItemColor()
+                {
+                    Alpha = 255,
+                    Red = 0,
+                    Green = 0,
+                    Blue = 0
+                };
+                textItem.Backgroud = new ItemColor()
+                {
+                    Alpha = 255,
+                    Red = 0,
+                    Green = 0,
+                    Blue = 0
+                };
+                textItem.Text = m[9];
+            }
+            return textItem;
+        }
+
+        private static BlockItem DeserializeBlock(string[] lines, int length, ref int end, string[] m, ItemSerializeOptions options)
+        {
+            var blockItem = DeserializeRootBlock(lines, length, ref end, m[2], int.Parse(m[1]), m.Length == 10 ? int.Parse(m[9]) : -1, options);
+            if (m.Length == 9 || m.Length == 10)
+            {
+                blockItem.Width = double.Parse(m[3]);
+                blockItem.Width = double.Parse(m[4]);
+                blockItem.Backgroud = new ItemColor()
+                {
+                    Alpha = int.Parse(m[5]),
+                    Red = int.Parse(m[6]),
+                    Green = int.Parse(m[7]),
+                    Blue = int.Parse(m[8])
+                };
+                blockItem.DataId = m.Length == 10 ? int.Parse(m[9]) : -1;
+            }
+            else
+            {
+                blockItem.Width = 0.0;
+                blockItem.Width = 0.0;
+                blockItem.Backgroud = new ItemColor()
+                {
+                    Alpha = 0,
+                    Red = 0,
+                    Green = 0,
+                    Blue = 0
+                };
+                blockItem.DataId = -1;
+            }
+            return blockItem;
+        }
+
+        private static BlockItem DeserializeRootBlock(string[] lines, int length, ref int end, string name, int id, int dataId, ItemSerializeOptions options)
+        {
+            var root = new BlockItem();
+            root.Init(id, dataId, name);
 
             for (; end < length; end++)
             {
-                string line = lines[end].TrimStart(whiteSpace);
-                var m = line.Split(modelSeparators);
+                string line = lines[end].TrimStart(options.WhiteSpace);
+                var m = line.Split(options.ModelSeparators);
                 if ((m.Length == 6 || m.Length == 10) && string.Compare(m[0], "LINE", true) == 0)
                 {
-                    var lineItem = new LineItem();
-                    lineItem.Id = int.Parse(m[1]);
-                    lineItem.X1 = double.Parse(m[2]);
-                    lineItem.Y1 = double.Parse(m[3]);
-                    lineItem.X2 = double.Parse(m[4]);
-                    lineItem.Y2 = double.Parse(m[5]);
-                    if (m.Length == 10)
-                    {
-                        lineItem.Stroke = new ItemColor()
-                        {
-                            Alpha = int.Parse(m[6]),
-                            Red = int.Parse(m[7]),
-                            Green = int.Parse(m[8]),
-                            Blue = int.Parse(m[9])
-                        };
-                    }
-                    else
-                    {
-                        lineItem.Stroke = new ItemColor()
-                        {
-                            Alpha = 255,
-                            Red = 0,
-                            Green = 0,
-                            Blue = 0
-                        };
-                    }
-                    sheet.Lines.Add(lineItem);
+                    var lineItem = DeserializeLine(m);
+                    root.Lines.Add(lineItem);
                 }
                 if ((m.Length == 7 || m.Length == 15) && string.Compare(m[0], "RECTANGLE", true) == 0)
                 {
-                    var rectangleItem = new RectangleItem();
-                    rectangleItem.Id = int.Parse(m[1]);
-                    rectangleItem.X = double.Parse(m[2]);
-                    rectangleItem.Y = double.Parse(m[3]);
-                    rectangleItem.Width = double.Parse(m[4]);
-                    rectangleItem.Height = double.Parse(m[5]);
-                    rectangleItem.IsFilled = bool.Parse(m[6]);
-                    if (m.Length == 15)
-                    {
-                        rectangleItem.Stroke = new ItemColor()
-                        {
-                            Alpha = int.Parse(m[7]),
-                            Red = int.Parse(m[8]),
-                            Green = int.Parse(m[9]),
-                            Blue = int.Parse(m[10])
-                        };
-                        rectangleItem.Fill = new ItemColor()
-                        {
-                            Alpha = int.Parse(m[11]),
-                            Red = int.Parse(m[12]),
-                            Green = int.Parse(m[13]),
-                            Blue = int.Parse(m[14])
-                        };
-                    }
-                    else
-                    {
-                        rectangleItem.Stroke = new ItemColor()
-                        {
-                            Alpha = 255,
-                            Red = 0,
-                            Green = 0,
-                            Blue = 0
-                        };
-                        rectangleItem.Fill = new ItemColor()
-                        {
-                            Alpha = 255,
-                            Red = 0,
-                            Green = 0,
-                            Blue = 0
-                        };
-                    }
-                    sheet.Rectangles.Add(rectangleItem);
+                    var rectangleItem = DeserializeRectangle(m);
+                    root.Rectangles.Add(rectangleItem);
                 }
                 if ((m.Length == 7 || m.Length == 15) && string.Compare(m[0], "ELLIPSE", true) == 0)
                 {
-                    var ellipseItem = new EllipseItem();
-                    ellipseItem.Id = int.Parse(m[1]);
-                    ellipseItem.X = double.Parse(m[2]);
-                    ellipseItem.Y = double.Parse(m[3]);
-                    ellipseItem.Width = double.Parse(m[4]);
-                    ellipseItem.Height = double.Parse(m[5]);
-                    ellipseItem.IsFilled = bool.Parse(m[6]);
-                    if (m.Length == 15)
-                    {
-                        ellipseItem.Stroke = new ItemColor()
-                        {
-                            Alpha = int.Parse(m[7]),
-                            Red = int.Parse(m[8]),
-                            Green = int.Parse(m[9]),
-                            Blue = int.Parse(m[10])
-                        };
-                        ellipseItem.Fill = new ItemColor()
-                        {
-                            Alpha = int.Parse(m[11]),
-                            Red = int.Parse(m[12]),
-                            Green = int.Parse(m[13]),
-                            Blue = int.Parse(m[14])
-                        };
-                    }
-                    else
-                    {
-                        ellipseItem.Stroke = new ItemColor()
-                        {
-                            Alpha = 255,
-                            Red = 0,
-                            Green = 0,
-                            Blue = 0
-                        };
-                        ellipseItem.Fill = new ItemColor()
-                        {
-                            Alpha = 255,
-                            Red = 0,
-                            Green = 0,
-                            Blue = 0
-                        };
-                    }
-                    sheet.Ellipses.Add(ellipseItem);
+                    var ellipseItem = DeserializeEllipse(m);
+                    root.Ellipses.Add(ellipseItem);
                 }
                 else if ((m.Length == 10 || m.Length == 18) && string.Compare(m[0], "TEXT", true) == 0)
                 {
-                    var textItem = new TextItem();
-                    textItem.Id = int.Parse(m[1]);
-                    textItem.X = double.Parse(m[2]);
-                    textItem.Y = double.Parse(m[3]);
-                    textItem.Width = double.Parse(m[4]);
-                    textItem.Height = double.Parse(m[5]);
-                    textItem.HAlign = int.Parse(m[6]);
-                    textItem.VAlign = int.Parse(m[7]);
-                    textItem.Size = double.Parse(m[8]);
-                    if (m.Length == 18)
-                    {
-                        textItem.Foreground = new ItemColor()
-                        {
-                            Alpha = int.Parse(m[9]),
-                            Red = int.Parse(m[10]),
-                            Green = int.Parse(m[11]),
-                            Blue = int.Parse(m[12])
-                        };
-                        textItem.Backgroud = new ItemColor()
-                        {
-                            Alpha = int.Parse(m[13]),
-                            Red = int.Parse(m[14]),
-                            Green = int.Parse(m[15]),
-                            Blue = int.Parse(m[16])
-                        };
-                        textItem.Text = m[17];
-                    }
-                    else
-                    {
-                        textItem.Foreground = new ItemColor()
-                        {
-                            Alpha = 255,
-                            Red = 0,
-                            Green = 0,
-                            Blue = 0
-                        };
-                        textItem.Backgroud = new ItemColor()
-                        {
-                            Alpha = 255,
-                            Red = 0,
-                            Green = 0,
-                            Blue = 0
-                        };
-                        textItem.Text = m[9];
-                    }
-                    sheet.Texts.Add(textItem);
+                    var textItem = DeserializeText(m);
+                    root.Texts.Add(textItem);
                 }
                 else if ((m.Length == 3 || m.Length == 9 || m.Length == 10) && string.Compare(m[0], "BLOCK", true) == 0)
                 {
                     end++;
-                    var blockItem = Deserialize(lines, length, ref end, m[2], int.Parse(m[1]), m.Length == 10 ? int.Parse(m[9]) : -1);
-                    if (m.Length == 9 || m.Length == 10)
-                    {
-                        blockItem.Width = double.Parse(m[3]);
-                        blockItem.Width = double.Parse(m[4]);
-                        blockItem.Backgroud = new ItemColor()
-                        {
-                            Alpha = int.Parse(m[5]),
-                            Red = int.Parse(m[6]),
-                            Green = int.Parse(m[7]),
-                            Blue = int.Parse(m[8])
-                        };
-                        blockItem.DataId = m.Length == 10 ? int.Parse(m[9]) : -1;
-                    }
-                    else
-                    {
-                        blockItem.Width = 0.0;
-                        blockItem.Width = 0.0;
-                        blockItem.Backgroud = new ItemColor()
-                        {
-                            Alpha = 0,
-                            Red = 0,
-                            Green = 0,
-                            Blue = 0
-                        };
-                        blockItem.DataId = -1;
-                    }
-                    sheet.Blocks.Add(blockItem);
+                    var blockItem = DeserializeBlock(lines, length, ref end, m, options);
+                    root.Blocks.Add(blockItem);
                     continue;
                 }
                 else if (m.Length == 1 && string.Compare(m[0], "END", true) == 0)
                 {
-                    return sheet;
+                    return root;
                 }
             }
-
-            return sheet;
+            return root;
         }
 
-        public static BlockItem Deserialize(string model)
+        public static BlockItem DeserializeContents(string model, ItemSerializeOptions options)
         {
-            string[] lines = model.Split(lineSeparators, StringSplitOptions.RemoveEmptyEntries);
+            string[] lines = model.Split(options.LineSeparators, StringSplitOptions.RemoveEmptyEntries);
             int length = lines.Length;
             int end = 0;
-            return Deserialize(lines, length, ref end, "LOGIC", 0, -1);
+            return DeserializeRootBlock(lines, length, ref end, "", 0, -1, options);
+        }
+
+        public static BlockItem DeserializeContents(string model)
+        {
+            return DeserializeContents(model, ItemSerializeOptions.Default);
         }
 
         #endregion
+    }
 
+    #endregion
+
+    #region Item Editor
+
+    public static class ItemEditor
+    {
         #region I/O
 
         public static string OpenText(string fileName)
@@ -2749,7 +2813,7 @@ namespace Sheet
         {
             var block = BlockEditor.SerializerBlockContents(parent, id, dataId, name);
             var sb = new StringBuilder();
-            ItemEditor.Serialize(sb, block, "");
+            ItemSerializer.Serialize(sb, block, "", ItemSerializeOptions.Default);
             return sb.ToString();
         }
 
@@ -2757,7 +2821,7 @@ namespace Sheet
         {
             var text = SerializeBlockContents(0, -1, name, Selected);
             Delete();
-            var block = ItemEditor.Deserialize(text);
+            var block = ItemSerializer.DeserializeContents(text);
             InsertBlock(block, true);
             return block.Blocks.FirstOrDefault();
         }
@@ -2793,8 +2857,8 @@ namespace Sheet
         {
             if (BlockEditor.HaveSelected(Selected))
             {
-                var text = ItemEditor.SerializeOnlyContents(BlockEditor.SerializerBlockContents(Selected, 0, -1, "SELECTED"));
-                var block = ItemEditor.Deserialize(text);
+                var text = ItemSerializer.SerializeContents(BlockEditor.SerializerBlockContents(Selected, 0, -1, "SELECTED"));
+                var block = ItemSerializer.DeserializeContents(text);
                 RegisterChange("Break Block");
                 Delete();
                 BlockEditor.InsertBrokenBlock(sheet, block, Logic, Selected, true, options.LineThickness / Zoom);
@@ -2810,7 +2874,7 @@ namespace Sheet
             var change = new ChangeMessage()
             {
                 Message = message,
-                Model = ItemEditor.SerializeOnlyContents(SerializeLogicBlock())
+                Model = ItemSerializer.SerializeContents(SerializeLogicBlock())
             };
             return change;
         }
@@ -2828,7 +2892,7 @@ namespace Sheet
                 redos.Push(CreateChangeMessage("Redo"));
                 Reset();
                 var undo = undos.Pop();
-                InsertBlock(ItemEditor.Deserialize(undo.Model), false);
+                InsertBlock(ItemSerializer.DeserializeContents(undo.Model), false);
             }
         }
 
@@ -2839,7 +2903,7 @@ namespace Sheet
                 undos.Push(CreateChangeMessage("Undo"));
                 Reset();
                 var redo = redos.Pop();
-                InsertBlock(ItemEditor.Deserialize(redo.Model), false);
+                InsertBlock(ItemSerializer.DeserializeContents(redo.Model), false);
             }
         }
 
@@ -2866,7 +2930,7 @@ namespace Sheet
         {
             var block = BlockEditor.HaveSelected(Selected) ? 
                 BlockEditor.SerializerBlockContents(Selected, 0, -1, "SELECTED") : SerializeLogicBlock();
-            var text = ItemEditor.SerializeOnlyContents(block);
+            var text = ItemSerializer.SerializeContents(block);
             Clipboard.SetData(DataFormats.UnicodeText, text);
             //string json = JsonConvert.SerializeObject(block, Formatting.Indented);
             //Clipboard.SetData(DataFormats.UnicodeText, json);
@@ -2875,7 +2939,7 @@ namespace Sheet
         public void Paste()
         {
             var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
-            var block = ItemEditor.Deserialize(text);
+            var block = ItemSerializer.DeserializeContents(text);
             InsertBlock(block, true);
             //var block = JsonConvert.DeserializeObject<BlockItem>(text);
             //InsertBlock(block, true);
@@ -2954,7 +3018,7 @@ namespace Sheet
         {
             if (Library != null && text != null)
             {
-                var blocks = ItemEditor.Deserialize(text).Blocks;
+                var blocks = ItemSerializer.DeserializeContents(text).Blocks;
                 Library.SetSource(blocks);
             }
         }
@@ -3659,7 +3723,7 @@ namespace Sheet
                             {
                                 RegisterChange("Open");
                                 Reset();
-                                var block = ItemEditor.Deserialize(text);
+                                var block = ItemSerializer.DeserializeContents(text);
                                 InsertBlock(block, false);
                             }
                             break;
@@ -3692,7 +3756,7 @@ namespace Sheet
                     case 1:
                         {
                             var block = SerializeLogicBlock();
-                            var text = ItemEditor.SerializeOnlyContents(block);
+                            var text = ItemSerializer.SerializeContents(block);
                             ItemEditor.SaveText(dlg.FileName, text);
                         }
                         break;
