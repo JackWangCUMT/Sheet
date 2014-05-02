@@ -2376,6 +2376,21 @@ namespace Sheet
 
         #endregion
 
+        #region Defaults
+
+        private double defaultPageOriginX = 0.0;
+        private double defaultPageOriginY = 0.0;
+        private double defaultPageWidth = 1260.0;
+        private double defaultPageHeight = 891.0;
+        private double defaultSnapSize = 15;
+        private double defaultGridSize = 30;
+        private double defaultFrameThickness = 1.0;
+        private double defaultGridThickness = 1.0;
+        private double defaultSelectionThickness = 1.0;
+        private double defaultLineThickness = 2.0;
+
+        #endregion
+
         #region Fields
 
         private ISheet back = null;
@@ -2385,12 +2400,6 @@ namespace Sheet
         private Stack<ChangeItem> redos = new Stack<ChangeItem>();
         private Mode mode = Mode.Selection;
         private Mode tempMode = Mode.None;
-        private double snapSize = 15;
-        private double gridSize = 30;
-        private double frameThickness = 1.0;
-        private double gridThickness = 1.0;
-        private double selectionThickness = 1.0;
-        private double lineThickness = 2.0;
         private Point panStartPoint;
         private Line tempLine = null;
         private Ellipse tempStartEllipse = null;
@@ -2490,8 +2499,8 @@ namespace Sheet
 
         private double Snap(double val)
         {
-            double r = val % snapSize;
-            return r >= snapSize / 2.0 ? val + snapSize - r : val - r;
+            double r = val % defaultSnapSize;
+            return r >= defaultSnapSize / 2.0 ? val + defaultSnapSize - r : val - r;
         }
 
         #endregion
@@ -2524,10 +2533,10 @@ namespace Sheet
 
         private void InitLoaded()
         {
-            CreateGrid(back, gridLines, 330.0, 30.0, 600.0, 750.0, gridSize, gridThickness, BlockEditor.GridBrush);
-            CreateFrame(back, frameLines, gridSize, gridThickness, BlockEditor.FrameBrush);
-            AdjustThickness(gridLines, gridThickness / zoomFactors[zoomIndex]);
-            AdjustThickness(frameLines, frameThickness / zoomFactors[zoomIndex]);
+            CreateGrid(back, gridLines, 330.0, 30.0, 600.0, 750.0, defaultGridSize, defaultGridThickness, BlockEditor.GridBrush);
+            CreateFrame(back, frameLines, defaultGridSize, defaultGridThickness, BlockEditor.FrameBrush);
+            AdjustThickness(gridLines, defaultGridThickness / zoomFactors[zoomIndex]);
+            AdjustThickness(frameLines, defaultFrameThickness / zoomFactors[zoomIndex]);
             LoadStandardLibrary();
             Focus();
         }
@@ -2709,7 +2718,7 @@ namespace Sheet
         private void InsertBlock(BlockItem block, bool select)
         {
             BlockEditor.DeselectAll(Selected);
-            BlockEditor.InsertBlockContents(sheet, block, Logic, Selected, select, lineThickness / Zoom);
+            BlockEditor.InsertBlockContents(sheet, block, Logic, Selected, select, defaultLineThickness / Zoom);
         }
 
         private BlockItem SerializeLogicBlock()
@@ -2769,7 +2778,7 @@ namespace Sheet
                 var block = ItemEditor.Deserialize(text);
                 RegisterChange("Break Block");
                 Delete();
-                BlockEditor.InsertBrokenBlock(sheet, block, Logic, Selected, true, lineThickness / Zoom);
+                BlockEditor.InsertBrokenBlock(sheet, block, Logic, Selected, true, defaultLineThickness / Zoom);
             }
         }
 
@@ -2869,7 +2878,7 @@ namespace Sheet
         private Block Insert(BlockItem blockItem, Point p, bool select)
         {
             BlockEditor.DeselectAll(Selected);
-            double thickness = lineThickness / Zoom;
+            double thickness = defaultLineThickness / Zoom;
 
             if (select)
             {
@@ -2931,14 +2940,14 @@ namespace Sheet
             }
         }
 
-        private void AddToLibrary(BlockItem block)
+        private void AddToLibrary(BlockItem blockItem)
         {
-            if (Library != null && block != null)
+            if (Library != null && blockItem != null)
             {
                 var source = Library.GetSource() as IEnumerable<BlockItem>;
                 var items = new List<BlockItem>(source);
-                ItemEditor.ResetPosition(block, 0.0, 0.0, 1200.0, 750.0);
-                items.Add(block);
+                ItemEditor.ResetPosition(blockItem, defaultPageOriginX, defaultPageOriginY, defaultPageWidth, defaultPageHeight);
+                items.Add(blockItem);
                 Library.SetSource(items);
             }
         }
@@ -2989,22 +2998,22 @@ namespace Sheet
 
         public void MoveUp()
         {
-            Move(0.0, -snapSize);
+            Move(0.0, -defaultSnapSize);
         }
 
         public void MoveDown()
         {
-            Move(0.0, snapSize);
+            Move(0.0, defaultSnapSize);
         }
 
         public void MoveLeft()
         {
-            Move(-snapSize, 0.0);
+            Move(-defaultSnapSize, 0.0);
         }
 
         public void MoveRight()
         {
-            Move(snapSize, 0.0);
+            Move(defaultSnapSize, 0.0);
         }
 
         #endregion
@@ -3147,10 +3156,10 @@ namespace Sheet
 
         private void AdjustThickness(double zoom)
         {
-            double gridThicknessZoomed = gridThickness / zoom;
-            double frameThicknessZoomed = frameThickness / zoom;
-            double lineThicknessZoomed = lineThickness / zoom;
-            double selectionThicknessZoomed = selectionThickness / zoom;
+            double gridThicknessZoomed = defaultGridThickness / zoom;
+            double frameThicknessZoomed = defaultFrameThickness / zoom;
+            double lineThicknessZoomed = defaultLineThickness / zoom;
+            double selectionThicknessZoomed = defaultSelectionThickness / zoom;
 
             AdjustThickness(gridLines, gridThicknessZoomed);
             AdjustThickness(frameLines, frameThicknessZoomed);
@@ -3255,7 +3264,7 @@ namespace Sheet
             selectionStartPoint = p;
             double x = p.X;
             double y = p.Y;
-            selectionRect = BlockEditor.CreateSelectionRectangle(selectionThickness / Zoom, x, y, 0.0, 0.0);
+            selectionRect = BlockEditor.CreateSelectionRectangle(defaultSelectionThickness / Zoom, x, y, 0.0, 0.0);
             overlay.Add(selectionRect);
             overlay.Capture();
         }
@@ -3303,9 +3312,9 @@ namespace Sheet
         {
             double x = Snap(p.X);
             double y = Snap(p.Y);
-            tempLine = BlockEditor.CreateLine(lineThickness / Zoom, x, y, x, y);
-            tempStartEllipse = BlockEditor.CreateEllipse(lineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
-            tempEndEllipse = BlockEditor.CreateEllipse(lineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
+            tempLine = BlockEditor.CreateLine(defaultLineThickness / Zoom, x, y, x, y);
+            tempStartEllipse = BlockEditor.CreateEllipse(defaultLineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
+            tempEndEllipse = BlockEditor.CreateEllipse(defaultLineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
             overlay.Add(tempLine);
             overlay.Add(tempStartEllipse);
             overlay.Add(tempEndEllipse);
@@ -3368,7 +3377,7 @@ namespace Sheet
             double x = Snap(p.X);
             double y = Snap(p.Y);
             selectionStartPoint = new Point(x, y);
-            tempRectangle = BlockEditor.CreateRectangle(selectionThickness / Zoom, x, y, 0.0, 0.0, true);
+            tempRectangle = BlockEditor.CreateRectangle(defaultSelectionThickness / Zoom, x, y, 0.0, 0.0, true);
             overlay.Add(tempRectangle);
             overlay.Capture();
         }
@@ -3425,7 +3434,7 @@ namespace Sheet
             double x = Snap(p.X);
             double y = Snap(p.Y);
             selectionStartPoint = new Point(x, y);
-            tempEllipse = BlockEditor.CreateEllipse(selectionThickness / Zoom, x, y, 0.0, 0.0, true);
+            tempEllipse = BlockEditor.CreateEllipse(defaultSelectionThickness / Zoom, x, y, 0.0, 0.0, true);
             overlay.Add(tempEllipse);
             overlay.Capture();
         }
@@ -3532,10 +3541,10 @@ namespace Sheet
             var sheet = new CanvasSheet(root.Sheet);
 
             //CreateGrid(sheet, null, 330.0, 30.0, 600.0, 720.0, gridSize, 0.013 * 96.0 / 2.54 /*gridThickness*/, BlockEditor.GridBrush);
-            CreateFrame(sheet, null, gridSize, /* 0.013 * 96.0 / 2.54 */ gridThickness, BlockEditor.NormalBrush);
+            CreateFrame(sheet, null, defaultGridSize, /* 0.013 * 96.0 / 2.54 */ defaultGridThickness, BlockEditor.NormalBrush);
 
             var block = BlockEditor.SerializerBlockContents(parent, 0, -1, "LOGIC");
-            BlockEditor.InsertBlockContents(sheet, block, null, null, false, /* 0.035 * 96.0 / 2.54 */ lineThickness);
+            BlockEditor.InsertBlockContents(sheet, block, null, null, false, /* 0.035 * 96.0 / 2.54 */ defaultLineThickness);
 
             //var vb = new Viewbox { Child = root };
             //vb.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
