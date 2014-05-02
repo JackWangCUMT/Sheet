@@ -3092,14 +3092,9 @@ namespace Sheet
 
             double dx = p.X - panStartPoint.X;
             double dy = p.Y - panStartPoint.Y;
-            double z = zoomFactors[zoomIndex];
-
-            Debug.Print(string.Format("{0} {1}", dx, dy));
 
             if (dx != 0.0 || dy != 0.0)
             {
-                //x = x / z;
-                //y = y / z;
                 BlockEditor.Move(dx, dy, Selected);
                 panStartPoint = p;
             }  
