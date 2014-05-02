@@ -2400,6 +2400,7 @@ namespace Sheet
         private Point selectionStartPoint;
         private Rectangle selectionRect = null;
         private double hitSize = 3.5;
+        private bool isFirstMove = true;
         private List<Line> gridLines = new List<Line>();
         private List<Line> frameLines = new List<Line>();
 
@@ -3075,7 +3076,7 @@ namespace Sheet
 
         private void InitMove(Point p)
         {
-            PushUndo("Move");
+            isFirstMove = true;
             StoreTempMode();
             ModeMove();
             p.X = Snap(p.X);
@@ -3087,6 +3088,12 @@ namespace Sheet
 
         private void Move(Point p)
         {
+            if (isFirstMove)
+            {
+                PushUndo("Move");
+                isFirstMove = false;
+            }
+
             p.X = Snap(p.X);
             p.Y = Snap(p.Y);
 
