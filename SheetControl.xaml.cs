@@ -3092,6 +3092,7 @@ namespace Sheet
             {
                 PushUndo("Move");
                 isFirstMove = false;
+                Cursor = Cursors.SizeAll;
             }
 
             p.X = Snap(p.X);
@@ -3110,6 +3111,7 @@ namespace Sheet
         private void FinishMove()
         {
             RestoreTempMode();
+            Cursor = Cursors.Arrow;
             overlay.ReleaseCapture();
         }
 
