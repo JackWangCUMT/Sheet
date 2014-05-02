@@ -3809,6 +3809,19 @@ namespace Sheet
 
         private void UserControl_PreviewMouseMove(object sender, MouseEventArgs e)
         {
+            bool shift = (Keyboard.Modifiers == ModifierKeys.Shift);
+
+            // mouse over selection when holding Shift key
+            if (shift && selectionRect == null && !overlay.IsCaptured)
+            {
+                if (BlockEditor.HaveSelected(Selected))
+                {
+                    BlockEditor.DeselectAll(Selected);
+                }
+
+                BlockEditor.HitTestClick(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), hitSize, false, false);
+            }
+
             if (GetMode() == Mode.Selection && overlay.IsCaptured)
             {
                 MoveSelectionRect(e.GetPosition(overlay.GetParent()));
