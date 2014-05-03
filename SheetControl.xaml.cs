@@ -3472,7 +3472,7 @@ namespace Sheet
             double x = ItemEditor.Snap(p.X, options.SnapSize);
             double y = ItemEditor.Snap(p.Y, options.SnapSize);
             selectionStartPoint = new Point(x, y);
-            tempRectangle = BlockFactory.CreateRectangle(options.SelectionThickness / Zoom, x, y, 0.0, 0.0, true);
+            tempRectangle = BlockFactory.CreateRectangle(options.LineThickness / Zoom, x, y, 0.0, 0.0, true);
             overlay.Add(tempRectangle);
             overlay.Capture();
         }
@@ -3529,7 +3529,7 @@ namespace Sheet
             double x = ItemEditor.Snap(p.X, options.SnapSize);
             double y = ItemEditor.Snap(p.Y, options.SnapSize);
             selectionStartPoint = new Point(x, y);
-            tempEllipse = BlockFactory.CreateEllipse(options.SelectionThickness / Zoom, x, y, 0.0, 0.0, true);
+            tempEllipse = BlockFactory.CreateEllipse(options.LineThickness / Zoom, x, y, 0.0, 0.0, true);
             overlay.Add(tempEllipse);
             overlay.Capture();
         }
