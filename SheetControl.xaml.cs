@@ -2454,22 +2454,29 @@ namespace Sheet
         #region Fields
 
         private SheetOptions options = null;
+
         private ISheet back = null;
         private ISheet sheet = null;
         private ISheet overlay = null;
+
         private Stack<ChangeMessage> undos = new Stack<ChangeMessage>();
         private Stack<ChangeMessage> redos = new Stack<ChangeMessage>();
+
         private Mode mode = Mode.Selection;
         private Mode tempMode = Mode.None;
+
+        private bool isFirstMove = true;
+
         private Point panStartPoint;
+        private Point selectionStartPoint;
+
         private Line tempLine = null;
         private Ellipse tempStartEllipse = null;
         private Ellipse tempEndEllipse = null;
         private Rectangle tempRectangle = null;
         private Ellipse tempEllipse = null;
-        private Point selectionStartPoint;
-        private Rectangle selectionRect = null;
-        private bool isFirstMove = true;
+        private Rectangle tempSelectionRect = null;
+
         private List<Line> gridLines = new List<Line>();
         private List<Line> frameLines = new List<Line>();
 
@@ -3107,14 +3114,14 @@ namespace Sheet
 
         #region Overlay
 
-        private void ResetTempOverlayElements()
+        private void ResetOverlay()
         {
             tempLine = null;
             tempStartEllipse = null;
             tempEndEllipse = null;
             tempRectangle = null;
             tempEllipse = null;
-            selectionRect = null;
+            tempSelectionRect = null;
         }
 
         #endregion
@@ -3142,7 +3149,7 @@ namespace Sheet
             p.X = ItemEditor.Snap(p.X, options.SnapSize);
             p.Y = ItemEditor.Snap(p.Y, options.SnapSize);
             panStartPoint = p;
-            ResetTempOverlayElements();
+            ResetOverlay();
             overlay.Capture();
         }
 
@@ -3251,9 +3258,9 @@ namespace Sheet
                 tempEllipse.StrokeThickness = lineThicknessZoomed;
             }
 
-            if (selectionRect != null)
+            if (tempSelectionRect != null)
             {
-                selectionRect.StrokeThickness = selectionThicknessZoomed;
+                tempSelectionRect.StrokeThickness = selectionThicknessZoomed;
             }
         }
 
@@ -3289,7 +3296,7 @@ namespace Sheet
             StoreTempMode();
             ModePan();
             panStartPoint = p;
-            ResetTempOverlayElements();
+            ResetOverlay();
             Cursor = Cursors.ScrollAll;
             overlay.Capture();
         }
@@ -3325,8 +3332,8 @@ namespace Sheet
             selectionStartPoint = p;
             double x = p.X;
             double y = p.Y;
-            selectionRect = BlockFactory.CreateSelectionRectangle(options.SelectionThickness / Zoom, x, y, 0.0, 0.0);
-            overlay.Add(selectionRect);
+            tempSelectionRect = BlockFactory.CreateSelectionRectangle(options.SelectionThickness / Zoom, x, y, 0.0, 0.0);
+            overlay.Add(tempSelectionRect);
             overlay.Capture();
         }
 
@@ -3338,18 +3345,18 @@ namespace Sheet
             double y = p.Y;
             double width = Math.Abs(sx - x);
             double height = Math.Abs(sy - y);
-            Canvas.SetLeft(selectionRect, Math.Min(sx, x));
-            Canvas.SetTop(selectionRect, Math.Min(sy, y));
-            selectionRect.Width = width;
-            selectionRect.Height = height;
+            Canvas.SetLeft(tempSelectionRect, Math.Min(sx, x));
+            Canvas.SetTop(tempSelectionRect, Math.Min(sy, y));
+            tempSelectionRect.Width = width;
+            tempSelectionRect.Height = height;
         }
 
         private void FinishSelectionRect()
         {
-            double x = Canvas.GetLeft(selectionRect);
-            double y = Canvas.GetTop(selectionRect);
-            double width = selectionRect.Width;
-            double height = selectionRect.Height;
+            double x = Canvas.GetLeft(tempSelectionRect);
+            double y = Canvas.GetTop(tempSelectionRect);
+            double width = tempSelectionRect.Width;
+            double height = tempSelectionRect.Height;
 
             CancelSelectionRect();
 
@@ -3361,8 +3368,8 @@ namespace Sheet
         private void CancelSelectionRect()
         {
             overlay.ReleaseCapture();
-            overlay.Remove(selectionRect);
-            selectionRect = null;
+            overlay.Remove(tempSelectionRect);
+            tempSelectionRect = null;
         }
 
         #endregion
@@ -3880,7 +3887,7 @@ namespace Sheet
             bool shift = (Keyboard.Modifiers == ModifierKeys.Shift);
 
             // mouse over selection when holding Shift key
-            if (shift && selectionRect == null && !overlay.IsCaptured)
+            if (shift && tempSelectionRect == null && !overlay.IsCaptured)
             {
                 if (BlockEditor.HaveSelected(Selected))
                 {
