@@ -2680,20 +2680,6 @@ namespace Sheet
 
         #endregion
 
-        #region Text
-
-        private void CreateText(Point p)
-        {
-            double x = ItemEditor.Snap(p.X, options.SnapSize);
-            double y = ItemEditor.Snap(p.Y, options.SnapSize);
-            RegisterChange("Create Text");
-            var text = BlockFactory.CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0);
-            Logic.Texts.Add(text);
-            sheet.Add(text);
-        }
-
-        #endregion
-
         #region Back
 
         private static void CreateLine(ISheet sheet, List<Line> lines, double thickness, double x1, double y1, double x2, double y2, Brush stroke)
@@ -3086,7 +3072,7 @@ namespace Sheet
 
         #endregion
 
-        #region Selection
+        #region Select
 
         public void SelecteAll()
         {
@@ -3552,7 +3538,17 @@ namespace Sheet
 
         #endregion
 
-        #region Edit Text
+        #region Text Mode
+
+        private void CreateText(Point p)
+        {
+            double x = ItemEditor.Snap(p.X, options.SnapSize);
+            double y = ItemEditor.Snap(p.Y, options.SnapSize);
+            RegisterChange("Create Text");
+            var text = BlockFactory.CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0);
+            Logic.Texts.Add(text);
+            sheet.Add(text);
+        }
 
         private void ShowTextEditor(Action<string> ok, Action cancel, string label, string text)
         {
@@ -3603,24 +3599,6 @@ namespace Sheet
 
         #region Preview
 
-        private CanvasControl CreatePreview(Block parent)
-        {
-            var root = new CanvasControl();
-            var sheet = new CanvasSheet(root.Sheet);
-
-            //CreateGrid(sheet, null, 330.0, 30.0, 600.0, 720.0, options.GridSize, 0.013 * 96.0 / 2.54 /*options.GridThickness*/, BlockEditor.GridBrush);
-            CreateFrame(sheet, null, options.GridSize, /* 0.013 * 96.0 / 2.54 */ options.GridThickness, BlockFactory.NormalBrush);
-
-            var block = BlockSerializer.SerializerBlockContents(parent, 0, -1, "LOGIC");
-            BlockEditor.AddBlockContents(sheet, block, null, null, false, /* 0.035 * 96.0 / 2.54 */ options.LineThickness);
-
-            //var vb = new Viewbox { Child = root };
-            //vb.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-            //vb.Arrange(new Rect(vb.DesiredSize));
-
-            return root;
-        }
-
         public void Preview()
         {
             var window = new Window()
@@ -3630,7 +3608,16 @@ namespace Sheet
                 WindowStartupLocation = WindowStartupLocation.CenterScreen
             };
 
-            window.Content = CreatePreview(Logic);
+            var canvas = new CanvasControl();
+            var sheet = new CanvasSheet(canvas.Sheet);
+
+            CreateGrid(sheet, null, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
+            CreateFrame(sheet, null, options.GridSize, options.GridThickness, BlockFactory.NormalBrush);
+
+            var blockItem = BlockSerializer.SerializerBlockContents(Logic, 0, -1, "PREVIEW");
+            BlockEditor.AddBlockContents(sheet, blockItem, null, null, false, options.LineThickness);
+
+            window.Content = canvas;
             window.Show();
         }
 
