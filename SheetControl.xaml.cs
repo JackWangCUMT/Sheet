@@ -1659,7 +1659,7 @@ namespace Sheet
 
         #endregion
 
-        #region Mark Selection
+        #region Selection
 
         private static int NormalZIndex = 0;
         private static int SelectedZIndex = 1;
@@ -1715,10 +1715,6 @@ namespace Sheet
             BlockFactory.GetTextBlock(text).Foreground = BlockFactory.SelectedBrush;
             Panel.SetZIndex(text, SelectedZIndex);
         }
-
-        #endregion
-
-        #region Selection
 
         public static bool HaveSelected(Block selected)
         {
