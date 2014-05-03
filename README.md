@@ -5,18 +5,13 @@ Diagram drawing application.
 
 Keyboard  Shortcuts:
 
+    (File)
     Ctrl+O          Open
     Ctrl+S          Save
     Ctrl+E          Export
     Ctrl+L          Library
     Ctrl+D          Database
-    N               Mode None
-    S               Mode Selection
-    I               Mode Insert
-    L               Mode Line
-    R               Mode Rectangle
-    E               Mode Ellipse
-    T               Mode Text
+    (Edit)
     Ctrl+Z          Undo
     Ctrl+Y          Redo
     Ctrl+X          Cut
@@ -32,12 +27,22 @@ Keyboard  Shortcuts:
     Left            Move Left
     Right           Move Right
     F               Toggle Fill
+    (Mode)
+    N               Mode None
+    S               Mode Selection
+    I               Mode Insert
+    L               Mode Line
+    R               Mode Rectangle
+    E               Mode Ellipse
+    T               Mode Text
+    (Logic)
+    Q               Invert Line Start
+    W               Invert Line End
 
 Mouse:
 
     Left Click            Create / (Hold+Drag) Move / (Hold+Drag) Selection / Select / Deselect
                           Select/deselect single/multiple items while Ctrl key is pressesed.
-
     Right Click           Pan / Cancel Create / Cancel Selection / Deselect / Edit Text
     Mouse Wheel           Zoom
     Double Middle Click   Reset Pan and Zoom

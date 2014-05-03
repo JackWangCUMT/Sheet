@@ -4118,5 +4118,122 @@ namespace Sheet
         }
 
         #endregion
+
+        #region Logic: Invert Line Start & End
+
+        private double invertedEllipseWidth = 10.0;
+        private double invertedEllipseHeight = 10.0;
+
+        private void AddInvertedLineEllipse(double x, double y, double width, double height)
+        {
+            var ellipse = BlockFactory.CreateEllipse(options.LineThickness / Zoom, x, y, width, height, false);
+            logic.Ellipses.Add(ellipse);
+            sheet.Add(ellipse);
+
+            BlockEditor.SelectEllipse(ellipse);
+            if (selected.Ellipses == null)
+            {
+                selected.Ellipses = new List<Ellipse>();
+            }
+            selected.Ellipses.Add(ellipse);
+        }
+
+        public void InvertSelectedLineStart()
+        {
+            // add for horizontal or vertical line start ellipse and shorten line
+            if (BlockEditor.HaveSelected(selected) && selected.Lines != null && selected.Lines.Count > 0)
+            {
+                RegisterChange("Invert Line Start");
+
+                foreach (var line in selected.Lines)
+                {
+                    bool sameX = Math.Round(line.X1, 1) == Math.Round(line.X2, 1);
+                    bool sameY = Math.Round(line.Y1, 1) == Math.Round(line.Y2, 1);
+
+                    // vertical line
+                    if (sameX && !sameY)
+                    {
+                        // X1, Y1 is start position
+                        if (line.Y1 < line.Y2)
+                        {
+                            AddInvertedLineEllipse(line.X1 - invertedEllipseWidth / 2.0, line.Y1, invertedEllipseWidth, invertedEllipseHeight);
+                            line.Y1 += invertedEllipseHeight;
+                        }
+                        // X2, Y2 is start position
+                        else
+                        {
+                            AddInvertedLineEllipse(line.X2 - invertedEllipseWidth / 2.0, line.Y2, invertedEllipseWidth, invertedEllipseHeight);
+                            line.Y2 += invertedEllipseHeight;
+                        }
+                    }
+                    // horizontal line
+                    else if (!sameX && sameY)
+                    {
+                        // X1, Y1 is start position
+                        if (line.X1 < line.X2)
+                        {
+                            AddInvertedLineEllipse(line.X1, line.Y1 - invertedEllipseHeight / 2.0, invertedEllipseWidth, invertedEllipseHeight);
+                            line.X1 += invertedEllipseWidth;
+                        }
+                        // X2, Y2 is start position
+                        else
+                        {
+                            AddInvertedLineEllipse(line.X2, line.Y2 - invertedEllipseHeight / 2.0, invertedEllipseWidth, invertedEllipseHeight);
+                            line.X2 += invertedEllipseWidth;
+                        }
+                    }
+                }
+            }
+        }
+
+        public void InvertSelectedLineEnd()
+        {
+            // add for horizontal or vertical line end ellipse and shorten line
+            if (BlockEditor.HaveSelected(selected) && selected.Lines != null && selected.Lines.Count > 0)
+            {
+                RegisterChange("Invert Line End");
+
+                foreach (var line in selected.Lines)
+                {
+                    bool sameX = Math.Round(line.X1, 1) == Math.Round(line.X2, 1);
+                    bool sameY = Math.Round(line.Y1, 1) == Math.Round(line.Y2, 1);
+
+                    // vertical line
+                    if (sameX && !sameY)
+                    {
+                        // X2, Y2 is end position
+                        if (line.Y2 > line.Y1)
+                        {
+                            AddInvertedLineEllipse(line.X2 - invertedEllipseWidth / 2.0, line.Y2 - invertedEllipseHeight, invertedEllipseWidth, invertedEllipseHeight);
+                            line.Y2 -= invertedEllipseHeight;
+                        }
+                        // X1, Y1 is end position
+                        else
+                        {
+                            AddInvertedLineEllipse(line.X1 - invertedEllipseWidth / 2.0, line.Y1 - invertedEllipseHeight, invertedEllipseWidth, invertedEllipseHeight);
+                            line.Y1 -= invertedEllipseHeight;
+                        }
+                    }
+                    // horizontal line
+                    else if (!sameX && sameY)
+                    {
+                        // X2, Y2 is end position
+                        if (line.X2 > line.X1)
+                        {
+                            AddInvertedLineEllipse(line.X2 - invertedEllipseWidth, line.Y2 - invertedEllipseHeight / 2.0, invertedEllipseWidth, invertedEllipseHeight);
+                            line.X2 -= invertedEllipseWidth;
+                        }
+                        // X1, Y1 is end position
+                        else
+                        {
+                            AddInvertedLineEllipse(line.X1 - invertedEllipseWidth, line.Y1 - invertedEllipseHeight / 2.0, invertedEllipseWidth, invertedEllipseHeight);
+                            line.X1 -= invertedEllipseWidth;
+                        }
+                    }
+                }
+            }
+        }
+
+        #endregion
     }
 }

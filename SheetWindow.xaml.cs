@@ -289,6 +289,14 @@ namespace Sheet
                     GetSheet().ModeText();
                     UpdateModeMenu();
                     break;
+                // Q: Invert Line Start
+                case Key.Q:
+                    GetSheet().InvertSelectedLineStart();
+                    break;
+                // W: Invert Line End
+                case Key.W:
+                    GetSheet().InvertSelectedLineEnd();
+                    break;
             }
         }
 
@@ -463,6 +471,20 @@ namespace Sheet
             GetSheet().ModeText();
             UpdateModeMenu();
         }
+
+        #endregion
+
+        #region Logic Menu Events
+
+        private void LogicInvertLineStart_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().InvertSelectedLineStart();
+        }
+
+        private void LogicInvertLineEnd_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().InvertSelectedLineEnd();
+        } 
 
         #endregion
     }
