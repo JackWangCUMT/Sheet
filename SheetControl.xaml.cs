@@ -941,7 +941,6 @@ namespace Sheet
         public int DefaultZoomIndex { get; set; }
         public int MaxZoomIndex { get; set; }
         public double[] ZoomFactors { get; set; }
-
     }
 
     public class ChangeMessage
