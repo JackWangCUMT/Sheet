@@ -1500,12 +1500,17 @@ namespace Sheet
         {
             foreach (var block in blocks)
             {
-                RemoveLines(sheet, block.Lines);
-                RemoveRectangles(sheet, block.Rectangles);
-                RemoveEllipses(sheet, block.Ellipses);
-                RemoveTexts(sheet, block.Texts);
-                RemoveBlocks(sheet, block.Blocks);
+                RemoveBlock(sheet, block);
             }
+        }
+
+        public static void RemoveBlock(ISheet sheet, Block block)
+        {
+            RemoveLines(sheet, block.Lines);
+            RemoveRectangles(sheet, block.Rectangles);
+            RemoveEllipses(sheet, block.Ellipses);
+            RemoveTexts(sheet, block.Texts);
+            RemoveBlocks(sheet, block.Blocks);
         }
 
         public static void RemoveBlockContents(ISheet sheet, Block parent, Block selected)
@@ -2480,6 +2485,9 @@ namespace Sheet
         private List<Line> gridLines = new List<Line>();
         private List<Line> frameLines = new List<Line>();
 
+        private Block logic = null;
+        private Block selected = null;
+
         #endregion
 
         #region Properties
@@ -2530,20 +2538,6 @@ namespace Sheet
             set { pan.Y = value; }
         }
 
-        private Block logic = null;
-        public Block Logic
-        {
-            get { return logic; }
-            set { logic = value; }
-        }
-
-        private Block selected = null;
-        public Block Selected
-        {
-            get { return selected; }
-            set { selected = value; }
-        }
-
         #endregion
 
         #region Constructor
@@ -2586,17 +2580,29 @@ namespace Sheet
 
         private void Init()
         {
+            InitOptions();
+            InitCanvas();
+            InitBlocks();
+        }
+
+        private void InitOptions()
+        {
             options = DefaultOptions();
             zoomIndex = options.DefaultZoomIndex;
+        }
 
+        private void InitCanvas()
+        {
             back = new CanvasSheet(Root.Back);
             sheet = new CanvasSheet(Root.Sheet);
             overlay = new CanvasSheet(Root.Overlay);
+        }
 
-            Logic = new Block(0, -1, "LOGIC");
-            Logic.Init();
-
-            Selected = new Block(0, -1, "SELECTED");
+        private void InitBlocks()
+        {
+            logic = new Block(0, -1, "LOGIC");
+            logic.Init();
+            selected = new Block(0, -1, "SELECTED");
         }
 
         private void InitLoaded()
@@ -2771,13 +2777,13 @@ namespace Sheet
 
         private void InsertBlock(BlockItem block, bool select)
         {
-            BlockEditor.DeselectAll(Selected);
-            BlockEditor.AddBlockContents(sheet, block, Logic, Selected, select, options.LineThickness / Zoom);
+            BlockEditor.DeselectAll(selected);
+            BlockEditor.AddBlockContents(sheet, block, logic, selected, select, options.LineThickness / Zoom);
         }
 
         private BlockItem SerializeLogicBlock()
         {
-            return BlockSerializer.SerializerBlockContents(Logic, 0, Logic.DataId, "LOGIC");
+            return BlockSerializer.SerializerBlockContents(logic, 0, logic.DataId, "LOGIC");
         }
 
         private static string SerializeBlockContents(int id, int dataId, string name, Block parent)
@@ -2790,7 +2796,7 @@ namespace Sheet
 
         private BlockItem CreateBlockItem(string name)
         {
-            var text = SerializeBlockContents(0, -1, name, Selected);
+            var text = SerializeBlockContents(0, -1, name, selected);
             Delete();
             var block = ItemSerializer.DeserializeContents(text);
             InsertBlock(block, true);
@@ -2799,7 +2805,7 @@ namespace Sheet
 
         public void CreateBlock()
         {
-            if (BlockEditor.HaveSelected(Selected))
+            if (BlockEditor.HaveSelected(selected))
             {
                 StoreTempMode();
                 ModeNone();
@@ -2826,13 +2832,13 @@ namespace Sheet
 
         public void BreakBlock()
         {
-            if (BlockEditor.HaveSelected(Selected))
+            if (BlockEditor.HaveSelected(selected))
             {
-                var text = ItemSerializer.SerializeContents(BlockSerializer.SerializerBlockContents(Selected, 0, -1, "SELECTED"));
+                var text = ItemSerializer.SerializeContents(BlockSerializer.SerializerBlockContents(selected, 0, -1, "SELECTED"));
                 var block = ItemSerializer.DeserializeContents(text);
                 RegisterChange("Break Block");
                 Delete();
-                BlockEditor.AddBrokenBlock(sheet, block, Logic, Selected, true, options.LineThickness / Zoom);
+                BlockEditor.AddBrokenBlock(sheet, block, logic, selected, true, options.LineThickness / Zoom);
             }
         }
 
@@ -2887,7 +2893,7 @@ namespace Sheet
             Copy();
             RegisterChange("Cut");
 
-            if (BlockEditor.HaveSelected(Selected))
+            if (BlockEditor.HaveSelected(selected))
             {
                 Delete();
             }
@@ -2899,8 +2905,8 @@ namespace Sheet
 
         public void Copy()
         {
-            var block = BlockEditor.HaveSelected(Selected) ?
-                BlockSerializer.SerializerBlockContents(Selected, 0, -1, "SELECTED") : SerializeLogicBlock();
+            var block = BlockEditor.HaveSelected(selected) ?
+                BlockSerializer.SerializerBlockContents(selected, 0, -1, "SELECTED") : SerializeLogicBlock();
             var text = ItemSerializer.SerializeContents(block);
             Clipboard.SetData(DataFormats.UnicodeText, text);
             //string json = JsonConvert.SerializeObject(block, Formatting.Indented);
@@ -2931,21 +2937,21 @@ namespace Sheet
 
         private Block Insert(BlockItem blockItem, Point p, bool select)
         {
-            BlockEditor.DeselectAll(Selected);
+            BlockEditor.DeselectAll(selected);
             double thickness = options.LineThickness / Zoom;
 
             if (select)
             {
-                Selected.Blocks = new List<Block>();
+                selected.Blocks = new List<Block>();
             }
 
             RegisterChange("Insert Block");
 
-            var block = BlockSerializer.DeserializeBlockItem(sheet, Logic, blockItem, select, thickness);
+            var block = BlockSerializer.DeserializeBlockItem(sheet, logic, blockItem, select, thickness);
 
             if (select)
             {
-                Selected.Blocks.Add(block);
+                selected.Blocks.Add(block);
             }
 
             BlockEditor.Move(ItemEditor.Snap(p.X, options.SnapSize), ItemEditor.Snap(p.Y, options.SnapSize), block);
@@ -3010,34 +3016,65 @@ namespace Sheet
 
         #region Reset
 
-        public void Delete()
+        private void ResetOverlay()
         {
-            if (BlockEditor.HaveSelected(Selected))
+            if (tempLine != null)
             {
-                RegisterChange("Delete");
-                BlockEditor.RemoveBlockContents(sheet, Logic, Selected);
+                overlay.Remove(tempLine);
+                tempLine = null;
+            }
+
+            if (tempStartEllipse != null)
+            {
+                overlay.Remove(tempStartEllipse);
+                tempLine = null;
+            }
+
+            if (tempEndEllipse != null)
+            {
+                overlay.Remove(tempEndEllipse);
+                tempEndEllipse = null;
+            }
+
+            if (tempRectangle != null)
+            {
+                overlay.Remove(tempRectangle);
+                tempRectangle = null;
+            }
+
+            if (tempEllipse != null)
+            {
+                overlay.Remove(tempEllipse);
+                tempEllipse = null;
+            }
+
+            if (tempSelectionRect != null)
+            {
+                overlay.Remove(tempSelectionRect);
+                tempSelectionRect = null;
             }
         }
 
         public void Reset()
         {
-            BlockEditor.RemoveLines(sheet, Logic.Lines);
-            BlockEditor.RemoveRectangles(sheet, Logic.Rectangles);
-            BlockEditor.RemoveEllipses(sheet, Logic.Ellipses);
-            BlockEditor.RemoveTexts(sheet, Logic.Texts);
-            BlockEditor.RemoveBlocks(sheet, Logic.Blocks);
+            ResetOverlay();
 
-            Logic.Lines.Clear();
-            Logic.Rectangles.Clear();
-            Logic.Ellipses.Clear();
-            Logic.Texts.Clear();
-            Logic.Blocks.Clear();
+            BlockEditor.RemoveBlock(sheet, logic);
 
-            Selected.Lines = null;
-            Selected.Rectangles = null;
-            Selected.Ellipses = null;
-            Selected.Texts = null;
-            Selected.Blocks = null;
+            InitBlocks();
+        }
+
+        #endregion
+
+        #region Delete
+
+        public void Delete()
+        {
+            if (BlockEditor.HaveSelected(selected))
+            {
+                RegisterChange("Delete");
+                BlockEditor.RemoveBlockContents(sheet, logic, selected);
+            }
         }
 
         #endregion
@@ -3046,8 +3083,11 @@ namespace Sheet
 
         private void Move(double x, double y)
         {
-            RegisterChange("Move");
-            BlockEditor.Move(x, y, BlockEditor.HaveSelected(Selected) ? Selected : Logic);
+            if (BlockEditor.HaveSelected(selected))
+            {
+                RegisterChange("Move");
+                BlockEditor.Move(x, y, selected);
+            }
         }
 
         public void MoveUp()
@@ -3076,7 +3116,7 @@ namespace Sheet
 
         public void SelecteAll()
         {
-            BlockEditor.SelectAll(Selected, Logic);
+            BlockEditor.SelectAll(selected, logic);
         }
 
         #endregion
@@ -3098,26 +3138,12 @@ namespace Sheet
 
         #endregion
 
-        #region Overlay
-
-        private void ResetOverlay()
-        {
-            tempLine = null;
-            tempStartEllipse = null;
-            tempEndEllipse = null;
-            tempRectangle = null;
-            tempEllipse = null;
-            tempSelectionRect = null;
-        }
-
-        #endregion
-
         #region Move Mode
 
         private bool CanInitMove(Point p)
         {
             var temp = new Block(0, -1, "TEMP");
-            BlockEditor.HitTestClick(sheet, Selected, temp, p, options.HitTestSize, false, true);
+            BlockEditor.HitTestClick(sheet, selected, temp, p, options.HitTestSize, false, true);
 
             if (BlockEditor.HaveSelected(temp))
             {
@@ -3156,7 +3182,7 @@ namespace Sheet
 
             if (dx != 0.0 || dy != 0.0)
             {
-                BlockEditor.Move(dx, dy, Selected);
+                BlockEditor.Move(dx, dy, selected);
                 panStartPoint = p;
             }  
         }
@@ -3217,7 +3243,7 @@ namespace Sheet
 
             AdjustThickness(gridLines, gridThicknessZoomed);
             AdjustThickness(frameLines, frameThicknessZoomed);
-            AdjustThickness(Logic, lineThicknessZoomed);
+            AdjustThickness(logic, lineThicknessZoomed);
 
             if (tempLine != null)
             {
@@ -3347,8 +3373,8 @@ namespace Sheet
             CancelSelectionRect();
 
             bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
-            bool resetSelected = ctrl && BlockEditor.HaveSelected(Selected) ? false : true;
-            BlockEditor.HitTestSelectionRect(sheet, Logic, Selected, new Rect(x, y, width, height), resetSelected);
+            bool resetSelected = ctrl && BlockEditor.HaveSelected(selected) ? false : true;
+            BlockEditor.HitTestSelectionRect(sheet, logic, selected, new Rect(x, y, width, height), resetSelected);
         }
 
         private void CancelSelectionRect()
@@ -3403,7 +3429,7 @@ namespace Sheet
                 overlay.Remove(tempStartEllipse);
                 overlay.Remove(tempEndEllipse);
                 RegisterChange("Create Line");
-                Logic.Lines.Add(tempLine);
+                logic.Lines.Add(tempLine);
                 sheet.Add(tempLine);
                 tempLine = null;
                 tempStartEllipse = null;
@@ -3466,7 +3492,7 @@ namespace Sheet
                 overlay.ReleaseCapture();
                 overlay.Remove(tempRectangle);
                 RegisterChange("Create Rectangle");
-                Logic.Rectangles.Add(tempRectangle);
+                logic.Rectangles.Add(tempRectangle);
                 sheet.Add(tempRectangle);
                 tempRectangle = null;
             }
@@ -3523,7 +3549,7 @@ namespace Sheet
                 overlay.ReleaseCapture();
                 overlay.Remove(tempEllipse);
                 RegisterChange("Create Ellipse");
-                Logic.Ellipses.Add(tempEllipse);
+                logic.Ellipses.Add(tempEllipse);
                 sheet.Add(tempEllipse);
                 tempEllipse = null;
             }
@@ -3546,7 +3572,7 @@ namespace Sheet
             double y = ItemEditor.Snap(p.Y, options.SnapSize);
             RegisterChange("Create Text");
             var text = BlockFactory.CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0);
-            Logic.Texts.Add(text);
+            logic.Texts.Add(text);
             sheet.Add(text);
         }
 
@@ -3561,7 +3587,7 @@ namespace Sheet
         private bool TryToEditText(Point p)
         {
             var temp = new Block(0, -1, "TEMP");
-            BlockEditor.HitTestClick(sheet, Logic, temp, p, options.HitTestSize, true, true);
+            BlockEditor.HitTestClick(sheet, logic, temp, p, options.HitTestSize, true, true);
 
             if (BlockEditor.HaveOneTextSelected(temp))
             {
@@ -3614,7 +3640,7 @@ namespace Sheet
             CreateGrid(sheet, null, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
             CreateFrame(sheet, null, options.GridSize, options.GridThickness, BlockFactory.NormalBrush);
 
-            var blockItem = BlockSerializer.SerializerBlockContents(Logic, 0, -1, "PREVIEW");
+            var blockItem = BlockSerializer.SerializerBlockContents(logic, 0, -1, "PREVIEW");
             BlockEditor.AddBlockContents(sheet, blockItem, null, null, false, options.LineThickness);
 
             window.Content = canvas;
@@ -3634,11 +3660,11 @@ namespace Sheet
 
             //var grid = CreateGridBlock();
             var frame = CreateFrameBlock();
-            var logic = BlockSerializer.SerializerBlockContents(Logic, 0, Logic.DataId, "LOGIC");
+            var block = BlockSerializer.SerializerBlockContents(logic, 0, logic.DataId, "LOGIC");
 
             //page.Blocks.Add(grid);
             page.Blocks.Add(frame);
-            page.Blocks.Add(logic);
+            page.Blocks.Add(block);
 
             writer.Create(fileName, 1260.0, 891.0, page);
         }
@@ -3796,21 +3822,21 @@ namespace Sheet
 
             if (!ctrl)
             {
-                if (BlockEditor.HaveSelected(Selected) && CanInitMove(e.GetPosition(overlay.GetParent())))
+                if (BlockEditor.HaveSelected(selected) && CanInitMove(e.GetPosition(overlay.GetParent())))
                 {
                     InitMove(e.GetPosition(overlay.GetParent()));
                     return;
                 }
 
-                BlockEditor.DeselectAll(Selected);
+                BlockEditor.DeselectAll(selected);
             }
 
-            bool resetSelected = ctrl && BlockEditor.HaveSelected(Selected) ? false : true;
+            bool resetSelected = ctrl && BlockEditor.HaveSelected(selected) ? false : true;
 
             if (GetMode() == Mode.Selection)
             {
-                bool result = BlockEditor.HitTestClick(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), options.HitTestSize, false, resetSelected);
-                if ((ctrl || !BlockEditor.HaveSelected(Selected)) && !result)
+                bool result = BlockEditor.HitTestClick(sheet, logic, selected, e.GetPosition(overlay.GetParent()), options.HitTestSize, false, resetSelected);
+                if ((ctrl || !BlockEditor.HaveSelected(selected)) && !result)
                 {
                     InitSelectionRect(e.GetPosition(overlay.GetParent()));
                 }
@@ -3876,12 +3902,12 @@ namespace Sheet
             // mouse over selection when holding Shift key
             if (shift && tempSelectionRect == null && !overlay.IsCaptured)
             {
-                if (BlockEditor.HaveSelected(Selected))
+                if (BlockEditor.HaveSelected(selected))
                 {
-                    BlockEditor.DeselectAll(Selected);
+                    BlockEditor.DeselectAll(selected);
                 }
 
-                BlockEditor.HitTestClick(sheet, Logic, Selected, e.GetPosition(overlay.GetParent()), options.HitTestSize, false, false);
+                BlockEditor.HitTestClick(sheet, logic, selected, e.GetPosition(overlay.GetParent()), options.HitTestSize, false, false);
             }
 
             if (GetMode() == Mode.Selection && overlay.IsCaptured)
@@ -3925,7 +3951,7 @@ namespace Sheet
                 return;
             }
 
-            BlockEditor.DeselectAll(Selected);
+            BlockEditor.DeselectAll(selected);
 
             if (GetMode() == Mode.Selection && overlay.IsCaptured)
             {
@@ -3977,7 +4003,7 @@ namespace Sheet
         private bool BindDataToBlock(Point p, DataItem dataItem)
         {
             var temp = new Block(0, -1, "TEMP");
-            BlockEditor.HitTestForBlocks(sheet, Logic, temp, p, options.HitTestSize);
+            BlockEditor.HitTestForBlocks(sheet, logic, temp, p, options.HitTestSize);
 
             if (BlockEditor.HaveOneBlockSelected(temp))
             {
@@ -4036,7 +4062,7 @@ namespace Sheet
                         var temp = new Block(0, -1, "TEMP");
                         temp.Init();
                         temp.Blocks.Add(block);
-                        BlockEditor.RemoveBlockContents(sheet, Logic, temp);
+                        BlockEditor.RemoveBlockContents(sheet, logic, temp);
                     }
                 }
             }
