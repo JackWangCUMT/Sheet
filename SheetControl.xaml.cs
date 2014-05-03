@@ -1466,41 +1466,56 @@ namespace Sheet
 
         public static void RemoveLines(ISheet sheet, IEnumerable<Line> lines)
         {
-            foreach (var line in lines)
+            if (lines != null)
             {
-                sheet.Remove(line);
+                foreach (var line in lines)
+                {
+                    sheet.Remove(line);
+                }
             }
         }
 
         public static void RemoveRectangles(ISheet sheet, IEnumerable<Rectangle> rectangles)
         {
-            foreach (var rectangle in rectangles)
+            if (rectangles != null)
             {
-                sheet.Remove(rectangle);
+                foreach (var rectangle in rectangles)
+                {
+                    sheet.Remove(rectangle);
+                } 
             }
         }
 
         public static void RemoveEllipses(ISheet sheet, IEnumerable<Ellipse> ellipses)
         {
-            foreach (var ellipse in ellipses)
+            if (ellipses != null)
             {
-                sheet.Remove(ellipse);
+                foreach (var ellipse in ellipses)
+                {
+                    sheet.Remove(ellipse);
+                } 
             }
         }
 
         public static void RemoveTexts(ISheet sheet, IEnumerable<Grid> texts)
         {
-            foreach (var text in texts)
+            if (texts != null)
             {
-                sheet.Remove(text);
+                foreach (var text in texts)
+                {
+                    sheet.Remove(text);
+                } 
             }
         }
 
         public static void RemoveBlocks(ISheet sheet, IEnumerable<Block> blocks)
         {
-            foreach (var block in blocks)
+            if (blocks != null)
             {
-                RemoveBlock(sheet, block);
+                foreach (var block in blocks)
+                {
+                    RemoveBlock(sheet, block);
+                }
             }
         }
 
@@ -1513,7 +1528,7 @@ namespace Sheet
             RemoveBlocks(sheet, block.Blocks);
         }
 
-        public static void RemoveBlockContents(ISheet sheet, Block parent, Block selected)
+        public static void RemoveSelectedFromBlock(ISheet sheet, Block parent, Block selected)
         {
             if (selected.Lines != null)
             {
@@ -3073,7 +3088,7 @@ namespace Sheet
             if (BlockEditor.HaveSelected(selected))
             {
                 RegisterChange("Delete");
-                BlockEditor.RemoveBlockContents(sheet, logic, selected);
+                BlockEditor.RemoveSelectedFromBlock(sheet, logic, selected);
             }
         }
 
@@ -4062,7 +4077,7 @@ namespace Sheet
                         var temp = new Block(0, -1, "TEMP");
                         temp.Init();
                         temp.Blocks.Add(block);
-                        BlockEditor.RemoveBlockContents(sheet, logic, temp);
+                        BlockEditor.RemoveSelectedFromBlock(sheet, logic, temp);
                     }
                 }
             }
