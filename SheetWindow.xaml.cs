@@ -33,7 +33,6 @@ namespace Sheet
         {
             Sheet.Library = Library;
             Sheet.Database = Csv;
-            Sheet.TextEditor = Text;
             UpdateModeMenu();
             CreateTestDatabase();
         }
@@ -93,7 +92,7 @@ namespace Sheet
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (Text.Visibility == Visibility.Visible)
+            if (GetSheet().GetMode() == Mode.TextEditor)
             {
                 return;
             }

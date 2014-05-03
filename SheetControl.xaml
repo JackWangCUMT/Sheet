@@ -21,15 +21,18 @@
              AllowDrop="True"
              DragEnter="UserControl_DragEnter"
              Drop="UserControl_Drop">
-    <Grid x:Name="Layout" Width="1260" Height="891" RenderTransformOrigin="0.0,0.0" Background="Transparent" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-        <Grid.RenderTransform>
-            <TransformGroup>
-                <ScaleTransform x:Name="zoom" ScaleX="1" ScaleY="1"/>
-                <SkewTransform/>
-                <RotateTransform/>
-                <TranslateTransform x:Name="pan" X="0" Y="0"/>
-            </TransformGroup>
-        </Grid.RenderTransform>
-        <local:CanvasControl x:Name="Root"/>
+    <Grid Width="1260" Height="891">
+        <Grid x:Name="Layout" Width="1260" Height="891" RenderTransformOrigin="0.0,0.0" Background="Transparent" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+            <Grid.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform x:Name="zoom" ScaleX="1" ScaleY="1"/>
+                    <SkewTransform/>
+                    <RotateTransform/>
+                    <TranslateTransform x:Name="pan" X="0" Y="0"/>
+                </TransformGroup>
+            </Grid.RenderTransform>
+            <local:CanvasControl x:Name="Root"/>
+        </Grid>
+        <Canvas x:Name="EditorCanvas" Width="1260" Height="891" Background="Transparent"/>
     </Grid>
 </UserControl>

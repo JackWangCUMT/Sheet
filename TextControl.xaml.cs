@@ -21,6 +21,11 @@ namespace Sheet
         public TextControl()
         {
             InitializeComponent();
+            Loaded += (sender, e) =>
+            {
+                TextValue.Focus();
+                TextValue.SelectAll();
+            };
         } 
 
         #endregion
@@ -34,15 +39,13 @@ namespace Sheet
 
         #region ITextEditor
 
-        public void Show(Action<string> ok, Action cancel, string label, string text)
+        public void Set(Action<string> ok, Action cancel, string title, string label, string text)
         {
             okAction = ok;
             cancelAction = cancel;
+            TextTitle.Text = title;
             TextLabel.Text = label;
             TextValue.Text = text;
-            Visibility = Visibility.Visible;
-            TextValue.Focus();
-            TextValue.SelectAll();
         }
 
         #endregion
@@ -73,7 +76,24 @@ namespace Sheet
 
             okAction = null;
             cancelAction = null;
-        }                 
+        }
+
+        private void ThumbDrag_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
+        {
+            Drag(e.HorizontalChange, e.VerticalChange);
+        }
+
+        #endregion
+
+        #region Drag
+
+        private void Drag(double dx, double dy)
+        {
+            double x = Canvas.GetLeft(this);
+            double y = Canvas.GetTop(this);
+            Canvas.SetLeft(this, x + dx);
+            Canvas.SetTop(this, y + dy);
+        }
 
         #endregion
     }

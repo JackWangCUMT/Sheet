@@ -131,7 +131,7 @@ namespace Sheet
 
     public interface ITextEditor
     {
-        void Show(Action<string> ok, Action cancel, string label, string text);
+        void Set(Action<string> ok, Action cancel, string title, string label, string text);
     }
 
     #endregion
@@ -923,6 +923,7 @@ namespace Sheet
         Rectangle,
         Ellipse,
         Text,
+        TextEditor
     }
 
     public class SheetOptions
@@ -2510,8 +2511,6 @@ namespace Sheet
 
         public IDatabase Database { get; set; }
 
-        public ITextEditor TextEditor { get; set; }
-
         private int zoomIndex = -1;
         public int ZoomIndex
         {
@@ -2698,6 +2697,11 @@ namespace Sheet
             SetMode(Mode.Text);
         }
 
+        public void ModeTextEditor()
+        {
+            SetMode(Mode.TextEditor);
+        }
+
         #endregion
 
         #region Back
@@ -2822,25 +2826,29 @@ namespace Sheet
             if (BlockEditor.HaveSelected(selected))
             {
                 StoreTempMode();
-                ModeNone();
+                ModeTextEditor();
+
+                var tc = CreateTextEditor(new Point((EditorCanvas.Width / 2) - (330 / 2), EditorCanvas.Height / 2));
 
                 Action<string> ok = (name) =>
                 {
                     RegisterChange("Create Block");
                     var block = CreateBlockItem(name);
                     AddToLibrary(block);
-
+                    EditorCanvas.Children.Remove(tc);
                     Focus();
                     RestoreTempMode();
                 };
 
                 Action cancel = () => 
                 {
+                    EditorCanvas.Children.Remove(tc);
                     Focus();
                     RestoreTempMode();
                 };
 
-                ShowTextEditor(ok, cancel, "Name:", "BLOCK0");
+                tc.Set(ok, cancel, "Create Block", "Name:", "BLOCK0");
+                EditorCanvas.Children.Add(tc);
             }
         }
 
@@ -3580,6 +3588,15 @@ namespace Sheet
 
         #region Text Mode
 
+        private TextControl CreateTextEditor(Point p)
+        {
+            var tc = new TextControl() { Width = 330.0, Background = Brushes.WhiteSmoke };
+            tc.RenderTransform = null;
+            Canvas.SetLeft(tc, p.X);
+            Canvas.SetTop(tc, p.Y);
+            return tc;
+        }
+
         private void CreateText(Point p)
         {
             double x = ItemEditor.Snap(p.X, options.SnapSize);
@@ -3588,14 +3605,6 @@ namespace Sheet
             var text = BlockFactory.CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0);
             logic.Texts.Add(text);
             sheet.Add(text);
-        }
-
-        private void ShowTextEditor(Action<string> ok, Action cancel, string label, string text)
-        {
-            if (TextEditor != null)
-            {
-                TextEditor.Show(ok, cancel, label, text);
-            }
         }
 
         private bool TryToEditText(Point p)
@@ -3608,24 +3617,28 @@ namespace Sheet
                 var tb = BlockFactory.GetTextBlock(temp.Texts[0]);
 
                 StoreTempMode();
-                ModeNone();
+                ModeTextEditor();
+
+                var tc = CreateTextEditor(new Point((EditorCanvas.Width / 2) - (330 / 2), EditorCanvas.Height / 2) /* p */);
 
                 Action<string> ok = (text) =>
                 {
                     RegisterChange("Edit Text");
                     tb.Text = text;
-
+                    EditorCanvas.Children.Remove(tc);
                     Focus();
                     RestoreTempMode();
                 };
 
                 Action cancel = () =>
                 {
+                    EditorCanvas.Children.Remove(tc);
                     Focus();
                     RestoreTempMode();
                 };
 
-                ShowTextEditor(ok, cancel, "Text:", tb.Text);
+                tc.Set(ok, cancel, "Edit Text", "Text:", tb.Text);
+                EditorCanvas.Children.Add(tc);
 
                 BlockEditor.DeselectBlock(temp);
                 return true;
@@ -3827,7 +3840,7 @@ namespace Sheet
         {
             Focus();
 
-            if (GetMode() == Mode.None)
+            if (GetMode() == Mode.None || GetMode() == Mode.TextEditor)
             {
                 return;
             }
@@ -3954,7 +3967,7 @@ namespace Sheet
         {
             Focus();
 
-            if (GetMode() == Mode.None)
+            if (GetMode() == Mode.None || GetMode() == Mode.TextEditor)
             {
                 return;
             }

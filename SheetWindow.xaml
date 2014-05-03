@@ -10,6 +10,13 @@
         WindowState="Maximized"
         SnapsToDevicePixels="True"
         PreviewKeyDown="Window_PreviewKeyDown">
+    <Window.Resources>
+        <ControlTemplate x:Key="VerticalGridSplitterControlTemplateKey">
+            <Grid Background="Transparent">
+                <Rectangle Width="3" Height="120" VerticalAlignment="Center" HorizontalAlignment="Center" Fill="LightGray"/>
+            </Grid>
+        </ControlTemplate>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"/>
@@ -91,14 +98,8 @@
                       HorizontalAlignment="Stretch" 
                       Background="Transparent" 
                       ResizeBehavior="PreviousAndNext"
-                      ResizeDirection="Columns">
-            <GridSplitter.Template>
-                <ControlTemplate>
-                    <Grid Background="Transparent">
-                        <Rectangle Width="3" Height="120" VerticalAlignment="Center" HorizontalAlignment="Center" Fill="LightGray"/>
-                    </Grid>
-                </ControlTemplate>
-            </GridSplitter.Template>
+                      ResizeDirection="Columns"
+                      Template="{StaticResource VerticalGridSplitterControlTemplateKey}">
         </GridSplitter>
         <local:SheetControl x:Name="Sheet" 
                             Background="Transparent"
@@ -112,14 +113,6 @@
                             Height="4096"
                             Margin="0"
                             VerticalAlignment="Center" HorizontalAlignment="Center"/>
-        <local:TextControl x:Name="Text"
-                           Background="WhiteSmoke"
-                           Grid.Row="1"
-                           Grid.Column="2"
-                           Visibility="Hidden"
-                           Width="330" 
-                           VerticalAlignment="Center"
-                           HorizontalAlignment="Center"/>
         <GridSplitter Grid.Row="1" 
                       Grid.Column="3" 
                       FocusVisualStyle="{x:Null}"
@@ -127,14 +120,8 @@
                       HorizontalAlignment="Stretch" 
                       Background="LightGray" 
                       ResizeBehavior="PreviousAndNext"
-                      ResizeDirection="Columns">
-            <GridSplitter.Template>
-                <ControlTemplate>
-                    <Grid Background="Transparent">
-                        <Rectangle Width="3" Height="120" VerticalAlignment="Center" HorizontalAlignment="Center" Fill="LightGray"/>
-                    </Grid>
-                </ControlTemplate>
-            </GridSplitter.Template>
+                      ResizeDirection="Columns"
+                      Template="{StaticResource VerticalGridSplitterControlTemplateKey}">
         </GridSplitter>
         <local:DatabaseControl x:Name="Csv" 
                                Background="WhiteSmoke"
