@@ -79,12 +79,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BlockDxfWriter.cs" />
     <Compile Include="CanvasControl.xaml.cs">
       <DependentUpon>CanvasControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="DatabaseControl.xaml.cs">
       <DependentUpon>DatabaseControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dxf.cs" />
     <Compile Include="LibraryControl.xaml.cs">
       <DependentUpon>LibraryControl.xaml</DependentUpon>
     </Compile>
