@@ -82,6 +82,8 @@ namespace Sheet
 
     public class BlockItem : Item
     {
+        public double X { get; set; }
+        public double Y { get; set; }
         public string Name { get; set; }
         public double Width { get; set; }
         public double Height { get; set; }
@@ -92,8 +94,10 @@ namespace Sheet
         public List<EllipseItem> Ellipses { get; set; }
         public List<TextItem> Texts { get; set; }
         public List<BlockItem> Blocks { get; set; }
-        public void Init(int id, int dataId, string name)
+        public void Init(int id, double x, double y, int dataId, string name)
         {
+            X = x;
+            Y = y;
             Id = id;
             DataId = dataId;
             Name = name;
@@ -283,6 +287,10 @@ namespace Sheet
             sb.Append(options.ModelSeparator);
             sb.Append(block.Id);
             sb.Append(options.ModelSeparator);
+            sb.Append(block.X);
+            sb.Append(options.ModelSeparator);
+            sb.Append(block.Y);
+            sb.Append(options.ModelSeparator);
             sb.Append(block.Name);
             sb.Append(options.ModelSeparator);
             sb.Append(block.Width);
@@ -375,26 +383,13 @@ namespace Sheet
             lineItem.Y1 = double.Parse(m[3]);
             lineItem.X2 = double.Parse(m[4]);
             lineItem.Y2 = double.Parse(m[5]);
-            if (m.Length == 10)
+            lineItem.Stroke = new ItemColor()
             {
-                lineItem.Stroke = new ItemColor()
-                {
-                    Alpha = int.Parse(m[6]),
-                    Red = int.Parse(m[7]),
-                    Green = int.Parse(m[8]),
-                    Blue = int.Parse(m[9])
-                };
-            }
-            else
-            {
-                lineItem.Stroke = new ItemColor()
-                {
-                    Alpha = 255,
-                    Red = 0,
-                    Green = 0,
-                    Blue = 0
-                };
-            }
+                Alpha = int.Parse(m[6]),
+                Red = int.Parse(m[7]),
+                Green = int.Parse(m[8]),
+                Blue = int.Parse(m[9])
+            };
             return lineItem;
         }
         
@@ -407,40 +402,20 @@ namespace Sheet
             rectangleItem.Width = double.Parse(m[4]);
             rectangleItem.Height = double.Parse(m[5]);
             rectangleItem.IsFilled = bool.Parse(m[6]);
-            if (m.Length == 15)
+            rectangleItem.Stroke = new ItemColor()
             {
-                rectangleItem.Stroke = new ItemColor()
-                {
-                    Alpha = int.Parse(m[7]),
-                    Red = int.Parse(m[8]),
-                    Green = int.Parse(m[9]),
-                    Blue = int.Parse(m[10])
-                };
-                rectangleItem.Fill = new ItemColor()
-                {
-                    Alpha = int.Parse(m[11]),
-                    Red = int.Parse(m[12]),
-                    Green = int.Parse(m[13]),
-                    Blue = int.Parse(m[14])
-                };
-            }
-            else
+                Alpha = int.Parse(m[7]),
+                Red = int.Parse(m[8]),
+                Green = int.Parse(m[9]),
+                Blue = int.Parse(m[10])
+            };
+            rectangleItem.Fill = new ItemColor()
             {
-                rectangleItem.Stroke = new ItemColor()
-                {
-                    Alpha = 255,
-                    Red = 0,
-                    Green = 0,
-                    Blue = 0
-                };
-                rectangleItem.Fill = new ItemColor()
-                {
-                    Alpha = 255,
-                    Red = 0,
-                    Green = 0,
-                    Blue = 0
-                };
-            }
+                Alpha = int.Parse(m[11]),
+                Red = int.Parse(m[12]),
+                Green = int.Parse(m[13]),
+                Blue = int.Parse(m[14])
+            };
             return rectangleItem;
         }
         
@@ -453,40 +428,20 @@ namespace Sheet
             ellipseItem.Width = double.Parse(m[4]);
             ellipseItem.Height = double.Parse(m[5]);
             ellipseItem.IsFilled = bool.Parse(m[6]);
-            if (m.Length == 15)
+            ellipseItem.Stroke = new ItemColor()
             {
-                ellipseItem.Stroke = new ItemColor()
-                {
-                    Alpha = int.Parse(m[7]),
-                    Red = int.Parse(m[8]),
-                    Green = int.Parse(m[9]),
-                    Blue = int.Parse(m[10])
-                };
-                ellipseItem.Fill = new ItemColor()
-                {
-                    Alpha = int.Parse(m[11]),
-                    Red = int.Parse(m[12]),
-                    Green = int.Parse(m[13]),
-                    Blue = int.Parse(m[14])
-                };
-            }
-            else
+                Alpha = int.Parse(m[7]),
+                Red = int.Parse(m[8]),
+                Green = int.Parse(m[9]),
+                Blue = int.Parse(m[10])
+            };
+            ellipseItem.Fill = new ItemColor()
             {
-                ellipseItem.Stroke = new ItemColor()
-                {
-                    Alpha = 255,
-                    Red = 0,
-                    Green = 0,
-                    Blue = 0
-                };
-                ellipseItem.Fill = new ItemColor()
-                {
-                    Alpha = 255,
-                    Red = 0,
-                    Green = 0,
-                    Blue = 0
-                };
-            }
+                Alpha = int.Parse(m[11]),
+                Red = int.Parse(m[12]),
+                Green = int.Parse(m[13]),
+                Blue = int.Parse(m[14])
+            };
             return ellipseItem;
         }
         
@@ -501,116 +456,150 @@ namespace Sheet
             textItem.HAlign = int.Parse(m[6]);
             textItem.VAlign = int.Parse(m[7]);
             textItem.Size = double.Parse(m[8]);
-            if (m.Length == 18)
+            textItem.Foreground = new ItemColor()
             {
-                textItem.Foreground = new ItemColor()
-                {
-                    Alpha = int.Parse(m[9]),
-                    Red = int.Parse(m[10]),
-                    Green = int.Parse(m[11]),
-                    Blue = int.Parse(m[12])
-                };
-                textItem.Backgroud = new ItemColor()
-                {
-                    Alpha = int.Parse(m[13]),
-                    Red = int.Parse(m[14]),
-                    Green = int.Parse(m[15]),
-                    Blue = int.Parse(m[16])
-                };
-                textItem.Text = m[17];
-            }
-            else
+                Alpha = int.Parse(m[9]),
+                Red = int.Parse(m[10]),
+                Green = int.Parse(m[11]),
+                Blue = int.Parse(m[12])
+            };
+            textItem.Backgroud = new ItemColor()
             {
-                textItem.Foreground = new ItemColor()
-                {
-                    Alpha = 255,
-                    Red = 0,
-                    Green = 0,
-                    Blue = 0
-                };
-                textItem.Backgroud = new ItemColor()
-                {
-                    Alpha = 255,
-                    Red = 0,
-                    Green = 0,
-                    Blue = 0
-                };
-                textItem.Text = m[9];
-            }
+                Alpha = int.Parse(m[13]),
+                Red = int.Parse(m[14]),
+                Green = int.Parse(m[15]),
+                Blue = int.Parse(m[16])
+            };
+            textItem.Text = m[17];
             return textItem;
         }
 
-        private static BlockItem DeserializeBlock(string[] lines, int length, ref int end, string[] m, ItemSerializeOptions options)
+        private static BlockItem DeserializeBlockRecursive(string[] lines, 
+            int length, 
+            ref int end, 
+            string[] m, 
+            ItemSerializeOptions options)
         {
-            var blockItem = DeserializeRootBlock(lines, length, ref end, m[2], int.Parse(m[1]), m.Length == 10 ? int.Parse(m[9]) : -1, options);
-            if (m.Length == 9 || m.Length == 10)
+            var blockItem = DeserializeRootBlock(lines, 
+                length, 
+                ref end, 
+                m[4], 
+                int.Parse(m[1]),
+                double.Parse(m[2]),
+                double.Parse(m[3]),
+                int.Parse(m[11]), 
+                options);
+
+            blockItem.Width = double.Parse(m[5]);
+            blockItem.Width = double.Parse(m[6]);
+            blockItem.Backgroud = new ItemColor()
             {
-                blockItem.Width = double.Parse(m[3]);
-                blockItem.Width = double.Parse(m[4]);
-                blockItem.Backgroud = new ItemColor()
-                {
-                    Alpha = int.Parse(m[5]),
-                    Red = int.Parse(m[6]),
-                    Green = int.Parse(m[7]),
-                    Blue = int.Parse(m[8])
-                };
-                blockItem.DataId = m.Length == 10 ? int.Parse(m[9]) : -1;
-            }
-            else
-            {
-                blockItem.Width = 0.0;
-                blockItem.Width = 0.0;
-                blockItem.Backgroud = new ItemColor()
-                {
-                    Alpha = 0,
-                    Red = 0,
-                    Green = 0,
-                    Blue = 0
-                };
-                blockItem.DataId = -1;
-            }
+                Alpha = int.Parse(m[7]),
+                Red = int.Parse(m[8]),
+                Green = int.Parse(m[9]),
+                Blue = int.Parse(m[10])
+            };
+            blockItem.DataId = int.Parse(m[11]);
             return blockItem;
         }
 
-        private static BlockItem DeserializeRootBlock(string[] lines, int length, ref int end, string name, int id, int dataId, ItemSerializeOptions options)
+        private static BlockItem DeserializeRootBlock(string[] lines, 
+            int length, 
+            ref int end, 
+            string name, 
+            int id, 
+            double x, 
+            double y,
+            int dataId, 
+            ItemSerializeOptions options)
         {
             var root = new BlockItem();
-            root.Init(id, dataId, name);
+            root.Init(id, x, y, dataId, name);
 
             for (; end < length; end++)
             {
                 string line = lines[end].TrimStart(options.WhiteSpace);
                 var m = line.Split(options.ModelSeparators);
-                if ((m.Length == 6 || m.Length == 10) && string.Compare(m[0], "LINE", true) == 0)
+                if (m.Length == 10 && string.Compare(m[0], "LINE", true) == 0)
                 {
-                    var lineItem = DeserializeLine(m);
-                    root.Lines.Add(lineItem);
+                    if (m.Length == 10)
+                    {
+                        var lineItem = DeserializeLine(m);
+                        root.Lines.Add(lineItem);
+                    }
+                    else
+                    {
+                        throw new Exception(string.Format("Invalid LINE item at line {0}", end + 1));
+                    }
                 }
-                if ((m.Length == 7 || m.Length == 15) && string.Compare(m[0], "RECTANGLE", true) == 0)
+                else if (string.Compare(m[0], "RECTANGLE", true) == 0)
                 {
-                    var rectangleItem = DeserializeRectangle(m);
-                    root.Rectangles.Add(rectangleItem);
+                    if (m.Length == 15)
+                    {
+                        var rectangleItem = DeserializeRectangle(m);
+                        root.Rectangles.Add(rectangleItem); 
+                    }
+                    else
+                    {
+                        throw new Exception(string.Format("Invalid RECTANGLE item at line {0}", end + 1));
+                    }
                 }
-                if ((m.Length == 7 || m.Length == 15) && string.Compare(m[0], "ELLIPSE", true) == 0)
+                else if (string.Compare(m[0], "ELLIPSE", true) == 0)
                 {
-                    var ellipseItem = DeserializeEllipse(m);
-                    root.Ellipses.Add(ellipseItem);
+                    if (m.Length == 15)
+                    {
+                        var ellipseItem = DeserializeEllipse(m);
+                        root.Ellipses.Add(ellipseItem); 
+                    }
+                    else
+                    {
+                        throw new Exception(string.Format("Invalid ELLIPSE item at line {0}", end + 1));
+                    }
                 }
-                else if ((m.Length == 10 || m.Length == 18) && string.Compare(m[0], "TEXT", true) == 0)
+                else if (string.Compare(m[0], "TEXT", true) == 0)
                 {
-                    var textItem = DeserializeText(m);
-                    root.Texts.Add(textItem);
+                    if (m.Length == 18)
+                    {
+                        var textItem = DeserializeText(m);
+                        root.Texts.Add(textItem); 
+                    }
+                    else
+                    {
+                        throw new Exception(string.Format("Invalid TEXT item at line {0}", end + 1));
+                    }
                 }
-                else if ((m.Length == 3 || m.Length == 9 || m.Length == 10) && string.Compare(m[0], "BLOCK", true) == 0)
+                else if (string.Compare(m[0], "BLOCK", true) == 0)
                 {
-                    end++;
-                    var blockItem = DeserializeBlock(lines, length, ref end, m, options);
-                    root.Blocks.Add(blockItem);
+                    if (m.Length == 12)
+                    {
+                        end++;
+                        var blockItem = DeserializeBlockRecursive(lines, length, ref end, m, options);
+                        root.Blocks.Add(blockItem);
+                        continue;
+                    }
+                    else
+                    {
+                        throw new Exception(string.Format("Invalid BLOCK item at line {0}", end + 1));
+                    }
+                }
+                else if (string.Compare(m[0], "END", true) == 0)
+                {
+                    if (m.Length == 1)
+                    {
+                        return root;
+                    }
+                    else
+                    {
+                        throw new Exception(string.Format("Invalid END item at line {0}", end + 1));
+                    }
+                }
+                else if (m[0].StartsWith("//"))
+                {
                     continue;
                 }
-                else if (m.Length == 1 && string.Compare(m[0], "END", true) == 0)
+                else
                 {
-                    return root;
+                    throw new Exception(string.Format("Invalid item at line {0}", end + 1));
                 }
             }
             return root;
@@ -621,7 +610,7 @@ namespace Sheet
             string[] lines = model.Split(options.LineSeparators, StringSplitOptions.RemoveEmptyEntries);
             int length = lines.Length;
             int end = 0;
-            return DeserializeRootBlock(lines, length, ref end, "", 0, -1, options);
+            return DeserializeRootBlock(lines, length, ref end, "", 0, 0.0, 0.0, -1, options);
         }
 
         public static BlockItem DeserializeContents(string model)
@@ -653,6 +642,7 @@ namespace Sheet
             catch (Exception ex)
             {
                 Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
             }
             return null;
         }
@@ -672,6 +662,7 @@ namespace Sheet
             catch (Exception ex)
             {
                 Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
             }
         }
 
@@ -859,6 +850,8 @@ namespace Sheet
     public class Block
     {
         public int Id { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
         public string Name { get; set; }
         public double Width { get; set; }
         public double Height { get; set; }
@@ -869,9 +862,11 @@ namespace Sheet
         public List<Ellipse> Ellipses { get; set; }
         public List<Grid> Texts { get; set; }
         public List<Block> Blocks { get; set; }
-        public Block(int id, int dataId, string name)
+        public Block(int id, double x, double y, int dataId, string name)
         {
             Id = id;
+            X = x;
+            Y = y;
             DataId = dataId;
             Name = name;
         }
@@ -1107,7 +1102,7 @@ namespace Sheet
         public static BlockItem SerializeBlock(Block parent)
         {
             var blockItem = new BlockItem();
-            blockItem.Init(0, parent.DataId, parent.Name);
+            blockItem.Init(0, parent.X, parent.Y, parent.DataId, parent.Name);
             blockItem.Width = 0;
             blockItem.Height = 0;
             blockItem.Backgroud = ToItemColor(parent.Backgroud);
@@ -1140,7 +1135,7 @@ namespace Sheet
             return blockItem;
         }
 
-        public static BlockItem SerializerBlockContents(Block parent, int id, int dataId, string name)
+        public static BlockItem SerializerBlockContents(Block parent, int id, double x, double y, int dataId, string name)
         {
             var lines = parent.Lines;
             var rectangles = parent.Rectangles;
@@ -1149,7 +1144,7 @@ namespace Sheet
             var blocks = parent.Blocks;
 
             var sheet = new BlockItem() { Backgroud = new ItemColor() };
-            sheet.Init(id, dataId, name);
+            sheet.Init(id, x, y, dataId, name);
 
             if (lines != null)
             {
@@ -1273,7 +1268,7 @@ namespace Sheet
 
         public static Block DeserializeBlockItem(ISheet sheet, Block parent, BlockItem blockItem, bool select, double thickness)
         {
-            var block = new Block(blockItem.Id, blockItem.DataId, blockItem.Name);
+            var block = new Block(blockItem.Id, blockItem.X, blockItem.Y, blockItem.DataId, blockItem.Name);
             block.Init();
 
             foreach (var textItem in blockItem.Texts)
@@ -1436,11 +1431,14 @@ namespace Sheet
 
         public static void AddBlockContents(ISheet sheet, BlockItem blockItem, Block logic, Block selected, bool select, double thickness)
         {
-            AddTexts(sheet, blockItem.Texts, logic, selected, select, thickness);
-            AddLines(sheet, blockItem.Lines, logic, selected, select, thickness);
-            AddRectangles(sheet, blockItem.Rectangles, logic, selected, select, thickness);
-            AddEllipses(sheet, blockItem.Ellipses, logic, selected, select, thickness);
-            AddBlocks(sheet, blockItem.Blocks, logic, selected, select, thickness);
+            if (blockItem != null)
+            {
+                AddTexts(sheet, blockItem.Texts, logic, selected, select, thickness);
+                AddLines(sheet, blockItem.Lines, logic, selected, select, thickness);
+                AddRectangles(sheet, blockItem.Rectangles, logic, selected, select, thickness);
+                AddEllipses(sheet, blockItem.Ellipses, logic, selected, select, thickness);
+                AddBlocks(sheet, blockItem.Blocks, logic, selected, select, thickness);
+            }
         }
 
         public static void AddBrokenBlock(ISheet sheet, BlockItem blockItem, Block logic, Block selected, bool select, double thickness)
@@ -2613,9 +2611,9 @@ namespace Sheet
 
         private void InitBlocks()
         {
-            logic = new Block(0, -1, "LOGIC");
+            logic = new Block(0, 0.0, 0.0, -1, "LOGIC");
             logic.Init();
-            selected = new Block(0, -1, "SELECTED");
+            selected = new Block(0, 0.0, 0.0, -1, "SELECTED");
         }
 
         private void InitLoaded()
@@ -2801,12 +2799,12 @@ namespace Sheet
 
         private BlockItem SerializeLogicBlock()
         {
-            return BlockSerializer.SerializerBlockContents(logic, 0, logic.DataId, "LOGIC");
+            return BlockSerializer.SerializerBlockContents(logic, 0, logic.X, logic.Y, logic.DataId, "LOGIC");
         }
 
-        private static string SerializeBlockContents(int id, int dataId, string name, Block parent)
+        private static string SerializeBlockContents(int id, double x, double y, int dataId, string name, Block parent)
         {
-            var block = BlockSerializer.SerializerBlockContents(parent, id, dataId, name);
+            var block = BlockSerializer.SerializerBlockContents(parent, id, x, y, dataId, name);
             var sb = new StringBuilder();
             ItemSerializer.Serialize(sb, block, "", ItemSerializeOptions.Default);
             return sb.ToString();
@@ -2814,7 +2812,7 @@ namespace Sheet
 
         private BlockItem CreateBlockItem(string name)
         {
-            var text = SerializeBlockContents(0, -1, name, selected);
+            var text = SerializeBlockContents(0, 0.0, 0.0, -1, name, selected);
             Delete();
             var block = ItemSerializer.DeserializeContents(text);
             InsertBlock(block, true);
@@ -2856,7 +2854,7 @@ namespace Sheet
         {
             if (BlockEditor.HaveSelected(selected))
             {
-                var text = ItemSerializer.SerializeContents(BlockSerializer.SerializerBlockContents(selected, 0, -1, "SELECTED"));
+                var text = ItemSerializer.SerializeContents(BlockSerializer.SerializerBlockContents(selected, 0, 0.0, 0.0, -1, "SELECTED"));
                 var block = ItemSerializer.DeserializeContents(text);
                 RegisterChange("Break Block");
                 Delete();
@@ -2912,36 +2910,60 @@ namespace Sheet
 
         public void Cut()
         {
-            Copy();
-            RegisterChange("Cut");
+            try
+            {
+                Copy();
+                RegisterChange("Cut");
 
-            if (BlockEditor.HaveSelected(selected))
-            {
-                Delete();
+                if (BlockEditor.HaveSelected(selected))
+                {
+                    Delete();
+                }
+                else
+                {
+                    Reset();
+                }
             }
-            else
+            catch(Exception ex)
             {
-                Reset();
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
             }
         }
 
         public void Copy()
         {
-            var block = BlockEditor.HaveSelected(selected) ?
-                BlockSerializer.SerializerBlockContents(selected, 0, -1, "SELECTED") : SerializeLogicBlock();
-            var text = ItemSerializer.SerializeContents(block);
-            Clipboard.SetData(DataFormats.UnicodeText, text);
-            //string json = JsonConvert.SerializeObject(block, Formatting.Indented);
-            //Clipboard.SetData(DataFormats.UnicodeText, json);
+            try
+            {
+                var block = BlockEditor.HaveSelected(selected) ?
+                    BlockSerializer.SerializerBlockContents(selected, 0, 0.0, 0.0, -1, "SELECTED") : SerializeLogicBlock();
+                var text = ItemSerializer.SerializeContents(block);
+                Clipboard.SetData(DataFormats.UnicodeText, text);
+                //string json = JsonConvert.SerializeObject(block, Formatting.Indented);
+                //Clipboard.SetData(DataFormats.UnicodeText, json);
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
         }
 
         public void Paste()
         {
-            var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
-            var block = ItemSerializer.DeserializeContents(text);
-            InsertBlock(block, true);
-            //var block = JsonConvert.DeserializeObject<BlockItem>(text);
-            //InsertBlock(block, true);
+            try
+            {
+                var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
+                var block = ItemSerializer.DeserializeContents(text);
+                InsertBlock(block, true);
+                //var block = JsonConvert.DeserializeObject<BlockItem>(text);
+                //InsertBlock(block, true);
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
         }
 
         #endregion
@@ -3164,7 +3186,7 @@ namespace Sheet
 
         private bool CanInitMove(Point p)
         {
-            var temp = new Block(0, -1, "TEMP");
+            var temp = new Block(0, 0.0, 0.0, -1, "TEMP");
             BlockEditor.HitTestClick(sheet, selected, temp, p, options.HitTestSize, false, true);
 
             if (BlockEditor.HaveSelected(temp))
@@ -3609,7 +3631,7 @@ namespace Sheet
 
         private bool TryToEditText(Point p)
         {
-            var temp = new Block(0, -1, "TEMP");
+            var temp = new Block(0, 0.0, 0.0, -1, "TEMP");
             BlockEditor.HitTestClick(sheet, logic, temp, p, options.HitTestSize, true, true);
 
             if (BlockEditor.HaveOneTextSelected(temp))
@@ -3667,7 +3689,7 @@ namespace Sheet
             CreateGrid(sheet, null, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
             CreateFrame(sheet, null, options.GridSize, options.GridThickness, BlockFactory.NormalBrush);
 
-            var blockItem = BlockSerializer.SerializerBlockContents(logic, 0, -1, "PREVIEW");
+            var blockItem = BlockSerializer.SerializerBlockContents(logic, 0, 0.0, 0.0, -1, "PREVIEW");
             BlockEditor.AddBlockContents(sheet, blockItem, null, null, false, options.LineThickness);
 
             window.Content = canvas;
@@ -3683,11 +3705,11 @@ namespace Sheet
             var writer = new BlockPdfWriter();
 
             var page = new BlockItem();
-            page.Init(0, -1, "");
+            page.Init(0, 0.0, 0.0, -1, "");
 
             //var grid = CreateGridBlock();
             var frame = CreateFrameBlock();
-            var block = BlockSerializer.SerializerBlockContents(logic, 0, logic.DataId, "LOGIC");
+            var block = BlockSerializer.SerializerBlockContents(logic, 0, logic.X, logic.Y, logic.DataId, "LOGIC");
 
             //page.Blocks.Add(grid);
             page.Blocks.Add(frame);
@@ -3699,7 +3721,7 @@ namespace Sheet
         private BlockItem CreateGridBlock()
         {
             var grid = new BlockItem();
-            grid.Init(0, -1, "");
+            grid.Init(0, 0.0, 0.0, -1, "");
 
             foreach (var line in gridLines)
             {
@@ -3714,7 +3736,7 @@ namespace Sheet
         private BlockItem CreateFrameBlock()
         {
             var frame = new BlockItem();
-            frame.Init(0, -1, "");
+            frame.Init(0, 0.0, 0.0, -1, "");
 
             foreach (var line in frameLines)
             {
@@ -3748,8 +3770,17 @@ namespace Sheet
                             {
                                 RegisterChange("Open");
                                 Reset();
-                                var block = ItemSerializer.DeserializeContents(text);
-                                InsertBlock(block, false);
+
+                                try
+                                {
+                                    var block = ItemSerializer.DeserializeContents(text);
+                                    InsertBlock(block, false);
+                                }
+                                catch(Exception ex)
+                                {
+                                    Debug.Print(ex.Message);
+                                    Debug.Print(ex.StackTrace);
+                                }
                             }
                             break;
                         case 2:
@@ -3757,8 +3788,17 @@ namespace Sheet
                             {
                                 RegisterChange("Open");
                                 Reset();
-                                var block = JsonConvert.DeserializeObject<BlockItem>(text);
-                                InsertBlock(block, false);
+
+                                try
+                                {
+                                    var block = JsonConvert.DeserializeObject<BlockItem>(text);
+                                    InsertBlock(block, false);
+                                }
+                                catch(Exception ex)
+                                {
+                                    Debug.Print(ex.Message);
+                                    Debug.Print(ex.StackTrace);
+                                }
                             }
                             break;
                     }
@@ -3780,17 +3820,33 @@ namespace Sheet
                 {
                     case 1:
                         {
-                            var block = SerializeLogicBlock();
-                            var text = ItemSerializer.SerializeContents(block);
-                            ItemEditor.SaveText(dlg.FileName, text);
+                            try
+                            {
+                                var block = SerializeLogicBlock();
+                                var text = ItemSerializer.SerializeContents(block);
+                                ItemEditor.SaveText(dlg.FileName, text);
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.Print(ex.Message);
+                                Debug.Print(ex.StackTrace);
+                            }
                         }
                         break;
                     case 2:
                     case 3:
                         {
-                            var block = SerializeLogicBlock();
-                            string text = JsonConvert.SerializeObject(block, Formatting.Indented);
-                            ItemEditor.SaveText(dlg.FileName, text);
+                            try
+                            {
+                                var block = SerializeLogicBlock();
+                                string text = JsonConvert.SerializeObject(block, Formatting.Indented);
+                                ItemEditor.SaveText(dlg.FileName, text);
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.Print(ex.Message);
+                                Debug.Print(ex.StackTrace);
+                            }
                         }
                         break;
                 }
@@ -3812,7 +3868,15 @@ namespace Sheet
                     case 1:
                     default:
                         {
-                            ExportToPdf(dlg.FileName);
+                            try
+                            {
+                                ExportToPdf(dlg.FileName);
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.Print(ex.Message);
+                                Debug.Print(ex.StackTrace);
+                            }
                         }
                         break;
                 }
@@ -3828,7 +3892,15 @@ namespace Sheet
 
             if (dlg.ShowDialog() == true)
             {
-                LoadLibrary(dlg.FileName);
+                try
+                {
+                    LoadLibrary(dlg.FileName);
+                }
+                catch (Exception ex)
+                {
+                    Debug.Print(ex.Message);
+                    Debug.Print(ex.StackTrace);
+                }
             }
         }
 
@@ -4029,7 +4101,7 @@ namespace Sheet
 
         private bool BindDataToBlock(Point p, DataItem dataItem)
         {
-            var temp = new Block(0, -1, "TEMP");
+            var temp = new Block(0, 0.0, 0.0, -1, "TEMP");
             BlockEditor.HitTestForBlocks(sheet, logic, temp, p, options.HitTestSize);
 
             if (BlockEditor.HaveOneBlockSelected(temp))
@@ -4086,7 +4158,7 @@ namespace Sheet
                     if (!secondTryResult)
                     {
                         // remove block if failed to bind
-                        var temp = new Block(0, -1, "TEMP");
+                        var temp = new Block(0, 0.0, 0.0, -1, "TEMP");
                         temp.Init();
                         temp.Blocks.Add(block);
                         BlockEditor.RemoveSelectedFromBlock(sheet, logic, temp);

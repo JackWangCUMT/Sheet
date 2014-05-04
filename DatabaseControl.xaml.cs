@@ -17,6 +17,7 @@ namespace Sheet
     #region CsvReader
 
     using Microsoft.VisualBasic.FileIO;
+    using System.Diagnostics;
 
     public static class CsvReader
     {
@@ -123,8 +124,16 @@ namespace Sheet
             var result = dlg.ShowDialog();
             if (result.HasValue && result.Value == true)
             {
-                Open(dlg.FileName);
-                return System.IO.Path.GetFileName(dlg.FileName);
+                try
+                {
+                    Open(dlg.FileName);
+                    return System.IO.Path.GetFileName(dlg.FileName);
+                }
+                catch (Exception ex)
+                {
+                    Debug.Print(ex.Message);
+                    Debug.Print(ex.StackTrace);
+                }
             }
             return null;
         }
