@@ -8,7 +8,7 @@ using System.Windows;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Sheet")]
-[assembly: AssemblyDescription("WPF logic drawing application.")]
+[assembly: AssemblyDescription("Diagram drawing application.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Wiesław Šoltés")]
 [assembly: AssemblyProduct("Sheet")]
