@@ -27,7 +27,11 @@ namespace Dxf.Enums
         AC1009 = 1, // R11 and R12
         AC1012 = 2, // R13
         AC1014 = 3, // R14
-        AC1015 = 4 // AutoCAD 2000
+        AC1015 = 4, // AutoCAD 2000
+        AC1018 = 5, // AutoCAD 2004
+        AC1021 = 6, // AutoCAD 2007
+        AC1024 = 7, // AutoCAD 2010
+        AC1027 = 8, // AutoCAD 2013
     }
 
     #endregion
@@ -361,16 +365,18 @@ namespace Dxf.Core
 
         public const string Entities = "ENTITIES";
 
-        public const string Line = "LINE";
-        public const string Text = "TEXT";
-        public const string Circle = "CIRCLE";
         public const string Attdef = "ATTDEF";
         public const string Attrib = "ATTRIB";
+        public const string Circle = "CIRCLE";
+        public const string Ellipse = "ELLIPSE";
+        public const string Insert = "INSERT";
+        public const string Line = "LINE";
+        public const string Text = "TEXT";
+
         public const string Ltype = "LTYPE";
         public const string BlockRecord = "BLOCK_RECORD";
         public const string Block = "BLOCK";
         public const string Endblk = "ENDBLK";
-        public const string Insert = "INSERT";
 
         public const string Vport = "VPORT";
         public const string Dimstyle = "DIMSTYLE";
@@ -389,6 +395,7 @@ namespace Dxf.Core
         public const string Line = "AcDbLine";
         public const string Text = "AcDbText";
         public const string Circle = "AcDbCircle";
+        public const string Ellipse = "AcDbEllipse";
 
         public const string Dictionary = "AcDbDictionary";
         public const string Entity = "AcDbEntity";
@@ -418,8 +425,7 @@ namespace Dxf.Core
 
     #region DxfObject
 
-    public abstract class DxfObject<T>
-        where T : DxfObject<T>
+    public abstract class DxfObject<T> where T : DxfObject<T>
     {
         public virtual DxfAcadVer Version { get; private set; }
         public virtual int Id { get; private set; }
@@ -1856,8 +1862,31 @@ namespace Dxf.Entities
 
     public class DxfCircle : DxfObject<DxfCircle>
     {
+        public string Layer { get; set; }
+        public string Color { get; set; }
+        public double Thickness { get; set; }
+        public Vector3 CenterPoint { get; set; }
+        public double Radius { get; set; }
+        public Vector3 ExtrusionDirection { get; set; }
+
         public DxfCircle(DxfAcadVer version, int id)
             : base(version, id)
+        {
+        }
+
+        public DxfCircle Defaults()
+        {
+            Layer = "0";
+            Color = "0";
+            Thickness = 0.0;
+            CenterPoint = new Vector3(0.0, 0.0, 0.0);
+            Radius = 0.0;
+            ExtrusionDirection = new Vector3(0.0, 0.0, 1.0);
+
+            return this;
+        }
+
+        public DxfCircle Create()
         {
             Add(0, CodeName.Circle);
 
@@ -1865,45 +1894,22 @@ namespace Dxf.Entities
 
             if (Version > DxfAcadVer.AC1009)
                 Subclass(SubclassMarker.Circle);
-        }
 
-        public DxfCircle Layer(string layer)
-        {
-            Add(8, layer);
-            return this;
-        }
+            Add(8, Layer);
+            Add(62, Color);
 
-        public DxfCircle Color(string color)
-        {
-            Add(62, color);
-            return this;
-        }
+            Add(39, Thickness);
 
-        public DxfCircle Thickness(double thickness)
-        {
-            Add(39, thickness);
-            return this;
-        }
+            Add(10, CenterPoint.X);
+            Add(20, CenterPoint.Y);
+            Add(30, CenterPoint.Z);
 
-        public DxfCircle Radius(double radius)
-        {
-            Add(40, radius);
-            return this;
-        }
+            Add(40, Radius);
 
-        public DxfCircle Center(Vector3 point)
-        {
-            Add(10, point.X);
-            Add(20, point.Y);
-            Add(30, point.Z);
-            return this;
-        }
+            Add(210, ExtrusionDirection.X);
+            Add(220, ExtrusionDirection.Y);
+            Add(230, ExtrusionDirection.Z);
 
-        public DxfCircle Extrusion(Vector3 direction)
-        {
-            Add(210, direction.X);
-            Add(220, direction.Y);
-            Add(230, direction.Z);
             return this;
         }
     }
@@ -1926,9 +1932,63 @@ namespace Dxf.Entities
 
     public class DxfEllipse : DxfObject<DxfEllipse>
     {
+        public string Layer { get; set; }
+        public string Color { get; set; }
+        public Vector3 CenterPoint { get; set; }
+        public Vector3 EndPoint { get; set; }
+        public Vector3 ExtrusionDirection { get; set; }
+        public double Ratio { get; set; }
+        public double StartParameter { get; set; }
+        public double EndParameter { get; set; }
+
         public DxfEllipse(DxfAcadVer version, int id)
             : base(version, id)
         {
+        }
+
+        public DxfEllipse Defaults()
+        {
+            Layer = "0";
+            Color = "0";
+            CenterPoint = new Vector3(0.0, 0.0, 0.0);
+            EndPoint = new Vector3(0.0, 0.0, 0.0);
+            ExtrusionDirection = new Vector3(0.0, 0.0, 1.0);
+            Ratio = 0.0;
+            StartParameter = 0.0;
+            EndParameter = 2 * Math.PI;
+
+            return this;
+        }
+
+        public DxfEllipse Create()
+        {
+            Add(0, CodeName.Ellipse);
+
+            Entity();
+
+            if (Version > DxfAcadVer.AC1009)
+                Subclass(SubclassMarker.Ellipse);
+
+            Add(8, Layer);
+            Add(62, Color);
+
+            Add(10, CenterPoint.X);
+            Add(20, CenterPoint.Y);
+            Add(30, CenterPoint.Z);
+
+            Add(11, EndPoint.X);
+            Add(21, EndPoint.Y);
+            Add(31, EndPoint.Z);
+
+            Add(210, ExtrusionDirection.X);
+            Add(220, ExtrusionDirection.Y);
+            Add(230, ExtrusionDirection.Z);
+
+            Add(40, Ratio);
+            Add(41, StartParameter);
+            Add(42, EndParameter);
+
+            return this;
         }
     }
 
