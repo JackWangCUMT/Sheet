@@ -3489,7 +3489,7 @@ namespace Dxf
             string str)
         {
             bool isHeaderSection = str == CodeName.Section;
-            string entityClass = isHeaderSection == true ? "section" : "other";
+            string entityClass = isHeaderSection == true ? "Section" : "Other";
 
             if (haveSection == true && isHeaderSection == true)
             {
@@ -3500,11 +3500,11 @@ namespace Dxf
             if (haveSection == false && isHeaderSection == true)
             {
                 haveSection = true;
-                sb.AppendFormat("<div class=\"content\">");
-                sb.AppendFormat("<dt class=\"header\"><code class=\"lineHeader\">LINE</code><code class=\"codeHeader\">CODE</code><code class=\"dataHeader\">DATA</code></dt>{0}", Environment.NewLine);
+                sb.AppendFormat("<div class=\"Table\">");
+                sb.AppendFormat("<div class=\"Header\"><div class=\"Cell\"><p>LINE</p></div><div class=\"Cell\"><p>CODE</p></div><div class=\"Cell\"><p>DATA</p></div></div>{0}", Environment.NewLine);
             }
 
-            sb.AppendFormat("<dt class=\"{3}\"><code class=\"line\">{4}</code><code class=\"code\">{0}:</code><code class=\"data\">{1}</code></dt>{2}",
+            sb.AppendFormat("<div class=\"{3}\"><div class=\"Cell\"><p class=\"Line\">{4}</p></div><div class=\"Cell\"><p class=\"Code\">{0}:</p></div><div class=\"Cell\"><p class=\"Data\">{1}</p></div></div>{2}",
                 tag.Code,
                 tag.Data,
                 Environment.NewLine,
@@ -3516,7 +3516,8 @@ namespace Dxf
 
         private static void WriteEntity(StringBuilder sb, string[] entity, int lineNumber)
         {
-            sb.AppendFormat("<dd><code class=\"line\">{3}</code><code class=\"code\">{0}:</code><code class=\"data\">{1}</code></dd>{2}",
+
+            sb.AppendFormat("<div class=\"Row\"><div class=\"Cell\"><p class=\"Line\">{3}</p></div><div class=\"Cell\"><p class=\"Code\">{0}:</p></div><div class=\"Cell\"><p class=\"Data\">{1}</p></div></div>{2}",
                 entity[0],
                 entity[1],
                 Environment.NewLine, lineNumber);
@@ -3524,13 +3525,6 @@ namespace Dxf
 
         private static void WriteBodyHeader(StringBuilder sb, string fileName)
         {
-            sb.AppendLine("<div class=\"container\">");
-            sb.AppendLine("<div class=\"header\">");
-            sb.AppendFormat("<h1 class=\"header\">{0}</h1></div>{1}",
-                System.IO.Path.GetFileName(fileName),
-                Environment.NewLine);
-
-            sb.AppendLine("<dl>");
         }
 
         private static void WriteBodyFooter(StringBuilder sb, bool haveSection)
@@ -3539,52 +3533,24 @@ namespace Dxf
             {
                 sb.AppendFormat("</div>");
             }
-
-            sb.AppendLine(@"</dl>");
-
-            sb.AppendLine("<div class=\"footer\">Copyright (C) Wiesław Šoltés 2013. All Rights Reserved</div>");
-            sb.AppendLine("</div>");
         }
 
         private void WriteHtmlHeader(StringBuilder sb, string fileName)
         {
             sb.AppendLine("<html><head>");
-
-            sb.AppendFormat("<title>{0}</title>{1}",
-                System.IO.Path.GetFileName(fileName), Environment.NewLine);
-
+            sb.AppendFormat("<title>{0}</title>{1}", System.IO.Path.GetFileName(fileName), Environment.NewLine);
             sb.AppendFormat("<meta charset=\"utf-8\"/>");
-
-            sb.AppendLine("<style>");
-            sb.AppendLine("body { background-color:rgb(221,221,221); }");
-            sb.AppendLine("dl,dt,dd { font-family: Arial; font-size:10pt; width:100%; }");
-            sb.AppendLine("dl { font-weight:normal; margin:0.0cm 0.0cm 0.0cm 0.0cm; background-color:rgb(221,221,221); }");
-
-            sb.AppendLine("dt { font-weight:bold; }");
-            sb.AppendLine("dt.header { margin:0.0cm 0.0cm 0.0cm 0.0cm; background-color:rgb(255,30,102); }");
-            sb.AppendLine("dt.section { margin:0.0cm 0.0cm 0.0cm 0.0cm; background-color:rgb(255,242,102); }");
-            sb.AppendLine("dt.other { margin:0.0cm 0.0cm 0.0cm 0.0cm; background-color:rgb(191,191,191); }");
-
-            sb.AppendLine("dd { font-weight:normal; margin:0.0cm 0.0cm 0.0cm 0.0cm; background-color:rgb(221,221,221); }");
-
-            sb.AppendLine("code.lineHeader { width:2.0cm; text-align:Left; color:rgb(0,0,0); }");
-            sb.AppendLine("code.codeHeader { width:1.2cm; text-align:right; color:rgb(0,0,0); }");
-            sb.AppendLine("code.dataHeader { margin:0.0cm 0.0cm 0.0cm 0.5cm; text-align:left; color:rgb(0,0,0); }");
-
-            sb.AppendLine("code.line { width:2.0cm; text-align:Left; color:rgb(84,84,84); }");
-            sb.AppendLine("code.code { width:1.2cm; text-align:right; color:rgb(116,116,116); }");
-            sb.AppendLine("code.data { margin:0.0cm 0.0cm 0.0cm 0.5cm; text-align:left; color:rgb(0,0,0); }");
-
-            sb.AppendLine("div.footer { font-family: Arial; font-size:10pt; }");
-
-            sb.AppendLine("div.container { clear:both; width:auto; display:inline-block; zoom: 1;*display: inline; height:0.0cm; vertical-align:top; overflow:auto; }");
-            sb.AppendLine("div.header { margin:0.2cm; }");
-            sb.AppendLine("div.content { margin:0.2cm; width:10.0cm; float:left; }");
-            sb.AppendLine("div.footer { margin:0.2cm;clear:both;text-align:center; }");
-
-            sb.AppendLine("h1 { font-family: Arial; font-size:12pt; }");
-            sb.AppendLine("h1.header { margin-bottom:0; }");
-
+            sb.AppendLine("<style type=\"text/css\">");
+            sb.AppendLine("body     { background-color:rgb(221,221,221); }");
+            sb.AppendLine(".Table   { display:table; font-family:\"Courier New\"; font-size:10pt; border-collapse:collapse; margin:10px; float:none; }");
+            sb.AppendLine(".Header  { display:table-row; font-weight:bold; text-align:left; background-color:rgb(255,30,102); }");
+            sb.AppendLine(".Section { display:table-row; font-weight:normal; text-align:left; background-color:rgb(255,242,102); }");
+            sb.AppendLine(".Other   { display:table-row; font-weight:normal; text-align:left; background-color:rgb(191,191,191); }");
+            sb.AppendLine(".Row     { display:table-row; background-color:rgb(221,221,221); }");
+            sb.AppendLine(".Cell    { display:table-cell; padding-left:5px; padding-right:5px; border:none; }");
+            sb.AppendLine(".Line    { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; width:60px; color:rgb(84,84,84); }");
+            sb.AppendLine(".Code    { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; width:50px; color:rgb(116,116,116); }");
+            sb.AppendLine(".Data    { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; width:200px; color:rgb(0,0,0); }");
             sb.AppendLine("</style>");
             sb.AppendLine("</head><body>");
         }
