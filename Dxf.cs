@@ -3427,6 +3427,7 @@ namespace Dxf
 
             string[] entity = new string[2] { null, null };
             int lineNumber = 0;
+            int sectionId = 0;
 
             foreach (var line in lines)
             {
@@ -3438,7 +3439,7 @@ namespace Dxf
                     tag.Data = str;
                     tags.Add(tag);
 
-                    haveSection = WriteTag(sb, tag, haveSection, lineNumber, str);
+                    haveSection = WriteTag(sb, tag, haveSection, lineNumber, str, ref sectionId);
 
                     //haveDxfCodeForType = true;
 
@@ -3486,7 +3487,8 @@ namespace Dxf
             DxfRawTag tag,
             bool haveSection,
             int lineNumber,
-            string str)
+            string str,
+            ref int sectionId)
         {
             bool isHeaderSection = str == CodeName.Section;
             string entityClass = isHeaderSection == true ? "Section" : "Other";
@@ -3499,8 +3501,10 @@ namespace Dxf
 
             if (haveSection == false && isHeaderSection == true)
             {
+                sectionId++;
                 haveSection = true;
-                sb.AppendFormat("<div class=\"Table\">");
+                sb.AppendFormat("<div class=\"Toggle\" onclick=\"toggle_visibility('{1}');\"><p>{2} #{1}</p></div>{0}", Environment.NewLine, sectionId, tag.Data);
+                sb.AppendFormat("<div class=\"Table\" id=\"{1}\">", Environment.NewLine, sectionId);
                 sb.AppendFormat("<div class=\"Header\"><div class=\"Cell\"><p>LINE</p></div><div class=\"Cell\"><p>CODE</p></div><div class=\"Cell\"><p>DATA</p></div></div>{0}", Environment.NewLine);
             }
 
@@ -3531,7 +3535,7 @@ namespace Dxf
         {
             if (haveSection == true)
             {
-                sb.AppendFormat("</div>");
+                sb.AppendLine("</div>");
             }
         }
 
@@ -3542,8 +3546,8 @@ namespace Dxf
             sb.AppendFormat("<meta charset=\"utf-8\"/>");
             sb.AppendLine("<style type=\"text/css\">");
             sb.AppendLine("body     { background-color:rgb(221,221,221); }");
-            sb.AppendLine(".Table   { display:table; font-family:\"Courier New\"; font-size:10pt; border-collapse:collapse; margin:10px; float:none; }");
-            sb.AppendLine(".Header  { display:table-row; font-weight:bold; text-align:left; background-color:rgb(255,30,102); }");
+            sb.AppendLine(".Table   { display:none; font-family:\"Courier New\"; font-size:10pt; border-collapse:collapse; margin:10px; float:none; }");
+            sb.AppendLine(".Header  { display:table-row; font-weight:normal; text-align:left; background-color:rgb(255,30,102); }");
             sb.AppendLine(".Section { display:table-row; font-weight:normal; text-align:left; background-color:rgb(255,242,102); }");
             sb.AppendLine(".Other   { display:table-row; font-weight:normal; text-align:left; background-color:rgb(191,191,191); }");
             sb.AppendLine(".Row     { display:table-row; background-color:rgb(221,221,221); }");
@@ -3551,7 +3555,9 @@ namespace Dxf
             sb.AppendLine(".Line    { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; width:60px; color:rgb(84,84,84); }");
             sb.AppendLine(".Code    { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; width:50px; color:rgb(116,116,116); }");
             sb.AppendLine(".Data    { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; width:200px; color:rgb(0,0,0); }");
+            sb.AppendLine(".Toggle   { display:table; cursor:hand; font-family:\"Courier New\"; font-size:14pt; font-weight:normal; text-align:center; border-collapse:collapse; margin-left:10px; margin-top:10px; float:none; width:340px; background-color:rgb(191,191,191); }");
             sb.AppendLine("</style>");
+            sb.AppendLine("<script type=\"text/javascript\"> function toggle_visibility(id) { var e = document.getElementById(id); if(e.style.display == 'table') e.style.display = 'none'; else e.style.display = 'table'; } </script>");
             sb.AppendLine("</head><body>");
         }
 
