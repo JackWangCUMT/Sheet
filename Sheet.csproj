@@ -87,6 +87,7 @@
       <DependentUpon>DatabaseControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Dxf.cs" />
+    <Compile Include="DxfInspect.cs" />
     <Compile Include="LibraryControl.xaml.cs">
       <DependentUpon>LibraryControl.xaml</DependentUpon>
     </Compile>
