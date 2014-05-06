@@ -137,7 +137,6 @@ namespace Dxf
                     section = tag;
                     section.Children = new List<DxfRawTag>();
                     sections.Add(section);
-
                     other = null;
                 }
                 else if (isSectionEnd)
@@ -145,6 +144,7 @@ namespace Dxf
                     tag.Parent = section;
                     section.Children.Add(tag);
                     section = null;
+                    other = null;
                 }
                 else
                 {
@@ -171,6 +171,7 @@ namespace Dxf
                         }
                         else
                         {
+                            tag.Parent = section;
                             section.Children.Add(tag);
                         }
                     }
