@@ -10,28 +10,81 @@ namespace Dxf
 
     public class DxfRawTag
     {
+        public bool IsEnabled { get; set; }
         public int GroupCode { get; set; }
         public string DataElement { get; set; }
+        public DxfRawTag Parent { get; set; }
         public List<DxfRawTag> Children { get; set; }
+        public string Dxf
+        {
+            get
+            {
+                var sb = new StringBuilder();
+                ToDxf(this, sb);
+                return sb.ToString();
+            }
+        }
+
+        private static void ToDxf(DxfRawTag tag, StringBuilder sb)
+        {
+            if (tag.IsEnabled && sb != null)
+            {
+                sb.Append(tag.GroupCode);
+                sb.Append(Environment.NewLine);
+                sb.Append(tag.DataElement);
+                sb.Append(Environment.NewLine);
+                if (tag.Children != null)
+                {
+                    for (int i = 0; i < tag.Children.Count; i++)
+                    {
+                        var child = tag.Children[i];
+                        if (child.IsEnabled)
+                        {
+                            ToDxf(child, sb);
+                        }
+                    }
+                }
+            }
+        }
+        public DxfRawTag()
+        {
+            IsEnabled = true;
+        }
+        public override string ToString()
+        {
+            if (Children != null)
+            {
+                var tagName = Children.FirstOrDefault(t => t.GroupCode == 2);
+                if (tagName != null)
+                {
+                    return string.Concat(DataElement, ':', tagName.DataElement);
+                }
+            }
+            return (GroupCode == 0 || GroupCode == 2) ? DataElement : string.Concat(GroupCode.ToString(), ',', DataElement);
+            //string name = (Children != null && Children.Count > 0 && Children[0].GroupCode == 2) ? string.Concat(DataElement,':',Children[0].DataElement) : 
+            //    GroupCode == 0 || GroupCode == 2 ? DataElement : null;
+            //return name != null ? name : string.Concat(GroupCode.ToString(), ',', DataElement);
+        }
     }
 
     #endregion
 
     #region DxfInspect
 
-    public class DxfInspect
+    public static class DxfInspect
     {
         #region Constants
 
-        private const int DxfCodeForType = 0;
-        private const int DxfCodeForName = 2;
-        private const string DxfCodeNameSection = "SECTION";
+        public const int DxfCodeForType = 0;
+        public const int DxfCodeForName = 2;
+        public const string DxfCodeNameSection = "SECTION";
+        public const string DxfCodeNameEndsec = "ENDSEC";
 
         #endregion
 
         #region Inspect
 
-        public string ToHtml(string path)
+        public static string ToHtml(string path)
         {
             try
             {
@@ -47,7 +100,7 @@ namespace Dxf
             return null;
         }
 
-        private string Read(string path)
+        public static string Read(string path)
         {
             using (var reader = new System.IO.StreamReader(path))
             {
@@ -55,7 +108,7 @@ namespace Dxf
             }
         }
 
-        private List<DxfRawTag> Parse(string text)
+        public static List<DxfRawTag> Parse(string text)
         {
             var lines = text.Split("\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
 
@@ -68,6 +121,7 @@ namespace Dxf
 
             DxfRawTag section = null;
             DxfRawTag other = null;
+
             for (int i = 0; i < lines.Length; i += 2)
             {
                 var tag = new DxfRawTag();
@@ -75,30 +129,55 @@ namespace Dxf
                 tag.DataElement = lines[i + 1];
 
                 bool isEntityWithType = tag.GroupCode == DxfCodeForType;
-                bool isSectionStart = (isEntityWithType) && (tag.DataElement == DxfCodeNameSection);
+                bool isSectionStart = (isEntityWithType) && tag.DataElement == DxfCodeNameSection;
+                bool isSectionEnd = (isEntityWithType) && tag.DataElement == DxfCodeNameEndsec;
 
                 if (isSectionStart)
                 {
-                    other = null;
                     section = tag;
                     section.Children = new List<DxfRawTag>();
                     sections.Add(section);
+
+                    other = null;
                 }
-                else if (isEntityWithType && !isSectionStart)
+                else if (isSectionEnd)
                 {
-                    other = tag;
-                    other.Children = new List<DxfRawTag>();
-                    section.Children.Add(other);
+                    tag.Parent = section;
+                    section.Children.Add(tag);
+                    section = null;
                 }
                 else
                 {
-                    if (other != null)
+                    if (section != null)
                     {
-                        other.Children.Add(tag);
+                        if (isEntityWithType && other == null)
+                        {
+                            other = tag;
+                            other.Parent = section;
+                            other.Children = new List<DxfRawTag>();
+                            section.Children.Add(other);
+                        }
+                        else if (isEntityWithType && other != null)
+                        {
+                            other = tag;
+                            other.Parent = section;
+                            other.Children = new List<DxfRawTag>();
+                            section.Children.Add(other);
+                        }
+                        else if (!isEntityWithType && other != null)
+                        {
+                            tag.Parent = other;
+                            other.Children.Add(tag);
+                        }
+                        else
+                        {
+                            section.Children.Add(tag);
+                        }
                     }
                     else
                     {
-                        section.Children.Add(tag);
+                        tag.Parent = null;
+                        sections.Add(tag);
                     }
                 }
             }
@@ -106,7 +185,7 @@ namespace Dxf
             return sections;
         }
 
-        private string ToHtml(List<DxfRawTag> sections, string fileName)
+        public static string ToHtml(List<DxfRawTag> sections, string fileName)
         {
             var sb = new StringBuilder();
 
@@ -136,50 +215,96 @@ namespace Dxf
             {
                 var section = sections[i];
 
-                // section
-                sb.AppendFormat("{3}<div class=\"Toggle\" onclick=\"toggle_visibility('{0}');\"><p>{1} {2}</p></div>{3}", i, section.DataElement, (section.Children.Count > 0) && (section.Children[0].GroupCode == DxfCodeForName) ? section.Children[0].DataElement : "<Unknown>", Environment.NewLine);
-                //sb.AppendFormat("<!-- SECTION i={0} -->{1}", i, Environment.NewLine);
-                sb.AppendFormat("<div class=\"Table\" id=\"{0}\">{1}", i, Environment.NewLine);
-                sb.AppendFormat("    <div class=\"Header\"><div class=\"Cell\"><p>LINE</p></div><div class=\"Cell\"><p>CODE</p></div><div class=\"Cell\"><p>DATA</p></div></div>{0}", Environment.NewLine);
-                sb.AppendFormat("    <div class=\"{0}\"><div class=\"Cell\"><p class=\"Line\">{1}</p></div><div class=\"Cell\"><p class=\"Code\">{2}:</p></div><div class=\"Cell\"><p class=\"Data\">{3}</p></div></div>{4}", "Section", lineNumber += 2, section.GroupCode, section.DataElement, Environment.NewLine);
-
-                for (int j = 0; j < section.Children.Count; j++)
+                if (section.IsEnabled)
                 {
-                    var child = section.Children[j];
-                    bool isEntityWithType = child.GroupCode == DxfCodeForType;
-                    if (isEntityWithType)
+                    // section
+                    sb.AppendFormat("{3}<div class=\"Toggle\" onclick=\"toggle_visibility('{0}');\"><p>{1} {2}</p></div>{3}", i, section.DataElement, (section.Children != null) && (section.Children.Count > 0) && (section.Children[0].GroupCode == DxfCodeForName) ? section.Children[0].DataElement : "<Unknown>", Environment.NewLine);
+                    //sb.AppendFormat("<!-- SECTION i={0} -->{1}", i, Environment.NewLine);
+                    sb.AppendFormat("<div class=\"Table\" id=\"{0}\">{1}", i, Environment.NewLine);
+                    sb.AppendFormat("    <div class=\"Header\"><div class=\"Cell\"><p>LINE</p></div><div class=\"Cell\"><p>CODE</p></div><div class=\"Cell\"><p>DATA</p></div></div>{0}", Environment.NewLine);
+                    sb.AppendFormat("    <div class=\"{0}\"><div class=\"Cell\"><p class=\"Line\">{1}</p></div><div class=\"Cell\"><p class=\"Code\">{2}:</p></div><div class=\"Cell\"><p class=\"Data\">{3}</p></div></div>{4}", "Section", lineNumber += 2, section.GroupCode, section.DataElement, Environment.NewLine);
+
+                    if (section.Children != null)
                     {
-                        var other = child;
-
-                        // entity with children (type)
-                        //sb.AppendFormat("    <!-- OTHER j={0} -->{1}", j, Environment.NewLine);
-                        sb.AppendFormat("    <div class=\"{0}\"><div class=\"Cell\"><p class=\"Line\">{1}</p></div><div class=\"Cell\"><p class=\"Code\">{2}:</p></div><div class=\"Cell\"><p class=\"Data\">{3}</p></div></div>{4}", "Other", lineNumber += 2, other.GroupCode, other.DataElement, Environment.NewLine);
-
-                        for (int k = 0; k < other.Children.Count; k++)
+                        for (int j = 0; j < section.Children.Count; j++)
                         {
-                            var entity = other.Children[k];
+                            var child = section.Children[j];
+                            if (child.IsEnabled)
+                            {
+                                bool isEntityWithType = child.GroupCode == DxfCodeForType;
+                                if (isEntityWithType)
+                                {
+                                    var other = child;
 
-                            // entity without type
-                            //sb.AppendFormat("        <!-- ENTITY k={0} -->{1}", k, Environment.NewLine);
-                            sb.AppendFormat("        <div class=\"Row\"><div class=\"Cell\"><p class=\"Line\">{0}</p></div><div class=\"Cell\"><p class=\"Code\">{1}:</p></div><div class=\"Cell\"><p class=\"Data\">{2}</p></div></div>{3}", lineNumber += 2, entity.GroupCode, entity.DataElement, Environment.NewLine);
+                                    // entity with children (type)
+                                    //sb.AppendFormat("    <!-- OTHER j={0} -->{1}", j, Environment.NewLine);
+                                    sb.AppendFormat("    <div class=\"{0}\"><div class=\"Cell\"><p class=\"Line\">{1}</p></div><div class=\"Cell\"><p class=\"Code\">{2}:</p></div><div class=\"Cell\"><p class=\"Data\">{3}</p></div></div>{4}", "Other", lineNumber += 2, other.GroupCode, other.DataElement, Environment.NewLine);
+
+                                    if (other.Children != null)
+                                    {
+                                        for (int k = 0; k < other.Children.Count; k++)
+                                        {
+                                            var entity = other.Children[k];
+                                            if (entity.IsEnabled)
+                                            {
+                                                // entity without type
+                                                //sb.AppendFormat("        <!-- ENTITY k={0} -->{1}", k, Environment.NewLine);
+                                                sb.AppendFormat("        <div class=\"Row\"><div class=\"Cell\"><p class=\"Line\">{0}</p></div><div class=\"Cell\"><p class=\"Code\">{1}:</p></div><div class=\"Cell\"><p class=\"Data\">{2}</p></div></div>{3}", lineNumber += 2, entity.GroupCode, entity.DataElement, Environment.NewLine);
+                                            }
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    var entity = child;
+
+                                    // entity without children (type)
+                                    //sb.AppendFormat("    <!-- ENTITY j={0} -->{1}", j, Environment.NewLine);
+                                    sb.AppendFormat("    <div class=\"Row\"><div class=\"Cell\"><p class=\"Line\">{0}</p></div><div class=\"Cell\"><p class=\"Code\">{1}:</p></div><div class=\"Cell\"><p class=\"Data\">{2}</p></div></div>{3}", lineNumber += 2, entity.GroupCode, entity.DataElement, Environment.NewLine);
+                                }
+                            }
                         }
                     }
-                    else
-                    {
-                        var entity = child;
 
-                        // entity without children (type)
-                        //sb.AppendFormat("    <!-- ENTITY j={0} -->{1}", j, Environment.NewLine);
-                        sb.AppendFormat("    <div class=\"Row\"><div class=\"Cell\"><p class=\"Line\">{0}</p></div><div class=\"Cell\"><p class=\"Code\">{1}:</p></div><div class=\"Cell\"><p class=\"Data\">{2}</p></div></div>{3}", lineNumber += 2, entity.GroupCode, entity.DataElement, Environment.NewLine);
-                    }
+                    sb.AppendLine("</div>");
                 }
-
-                sb.AppendLine("</div>");
             }
 
             sb.AppendFormat("{0}</body></html>", Environment.NewLine);
 
             return sb.ToString();
+        }
+
+        public static void Convert(string dxfPath, string htmlPath)
+        {
+            try
+            {
+                Save(htmlPath, DxfInspect.ToHtml(dxfPath));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+            }
+        }
+
+        public static void Save(string path, string text)
+        {
+            try
+            {
+                if (text != null)
+                {
+                    using (var stream = System.IO.File.CreateText(path))
+                    {
+                        stream.Write(text);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+            }
         }
 
         #endregion
