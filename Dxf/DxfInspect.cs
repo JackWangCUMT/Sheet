@@ -61,9 +61,6 @@ namespace Dxf
                 }
             }
             return (GroupCode == 0 || GroupCode == 2) ? DataElement : string.Concat(GroupCode.ToString(), ',', DataElement);
-            //string name = (Children != null && Children.Count > 0 && Children[0].GroupCode == 2) ? string.Concat(DataElement,':',Children[0].DataElement) : 
-            //    GroupCode == 0 || GroupCode == 2 ? DataElement : null;
-            //return name != null ? name : string.Concat(GroupCode.ToString(), ',', DataElement);
         }
     }
 
