@@ -16,33 +16,55 @@ namespace Dxf
 {
     public class DxfWriter
     {
+        #region Fields
+
         private DxfAcadVer Version = DxfAcadVer.AC1015;
         private string Layer = "0";
         private int Handle = 0;
         private string DefaultStyle = "Standard";
 
-        private string StylePrimatyFont = "arial.ttf"; // arialuni.ttf
-        private string StylePrimatyFontDescription = "Arial"; // Arial Unicode MS
-        private string StyleBigFont = "";
         private double PageWidth = 1260.0;
         private double PageHeight = 891.0;
 
+        private string StylePrimatyFont = "arial.ttf"; // arialuni.ttf
+        private string StylePrimatyFontDescription = "Arial"; // Arial Unicode MS
+        private string StyleBigFont = "";
+
+        #endregion
+
+        #region Constructor
+
         public DxfWriter() { }
+
+        #endregion
+
+        #region Helpers
 
         private int NextHandle() { return Handle += 1; }
 
         private double X(double x) { return x; }
         private double Y(double y) { return PageHeight - y; }
 
-        private DxfBlockRecord CreateBlockRecordForBlock(string name)
+        private string EncodeText(string text)
         {
-            var blockRecord = new DxfBlockRecord(Version, NextHandle())
+            if (Version >= DxfAcadVer.AC1021)
+                return text;
+            if (string.IsNullOrEmpty(text))
+                return text;
+            var sb = new StringBuilder();
+            foreach (char c in text)
             {
-                Name = name
-            };
-
-            return blockRecord.Create();
+                if (c > 255)
+                    sb.Append(string.Concat("\\U+", Convert.ToInt32(c).ToString("X4")));
+                else
+                    sb.Append(c);
+            }
+            return sb.ToString();
         }
+
+        #endregion
+
+        #region Tables
 
         private IEnumerable<DxfAppid> TableAppids()
         {
@@ -206,6 +228,10 @@ namespace Dxf
             return vports;
         }
 
+        #endregion
+
+        #region Blocks
+
         public IEnumerable<DxfBlock> DefaultBlocks()
         {
             if (Version > DxfAcadVer.AC1009)
@@ -257,6 +283,20 @@ namespace Dxf
 
             return Enumerable.Empty<DxfBlock>();
         }
+
+        private DxfBlockRecord CreateBlockRecordForBlock(string name)
+        {
+            var blockRecord = new DxfBlockRecord(Version, NextHandle())
+            {
+                Name = name
+            };
+
+            return blockRecord.Create();
+        }
+
+        #endregion
+
+        #region Factory
 
         private DxfLine CreateLine(double x1, double y1, double x2, double y2)
         {
@@ -318,23 +358,6 @@ namespace Dxf
             return ellipse.Create();
         }
 
-        private string EncodeText(string text)
-        {
-            if (Version >= DxfAcadVer.AC1021)
-                return text;
-            if (string.IsNullOrEmpty(text))
-                return text;
-            var sb = new StringBuilder();
-            foreach (char c in text)
-            {
-                if (c > 255)
-                    sb.Append(string.Concat("\\U+", Convert.ToInt32(c).ToString("X4")));
-                else
-                    sb.Append(c);
-            }
-            return sb.ToString();
-        }
-
         private DxfText CreateText(string text, double x, double y, double height, DxfHorizontalTextJustification horizontalJustification, DxfVerticalTextJustification verticalJustification, string style)
         {
             var txt = new DxfText(Version, NextHandle())
@@ -358,6 +381,10 @@ namespace Dxf
 
             return txt.Create();
         }
+
+        #endregion
+
+        #region Create
 
         public string Create(DxfAcadVer version)
         {
@@ -438,11 +465,14 @@ namespace Dxf
 
             // TODO: add user entities
 
-            Entities.Add(CreateLine(0.0, 0.0, 0.0, 100.0));
-            Entities.Add(CreateLine(0.0, 0.0, 100.0, 0.0));
-            Entities.Add(CreateCircle(50.0, 50.0, 50.0));
-            Entities.Add(CreateEllipse(0.0, 0.0, 100.0, 100.0));
-            Entities.Add(CreateText("≥1", 50.0, 50.0, 14.0, DxfHorizontalTextJustification.Center, DxfVerticalTextJustification.Middle, DefaultStyle));
+            //Entities.Add(CreateLine(0.0, 0.0, 0.0, 100.0));
+            //Entities.Add(CreateLine(0.0, 0.0, 100.0, 0.0));
+            //Entities.Add(CreateCircle(50.0, 50.0, 50.0));
+            //Entities.Add(CreateEllipse(0.0, 0.0, 100.0, 100.0));
+            //Entities.Add(CreateText("≥1", 50.0, 50.0, 14.0, DxfHorizontalTextJustification.Center, DxfVerticalTextJustification.Middle, DefaultStyle));
+
+
+
 
 
             Entities.End();
@@ -503,5 +533,7 @@ namespace Dxf
             // return dxf file contents
             return file.ToString();
         }
+
+        #endregion
     }
 }
