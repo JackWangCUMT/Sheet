@@ -389,13 +389,8 @@ namespace Sheet
 
         public void Create(string fileName, double sourceWidth, double sourceHeight, BlockItem blockItem)
         {
-            
-
-
             PageWidth = sourceWidth;
             PageHeight = sourceHeight;
-
-
 
             Version = DxfAcadVer.AC1015;
 
@@ -442,10 +437,9 @@ namespace Sheet
                 records.Add(CreateBlockRecordForBlock("*Paper_Space"));
                 records.Add(CreateBlockRecordForBlock("*Paper_Space0"));
 
-
                 // TODO: add user layers
-                //records.Add(CreateBlockRecordForBlock("NEW_LAYER_NAME"));
 
+                //records.Add(CreateBlockRecordForBlock("NEW_LAYER_NAME"));
 
                 tables.AddBlockRecordTable(records, NextHandle());
             }
@@ -463,33 +457,22 @@ namespace Sheet
             blocks = new DxfBlocks(Version, NextHandle()).Begin();
             blocks.Add(DefaultBlocks());
 
-
             // TODO: add user blocks
-
 
             blocks.End();
 
             // create entities
             var Entities = new DxfEntities(Version, NextHandle()).Begin();
 
-
-
             // TODO: add user entities
 
-
-            // Demo
             //Entities.Add(CreateLine(0.0, 0.0, 0.0, 100.0));
             //Entities.Add(CreateLine(0.0, 0.0, 100.0, 0.0));
             //Entities.Add(CreateCircle(50.0, 50.0, 50.0));
             //Entities.Add(CreateEllipse(0.0, 0.0, 100.0, 100.0));
             //Entities.Add(CreateText("≥1", 50.0, 50.0, 14.0, DxfHorizontalTextJustification.Center, DxfVerticalTextJustification.Middle, DefaultStyle));
 
-
-
             DrawBlock(Entities, blockItem);
-
-
-
 
             Entities.End();
 
