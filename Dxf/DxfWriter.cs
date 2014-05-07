@@ -58,13 +58,6 @@ namespace Dxf
                 appids.Add(acad);
             }
 
-            // DXF - DxfFile
-            var cade = new DxfAppid(Version, NextHandle())
-                .Application("DXF")
-                .StandardFlags(DxfAppidStandardFlags.Default);
-
-            appids.Add(cade);
-
             return appids;
         }
 
