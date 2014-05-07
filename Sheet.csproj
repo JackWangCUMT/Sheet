@@ -79,36 +79,36 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="BlockDxfWriter.cs" />
-    <Compile Include="CanvasControl.xaml.cs">
+    <Compile Include="Dxf\BlockDxfWriter.cs" />
+    <Compile Include="Controls\CanvasControl.xaml.cs">
       <DependentUpon>CanvasControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="DatabaseControl.xaml.cs">
+    <Compile Include="Controls\DatabaseControl.xaml.cs">
       <DependentUpon>DatabaseControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Dxf.cs" />
-    <Compile Include="DxfInspect.cs" />
-    <Compile Include="DxfWriter.cs" />
-    <Compile Include="LibraryControl.xaml.cs">
+    <Compile Include="Dxf\Dxf.cs" />
+    <Compile Include="Dxf\DxfInspect.cs" />
+    <Compile Include="Dxf\DxfWriter.cs" />
+    <Compile Include="Controls\LibraryControl.xaml.cs">
       <DependentUpon>LibraryControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="BlockPdfWriter.cs" />
-    <Compile Include="TextControl.xaml.cs">
+    <Compile Include="Pdf\BlockPdfWriter.cs" />
+    <Compile Include="Controls\TextControl.xaml.cs">
       <DependentUpon>TextControl.xaml</DependentUpon>
     </Compile>
-    <Page Include="CanvasControl.xaml">
+    <Page Include="Controls\CanvasControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="DatabaseControl.xaml">
+    <Page Include="Controls\DatabaseControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="LibraryControl.xaml">
+    <Page Include="Controls\LibraryControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="SheetControl.xaml">
+    <Page Include="Controls\SheetControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -120,14 +120,14 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SheetControl.xaml.cs">
+    <Compile Include="Controls\SheetControl.xaml.cs">
       <DependentUpon>SheetControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="SheetWindow.xaml.cs">
       <DependentUpon>SheetWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="TextControl.xaml">
+    <Page Include="Controls\TextControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
