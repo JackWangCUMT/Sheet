@@ -79,7 +79,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Dxf\BlockDxfWriter.cs" />
     <Compile Include="Controls\CanvasControl.xaml.cs">
       <DependentUpon>CanvasControl.xaml</DependentUpon>
     </Compile>
@@ -88,7 +87,7 @@
     </Compile>
     <Compile Include="Dxf\Dxf.cs" />
     <Compile Include="Dxf\DxfInspect.cs" />
-    <Compile Include="Dxf\DxfWriter.cs" />
+    <Compile Include="Dxf\BlockDxfWriter.cs" />
     <Compile Include="Controls\LibraryControl.xaml.cs">
       <DependentUpon>LibraryControl.xaml</DependentUpon>
     </Compile>

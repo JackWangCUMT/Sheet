@@ -3698,25 +3698,7 @@ namespace Sheet
 
         #endregion
 
-        #region Export Pdf
-
-        private void ExportToPdf(string fileName)
-        {
-            var writer = new BlockPdfWriter();
-
-            var page = new BlockItem();
-            page.Init(0, 0.0, 0.0, -1, "");
-
-            //var grid = CreateGridBlock();
-            var frame = CreateFrameBlock();
-            var block = BlockSerializer.SerializerBlockContents(logic, 0, logic.X, logic.Y, logic.DataId, "LOGIC");
-
-            //page.Blocks.Add(grid);
-            page.Blocks.Add(frame);
-            page.Blocks.Add(block);
-
-            writer.Create(fileName, 1260.0, 891.0, page);
-        }
+        #region Export
 
         private BlockItem CreateGridBlock()
         {
@@ -3746,6 +3728,51 @@ namespace Sheet
                 frame.Lines.Add(lineItem);
             }
             return frame;
+        }
+
+        private BlockItem CreatePage(bool enableFrame, bool enableGrid)
+        {
+            var page = new BlockItem();
+            page.Init(0, 0.0, 0.0, -1, "");
+
+            if (enableGrid)
+            {
+                var grid = CreateGridBlock();
+                page.Blocks.Add(grid);
+            }
+
+            if (enableFrame)
+            {
+                var frame = CreateFrameBlock();
+                page.Blocks.Add(frame);
+            }
+
+            var block = BlockSerializer.SerializerBlockContents(logic, 0, logic.X, logic.Y, logic.DataId, "LOGIC");
+            page.Blocks.Add(block);
+
+            return page;
+        }
+
+        #endregion
+
+        #region Export To Pdf
+
+        private void ExportToPdf(string fileName)
+        {
+            var writer = new BlockPdfWriter();
+            var page = CreatePage(true, false);
+            writer.Create(fileName, options.PageWidth, options.PageHeight, page);
+        }
+
+        #endregion
+
+        #region Export To Dxf
+
+        private void ExportToDxf(string fileName)
+        {
+            var writer = new BlockDxfWriter();
+            var page = CreatePage(false, false);
+            writer.Create(fileName, options.PageWidth, options.PageHeight, page);
         }
 
         #endregion
@@ -3857,7 +3884,7 @@ namespace Sheet
         {
             var dlg = new Microsoft.Win32.SaveFileDialog()
             {
-                Filter = "PDF Documents (*.pdf)|*.pdf|All Files (*.*)|*.*",
+                Filter = "PDF Documents (*.pdf)|*.pdf|DXF Documents (*.dxf)|*.dxf|All Files (*.*)|*.*",
                 FileName = "sheet"
             };
 
@@ -3866,11 +3893,25 @@ namespace Sheet
                 switch(dlg.FilterIndex)
                 {
                     case 1:
+                    case 3:
                     default:
                         {
                             try
                             {
                                 ExportToPdf(dlg.FileName);
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.Print(ex.Message);
+                                Debug.Print(ex.StackTrace);
+                            }
+                        }
+                        break;
+                    case 2:
+                        {
+                            try
+                            {
+                                ExportToDxf(dlg.FileName);
                             }
                             catch (Exception ex)
                             {
