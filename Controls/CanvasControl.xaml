@@ -11,7 +11,8 @@
              Focusable="False" 
              FocusVisualStyle="{x:Null}"
              Background="Transparent" 
-             SnapsToDevicePixels="True">
+             UseLayoutRounding="False" SnapsToDevicePixels="True" 
+             TextOptions.TextFormattingMode="Ideal" TextOptions.TextRenderingMode="Auto" TextOptions.TextHintingMode="Auto">
     <Canvas Width="1260"
             Height="891"
             Background="Transparent">
