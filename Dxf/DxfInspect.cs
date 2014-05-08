@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Dxf
 {
@@ -81,13 +82,14 @@ namespace Dxf
 
         #region Inspect
 
-        public static string ToHtml(string path)
+        public async static Task<string> ToHtml(string path)
         {
             try
             {
-                var sections = Parse(Read(path));
+                var dxf = await Read(path);
+                var sections = await Task.Run(() => Parse(dxf));
                 var fileName = System.IO.Path.GetFileName(path);
-                return ToHtml(sections, fileName);
+                return await Task.Run(() => ToHtml(sections, fileName));
             }
             catch (Exception ex)
             {
@@ -97,11 +99,11 @@ namespace Dxf
             return null;
         }
 
-        public static string Read(string path)
+        public async static Task<string> Read(string path)
         {
             using (var reader = new System.IO.StreamReader(path))
             {
-                return reader.ReadToEnd();
+                return await reader.ReadToEndAsync();
             }
         }
 
@@ -273,11 +275,12 @@ namespace Dxf
             return sb.ToString();
         }
 
-        public static void Convert(string dxfPath, string htmlPath)
+        public async static void Convert(string dxfPath, string htmlPath)
         {
             try
             {
-                Save(htmlPath, DxfInspect.ToHtml(dxfPath));
+                var html = await DxfInspect.ToHtml(dxfPath);
+                Save(htmlPath, html);
             }
             catch (Exception ex)
             {
@@ -286,7 +289,7 @@ namespace Dxf
             }
         }
 
-        public static void Save(string path, string text)
+        public async static void Save(string path, string text)
         {
             try
             {
@@ -294,7 +297,7 @@ namespace Dxf
                 {
                     using (var stream = System.IO.File.CreateText(path))
                     {
-                        stream.Write(text);
+                        await stream.WriteAsync(text);
                     }
                 }
             }

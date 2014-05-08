@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO.Packaging;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -605,17 +606,20 @@ namespace Sheet
             return root;
         }
 
-        public static BlockItem DeserializeContents(string model, ItemSerializeOptions options)
+        public async static Task<BlockItem> DeserializeContents(string model, ItemSerializeOptions options)
         {
-            string[] lines = model.Split(options.LineSeparators, StringSplitOptions.RemoveEmptyEntries);
-            int length = lines.Length;
-            int end = 0;
-            return DeserializeRootBlock(lines, length, ref end, "", 0, 0.0, 0.0, -1, options);
+            return await Task.Run(() =>
+            {
+                string[] lines = model.Split(options.LineSeparators, StringSplitOptions.RemoveEmptyEntries);
+                int length = lines.Length;
+                int end = 0;
+                return DeserializeRootBlock(lines, length, ref end, "", 0, 0.0, 0.0, -1, options);
+            });
         }
 
-        public static BlockItem DeserializeContents(string model)
+        public async static Task<BlockItem> DeserializeContents(string model)
         {
-            return DeserializeContents(model, ItemSerializeOptions.Default);
+            return await DeserializeContents(model, ItemSerializeOptions.Default);
         }
 
         #endregion
@@ -629,14 +633,13 @@ namespace Sheet
     {
         #region Text
 
-        public static string OpenText(string fileName)
+        public async static Task<string> OpenText(string fileName)
         {
             try
             {
                 using (var stream = System.IO.File.OpenText(fileName))
                 {
-                    var text = stream.ReadToEnd();
-                    return text;
+                    return await stream.ReadToEndAsync();
                 }
             }
             catch (Exception ex)
@@ -647,7 +650,7 @@ namespace Sheet
             return null;
         }
 
-        public static void SaveText(string fileName, string text)
+        public async static void SaveText(string fileName, string text)
         {
             try
             {
@@ -655,7 +658,7 @@ namespace Sheet
                 {
                     using (var stream = System.IO.File.CreateText(fileName))
                     {
-                        stream.Write(text);
+                        await stream.WriteAsync(text);
                     }
                 }
             }
@@ -2810,11 +2813,11 @@ namespace Sheet
             return sb.ToString();
         }
 
-        private BlockItem CreateBlockItem(string name)
+        private async Task<BlockItem> CreateBlockItem(string name)
         {
             var text = SerializeBlockContents(0, 0.0, 0.0, -1, name, selected);
+            var block = await ItemSerializer.DeserializeContents(text);
             Delete();
-            var block = ItemSerializer.DeserializeContents(text);
             InsertBlock(block, true);
             return block.Blocks.FirstOrDefault();
         }
@@ -2831,11 +2834,13 @@ namespace Sheet
                 Action<string> ok = (name) =>
                 {
                     RegisterChange("Create Block");
-                    var block = CreateBlockItem(name);
-                    AddToLibrary(block);
-                    EditorCanvas.Children.Remove(tc);
-                    Focus();
-                    RestoreTempMode();
+                    CreateBlockItem(name).ContinueWith((block) =>
+                    {
+                        AddToLibrary(block.Result);
+                        EditorCanvas.Children.Remove(tc);
+                        Focus();
+                        RestoreTempMode();
+                    }, TaskScheduler.FromCurrentSynchronizationContext());
                 };
 
                 Action cancel = () => 
@@ -2850,12 +2855,12 @@ namespace Sheet
             }
         }
 
-        public void BreakBlock()
+        public async void BreakBlock()
         {
             if (BlockEditor.HaveSelected(selected))
             {
                 var text = ItemSerializer.SerializeContents(BlockSerializer.SerializerBlockContents(selected, 0, 0.0, 0.0, -1, "SELECTED"));
-                var block = ItemSerializer.DeserializeContents(text);
+                var block = await ItemSerializer.DeserializeContents(text);
                 RegisterChange("Break Block");
                 Delete();
                 BlockEditor.AddBrokenBlock(sheet, block, logic, selected, true, options.LineThickness / Zoom);
@@ -2866,41 +2871,48 @@ namespace Sheet
 
         #region Undo/Redo Changes
 
-        private ChangeMessage CreateChangeMessage(string message)
+        private async Task<ChangeMessage> CreateChangeMessage(string message)
         {
+            var block = SerializeLogicBlock();
+            var text = await Task.Run(() => ItemSerializer.SerializeContents(block));
             var change = new ChangeMessage()
             {
                 Message = message,
-                Model = ItemSerializer.SerializeContents(SerializeLogicBlock())
+                Model = text
             };
             return change;
         }
 
-        public void RegisterChange(string message)
+        public async void RegisterChange(string message)
         {
-            undos.Push(CreateChangeMessage(message));
+            var change = await CreateChangeMessage(message);
+            undos.Push(change);
             redos.Clear();
         }
 
-        public void Undo()
+        public async void Undo()
         {
             if (undos.Count > 0)
             {
-                redos.Push(CreateChangeMessage("Redo"));
-                Reset();
+                var change = await CreateChangeMessage("Redo");
+                redos.Push(change);
                 var undo = undos.Pop();
-                InsertBlock(ItemSerializer.DeserializeContents(undo.Model), false);
+                var block = await Task.Run(() => ItemSerializer.DeserializeContents(undo.Model));
+                Reset();
+                InsertBlock(block, false);
             }
         }
 
-        public void Redo()
+        public async void Redo()
         {
             if (redos.Count > 0)
             {
-                undos.Push(CreateChangeMessage("Undo"));
-                Reset();
+                var change = await CreateChangeMessage("Undo");
+                undos.Push(change);
                 var redo = redos.Pop();
-                InsertBlock(ItemSerializer.DeserializeContents(redo.Model), false);
+                var block = await Task.Run(() => ItemSerializer.DeserializeContents(redo.Model));
+                Reset();
+                InsertBlock(block, false);
             }
         }
 
@@ -2912,16 +2924,11 @@ namespace Sheet
         {
             try
             {
-                Copy();
-                RegisterChange("Cut");
-
                 if (BlockEditor.HaveSelected(selected))
                 {
+                    RegisterChange("Cut");
+                    Copy();
                     Delete();
-                }
-                else
-                {
-                    Reset();
                 }
             }
             catch(Exception ex)
@@ -2949,12 +2956,12 @@ namespace Sheet
             }
         }
 
-        public void Paste()
+        public async void Paste()
         {
             try
             {
                 var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
-                var block = ItemSerializer.DeserializeContents(text);
+                var block = await ItemSerializer.DeserializeContents(text);
                 InsertBlock(block, true);
                 //var block = JsonConvert.DeserializeObject<BlockItem>(text);
                 //InsertBlock(block, true);
@@ -3003,7 +3010,7 @@ namespace Sheet
             return block;
         }
 
-        private void LoadStandardLibrary()
+        private async void LoadStandardLibrary()
         {
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
             if (assembly == null)
@@ -3017,7 +3024,7 @@ namespace Sheet
             {
                 using (var reader = new System.IO.StreamReader(stream))
                 {
-                    string text = reader.ReadToEnd();
+                    string text = await reader.ReadToEndAsync();
                     if (text != null)
                     {
                         InitLibrary(text);
@@ -3026,21 +3033,21 @@ namespace Sheet
             }
         }
 
-        private void LoadLibrary(string fileName)
+        private async void LoadLibrary(string fileName)
         {
-            var text = ItemEditor.OpenText(fileName);
+            var text = await ItemEditor.OpenText(fileName);
             if (text != null)
             {
                 InitLibrary(text);
             }
         }
 
-        private void InitLibrary(string text)
+        private async void InitLibrary(string text)
         {
             if (Library != null && text != null)
             {
-                var blocks = ItemSerializer.DeserializeContents(text).Blocks;
-                Library.SetSource(blocks);
+                var block = await ItemSerializer.DeserializeContents(text);
+                Library.SetSource(block.Blocks);
             }
         }
 
@@ -3418,6 +3425,7 @@ namespace Sheet
 
             bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
             bool resetSelected = ctrl && BlockEditor.HaveSelected(selected) ? false : true;
+
             BlockEditor.HitTestSelectionRect(sheet, logic, selected, new Rect(x, y, width, height), resetSelected);
         }
 
@@ -3759,9 +3767,13 @@ namespace Sheet
 
         private void ExportToPdf(string fileName)
         {
-            var writer = new BlockPdfWriter();
             var page = CreatePage(true, false);
-            writer.Create(fileName, options.PageWidth, options.PageHeight, page);
+
+            Task.Run(() =>
+            {
+                var writer = new BlockPdfWriter();
+                writer.Create(fileName, options.PageWidth, options.PageHeight, page);
+            });
         }
 
         #endregion
@@ -3770,16 +3782,20 @@ namespace Sheet
 
         private void ExportToDxf(string fileName)
         {
-            var writer = new BlockDxfWriter();
             var page = CreatePage(false, false);
-            writer.Create(fileName, options.PageWidth, options.PageHeight, page);
+
+            Task.Run(() =>
+            {
+                var writer = new BlockDxfWriter();
+                writer.Create(fileName, options.PageWidth, options.PageHeight, page);
+            });
         }
 
         #endregion
 
         #region File Dialogs
 
-        public void Open()
+        public async void Open()
         {
             var dlg = new Microsoft.Win32.OpenFileDialog()
             {
@@ -3788,19 +3804,18 @@ namespace Sheet
 
             if (dlg.ShowDialog() == true)
             {
-                var text = ItemEditor.OpenText(dlg.FileName);
+                var text = await ItemEditor.OpenText(dlg.FileName);
                 if (text != null)
                 {
                     switch (dlg.FilterIndex)
                     {
                         case 1:
                             {
-                                RegisterChange("Open");
-                                Reset();
-
                                 try
                                 {
-                                    var block = ItemSerializer.DeserializeContents(text);
+                                    var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
+                                    RegisterChange("Open");
+                                    Reset();
                                     InsertBlock(block, false);
                                 }
                                 catch(Exception ex)
@@ -3813,13 +3828,12 @@ namespace Sheet
                         case 2:
                         case 3:
                             {
-                                RegisterChange("Open");
-                                Reset();
-
                                 try
                                 {
-                                    var block = JsonConvert.DeserializeObject<BlockItem>(text);
-                                    InsertBlock(block, false);
+                                     var block = await Task.Run(() => JsonConvert.DeserializeObject<BlockItem>(text));
+                                     RegisterChange("Open");
+                                     Reset();
+                                     InsertBlock(block, false);
                                 }
                                 catch(Exception ex)
                                 {
@@ -3850,8 +3864,12 @@ namespace Sheet
                             try
                             {
                                 var block = SerializeLogicBlock();
-                                var text = ItemSerializer.SerializeContents(block);
-                                ItemEditor.SaveText(dlg.FileName, text);
+
+                                Task.Run(() =>
+                                {
+                                    var text = ItemSerializer.SerializeContents(block);
+                                    ItemEditor.SaveText(dlg.FileName, text);
+                                });
                             }
                             catch (Exception ex)
                             {
@@ -3866,8 +3884,12 @@ namespace Sheet
                             try
                             {
                                 var block = SerializeLogicBlock();
-                                string text = JsonConvert.SerializeObject(block, Formatting.Indented);
-                                ItemEditor.SaveText(dlg.FileName, text);
+
+                                Task.Run(() =>
+                                {
+                                    string text = JsonConvert.SerializeObject(block, Formatting.Indented);
+                                    ItemEditor.SaveText(dlg.FileName, text);
+                                });
                             }
                             catch (Exception ex)
                             {
