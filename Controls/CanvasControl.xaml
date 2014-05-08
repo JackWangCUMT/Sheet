@@ -12,7 +12,7 @@
              FocusVisualStyle="{x:Null}"
              Background="Transparent" 
              UseLayoutRounding="False" SnapsToDevicePixels="True" 
-             TextOptions.TextFormattingMode="Ideal" TextOptions.TextRenderingMode="Auto" TextOptions.TextHintingMode="Auto">
+             TextOptions.TextFormattingMode="Ideal" TextOptions.TextRenderingMode="ClearType" TextOptions.TextHintingMode="Auto">
     <Canvas Width="1260"
             Height="891"
             Background="Transparent">
