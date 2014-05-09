@@ -116,7 +116,11 @@ namespace Sheet
                 {
                     foreach (var document in solution.Documents)
                     {
-                        AddDocumentEntry(zip, document.Name);
+                        if (document.Pages.Count <= 0)
+                        {
+                            AddDocumentEntry(zip, document.Name);
+                        }
+
                         foreach (var page in document.Pages)
                         {
                             AddPageEntry(zip, document.Name, page.Name, page.Content);
