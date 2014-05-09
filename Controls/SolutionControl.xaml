@@ -12,15 +12,15 @@
                   FocusVisualStyle="{x:Null}"
                   Background="Transparent"
                   BorderBrush="{x:Null}" 
-                  BorderThickness="0" >
+                  BorderThickness="0">
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate ItemsSource="{Binding Pages}">
                     <HierarchicalDataTemplate.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock/>
+                            <TextBlock Text="{Binding Name}"/>
                         </DataTemplate>
                     </HierarchicalDataTemplate.ItemTemplate>
-                    <TextBlock/>
+                    <TextBlock Text="{Binding Name}"/>
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>
