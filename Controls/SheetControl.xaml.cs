@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
 using System.IO.Packaging;
 using System.Linq;
 using System.Text;
@@ -18,6 +20,32 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
+    #region Entry Model
+
+    public abstract class Entry
+    {
+        public string Name { get; set; }
+        public bool IsNew { get; set; }
+        public bool IsModified { get; set; }
+    }
+
+    public class SolutionEntry : Entry
+    {
+        public List<DocumentEntry> Documents { get; set; }
+    }
+
+    public class DocumentEntry : Entry
+    {
+        public List<PageEntry> Pages { get; set; }
+    }
+
+    public class PageEntry : Entry
+    {
+        public string Content { get; set; }
+    }
+
+    #endregion
+
     #region Item Model
 
     public abstract class Item
