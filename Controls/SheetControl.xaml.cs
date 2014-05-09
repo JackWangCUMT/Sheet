@@ -46,6 +46,110 @@ namespace Sheet
 
     #endregion
 
+    #region Entry Editor
+
+    public static class EntryEditor
+    {
+        private static char[] entryNameSeparator = { '/' };
+
+        public static SolutionEntry OpenSolutionArchive(string path)
+        {
+            string solutionName = System.IO.Path.GetFileNameWithoutExtension(path);
+
+            var dict = new Dictionary<string, List<Tuple<string, string>>>();
+            var solution = new SolutionEntry() { Name = solutionName, Documents = new List<DocumentEntry>() };
+
+            using (var zip = ZipFile.Open(path, ZipArchiveMode.Read))
+            {
+                foreach (var entry in zip.Entries)
+                {
+                    var e = entry.FullName.Split(entryNameSeparator);
+                    if (e.Length == 1)
+                    {
+                        string key = e[0];
+
+                        if (!dict.ContainsKey(key))
+                        {
+                            dict.Add(key, new List<Tuple<string, string>>());
+                        }
+                    }
+                    else if (e.Length == 2)
+                    {
+                        string key = e[0];
+                        string data = e[1];
+                        string content = null;
+
+                        using (var reader = new StreamReader(entry.Open()))
+                        {
+                            content = reader.ReadToEnd();
+                        }
+
+                        if (!dict.ContainsKey(key))
+                        {
+                            dict.Add(key, new List<Tuple<string, string>>());
+                        }
+
+                        dict[key].Add(new Tuple<string, string>(data, content));
+                    }
+                }
+            }
+
+            foreach (var item in dict)
+            {
+                var document = new DocumentEntry() { Name = item.Key, Pages = new List<PageEntry>() };
+                solution.Documents.Add(document);
+                foreach (var tuple in item.Value)
+                {
+                    var page = new PageEntry() { Name = tuple.Item1, Content = tuple.Item2 };
+                    document.Pages.Add(page);
+                }
+            }
+
+            return solution;
+        }
+
+        public static void CreateSolutionArchive(SolutionEntry solution, string path)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Create))
+            {
+                using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Update))
+                {
+                    foreach (var document in solution.Documents)
+                    {
+                        AddDocumentEntry(zip, document.Name);
+                        foreach (var page in document.Pages)
+                        {
+                            AddPageEntry(zip, document.Name, page.Name, page.Content);
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void CreateSolutionArchive(SolutionEntry solution)
+        {
+            CreateSolutionArchive(solution, string.Concat(solution.Name, ".zip"));
+        }
+
+        public static void AddDocumentEntry(ZipArchive zip, string document)
+        {
+            var name = string.Concat(document, '/');
+            var entry = zip.CreateEntry(name);
+        }
+
+        public static void AddPageEntry(ZipArchive zip, string document, string page, string content)
+        {
+            var name = string.Concat(document, '/', page);
+            var entry = zip.CreateEntry(name);
+            using (var writer = new StreamWriter(entry.Open()))
+            {
+                writer.Write(content);
+            }
+        }
+    }
+
+    #endregion
+
     #region Item Model
 
     public abstract class Item
