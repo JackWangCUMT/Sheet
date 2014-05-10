@@ -47,3 +47,8 @@ Mouse:
     Mouse Wheel           Zoom
     Double Middle Click   Reset Pan and Zoom
     Mouse Over (+Shift)   Select signle item under mouse cursor.
+
+Icons:
+
+    Document, Edit by http://thedesignoffice.org/, http://www.thexamlproject.com/
+    Document by http://www.thenounproject.com/, http://www.thexamlproject.com/
