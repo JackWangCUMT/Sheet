@@ -52,6 +52,17 @@ namespace Sheet
     {
         private static char[] entryNameSeparator = { '/' };
 
+        public static void NewSolutionArchive(string path)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Create))
+            {
+                using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Update))
+                {
+                    EntryEditor.AddPageEntry(zip, "Document", "Page", "");
+                }
+            }
+        }
+
         public static SolutionEntry OpenSolutionArchive(string path)
         {
             string solutionName = System.IO.Path.GetFileNameWithoutExtension(path);
