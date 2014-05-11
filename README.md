@@ -6,11 +6,16 @@ Diagram drawing application.
 Keyboard  Shortcuts:
 
     (File)
+    Ctrl+Shift+N    New Solution
+    Ctrl+Shift+O    Open Solution
+    Ctrl+Shift+S    Save Solution
+    Ctrl+Shift+C    Close Solution
     Ctrl+O          Open
     Ctrl+S          Save
     Ctrl+E          Export
     Ctrl+L          Library
     Ctrl+D          Database
+    Alt+F4          Exit
     (Edit)
     Ctrl+Z          Undo
     Ctrl+Y          Redo

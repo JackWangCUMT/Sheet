@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -98,22 +99,33 @@ namespace Sheet
             }
 
             bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
+            bool shift = (Keyboard.Modifiers & ModifierKeys.Shift) > 0;
 
             switch (e.Key)
             {
                 // Ctrl+O: Open
+                // Ctrl+Shift+O: Open Solution
                 case Key.O:
-                    if (ctrl)
+                    if (ctrl && !shift)
                     {
                         GetSheet().Open();
                     }
+                    else if (ctrl && shift)
+                    {
+                        OpenSolution();
+                    }
                     break;
                 // Ctrl+S: Save
+                // Ctrl+Shift+S: Save Solution
                 // S: Mode Selection
                 case Key.S:
-                    if (ctrl)
+                    if (ctrl && !shift)
                     {
                         GetSheet().Save();
+                    }
+                    else if (ctrl && shift)
+                    {
+                        SaveSolution();
                     }
                     else
                     {
@@ -176,10 +188,15 @@ namespace Sheet
                     }
                     break;
                 // Ctrl+C: Copy
+                // Ctrl+Shift+C: Close Solution
                 case Key.C:
-                    if (ctrl)
+                    if (ctrl && !shift)
                     {
                         GetSheet().Copy();
+                    }
+                    else if (ctrl && shift)
+                    {
+                        CloseSolution();
                     }
                     break;
                 // Ctrl+V: Paste
@@ -268,10 +285,18 @@ namespace Sheet
                 case Key.F:
                     GetSheet().ToggleFill();
                     break;
+                // Ctrl+Shift+N: New Solution
                 // N: Mode None
                 case Key.N:
-                    GetSheet().ModeNone();
-                    UpdateModeMenu();
+                    if (ctrl && shift)
+                    {
+                        NewSolution();
+                    }
+                    else
+                    {
+                        GetSheet().ModeNone();
+                        UpdateModeMenu();
+                    }
                     break;
                 // I: Mode Insert
                 case Key.I:
@@ -301,7 +326,132 @@ namespace Sheet
 
         #endregion
 
+        #region Solution
+
+        public string SolutionPath { get; set; }
+
+        public async void NewSolution()
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog()
+            {
+                Filter = "ZIP Files (*.zip)|*.zip|All Files (*.*)|*.*",
+                FileName = "solution"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    await NewSolution(dlg.FileName);
+                }
+                catch (Exception ex)
+                {
+                    Debug.Print(ex.Message);
+                    Debug.Print(ex.StackTrace);
+                }
+            }
+        }
+
+        private async Task NewSolution(string path)
+        {
+            await Task.Run(() => EntryEditor.NewSolutionArchive(path));
+            var solution = await Task.Run(() => EntryEditor.OpenSolutionArchive(path));
+
+            if (solution != null)
+            {
+                Solution.DataContext = null;
+                Solution.DataContext = solution;
+
+                SolutionPath = path;
+            }
+        }
+
+        public async void OpenSolution()
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog()
+            {
+                Filter = "ZIP Files (*.zip)|*.zip|All Files (*.*)|*.*"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    await OpenSolution(dlg.FileName);
+                }
+                catch (Exception ex)
+                {
+                    Debug.Print(ex.Message);
+                    Debug.Print(ex.StackTrace);
+                }
+            }
+        }
+
+        private async Task OpenSolution(string path)
+        {
+            var solution = await Task.Run(() => EntryEditor.OpenSolutionArchive(path));
+
+            if (solution != null)
+            {
+                Solution.DataContext = null;
+                Solution.DataContext = solution;
+
+                SolutionPath = path;
+            }
+        }
+
+        public void SaveSolution()
+        {
+            if (SolutionPath != null)
+            {
+                try
+                {
+                    var path = SolutionPath;
+                    var solution = Solution.DataContext as SolutionEntry;
+
+                    if (solution != null)
+                    {
+                        EntryEditor.CreateSolutionArchive(solution, path);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.Print(ex.Message);
+                    Debug.Print(ex.StackTrace);
+                }
+            }
+        }
+
+        private void CloseSolution()
+        {
+            SolutionPath = null;
+            Solution.DataContext = null;
+            GetSheet().Reset();
+        }
+
+        #endregion
+
         #region File Menu Events
+
+        private void FileNewSolution_Click(object sender, RoutedEventArgs e)
+        {
+            NewSolution();
+        }
+
+        private void FileOpenSolution_Click(object sender, RoutedEventArgs e)
+        {
+            OpenSolution();
+        }
+
+        private void FileSaveSolution_Click(object sender, RoutedEventArgs e)
+        {
+            SaveSolution();
+        }
+
+        private void FileCloseSolution_Click(object sender, RoutedEventArgs e)
+        {
+            CloseSolution();
+        }
 
         private void FileOpen_Click(object sender, RoutedEventArgs e)
         {

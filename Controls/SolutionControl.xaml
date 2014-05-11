@@ -6,7 +6,6 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="150">
     <UserControl.Resources>
-        
         <Style x:Key="{x:Type TreeViewItem}" TargetType="{x:Type TreeViewItem}">
             <Setter Property="Background" Value="Transparent" />
             <!--<Setter Property="HorizontalContentAlignment" Value="{Binding Path=HorizontalContentAlignment, RelativeSource={RelativeSource AncestorType={x:Type ItemsControl}}}" />-->
@@ -106,7 +105,35 @@
                 </Setter.Value>
             </Setter>
         </Style>
-        
+        <ContextMenu x:Key="PageContextMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+            <MenuItem x:Name="PageAdd" Header="_Add Page" Click="PageAdd_Click"/>
+            <MenuItem x:Name="PageDuplicate" Header="_Duplicate Page" Click="PageDuplicate_Click"/>
+            <MenuItem x:Name="PageRemove" Header="_Remove Page" Click="PageRemove_Click"/>
+            <Separator/>
+            <MenuItem x:Name="PageExport" Header="_Export Page" Click="PageExport_Click"/>
+        </ContextMenu>
+        <ContextMenu x:Key="DocumentContextMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+            <MenuItem x:Name="DocumentAddPage" Header="_Add Page" Click="DocumentAddPage_Click"/>
+            <Separator/>
+            <MenuItem x:Name="DocumentAdd" Header="_Add Document" Click="DocumentAdd_Click"/>
+            <MenuItem x:Name="DocumentDuplicate" Header="_Duplicate Document" Click="DocumentDuplicate_Click"/>
+            <MenuItem x:Name="DocumentRemove" Header="_Remove Document" Click="DocumentRemove_Click"/>
+            <Separator/>
+            <MenuItem x:Name="DocumentExport" Header="_Export Document" Click="DocumentExport_Click"/>
+        </ContextMenu>
+        <ContextMenu x:Key="TreeViewContextMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+            <MenuItem x:Name="TreeAddDocument" Header="_Add Document" Click="TreeAddDocument_Click"/>
+        </ContextMenu>
+        <Style x:Key="PageTreeViewItemStyle" BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="{x:Type TreeViewItem}">
+            <Setter Property="IsExpanded" Value="False"/>
+            <Setter Property="ContextMenu" Value="{StaticResource PageContextMenu}"/>
+            <EventSetter Event="TreeViewItem.MouseRightButtonDown" Handler="TreeViewItem_MouseRightButtonDown"/>
+        </Style>
+        <Style x:Key="DocumentTreeViewItemStyle" BasedOn="{StaticResource {x:Type TreeViewItem}}" TargetType="{x:Type TreeViewItem}">
+            <Setter Property="IsExpanded" Value="False"/>
+            <Setter Property="ContextMenu" Value="{StaticResource DocumentContextMenu}"/>
+            <EventSetter Event="TreeViewItem.MouseRightButtonDown" Handler="TreeViewItem_MouseRightButtonDown"/>
+        </Style>
     </UserControl.Resources>
     <Grid>
         <TreeView x:Name="SolutionTree" 
@@ -115,9 +142,12 @@
                   FocusVisualStyle="{x:Null}"
                   Background="Transparent"
                   BorderBrush="{x:Null}" 
-                  BorderThickness="0">
+                  BorderThickness="0"
+                  ContextMenu="{StaticResource TreeViewContextMenu}"
+                  ItemContainerStyle="{StaticResource DocumentTreeViewItemStyle}"
+                  SelectedItemChanged="TreeView_SelectedItemChanged">
             <TreeView.ItemTemplate>
-                <HierarchicalDataTemplate ItemsSource="{Binding Pages}">
+                <HierarchicalDataTemplate ItemsSource="{Binding Pages}" ItemContainerStyle="{StaticResource PageTreeViewItemStyle}">
                     <HierarchicalDataTemplate.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
