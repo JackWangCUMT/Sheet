@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -31,17 +32,27 @@ namespace Sheet
 
     public class SolutionEntry : Entry
     {
-        public List<DocumentEntry> Documents { get; set; }
+        public ObservableCollection<DocumentEntry> Documents { get; set; }
     }
 
     public class DocumentEntry : Entry
     {
-        public List<PageEntry> Pages { get; set; }
+        public SolutionEntry Solution { get; set; }
+        public ObservableCollection<PageEntry> Pages { get; set; }
     }
 
     public class PageEntry : Entry
     {
+        public DocumentEntry Document { get; set; }
         public string Content { get; set; }
+    }
+
+    public interface IEntryEditor
+    {
+        void Set(string text);
+        string Get();
+        void Export(string text);
+        void Export(IEnumerable<string> texts);
     }
 
     #endregion
@@ -58,7 +69,7 @@ namespace Sheet
             {
                 using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Update))
                 {
-                    EntryEditor.AddPageEntry(zip, "Document", "Page", "");
+                    EntryEditor.AddPageEntry(zip, "Document0", "Page", "");
                 }
             }
         }
@@ -68,7 +79,7 @@ namespace Sheet
             string solutionName = System.IO.Path.GetFileNameWithoutExtension(path);
 
             var dict = new Dictionary<string, List<Tuple<string, string>>>();
-            var solution = new SolutionEntry() { Name = solutionName, Documents = new List<DocumentEntry>() };
+            var solution = new SolutionEntry() { Name = solutionName, Documents = new ObservableCollection<DocumentEntry>() };
 
             using (var zip = ZipFile.Open(path, ZipArchiveMode.Read))
             {
@@ -107,11 +118,11 @@ namespace Sheet
 
             foreach (var item in dict)
             {
-                var document = new DocumentEntry() { Name = item.Key, Pages = new List<PageEntry>() };
+                var document = new DocumentEntry() { Name = item.Key, Pages = new ObservableCollection<PageEntry>(), Solution = solution };
                 solution.Documents.Add(document);
                 foreach (var tuple in item.Value)
                 {
-                    var page = new PageEntry() { Name = tuple.Item1, Content = tuple.Item2 };
+                    var page = new PageEntry() { Name = tuple.Item1, Content = tuple.Item2, Document = document };
                     document.Pages.Add(page);
                 }
             }
@@ -2620,7 +2631,7 @@ namespace Sheet
 
     #endregion
 
-    public partial class SheetControl : UserControl
+    public partial class SheetControl : UserControl, IEntryEditor
     {
         #region Fields
 
@@ -2788,6 +2799,51 @@ namespace Sheet
             AdjustThickness(frameBlock, options.FrameThickness / options.ZoomFactors[zoomIndex]);
             LoadStandardLibrary();
             Focus();
+        }
+
+        #endregion
+
+        #region Entry Editor
+
+        public async void Set(string text)
+        {
+            try
+            {
+                if (text == null)
+                {
+                    ResetChanges();
+                    Reset();
+                }
+                else
+                {
+                    var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
+                    ResetChanges();
+                    Reset();
+                    InsertBlock(block, false);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
+        }
+
+        public string Get()
+        {
+            var block = SerializeLogicBlock();
+            var text = ItemSerializer.SerializeContents(block);
+            return text;
+        }
+
+        public void Export(string text)
+        {
+            // TODO: 
+        }
+
+        public void Export(IEnumerable<string> texts)
+        {
+            // TODO: 
         }
 
         #endregion
@@ -3061,6 +3117,12 @@ namespace Sheet
         {
             var change = await CreateChangeMessage(message);
             undos.Push(change);
+            redos.Clear();
+        }
+
+        public void ResetChanges()
+        {
+            undos.Clear();
             redos.Clear();
         }
 

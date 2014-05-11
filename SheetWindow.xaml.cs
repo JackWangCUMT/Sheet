@@ -34,6 +34,7 @@ namespace Sheet
         {
             Sheet.Library = Library;
             Sheet.Database = Csv;
+            Solution.EntryEditor = Sheet;
             UpdateModeMenu();
             CreateTestDatabase();
         }
@@ -411,6 +412,7 @@ namespace Sheet
 
                     if (solution != null)
                     {
+                        Solution.UpdateSelectedPage();
                         EntryEditor.CreateSolutionArchive(solution, path);
                     }
                 }
