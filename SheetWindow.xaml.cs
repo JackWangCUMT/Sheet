@@ -34,7 +34,7 @@ namespace Sheet
         {
             Sheet.Library = Library;
             Sheet.Database = Csv;
-            Solution.EntryEditor = Sheet;
+            Solution.Controller = Sheet;
             UpdateModeMenu();
             CreateTestDatabase();
         }

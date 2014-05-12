@@ -47,7 +47,7 @@ namespace Sheet
         public string Content { get; set; }
     }
 
-    public interface IEntryEditor
+    public interface IEntryController
     {
         void Set(string text);
         string Get();
@@ -61,7 +61,13 @@ namespace Sheet
 
     public static class EntryEditor
     {
+        #region Fields
+
         private static char[] entryNameSeparator = { '/' };
+
+        #endregion
+
+        #region Archive
 
         public static void NewSolutionArchive(string path)
         {
@@ -118,11 +124,11 @@ namespace Sheet
 
             foreach (var item in dict)
             {
-                var document = new DocumentEntry() { Name = item.Key, Pages = new ObservableCollection<PageEntry>(), Solution = solution };
+                var document = EntryEditor.CreateDocument(solution, item.Key);
                 solution.Documents.Add(document);
                 foreach (var tuple in item.Value)
                 {
-                    var page = new PageEntry() { Name = tuple.Item1, Content = tuple.Item2, Document = document };
+                    var page = EntryEditor.CreatePage(document, tuple.Item2, tuple.Item1);
                     document.Pages.Add(page);
                 }
             }
@@ -171,7 +177,206 @@ namespace Sheet
             {
                 writer.Write(content);
             }
+        } 
+
+        #endregion
+
+        #region Factory
+
+        public static PageEntry CreatePage(DocumentEntry document, string content, string name = null)
+        {
+            var page = new PageEntry()
+            {
+                Name = name == null ? "Page" : name,
+                Content = content,
+                Document = document
+            };
+            return page;
         }
+
+        public static DocumentEntry CreateDocument(SolutionEntry solution, string name = null)
+        {
+            var document = new DocumentEntry()
+            {
+                Name = name == null ? string.Concat("Document", solution.Documents.Count) : name,
+                Pages = new ObservableCollection<PageEntry>(),
+                Solution = solution
+            };
+            return document;
+        }
+
+        #endregion
+
+        #region Page
+
+        public static PageEntry AddPage(DocumentEntry document, string content)
+        {
+            var page = CreatePage(document, content);
+            document.Pages.Add(page);
+            return page;
+        }
+
+        public static PageEntry AddPageBefore(DocumentEntry document, PageEntry beofore, string content)
+        {
+            var page = CreatePage(document, content);
+            int index = document.Pages.IndexOf(beofore);
+            document.Pages.Insert(index, page);
+            return page;
+        }
+
+        public static PageEntry AddPageAfter(DocumentEntry document, PageEntry after, string content)
+        {
+            var page = CreatePage(document, content);
+            int index = document.Pages.IndexOf(after);
+            document.Pages.Insert(index + 1, page);
+            return page;
+        }
+
+        public static void AddPageAfter(object item)
+        {
+            if (item != null && item is PageEntry)
+            {
+                var page = item as PageEntry;
+                var document = page.Document;
+                if (document != null)
+                {
+                    AddPageAfter(document, page, "");
+                }
+            }
+        }
+
+        public static void AddPageBefore(object item)
+        {
+            if (item != null && item is PageEntry)
+            {
+                var page = item as PageEntry;
+                var document = page.Document;
+                if (document != null)
+                {
+                    AddPageBefore(document, page, "");
+                }
+            }
+        }
+
+        public static void DuplicatePage(object item)
+        {
+            if (item != null && item is PageEntry)
+            {
+                var page = item as PageEntry;
+                var document = page.Document;
+                if (document != null)
+                {
+                    AddPageAfter(document, page, page.Content);
+                }
+            }
+        }
+
+        public static void RemovePage(object item)
+        {
+            if (item != null && item is PageEntry)
+            {
+                var page = item as PageEntry;
+                var document = page.Document;
+                if (document != null)
+                {
+                    document.Pages.Remove(page);
+                }
+            }
+        }
+
+        #endregion
+
+        #region Document
+
+        public static DocumentEntry AddDocumentBefore(SolutionEntry solution, DocumentEntry after)
+        {
+            var document = CreateDocument(solution);
+            int index = solution.Documents.IndexOf(after);
+            solution.Documents.Insert(index, document);
+            return document;
+        }
+
+        public static DocumentEntry AddDocumentAfter(SolutionEntry solution, DocumentEntry after)
+        {
+            var document = CreateDocument(solution);
+            int index = solution.Documents.IndexOf(after);
+            solution.Documents.Insert(index + 1, document);
+            return document;
+        }
+
+        public static DocumentEntry AddDocument(SolutionEntry solution)
+        {
+            var document = CreateDocument(solution);
+            solution.Documents.Add(document);
+            return document;
+        }
+
+        public static void DocumentAddPage(object item)
+        {
+            if (item != null && item is DocumentEntry)
+            {
+                var document = item as DocumentEntry;
+                AddPage(document, "");
+            }
+        }
+
+        public static void AddDocumentAfter(object item)
+        {
+            if (item != null && item is DocumentEntry)
+            {
+                var document = item as DocumentEntry;
+                var solution = document.Solution;
+                if (solution != null)
+                {
+                    AddDocumentAfter(solution, document);
+                }
+            }
+        }
+
+        public static void AddDocumentBefore(object item)
+        {
+            if (item != null && item is DocumentEntry)
+            {
+                var document = item as DocumentEntry;
+                var solution = document.Solution;
+                if (solution != null)
+                {
+                    AddDocumentBefore(solution, document);
+                }
+            }
+        }
+
+        public static void DulicateDocument(object item)
+        {
+            if (item != null && item is DocumentEntry)
+            {
+                var document = item as DocumentEntry;
+                var solution = document.Solution;
+                if (solution != null)
+                {
+                    var duplicate = AddDocumentAfter(solution, document);
+                    foreach (var page in document.Pages)
+                    {
+                        AddPage(duplicate, page.Content);
+                    }
+                }
+            }
+        }
+
+        public static void RemoveDocument(object item)
+        {
+            if (item != null && item is DocumentEntry)
+            {
+                var document = item as DocumentEntry;
+                var solution = document.Solution;
+                if (solution != null)
+                {
+                    solution.Documents.Remove(document);
+                }
+            }
+        }
+
+        #endregion
     }
 
     #endregion
@@ -292,7 +497,7 @@ namespace Sheet
         int Add(string[] item);
     }
 
-    public interface ITextEditor
+    public interface ITextController
     {
         void Set(Action<string> ok, Action cancel, string title, string label, string text);
     }
@@ -2637,7 +2842,7 @@ namespace Sheet
 
     #endregion
 
-    public partial class SheetControl : UserControl, IEntryEditor
+    public partial class SheetControl : UserControl, IEntryController
     {
         #region Fields
 

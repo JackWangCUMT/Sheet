@@ -14,7 +14,7 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
-    public partial class TextControl : UserControl, ITextEditor
+    public partial class TextControl : UserControl, ITextController
     {
         #region Constructor
 
@@ -37,7 +37,7 @@ namespace Sheet
 
         #endregion
 
-        #region ITextEditor
+        #region ITextController
 
         public void Set(Action<string> ok, Action cancel, string title, string label, string text)
         {
