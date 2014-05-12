@@ -100,6 +100,166 @@ namespace Sheet
             }
         }
 
+        private PageEntry AddPage(DocumentEntry document, PageEntry after, string content)
+        {
+            var page = new PageEntry()
+            {
+                Name = "Page",
+                Content = content,
+                Document = document
+            };
+
+            if (after != null)
+            {
+                int index = document.Pages.IndexOf(after);
+                document.Pages.Insert(index + 1, page);
+            }
+            else
+            {
+                document.Pages.Add(page);
+            }
+
+            return page;
+        }
+
+        private DocumentEntry AddDocument(SolutionEntry solution, DocumentEntry after)
+        {
+            var document = new DocumentEntry()
+            {
+                Name = string.Concat("Document", solution.Documents.Count),
+                Pages = new ObservableCollection<PageEntry>(),
+                Solution = solution
+            };
+
+            if (after != null)
+            {
+                int index = solution.Documents.IndexOf(after);
+                solution.Documents.Insert(index + 1, document);
+            }
+            else
+            {
+                solution.Documents.Add(document);
+            }
+
+            return document;
+        }
+
+        private void AddPageAfter(object item)
+        {
+            if (item != null && item is PageEntry)
+            {
+                var page = item as PageEntry;
+                var document = page.Document;
+                if (document != null)
+                {
+                    AddPage(document, page, "");
+                }
+            }
+        }
+
+        private void DuplicatePage(object item)
+        {
+            if (item != null && item is PageEntry)
+            {
+                var page = item as PageEntry;
+                var document = page.Document;
+                if (document != null)
+                {
+                    AddPage(document, page, page.Content);
+                }
+            }
+        }
+
+        private void RemovePage(object item)
+        {
+            if (item != null && item is PageEntry)
+            {
+                var page = item as PageEntry;
+                var document = page.Document;
+                if (document != null)
+                {
+                    document.Pages.Remove(page);
+                }
+            }
+        }
+
+        private void ExportPage(object item)
+        {
+            if (EntryEditor != null)
+            {
+                if (item != null && item is PageEntry)
+                {
+                    var page = item as PageEntry;
+                    EntryEditor.Export(page.Content);
+                }
+            }
+        } 
+
+        private void DocumentAddPage(object item)
+        {
+            if (item != null && item is DocumentEntry)
+            {
+                var document = item as DocumentEntry;
+                AddPage(document, null, "");
+            }
+        }
+
+        private void AddDocumentAfter(object item)
+        {
+            if (item != null && item is DocumentEntry)
+            {
+                var document = item as DocumentEntry;
+                var solution = document.Solution;
+                if (solution != null)
+                {
+                    AddDocument(solution, document);
+                }
+            }
+        }
+
+        private void DulicateDocument(object item)
+        {
+            if (item != null && item is DocumentEntry)
+            {
+                var document = item as DocumentEntry;
+                var solution = document.Solution;
+                if (solution != null)
+                {
+                    var duplicate = AddDocument(solution, document);
+                    foreach (var page in document.Pages)
+                    {
+                        AddPage(duplicate, null, page.Content);
+                    }
+                }
+            }
+        }
+
+        private void RemoveDocument(object item)
+        {
+            if (item != null && item is DocumentEntry)
+            {
+                var document = item as DocumentEntry;
+                var solution = document.Solution;
+                if (solution != null)
+                {
+                    solution.Documents.Remove(document);
+                }
+            }
+        }
+
+        private void ExportDocument(object item)
+        {
+            if (EntryEditor != null)
+            {
+                if (item != null && item is DocumentEntry)
+                {
+                    var document = item as DocumentEntry;
+                    var texts = document.Pages.Select(x => x.Content);
+                    EntryEditor.Export(texts);
+                }
+            }
+        } 
+
         #endregion
 
         #region TreeView Events
@@ -126,31 +286,23 @@ namespace Sheet
 
         private void PageAdd_Click(object sender, RoutedEventArgs e)
         {
-            // TODO:
+            AddPageAfter(SolutionTree.SelectedItem);
         }
 
         private void PageDuplicate_Click(object sender, RoutedEventArgs e)
         {
-            // TODO:
+            DuplicatePage(SolutionTree.SelectedItem);
         }
 
         private void PageRemove_Click(object sender, RoutedEventArgs e)
         {
-            // TODO:
+            RemovePage(SolutionTree.SelectedItem);
         }
 
         private void PageExport_Click(object sender, RoutedEventArgs e)
         {
-            if (EntryEditor != null)
-            {
-                var item = SolutionTree.SelectedItem;
-                if (item != null && item is PageEntry)
-                {
-                    var page = item as PageEntry;
-                    EntryEditor.Export(page.Content);
-                }
-            }
-        } 
+            ExportPage(SolutionTree.SelectedItem);
+        }
 
         #endregion
 
@@ -158,44 +310,28 @@ namespace Sheet
 
         private void DocumentAddPage_Click(object sender, RoutedEventArgs e)
         {
-            var document = SolutionTree.SelectedItem as DocumentEntry;
-            var page = new PageEntry() 
-            { 
-                Name = "Page", 
-                Content = "", 
-                Document = document 
-            };
-            document.Pages.Add(page);
+            DocumentAddPage(SolutionTree.SelectedItem);
         }
 
         private void DocumentAdd_Click(object sender, RoutedEventArgs e)
         {
-            // TODO:
+            AddDocumentAfter(SolutionTree.SelectedItem);
         }
 
         private void DocumentDuplicate_Click(object sender, RoutedEventArgs e)
         {
-            // TODO:
+            DulicateDocument(SolutionTree.SelectedItem);
         }
 
         private void DocumentRemove_Click(object sender, RoutedEventArgs e)
         {
-            // TODO:
+            RemoveDocument(SolutionTree.SelectedItem);
         }
 
         private void DocumentExport_Click(object sender, RoutedEventArgs e)
         {
-            if (EntryEditor != null)
-            {
-                var item = SolutionTree.SelectedItem;
-                if (item != null && item is DocumentEntry)
-                {
-                    var document = item as DocumentEntry;
-                    var texts = document.Pages.Select(x => x.Content);
-                    EntryEditor.Export(texts);
-                }
-            }
-        } 
+            ExportDocument(SolutionTree.SelectedItem);
+        }
 
         #endregion
 
@@ -203,16 +339,9 @@ namespace Sheet
 
         private void TreeAddDocument_Click(object sender, RoutedEventArgs e)
         {
-            var solution = DataContext as SolutionEntry;
-            if (solution != null)
+            if (DataContext != null && DataContext is SolutionEntry)
             {
-                var document = new DocumentEntry() 
-                { 
-                    Name = string.Concat("Document", solution.Documents.Count), 
-                    Pages = new ObservableCollection<PageEntry>(), 
-                    Solution = solution 
-                };
-                solution.Documents.Add(document);
+                AddDocument(DataContext as SolutionEntry, null);
             }
         }
 
