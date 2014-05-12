@@ -106,8 +106,11 @@
             </Setter>
         </Style>
         <ContextMenu x:Key="PageContextMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
-            <MenuItem x:Name="PageAdd" Header="_Add Page" Click="PageAdd_Click"/>
+            <MenuItem x:Name="PageInsertBefore" Header="Insert Page _Before" Click="PageInsertBefore_Click"/>
+            <MenuItem x:Name="PageInsertAfter" Header="Insert Page _After" Click="PageInsertAfter_Click"/>
+            <Separator/>
             <MenuItem x:Name="PageDuplicate" Header="_Duplicate Page" Click="PageDuplicate_Click"/>
+            <Separator/>
             <MenuItem x:Name="PageRemove" Header="_Remove Page" Click="PageRemove_Click"/>
             <Separator/>
             <MenuItem x:Name="PageExport" Header="_Export Page" Click="PageExport_Click"/>
@@ -115,8 +118,11 @@
         <ContextMenu x:Key="DocumentContextMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
             <MenuItem x:Name="DocumentAddPage" Header="_Add Page" Click="DocumentAddPage_Click"/>
             <Separator/>
-            <MenuItem x:Name="DocumentAdd" Header="_Add Document" Click="DocumentAdd_Click"/>
+            <MenuItem x:Name="DocumentInsertBofre" Header="Insert Document _Beofre" Click="DocumentInsertBofre_Click"/>
+            <MenuItem x:Name="DocumentInsertAfter" Header="Insert Document _After" Click="DocumentInsertAfter_Click"/>
+            <Separator/>
             <MenuItem x:Name="DocumentDuplicate" Header="_Duplicate Document" Click="DocumentDuplicate_Click"/>
+            <Separator/>
             <MenuItem x:Name="DocumentRemove" Header="_Remove Document" Click="DocumentRemove_Click"/>
             <Separator/>
             <MenuItem x:Name="DocumentExport" Header="_Export Document" Click="DocumentExport_Click"/>

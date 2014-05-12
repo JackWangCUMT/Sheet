@@ -34,7 +34,7 @@ namespace Sheet
 
         #endregion
 
-        #region Entries
+        #region Entries Editor
 
         private void EntryChanged(object oldValue, object newValue)
         {
@@ -100,7 +100,11 @@ namespace Sheet
             }
         }
 
-        private PageEntry AddPage(DocumentEntry document, PageEntry after, string content)
+        #endregion
+
+        #region Solution Editor
+
+        private static PageEntry CreatePage(DocumentEntry document, string content)
         {
             var page = new PageEntry()
             {
@@ -108,21 +112,10 @@ namespace Sheet
                 Content = content,
                 Document = document
             };
-
-            if (after != null)
-            {
-                int index = document.Pages.IndexOf(after);
-                document.Pages.Insert(index + 1, page);
-            }
-            else
-            {
-                document.Pages.Add(page);
-            }
-
             return page;
         }
 
-        private DocumentEntry AddDocument(SolutionEntry solution, DocumentEntry after)
+        private static DocumentEntry CreateDocument(SolutionEntry solution)
         {
             var document = new DocumentEntry()
             {
@@ -130,17 +123,52 @@ namespace Sheet
                 Pages = new ObservableCollection<PageEntry>(),
                 Solution = solution
             };
+            return document;
+        }
 
-            if (after != null)
-            {
-                int index = solution.Documents.IndexOf(after);
-                solution.Documents.Insert(index + 1, document);
-            }
-            else
-            {
-                solution.Documents.Add(document);
-            }
+        private PageEntry AddPage(DocumentEntry document, string content)
+        {
+            var page = CreatePage(document, content);
+            document.Pages.Add(page);
+            return page;
+        }
 
+        private PageEntry AddPageBefore(DocumentEntry document, PageEntry beofore, string content)
+        {
+            var page = CreatePage(document, content);
+            int index = document.Pages.IndexOf(beofore);
+            document.Pages.Insert(index, page);
+            return page;
+        }
+
+        private PageEntry AddPageAfter(DocumentEntry document, PageEntry after, string content)
+        {
+            var page = CreatePage(document, content);
+            int index = document.Pages.IndexOf(after);
+            document.Pages.Insert(index + 1, page);
+            return page;
+        }
+
+        private DocumentEntry AddDocumentBefore(SolutionEntry solution, DocumentEntry after)
+        {
+            var document = CreateDocument(solution);
+            int index = solution.Documents.IndexOf(after);
+            solution.Documents.Insert(index, document);
+            return document;
+        }
+
+        private DocumentEntry AddDocumentAfter(SolutionEntry solution, DocumentEntry after)
+        {
+            var document = CreateDocument(solution);
+            int index = solution.Documents.IndexOf(after);
+            solution.Documents.Insert(index + 1, document);
+            return document;
+        }
+
+        private DocumentEntry AddDocument(SolutionEntry solution)
+        {
+            var document = CreateDocument(solution);
+            solution.Documents.Add(document);
             return document;
         }
 
@@ -152,7 +180,20 @@ namespace Sheet
                 var document = page.Document;
                 if (document != null)
                 {
-                    AddPage(document, page, "");
+                    AddPageAfter(document, page, "");
+                }
+            }
+        }
+
+        private void AddPageBefore(object item)
+        {
+            if (item != null && item is PageEntry)
+            {
+                var page = item as PageEntry;
+                var document = page.Document;
+                if (document != null)
+                {
+                    AddPageBefore(document, page, "");
                 }
             }
         }
@@ -165,7 +206,7 @@ namespace Sheet
                 var document = page.Document;
                 if (document != null)
                 {
-                    AddPage(document, page, page.Content);
+                    AddPageAfter(document, page, page.Content);
                 }
             }
         }
@@ -200,7 +241,7 @@ namespace Sheet
             if (item != null && item is DocumentEntry)
             {
                 var document = item as DocumentEntry;
-                AddPage(document, null, "");
+                AddPage(document, "");
             }
         }
 
@@ -212,7 +253,20 @@ namespace Sheet
                 var solution = document.Solution;
                 if (solution != null)
                 {
-                    AddDocument(solution, document);
+                    AddDocumentAfter(solution, document);
+                }
+            }
+        }
+
+        private void AddDocumentBefore(object item)
+        {
+            if (item != null && item is DocumentEntry)
+            {
+                var document = item as DocumentEntry;
+                var solution = document.Solution;
+                if (solution != null)
+                {
+                    AddDocumentBefore(solution, document);
                 }
             }
         }
@@ -225,10 +279,10 @@ namespace Sheet
                 var solution = document.Solution;
                 if (solution != null)
                 {
-                    var duplicate = AddDocument(solution, document);
+                    var duplicate = AddDocumentAfter(solution, document);
                     foreach (var page in document.Pages)
                     {
-                        AddPage(duplicate, null, page.Content);
+                        AddPage(duplicate, page.Content);
                     }
                 }
             }
@@ -284,7 +338,12 @@ namespace Sheet
 
         #region Page Menu Events
 
-        private void PageAdd_Click(object sender, RoutedEventArgs e)
+        private void PageInsertBefore_Click(object sender, RoutedEventArgs e)
+        {
+            AddPageBefore(SolutionTree.SelectedItem);
+        }
+
+        private void PageInsertAfter_Click(object sender, RoutedEventArgs e)
         {
             AddPageAfter(SolutionTree.SelectedItem);
         }
@@ -313,7 +372,12 @@ namespace Sheet
             DocumentAddPage(SolutionTree.SelectedItem);
         }
 
-        private void DocumentAdd_Click(object sender, RoutedEventArgs e)
+        private void DocumentInsertBofre_Click(object sender, RoutedEventArgs e)
+        {
+            AddDocumentBefore(SolutionTree.SelectedItem);
+        }
+
+        private void DocumentInsertAfter_Click(object sender, RoutedEventArgs e)
         {
             AddDocumentAfter(SolutionTree.SelectedItem);
         }
@@ -341,7 +405,7 @@ namespace Sheet
         {
             if (DataContext != null && DataContext is SolutionEntry)
             {
-                AddDocument(DataContext as SolutionEntry, null);
+                AddDocument(DataContext as SolutionEntry);
             }
         }
 
