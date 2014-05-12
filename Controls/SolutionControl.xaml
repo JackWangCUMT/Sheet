@@ -158,7 +158,7 @@
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
                                 <Path x:Name="Page" UseLayoutRounding="True" RenderOptions.EdgeMode="Aliased" SnapsToDevicePixels="True" Width="16" Height="16" Stretch="Uniform" Fill="LightGray" Data="F1 M 74.9329,1.52588e-005L 0,1.52588e-005L 0,133.333L 105.334,133.333L 105.334,28.9531L 74.9329,1.52588e-005 Z M 77.334,13.3347L 91.334,26.6667L 77.334,26.6667L 77.334,13.3347 Z M 8,125.333L 8,8.00002L 69.334,8.00002L 69.334,34.6667L 97.334,34.6667L 97.334,125.333L 8,125.333 Z "/>
-                                <TextBlock Margin="2,0,0,0" Text="{Binding Name}" Foreground="Black" FontWeight="Normal"/>
+                                <TextBlock Margin="2,0,0,0" Text="{Binding Name}"/>
                             </StackPanel>
                             <DataTemplate.Triggers>
                                 <DataTrigger Binding="{Binding Path=IsSelected, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
@@ -170,7 +170,7 @@
                     </HierarchicalDataTemplate.ItemTemplate>
                     <StackPanel Orientation="Horizontal" Margin="0,2,0,2">
                         <Path x:Name="Document" UseLayoutRounding="True" RenderOptions.EdgeMode="Aliased" SnapsToDevicePixels="True" Width="16" Height="16" Stretch="Uniform" Fill="LightGray" Data="F1 M 0,3.05176e-005L 0,29.22L 23.94,29.22L 23.94,7.95331L 16.1561,3.05176e-005L 0,3.05176e-005 Z M 3.30002,3.30005L 14.4,3.30005L 14.4,9.06003L 20.64,9.06003L 20.64,25.92L 3.30002,25.92L 3.30002,3.30005 Z M 5.70001,13.0283L 18.24,13.0283L 18.24,14.4L 5.70001,14.4L 5.70001,13.0283 Z M 5.70001,16.74L 18.24,16.74L 18.24,18.24L 5.70001,18.24L 5.70001,16.74 Z M 5.70001,20.58L 18.24,20.58L 18.24,22.1218L 5.70001,22.1218L 5.70001,20.58 Z "/>
-                        <TextBlock Margin="2,0,0,0" Text="{Binding Name}" Foreground="Black" FontWeight="Normal"/>
+                        <TextBlock Margin="2,0,0,0" Text="{Binding Name}"/>
                     </StackPanel>
                     <HierarchicalDataTemplate.Triggers>
                         <DataTrigger Binding="{Binding Path=IsExpanded, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
