@@ -266,7 +266,7 @@ namespace Sheet
                 var document = page.Document;
                 if (document != null)
                 {
-                    AddPageAfter(document, page, page.Content);
+                    AddPage(document, page.Content);
                 }
             }
         }
@@ -354,7 +354,7 @@ namespace Sheet
                 var solution = document.Solution;
                 if (solution != null)
                 {
-                    var duplicate = AddDocumentAfter(solution, document);
+                    var duplicate = AddDocument(solution);
                     foreach (var page in document.Pages)
                     {
                         AddPage(duplicate, page.Content);
@@ -3014,7 +3014,12 @@ namespace Sheet
 
         #endregion
 
-        #region Entry Editor
+        #region IEntryController
+
+        public IEnumerable<BlockItem> ToSingle(BlockItem block)
+        {
+            yield return block;
+        }
 
         public async void Set(string text)
         {
@@ -3049,12 +3054,14 @@ namespace Sheet
 
         public void Export(string text)
         {
-            // TODO: 
+            var block = ItemSerializer.DeserializeContents(text);
+            Export(ToSingle(block));
         }
 
         public void Export(IEnumerable<string> texts)
         {
-            // TODO: 
+            var blocks = texts.Select(text => ItemSerializer.DeserializeContents(text));
+            Export(blocks);
         }
 
         #endregion
@@ -4156,6 +4163,12 @@ namespace Sheet
 
         #region Export
 
+        private IEnumerable<BlockItem> CreateFromCurrent()
+        {
+            var block = BlockSerializer.SerializerBlockContents(logicBlock, 0, logicBlock.X, logicBlock.Y, logicBlock.DataId, "LOGIC");
+            return ToSingle(block);
+        }
+
         private BlockItem CreateGridBlock()
         {
             var grid = new BlockItem();
@@ -4186,7 +4199,7 @@ namespace Sheet
             return frame;
         }
 
-        private BlockItem CreatePage(bool enableFrame, bool enableGrid)
+        private BlockItem CreatePage(BlockItem block, bool enableFrame, bool enableGrid)
         {
             var page = new BlockItem();
             page.Init(0, 0.0, 0.0, -1, "");
@@ -4203,7 +4216,6 @@ namespace Sheet
                 page.Blocks.Add(frame);
             }
 
-            var block = BlockSerializer.SerializerBlockContents(logicBlock, 0, logicBlock.X, logicBlock.Y, logicBlock.DataId, "LOGIC");
             page.Blocks.Add(block);
 
             return page;
@@ -4213,14 +4225,14 @@ namespace Sheet
 
         #region Export To Pdf
 
-        private void ExportToPdf(string fileName)
+        private void ExportToPdf(IEnumerable<BlockItem> blocks, string fileName)
         {
-            var page = CreatePage(true, false);
+            var pages = blocks.Select(block => CreatePage(block, true, false)).ToList();
 
             Task.Run(() =>
             {
                 var writer = new BlockPdfWriter();
-                writer.Create(fileName, options.PageWidth, options.PageHeight, page);
+                writer.Create(fileName, options.PageWidth, options.PageHeight, pages);
             });
         }
 
@@ -4228,14 +4240,37 @@ namespace Sheet
 
         #region Export To Dxf
 
-        private void ExportToDxf(string fileName)
+        private void ExportToDxf(IEnumerable<BlockItem> blocks, string fileName)
         {
-            var page = CreatePage(false, false);
+            var pages = blocks.Select(block => CreatePage(block, false, false)).ToList();
 
             Task.Run(() =>
             {
                 var writer = new BlockDxfWriter();
-                writer.Create(fileName, options.PageWidth, options.PageHeight, page);
+
+                if (blocks.Count() > 1)
+                {
+                    string path = System.IO.Path.GetDirectoryName(fileName);
+                    string name = System.IO.Path.GetFileNameWithoutExtension(fileName);
+                    string extension = System.IO.Path.GetExtension(fileName);
+
+                    int counter = 0;
+                    foreach(var page in pages)
+                    {
+                        string fileNameWithCounter = System.IO.Path.Combine(path, string.Concat(name, '-', counter.ToString("000"), extension));
+                        writer.Create(fileNameWithCounter, options.PageWidth, options.PageHeight, page);
+                        counter++;
+                    }
+                }
+                else
+                {
+                    var page = pages.FirstOrDefault();
+                    if (page != null)
+                    {
+                        writer.Create(fileName, options.PageWidth, options.PageHeight, page);
+                    }
+                }
+
             });
         }
 
@@ -4352,6 +4387,18 @@ namespace Sheet
 
         public void Export()
         {
+            var blocks = CreateFromCurrent();
+            Export(blocks);
+        }
+
+        public void Export(SolutionEntry solution)
+        {
+            var texts = solution.Documents.SelectMany(document => document.Pages).Select(page => page.Content);
+            Export(texts);
+        }
+
+        public void Export(IEnumerable<BlockItem> blocks)
+        {
             var dlg = new Microsoft.Win32.SaveFileDialog()
             {
                 Filter = "PDF Documents (*.pdf)|*.pdf|DXF Documents (*.dxf)|*.dxf|All Files (*.*)|*.*",
@@ -4368,7 +4415,7 @@ namespace Sheet
                         {
                             try
                             {
-                                ExportToPdf(dlg.FileName);
+                                ExportToPdf(blocks, dlg.FileName);
                             }
                             catch (Exception ex)
                             {
@@ -4381,7 +4428,7 @@ namespace Sheet
                         {
                             try
                             {
-                                ExportToDxf(dlg.FileName);
+                                ExportToDxf(blocks, dlg.FileName);
                             }
                             catch (Exception ex)
                             {

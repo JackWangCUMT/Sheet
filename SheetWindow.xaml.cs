@@ -139,7 +139,14 @@ namespace Sheet
                 case Key.E:
                     if (ctrl)
                     {
-                        GetSheet().Export();
+                        if (Solution.DataContext != null)
+                        {
+                            GetSheet().Export(Solution.DataContext as SolutionEntry);
+                        }
+                        else
+                        {
+                            GetSheet().Export();
+                        }
                     }
                     else
                     {
@@ -467,7 +474,14 @@ namespace Sheet
 
         private void FileExport_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().Export();
+            if (Solution.DataContext != null)
+            {
+                GetSheet().Export(Solution.DataContext as SolutionEntry);
+            }
+            else
+            {
+                GetSheet().Export();
+            }
         }
 
         private void FileLibrary_Click(object sender, RoutedEventArgs e)
