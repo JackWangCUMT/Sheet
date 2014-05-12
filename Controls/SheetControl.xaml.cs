@@ -764,20 +764,26 @@ namespace Sheet
             return root;
         }
 
-        public async static Task<BlockItem> DeserializeContents(string model, ItemSerializeOptions options)
+        public static BlockItem DeserializeContents(string model, ItemSerializeOptions options)
         {
-            return await Task.Run(() =>
+            try
             {
                 string[] lines = model.Split(options.LineSeparators, StringSplitOptions.RemoveEmptyEntries);
                 int length = lines.Length;
                 int end = 0;
                 return DeserializeRootBlock(lines, length, ref end, "", 0, 0.0, 0.0, -1, options);
-            });
+            }
+            catch(Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
+            return null;
         }
 
-        public async static Task<BlockItem> DeserializeContents(string model)
+        public static BlockItem DeserializeContents(string model)
         {
-            return await DeserializeContents(model, ItemSerializeOptions.Default);
+            return DeserializeContents(model, ItemSerializeOptions.Default);
         }
 
         #endregion
@@ -3046,7 +3052,7 @@ namespace Sheet
         private async Task<BlockItem> CreateBlockItem(string name)
         {
             var text = SerializeBlockContents(0, 0.0, 0.0, -1, name, selectedBlock);
-            var block = await ItemSerializer.DeserializeContents(text);
+            var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
             Delete();
             InsertBlock(block, true);
             return block.Blocks.FirstOrDefault();
@@ -3090,7 +3096,7 @@ namespace Sheet
             if (BlockEditor.HaveSelected(selectedBlock))
             {
                 var text = ItemSerializer.SerializeContents(BlockSerializer.SerializerBlockContents(selectedBlock, 0, 0.0, 0.0, -1, "SELECTED"));
-                var block = await ItemSerializer.DeserializeContents(text);
+                var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
                 RegisterChange("Break Block");
                 Delete();
                 BlockEditor.AddBrokenBlock(logicSheet, block, logicBlock, selectedBlock, true, options.LineThickness / Zoom);
@@ -3197,7 +3203,8 @@ namespace Sheet
             try
             {
                 var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
-                var block = await ItemSerializer.DeserializeContents(text);
+                var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
+                RegisterChange("Paste");
                 InsertBlock(block, true);
                 //var block = JsonConvert.DeserializeObject<BlockItem>(text);
                 //InsertBlock(block, true);
@@ -3282,7 +3289,7 @@ namespace Sheet
         {
             if (Library != null && text != null)
             {
-                var block = await ItemSerializer.DeserializeContents(text);
+                var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
                 Library.SetSource(block.Blocks);
             }
         }
