@@ -1071,10 +1071,13 @@ namespace Sheet
 
             CancelSelectionRect();
 
+            // get selected items
             bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
             bool resetSelected = ctrl && BlockEditor.HaveSelected(selectedBlock) ? false : true;
-
             BlockEditor.HitTestSelectionRect(logicSheet, logicBlock, selectedBlock, new Rect(x, y, width, height), resetSelected);
+
+            // edit mode
+            TryToEditSelected();
         }
 
         private void CancelSelectionRect()
@@ -1657,10 +1660,65 @@ namespace Sheet
 
         #endregion
 
-        #region Edit Line
+        #region Edit
 
         private ItemType selectedType = ItemType.None;
-        private string selectedThumbTemplate = "<Thumb xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><Thumb.Template><ControlTemplate><Ellipse Fill=\"Red\" Stroke=\"Red\" Width=\"8\" Height=\"8\" Margin=\"-4,-4,0,0\"/></ControlTemplate></Thumb.Template></Thumb>";
+        private string editThumbTemplate = "<Thumb xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><Thumb.Template><ControlTemplate><Ellipse Fill=\"Red\" Stroke=\"Red\" Width=\"8\" Height=\"8\" Margin=\"-4,-4,0,0\"/></ControlTemplate></Thumb.Template></Thumb>";
+
+        private Thumb CreateEditThumb()
+        {
+            var stringReader = new System.IO.StringReader(editThumbTemplate);
+            var xmlReader = System.Xml.XmlReader.Create(stringReader);
+            return (Thumb)XamlReader.Load(xmlReader);
+        }
+
+        private bool TryToEditSelected()
+        {
+            if (BlockEditor.HaveOneLineSelected(selectedBlock))
+            {
+                InitLineEditor();
+                return true;
+            }
+            else if (BlockEditor.HaveOneRectangleSelected(selectedBlock))
+            {
+                InitRectangleEditor();
+                return true;
+            }
+            else if (BlockEditor.HaveOneEllipseSelected(selectedBlock))
+            {
+                InitEllipseEditor();
+                return true;
+            }
+            else if (BlockEditor.HaveOneTextSelected(selectedBlock))
+            {
+                InitTextEditor();
+                return true;
+            }
+            return false;
+        }
+
+        private void FinishEdit()
+        {
+            switch (selectedType)
+            {
+                case ItemType.Line:
+                    FinishLineEditor();
+                    break;
+                case ItemType.Rectangle:
+                    FinishRectangleEditor();
+                    break;
+                case ItemType.Ellipse:
+                    FinishEllipseEditor();
+                    break;
+                case ItemType.Text:
+                    FinishTextEditor();
+                    break;
+            }
+        }
+
+        #endregion
+
+        #region Edit Line
 
         private Line selectedLine = null;
         private Thumb lineThumbStart = null;
@@ -1680,15 +1738,13 @@ namespace Sheet
 
                 if (lineThumbStart == null)
                 {
-                    var stringReader = new System.IO.StringReader(selectedThumbTemplate);
-                    var xmlReader = System.Xml.XmlReader.Create(stringReader);
-                    lineThumbStart = (Thumb)XamlReader.Load(xmlReader);
-                    lineThumbStart.DragDelta += (_sender, _e) =>
+                    lineThumbStart = CreateEditThumb();
+                    lineThumbStart.DragDelta += (sender, e) =>
                     {
                         if (selectedLine != null)
                         {
-                            double x = ItemEditor.Snap(selectedLine.X1 + _e.HorizontalChange, options.SnapSize);
-                            double y = ItemEditor.Snap(selectedLine.Y1 + _e.VerticalChange, options.SnapSize);
+                            double x = ItemEditor.Snap(selectedLine.X1 + e.HorizontalChange, options.SnapSize);
+                            double y = ItemEditor.Snap(selectedLine.Y1 + e.VerticalChange, options.SnapSize);
                             selectedLine.X1 = x;
                             selectedLine.Y1 = y;
                             Canvas.SetLeft(lineThumbStart, x);
@@ -1699,15 +1755,13 @@ namespace Sheet
 
                 if (lineThumbEnd == null)
                 {
-                    var stringReader = new System.IO.StringReader(selectedThumbTemplate);
-                    var xmlReader = System.Xml.XmlReader.Create(stringReader);
-                    lineThumbEnd = (Thumb)XamlReader.Load(xmlReader);
-                    lineThumbEnd.DragDelta += (_sender, _e) =>
+                    lineThumbEnd = CreateEditThumb();
+                    lineThumbEnd.DragDelta += (sender, e) =>
                     {
                         if (selectedLine != null)
                         {
-                            double x = ItemEditor.Snap(selectedLine.X2 + _e.HorizontalChange, options.SnapSize);
-                            double y = ItemEditor.Snap(selectedLine.Y2 + _e.VerticalChange, options.SnapSize);
+                            double x = ItemEditor.Snap(selectedLine.X2 + e.HorizontalChange, options.SnapSize);
+                            double y = ItemEditor.Snap(selectedLine.Y2 + e.VerticalChange, options.SnapSize);
                             selectedLine.X2 = x;
                             selectedLine.Y2 = y;
                             Canvas.SetLeft(lineThumbEnd, x);
@@ -1753,19 +1807,43 @@ namespace Sheet
 
         #region Edit Rectangle
 
-        // TODO:
+        private void InitRectangleEditor()
+        {
+            // TODO:
+        }
+
+        private void FinishRectangleEditor()
+        {
+            // TODO:
+        }
 
         #endregion
 
         #region Edit Ellipse
 
-        // TODO:
+        private void InitEllipseEditor()
+        {
+            // TODO:
+        }
+
+        private void FinishEllipseEditor()
+        {
+            // TODO:
+        }
 
         #endregion
 
         #region Edit Text
 
-        // TODO:
+        private void InitTextEditor()
+        {
+            // TODO:
+        }
+
+        private void FinishTextEditor()
+        {
+            // TODO:
+        }
 
         #endregion
 
@@ -1775,43 +1853,21 @@ namespace Sheet
         {
             Focus();
 
+            // edit mode
             if (selectedType != ItemType.None)
             {
-                /*
-                BlockEditor.HitTestClick(logicSheet, logicBlock, selectedBlock, e.GetPosition(overlaySheet.GetParent()), options.HitTestSize, false, true);
-                if (!BlockEditor.HaveSelected(selectedBlock))
+                if (!((e.OriginalSource as FrameworkElement).TemplatedParent is Thumb))
                 {
                     BlockEditor.DeselectAll(selectedBlock);
-                    if (selectedLine != null)
-                    {
-                        BlockEditor.DeselectLine(selectedLine);
-                    }
-
-                    switch(selectedType)
-                    {
-                        case ItemType.Line:
-                            FinishLineEditor();
-                            break;
-                        case ItemType.Rectangle:
-                            break;
-                        case ItemType.Ellipse:
-                            break;
-                        case ItemType.Text:
-                            break;
-                    }
+                    FinishEdit();
                 }
                 else
                 {
-                    BlockEditor.DeselectAll(selectedBlock);
-                    if (selectedLine != null)
-                    {
-                        BlockEditor.SelectLine(selectedLine);
-                    }
+                    return;
                 }
-                */
-                return;
             }
 
+            // text editor
             if (GetMode() == Mode.None || GetMode() == Mode.TextEditor)
             {
                 return;
@@ -1819,6 +1875,7 @@ namespace Sheet
 
             bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
 
+            // move mode
             if (!ctrl)
             {
                 if (BlockEditor.HaveSelected(selectedBlock) && CanInitMove(e.GetPosition(overlaySheet.GetParent())))
@@ -1839,15 +1896,14 @@ namespace Sheet
                 {
                     InitSelectionRect(e.GetPosition(overlaySheet.GetParent()));
                 }
-                else if (BlockEditor.HaveOneLineSelected(selectedBlock))
-                {
-                    InitLineEditor();
-                }
                 else
                 {
-                    InitMove(e.GetPosition(overlaySheet.GetParent()));
+                    bool editModeEnabled = TryToEditSelected();
+                    if (!editModeEnabled)
+                    {
+                        InitMove(e.GetPosition(overlaySheet.GetParent()));
+                    }
                 }
-
             }
             else if (GetMode() == Mode.Insert && !overlaySheet.IsCaptured)
             {
@@ -1954,24 +2010,15 @@ namespace Sheet
                 return;
             }
 
+            // edit mode
             if (selectedType != ItemType.None)
             {
                 BlockEditor.DeselectAll(selectedBlock);
-                //if (selectedLine != null)
-                //{
-                //    BlockEditor.DeselectLine(selectedLine);
-                //}
-
-                switch(selectedType)
-                {
-                    case ItemType.Line:
-                         FinishLineEditor();
-                         break;
-                }
-
+                FinishEdit();
                 return;
             }
 
+            // text editor
             if (TryToEditText(e.GetPosition(overlaySheet.GetParent())))
             {
                 e.Handled = true;
