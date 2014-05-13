@@ -127,6 +127,7 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Sheet.cs" />
     <Compile Include="Controls\SheetControl.xaml.cs">
       <DependentUpon>SheetControl.xaml</DependentUpon>
     </Compile>
