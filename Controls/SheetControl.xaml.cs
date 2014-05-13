@@ -1663,7 +1663,7 @@ namespace Sheet
         #region Edit
 
         private ItemType selectedType = ItemType.None;
-        private string editThumbTemplate = "<Thumb xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><Thumb.Template><ControlTemplate><Ellipse Fill=\"Red\" Stroke=\"Red\" Width=\"8\" Height=\"8\" Margin=\"-4,-4,0,0\"/></ControlTemplate></Thumb.Template></Thumb>";
+        private string editThumbTemplate = "<Thumb Cursor=\"SizeAll\" xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><Thumb.Template><ControlTemplate><Ellipse Fill=\"Red\" Stroke=\"Red\" StrokeThickness=\"2\" Width=\"8\" Height=\"8\" Margin=\"-4,-4,0,0\"/></ControlTemplate></Thumb.Template></Thumb>";
 
         private Thumb CreateEditThumb()
         {
@@ -1781,7 +1781,8 @@ namespace Sheet
             }
             catch(Exception ex)
             {
-                MessageBox.Show(ex.Message + Environment.NewLine + ex.StackTrace);
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
             }
         }
 
