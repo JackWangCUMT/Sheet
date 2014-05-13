@@ -3,9 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
-using System.IO.Packaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -1660,21 +1657,14 @@ namespace Sheet
 
         #endregion
 
-
-
-
-
-
-
-
-
         #region Edit Line
 
-        private Line selectedLine = null;
         private ItemType selectedType = ItemType.None;
+        private string selectedThumbTemplate = "<Thumb xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><Thumb.Template><ControlTemplate><Ellipse Fill=\"Red\" Stroke=\"Red\" Width=\"8\" Height=\"8\" Margin=\"-4,-4,0,0\"/></ControlTemplate></Thumb.Template></Thumb>";
+
+        private Line selectedLine = null;
         private Thumb lineThumbStart = null;
         private Thumb lineThumbEnd = null;
-        private string thumbTemplate = "<Thumb xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><Thumb.Template><ControlTemplate><Ellipse Fill=\"Red\" Stroke=\"Red\" Width=\"8\" Height=\"8\" Margin=\"-4,-4,0,0\"/></ControlTemplate></Thumb.Template></Thumb>";
 
         private void InitLineEditor()
         {
@@ -1690,7 +1680,7 @@ namespace Sheet
 
                 if (lineThumbStart == null)
                 {
-                    var stringReader = new StringReader(thumbTemplate);
+                    var stringReader = new System.IO.StringReader(selectedThumbTemplate);
                     var xmlReader = System.Xml.XmlReader.Create(stringReader);
                     lineThumbStart = (Thumb)XamlReader.Load(xmlReader);
                     lineThumbStart.DragDelta += (_sender, _e) =>
@@ -1709,7 +1699,7 @@ namespace Sheet
 
                 if (lineThumbEnd == null)
                 {
-                    var stringReader = new StringReader(thumbTemplate);
+                    var stringReader = new System.IO.StringReader(selectedThumbTemplate);
                     var xmlReader = System.Xml.XmlReader.Create(stringReader);
                     lineThumbEnd = (Thumb)XamlReader.Load(xmlReader);
                     lineThumbEnd.DragDelta += (_sender, _e) =>
@@ -1745,7 +1735,6 @@ namespace Sheet
         {
             RestoreTempMode();
 
-
             selectedType = ItemType.None;
             selectedLine = null;
 
@@ -1762,15 +1751,23 @@ namespace Sheet
 
         #endregion
 
+        #region Edit Rectangle
 
+        // TODO:
 
+        #endregion
 
+        #region Edit Ellipse
 
+        // TODO:
 
+        #endregion
 
+        #region Edit Text
 
+        // TODO:
 
-
+        #endregion
 
         #region Events
 
