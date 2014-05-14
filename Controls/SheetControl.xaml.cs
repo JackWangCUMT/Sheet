@@ -1660,10 +1660,20 @@ namespace Sheet
 
         #endregion
 
-        #region Edit
+        #region Edit Mode
 
         private ItemType selectedType = ItemType.None;
-        private string editThumbTemplate = "<Thumb Cursor=\"SizeAll\" xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><Thumb.Template><ControlTemplate><Ellipse Fill=\"Red\" Stroke=\"Red\" StrokeThickness=\"2\" Width=\"8\" Height=\"8\" Margin=\"-4,-4,0,0\"/></ControlTemplate></Thumb.Template></Thumb>";
+        private string editThumbTemplate = "<Thumb Cursor=\"SizeAll\" xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><Thumb.Template><ControlTemplate><Rectangle Fill=\"Transparent\" Stroke=\"Red\" StrokeThickness=\"2\" Width=\"8\" Height=\"8\" Margin=\"-4,-4,0,0\"/></ControlTemplate></Thumb.Template></Thumb>";
+
+        private Line selectedLine = null;
+        private Thumb lineThumbStart = null;
+        private Thumb lineThumbEnd = null;
+
+        private FrameworkElement selectedElement = null;
+        private Thumb thumbTopLeft = null;
+        private Thumb thumbTopRight = null;
+        private Thumb thumbBottomLeft = null;
+        private Thumb thumbBottomRight = null;
 
         private Thumb CreateEditThumb()
         {
@@ -1705,13 +1715,9 @@ namespace Sheet
                     FinishLineEditor();
                     break;
                 case ItemType.Rectangle:
-                    FinishRectangleEditor();
-                    break;
                 case ItemType.Ellipse:
-                    FinishEllipseEditor();
-                    break;
                 case ItemType.Text:
-                    FinishTextEditor();
+                    FinishFrameworkElementEditor();
                     break;
             }
         }
@@ -1720,9 +1726,31 @@ namespace Sheet
 
         #region Edit Line
 
-        private Line selectedLine = null;
-        private Thumb lineThumbStart = null;
-        private Thumb lineThumbEnd = null;
+        private void DragLineStart(Line line, Thumb thumb, double dx, double dy)
+        {
+            if (line != null && thumb != null)
+            {
+                double x = ItemEditor.Snap(line.X1 + dx, options.SnapSize);
+                double y = ItemEditor.Snap(line.Y1 + dy, options.SnapSize);
+                line.X1 = x;
+                line.Y1 = y;
+                Canvas.SetLeft(thumb, x);
+                Canvas.SetTop(thumb, y);
+            }
+        }
+
+        private void DragLineEnd(Line line, Thumb thumb, double dx, double dy)
+        {
+            if (line != null && thumb != null)
+            {
+                double x = ItemEditor.Snap(line.X2 + dx, options.SnapSize);
+                double y = ItemEditor.Snap(line.Y2 + dy, options.SnapSize);
+                line.X2 = x;
+                line.Y2 = y;
+                Canvas.SetLeft(thumb, x);
+                Canvas.SetTop(thumb, y);
+            }
+        }
 
         private void InitLineEditor()
         {
@@ -1732,47 +1760,23 @@ namespace Sheet
             try
             {
                 var line = selectedBlock.Lines.FirstOrDefault();
-
                 selectedType = ItemType.Line;
                 selectedLine = line;
 
                 if (lineThumbStart == null)
                 {
                     lineThumbStart = CreateEditThumb();
-                    lineThumbStart.DragDelta += (sender, e) =>
-                    {
-                        if (selectedLine != null)
-                        {
-                            double x = ItemEditor.Snap(selectedLine.X1 + e.HorizontalChange, options.SnapSize);
-                            double y = ItemEditor.Snap(selectedLine.Y1 + e.VerticalChange, options.SnapSize);
-                            selectedLine.X1 = x;
-                            selectedLine.Y1 = y;
-                            Canvas.SetLeft(lineThumbStart, x);
-                            Canvas.SetTop(lineThumbStart, y);
-                        }
-                    };
+                    lineThumbStart.DragDelta += (sender, e) => DragLineStart(selectedLine, lineThumbStart, e.HorizontalChange, e.VerticalChange);
                 }
 
                 if (lineThumbEnd == null)
                 {
                     lineThumbEnd = CreateEditThumb();
-                    lineThumbEnd.DragDelta += (sender, e) =>
-                    {
-                        if (selectedLine != null)
-                        {
-                            double x = ItemEditor.Snap(selectedLine.X2 + e.HorizontalChange, options.SnapSize);
-                            double y = ItemEditor.Snap(selectedLine.Y2 + e.VerticalChange, options.SnapSize);
-                            selectedLine.X2 = x;
-                            selectedLine.Y2 = y;
-                            Canvas.SetLeft(lineThumbEnd, x);
-                            Canvas.SetTop(lineThumbEnd, y);
-                        }
-                    };
+                    lineThumbEnd.DragDelta += (sender, e) => DragLineEnd(selectedLine, lineThumbStart, e.HorizontalChange, e.VerticalChange);
                 }
 
                 Canvas.SetLeft(lineThumbStart, line.X1);
                 Canvas.SetTop(lineThumbStart, line.Y1);
-
                 Canvas.SetLeft(lineThumbEnd, line.X2);
                 Canvas.SetTop(lineThumbEnd, line.Y2);
 
@@ -1806,16 +1810,223 @@ namespace Sheet
 
         #endregion
 
+        #region Edit FrameworkElement
+
+        private void DragThumbs(Rect rect)
+        {
+            var tl = rect.TopLeft;
+            var tr = rect.TopRight;
+            var bl = rect.BottomLeft;
+            var br = rect.BottomRight;
+
+            Canvas.SetLeft(thumbTopLeft, tl.X);
+            Canvas.SetTop(thumbTopLeft, tl.Y);
+
+            Canvas.SetLeft(thumbTopRight, tr.X);
+            Canvas.SetTop(thumbTopRight, tr.Y);
+
+            Canvas.SetLeft(thumbBottomLeft, bl.X);
+            Canvas.SetTop(thumbBottomLeft, bl.Y);
+
+            Canvas.SetLeft(thumbBottomRight, br.X);
+            Canvas.SetTop(thumbBottomRight, br.Y);
+        }
+
+        private void DragTopLeft(FrameworkElement element, Thumb thumb, double dx, double dy)
+        {
+            if (element != null && thumb != null)
+            {
+                double left = Canvas.GetLeft(element);
+                double top = Canvas.GetTop(element);
+                double width = element.Width;
+                double height = element.Height;
+
+                var rect = new Rect(left, top, width, height);
+
+                rect.X = ItemEditor.Snap(rect.X + dx, options.SnapSize);
+                rect.Y = ItemEditor.Snap(rect.Y + dy, options.SnapSize);
+
+                rect.Width = Math.Max(0.0, rect.Width - (rect.X - left));
+                rect.Height = Math.Max(0.0, rect.Height - (rect.Y - top));
+
+                Canvas.SetLeft(element, rect.X);
+                Canvas.SetTop(element, rect.Y);
+                element.Width = rect.Width;
+                element.Height = rect.Height;
+
+                DragThumbs(rect);
+            }
+        }
+
+        private void DragTopRight(FrameworkElement element, Thumb thumb, double dx, double dy)
+        {
+            if (element != null && thumb != null)
+            {
+                double left = Canvas.GetLeft(element);
+                double top = Canvas.GetTop(element);
+                double width = element.Width;
+                double height = element.Height;
+
+                var rect = new Rect(left, top, width, height);
+
+                rect.Width = Math.Max(0.0, ItemEditor.Snap(rect.Width + dx, options.SnapSize));
+                rect.Y = ItemEditor.Snap(rect.Y + dy, options.SnapSize);
+
+                rect.Height = Math.Max(0.0, rect.Height - (rect.Y - top));
+
+                Canvas.SetLeft(element, rect.X);
+                Canvas.SetTop(element, rect.Y);
+                element.Width = rect.Width;
+                element.Height = rect.Height;
+
+                DragThumbs(rect);
+            }
+        }
+
+        private void DragBottomLeft(FrameworkElement element, Thumb thumb, double dx, double dy)
+        {
+            if (element != null && thumb != null)
+            {
+                double left = Canvas.GetLeft(element);
+                double top = Canvas.GetTop(element);
+                double width = element.Width;
+                double height = element.Height;
+
+                var rect = new Rect(left, top, width, height);
+
+                rect.X = ItemEditor.Snap(rect.X + dx, options.SnapSize);
+                rect.Height = Math.Max(0.0, ItemEditor.Snap(rect.Height + dy, options.SnapSize));
+
+                rect.Width = Math.Max(0.0, rect.Width - (rect.X - left));
+
+                Canvas.SetLeft(element, rect.X);
+                Canvas.SetTop(element, rect.Y);
+                element.Width = rect.Width;
+                element.Height = rect.Height;
+
+                DragThumbs(rect);
+            }
+        }
+
+        private void DragBottomRight(FrameworkElement element, Thumb thumb, double dx, double dy)
+        {
+            if (element != null && thumb != null)
+            {
+                double left = Canvas.GetLeft(element);
+                double top = Canvas.GetTop(element);
+                double width = element.Width;
+                double height = element.Height;
+
+                var rect = new Rect(left, top, width, height);
+
+                rect.Width = Math.Max(0.0, ItemEditor.Snap(rect.Width + dx, options.SnapSize));
+                rect.Height = Math.Max(0.0, ItemEditor.Snap(rect.Height + dy, options.SnapSize));
+
+                Canvas.SetLeft(element, rect.X);
+                Canvas.SetTop(element, rect.Y);
+
+                element.Width = rect.Width;
+                element.Height = rect.Height;
+
+                DragThumbs(rect);
+            }
+        }
+
+        private void InitFrameworkElementEditor()
+        {
+            if (thumbTopLeft == null)
+            {
+                thumbTopLeft = CreateEditThumb();
+                thumbTopLeft.DragDelta += (sender, e) => DragTopLeft(selectedElement, thumbTopLeft, e.HorizontalChange, e.VerticalChange);
+            }
+
+            if (thumbTopRight == null)
+            {
+                thumbTopRight = CreateEditThumb();
+                thumbTopRight.DragDelta += (sender, e) => DragTopRight(selectedElement, thumbTopRight, e.HorizontalChange, e.VerticalChange);
+            }
+
+            if (thumbBottomLeft == null)
+            {
+                thumbBottomLeft = CreateEditThumb();
+                thumbBottomLeft.DragDelta += (sender, e) => DragBottomLeft(selectedElement, thumbBottomLeft, e.HorizontalChange, e.VerticalChange);
+            }
+
+            if (thumbBottomRight == null)
+            {
+                thumbBottomRight = CreateEditThumb();
+                thumbBottomRight.DragDelta += (sender, e) => DragBottomRight(selectedElement, thumbBottomRight, e.HorizontalChange, e.VerticalChange);
+            }
+
+            double left = Canvas.GetLeft(selectedElement);
+            double top = Canvas.GetTop(selectedElement);
+            double width = selectedElement.Width;
+            double height = selectedElement.Height;
+
+            Canvas.SetLeft(thumbTopLeft, left);
+            Canvas.SetTop(thumbTopLeft, top);
+            Canvas.SetLeft(thumbTopRight, left + width);
+            Canvas.SetTop(thumbTopRight, top);
+            Canvas.SetLeft(thumbBottomLeft, left);
+            Canvas.SetTop(thumbBottomLeft, top + height);
+            Canvas.SetLeft(thumbBottomRight, left + width);
+            Canvas.SetTop(thumbBottomRight, top + height);
+
+            overlaySheet.Add(thumbTopLeft);
+            overlaySheet.Add(thumbTopRight);
+            overlaySheet.Add(thumbBottomLeft);
+            overlaySheet.Add(thumbBottomRight);
+        }
+
+        private void FinishFrameworkElementEditor()
+        {
+            RestoreTempMode();
+
+            selectedType = ItemType.None;
+            selectedElement = null;
+
+            if (thumbTopLeft != null)
+            {
+                overlaySheet.Remove(thumbTopLeft);
+            }
+
+            if (thumbTopRight != null)
+            {
+                overlaySheet.Remove(thumbTopRight);
+            }
+
+            if (thumbBottomLeft != null)
+            {
+                overlaySheet.Remove(thumbBottomLeft);
+            }
+
+            if (thumbBottomRight != null)
+            {
+                overlaySheet.Remove(thumbBottomRight);
+            }
+        }
+
+        #endregion
+
         #region Edit Rectangle
 
         private void InitRectangleEditor()
         {
-            // TODO:
-        }
+            StoreTempMode();
+            ModeEdit();
 
-        private void FinishRectangleEditor()
-        {
-            // TODO:
+            try
+            {
+                var rectangle = selectedBlock.Rectangles.FirstOrDefault();
+                selectedType = ItemType.Rectangle;
+                selectedElement = rectangle;
+                InitFrameworkElementEditor();
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
         }
 
         #endregion
@@ -1824,12 +2035,21 @@ namespace Sheet
 
         private void InitEllipseEditor()
         {
-            // TODO:
-        }
+            StoreTempMode();
+            ModeEdit();
 
-        private void FinishEllipseEditor()
-        {
-            // TODO:
+            try
+            {
+                var ellipse = selectedBlock.Ellipses.FirstOrDefault();
+                selectedType = ItemType.Ellipse;
+                selectedElement = ellipse;
+                InitFrameworkElementEditor();
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
         }
 
         #endregion
@@ -1838,12 +2058,21 @@ namespace Sheet
 
         private void InitTextEditor()
         {
-            // TODO:
-        }
+            StoreTempMode();
+            ModeEdit();
 
-        private void FinishTextEditor()
-        {
-            // TODO:
+            try
+            {
+                var text = selectedBlock.Texts.FirstOrDefault();
+                selectedType = ItemType.Text;
+                selectedElement = text;
+                InitFrameworkElementEditor();
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
         }
 
         #endregion
