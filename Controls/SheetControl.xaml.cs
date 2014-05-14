@@ -1772,7 +1772,7 @@ namespace Sheet
                 if (lineThumbEnd == null)
                 {
                     lineThumbEnd = CreateEditThumb();
-                    lineThumbEnd.DragDelta += (sender, e) => DragLineEnd(selectedLine, lineThumbStart, e.HorizontalChange, e.VerticalChange);
+                    lineThumbEnd.DragDelta += (sender, e) => DragLineEnd(selectedLine, lineThumbEnd, e.HorizontalChange, e.VerticalChange);
                 }
 
                 Canvas.SetLeft(lineThumbStart, line.X1);
