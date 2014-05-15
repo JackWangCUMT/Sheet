@@ -16,6 +16,23 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
+    #region SizeBorder
+
+    public class SizeBorder : Border
+    {
+        public Action<Size> Execute { get; set; }
+        protected override Size ArrangeOverride(Size finalSize)
+        {
+            if (Execute != null)
+            {
+                Execute(finalSize);
+            }
+            return base.ArrangeOverride(finalSize);
+        }
+    } 
+
+    #endregion
+
     public partial class SheetWindow : Window
     {
         #region Constructor
@@ -34,6 +51,7 @@ namespace Sheet
         {
             Sheet.Library = Library;
             Sheet.Database = Csv;
+            SizeBorder.Execute = (size) => Sheet.AutoFit(size);
             Solution.Controller = Sheet;
             UpdateModeMenu();
             CreateTestDatabase();

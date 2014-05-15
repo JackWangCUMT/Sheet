@@ -31,7 +31,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
         <Menu x:Name="MainMenu" 
-              Background="WhiteSmoke"
+              Background="Transparent"
               Visibility="Visible" 
               Margin="0"
               Grid.Row="0"
@@ -92,7 +92,7 @@
             </MenuItem>
         </Menu>
         <local:LibraryControl x:Name="Library" 
-                              Background="WhiteSmoke"
+                              Background="Transparent"
                               Grid.Row="1"
                               Grid.Column="0"
                               Visibility="Hidden" 
@@ -117,17 +117,26 @@
                 <RowDefinition Height="12"/>
                 <RowDefinition Height="0"/>
             </Grid.RowDefinitions>
-            <local:SheetControl x:Name="Sheet" 
-                                Background="Transparent"
-                                ClipToBounds="False"
-                                Grid.Row="0"
-                                ZoomIndex="9" 
-                                PanX="0" 
-                                PanY="0"
-                                Width="4096"
-                                Height="4096"
-                                Margin="0"
-                                VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            <local:SizeBorder x:Name="SizeBorder" 
+                              Background="Transparent" 
+                              ClipToBounds="True" 
+                              BorderBrush="{x:Null}" 
+                              BorderThickness="0" 
+                              FocusVisualStyle="{x:Null}" 
+                              Grid.Row="0" 
+                              VerticalAlignment="Stretch" 
+                              HorizontalAlignment="Stretch">
+                <local:SheetControl x:Name="Sheet" 
+                                    Background="Transparent"
+                                    ClipToBounds="False"
+                                    Grid.Row="0"
+                                    ZoomIndex="9" 
+                                    PanX="0" 
+                                    PanY="0"
+                                    Margin="0"
+                                    VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+                </local:SheetControl>
+            </local:SizeBorder>
             <GridSplitter Grid.Row="1" 
                           FocusVisualStyle="{x:Null}"
                           VerticalAlignment="Stretch" 
@@ -157,7 +166,7 @@
                       Template="{StaticResource VerticalGridSplitterControlTemplateKey}">
         </GridSplitter>
         <local:SolutionControl x:Name="Solution" 
-                               Background="WhiteSmoke"
+                               Background="Transparent"
                                FocusVisualStyle="{x:Null}"
                                Grid.Row="1"
                                Grid.Column="4"

@@ -21,8 +21,8 @@
              AllowDrop="True"
              DragEnter="UserControl_DragEnter"
              Drop="UserControl_Drop">
-    <Grid Width="1260" Height="891">
-        <Grid x:Name="Layout" Width="1260" Height="891" RenderTransformOrigin="0.0,0.0" Background="{x:Null}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
+    <Grid Width="1260" Height="891" >
+        <Grid x:Name="Layout" Width="1260" Height="891" RenderTransformOrigin="0.0,0.0" Background="Transparent" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
             <Grid.RenderTransform>
                 <TransformGroup>
                     <ScaleTransform x:Name="zoom" ScaleX="1" ScaleY="1"/>
@@ -33,6 +33,6 @@
             </Grid.RenderTransform>
             <local:CanvasControl x:Name="Root"/>
         </Grid>
-        <Canvas x:Name="EditorCanvas" Width="1260" Height="891" Background="{x:Null}"/>
+        <Canvas x:Name="EditorCanvas" Width="1260" Height="891" Background="Transparent"/>
     </Grid>
 </UserControl>

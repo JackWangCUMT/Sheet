@@ -286,8 +286,8 @@ namespace Sheet
         {
             CreateGrid(backSheet, gridBlock, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
             CreateFrame(backSheet, frameBlock, options.GridSize, options.GridThickness, BlockFactory.FrameBrush);
-            AdjustThickness(gridBlock, options.GridThickness / options.ZoomFactors[zoomIndex]);
-            AdjustThickness(frameBlock, options.FrameThickness / options.ZoomFactors[zoomIndex]);
+            AdjustThickness(gridBlock, options.GridThickness / GetZoom(zoomIndex));
+            AdjustThickness(frameBlock, options.FrameThickness / GetZoom(zoomIndex));
             LoadStandardLibrary();
             Focus();
         }
@@ -1035,9 +1035,10 @@ namespace Sheet
 
         private void ZoomTo(double x, double y, int oldZoomIndex)
         {
-            double oldZoom = options.ZoomFactors[oldZoomIndex];
-            double newZoom = options.ZoomFactors[zoomIndex];
+            double oldZoom = GetZoom(oldZoomIndex);
+            double newZoom = GetZoom(zoomIndex);
             Zoom = newZoom;
+
             PanX = (x * oldZoom + PanX) - x * newZoom;
             PanY = (y * oldZoom + PanY) - y * newZoom;
         }
@@ -1046,9 +1047,21 @@ namespace Sheet
         {
             if (delta > 0)
             {
-                if (zoomIndex < options.MaxZoomIndex)
+                if (zoomIndex > -1 && zoomIndex < options.MaxZoomIndex)
                 {
                     ZoomTo(p.X, p.Y, zoomIndex++);
+                }
+                else if(zoomIndex == -1)
+                {
+                    for (int i = 0; i < options.ZoomFactors.Length; i++)
+                    {
+                        if (options.ZoomFactors[i] > lastFactor)
+                        {
+                            zoomIndex = i;
+                            break;
+                        }
+                    }
+                    ZoomTo(p.X, p.Y, zoomIndex + 1);
                 }
             }
             else
@@ -1057,7 +1070,59 @@ namespace Sheet
                 {
                     ZoomTo(p.X, p.Y, zoomIndex--);
                 }
+                else if (zoomIndex == -1)
+                {
+                    for (int i = 0; i < options.ZoomFactors.Length; i++)
+                    {
+                        if (options.ZoomFactors[i] > lastFactor)
+                        {
+                            zoomIndex = i - 1;
+                            break;
+                        }
+                    }
+                    ZoomTo(p.X, p.Y, zoomIndex + 1);
+                }
             }
+        }
+
+        public double GetZoom(int index)
+        {
+            if (index >= 0)
+            {
+                return options.ZoomFactors[index];
+            }
+            else
+            {
+                return lastFactor;
+            }
+        }
+
+        private double lastFactor = 1.0;
+        private Size lastFinalSize = new Size();
+
+        public void AutoFit(Size finalSize)
+        {
+            lastFinalSize = finalSize;
+
+            // calculate factor
+            double fwidth = finalSize.Width / options.PageWidth;
+            double fheight = finalSize.Height / options.PageHeight;
+            double factor = Math.Min(fwidth, fheight);
+            double panX = (finalSize.Width - (options.PageWidth * factor)) / 2.0;
+            double panY = (finalSize.Height - (options.PageHeight * factor)) / 2.0;
+
+            double dx = Math.Max(0, (finalSize.Width - DesiredSize.Width) / 2.0);
+            double dy = Math.Max(0, (finalSize.Height - DesiredSize.Height) / 2.0);
+
+            // adjust zoom
+            zoomIndex = -1;
+            Zoom = factor;
+
+            // adjust pan
+            PanX = panX - dx;
+            PanY = panY - dy;
+
+            lastFactor = factor;
         }
 
         private void InitPan(Point p)
@@ -2354,7 +2419,8 @@ namespace Sheet
         {
             if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
             {
-                ResetPanAndZoom();
+                //ResetPanAndZoom();
+                AutoFit(lastFinalSize);
             }
         }
 
