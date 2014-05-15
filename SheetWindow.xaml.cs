@@ -178,14 +178,14 @@ namespace Sheet
                 case Key.Z:
                     if (ctrl)
                     {
-                        GetSheet().Undo();
+                        GetSheet().History.Undo();
                     }
                     break;
                 // Ctrl+Y: Redo
                 case Key.Y:
                     if (ctrl)
                     {
-                        GetSheet().Redo();
+                        GetSheet().History.Redo();
                     }
                     break;
                 // Ctrl+X: Cut
@@ -219,7 +219,7 @@ namespace Sheet
                 case Key.Delete:
                     if (ctrl)
                     {
-                        GetSheet().RegisterChange("Reset");
+                        GetSheet().History.Register("Reset");
                         GetSheet().Reset();
                     }
                     else
@@ -505,12 +505,12 @@ namespace Sheet
 
         private void EditUndo_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().Undo();
+            GetSheet().History.Undo();
         }
 
         private void EditRedo_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().Redo();
+            GetSheet().History.Redo();
         }
 
         private void EditCut_Click(object sender, RoutedEventArgs e)
@@ -535,7 +535,7 @@ namespace Sheet
 
         private void EditReset_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().RegisterChange("Reset");
+            GetSheet().History.Register("Reset");
             GetSheet().Reset();
         }
 
