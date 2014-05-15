@@ -20,7 +20,106 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
-    public partial class SheetControl : UserControl, IEntryController
+    #region History
+
+    public interface IBlockController
+    {
+        BlockItem Serialize();
+        void Insert(BlockItem block);
+        void Reset();
+    }
+
+    public interface IHistoryController
+    {
+        void Register(string message);
+        void Reset();
+        void Undo();
+        void Redo();
+    }
+
+    public class CanvasHistoryController : IHistoryController
+    {
+        #region Properties
+
+        public IBlockController BlockController { get; private set; }
+
+        #endregion
+
+        #region Fields
+
+        private Stack<ChangeMessage> undos = new Stack<ChangeMessage>();
+        private Stack<ChangeMessage> redos = new Stack<ChangeMessage>();
+
+        #endregion
+
+        #region Constructor
+
+        public CanvasHistoryController(IBlockController blockController)
+        {
+            BlockController = blockController;
+        }
+
+        #endregion
+
+        #region Undo/Redo Changes
+
+        private async Task<ChangeMessage> CreateChangeMessage(string message)
+        {
+            var block = BlockController.Serialize();
+            var text = await Task.Run(() => ItemSerializer.SerializeContents(block));
+            var change = new ChangeMessage()
+            {
+                Message = message,
+                Model = text
+            };
+            return change;
+        }
+
+        public async void Register(string message)
+        {
+            var change = await CreateChangeMessage(message);
+            undos.Push(change);
+            redos.Clear();
+        }
+
+        public void Reset()
+        {
+            undos.Clear();
+            redos.Clear();
+        }
+
+        public async void Undo()
+        {
+            if (undos.Count > 0)
+            {
+                var change = await CreateChangeMessage("Redo");
+                redos.Push(change);
+                var undo = undos.Pop();
+                var block = await Task.Run(() => ItemSerializer.DeserializeContents(undo.Model));
+                BlockController.Reset();
+                BlockController.Insert(block);
+            }
+        }
+
+        public async void Redo()
+        {
+            if (redos.Count > 0)
+            {
+                var change = await CreateChangeMessage("Undo");
+                undos.Push(change);
+                var redo = redos.Pop();
+                var block = await Task.Run(() => ItemSerializer.DeserializeContents(redo.Model));
+                BlockController.Reset();
+                BlockController.Insert(block);
+            }
+        }
+
+        #endregion
+    }
+
+    #endregion
+
+    public partial class SheetControl : UserControl, IEntryController, IBlockController
     {
         #region Fields
 
@@ -29,9 +128,6 @@ namespace Sheet
         private ISheet backSheet = null;
         private ISheet logicSheet = null;
         private ISheet overlaySheet = null;
-
-        private Stack<ChangeMessage> undos = new Stack<ChangeMessage>();
-        private Stack<ChangeMessage> redos = new Stack<ChangeMessage>();
 
         private Mode mode = Mode.Selection;
         private Mode tempMode = Mode.None;
@@ -57,6 +153,8 @@ namespace Sheet
         #endregion
 
         #region Properties
+
+        public IHistoryController History { get; private set; }
 
         public ILibrary Library { get; set; }
 
@@ -109,7 +207,11 @@ namespace Sheet
         public SheetControl()
         {
             InitializeComponent();
+
+            History = new CanvasHistoryController(this);
+
             Init();
+
             Loaded += (s, e) => InitLoaded();
         }
 
@@ -205,13 +307,13 @@ namespace Sheet
             {
                 if (text == null)
                 {
-                    ResetChanges();
+                    History.Reset();
                     Reset();
                 }
                 else
                 {
                     var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
-                    ResetChanges();
+                    History.Reset();
                     Reset();
                     InsertBlock(block, false);
                 }
@@ -225,7 +327,7 @@ namespace Sheet
 
         public string Get()
         {
-            var block = SerializeLogicBlock();
+            var block = Serialize();
             var text = ItemSerializer.SerializeContents(block);
             return text;
         }
@@ -240,6 +342,29 @@ namespace Sheet
         {
             var blocks = texts.Select(text => ItemSerializer.DeserializeContents(text));
             Export(blocks);
+        }
+
+        #endregion
+
+        #region IBlockController
+
+        public BlockItem Serialize()
+        {
+            return BlockSerializer.SerializerBlockContents(logicBlock, 0, logicBlock.X, logicBlock.Y, logicBlock.DataId, "LOGIC");
+        }
+
+        public void Insert(BlockItem block)
+        {
+            InsertBlock(block, false);
+        }
+
+        public void Reset()
+        {
+            ResetOverlay();
+
+            BlockEditor.RemoveBlock(logicSheet, logicBlock);
+
+            InitContentBlocks();
         }
 
         #endregion
@@ -425,15 +550,10 @@ namespace Sheet
 
         #region Block
 
-        private void InsertBlock(BlockItem block, bool select)
+        public void InsertBlock(BlockItem block, bool select)
         {
             BlockEditor.DeselectAll(selectedBlock);
             BlockEditor.AddBlockContents(logicSheet, block, logicBlock, selectedBlock, select, options.LineThickness / Zoom);
-        }
-
-        private BlockItem SerializeLogicBlock()
-        {
-            return BlockSerializer.SerializerBlockContents(logicBlock, 0, logicBlock.X, logicBlock.Y, logicBlock.DataId, "LOGIC");
         }
 
         private static string SerializeBlockContents(int id, double x, double y, int dataId, string name, Block parent)
@@ -464,7 +584,7 @@ namespace Sheet
 
                 Action<string> ok = (name) =>
                 {
-                    RegisterChange("Create Block");
+                    History.Register("Create Block");
                     CreateBlockItem(name).ContinueWith((block) =>
                     {
                         AddToLibrary(block.Result);
@@ -492,64 +612,9 @@ namespace Sheet
             {
                 var text = ItemSerializer.SerializeContents(BlockSerializer.SerializerBlockContents(selectedBlock, 0, 0.0, 0.0, -1, "SELECTED"));
                 var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
-                RegisterChange("Break Block");
+                History.Register("Break Block");
                 Delete();
                 BlockEditor.AddBrokenBlock(logicSheet, block, logicBlock, selectedBlock, true, options.LineThickness / Zoom);
-            }
-        }
-
-        #endregion
-
-        #region Undo/Redo Changes
-
-        private async Task<ChangeMessage> CreateChangeMessage(string message)
-        {
-            var block = SerializeLogicBlock();
-            var text = await Task.Run(() => ItemSerializer.SerializeContents(block));
-            var change = new ChangeMessage()
-            {
-                Message = message,
-                Model = text
-            };
-            return change;
-        }
-
-        public async void RegisterChange(string message)
-        {
-            var change = await CreateChangeMessage(message);
-            undos.Push(change);
-            redos.Clear();
-        }
-
-        public void ResetChanges()
-        {
-            undos.Clear();
-            redos.Clear();
-        }
-
-        public async void Undo()
-        {
-            if (undos.Count > 0)
-            {
-                var change = await CreateChangeMessage("Redo");
-                redos.Push(change);
-                var undo = undos.Pop();
-                var block = await Task.Run(() => ItemSerializer.DeserializeContents(undo.Model));
-                Reset();
-                InsertBlock(block, false);
-            }
-        }
-
-        public async void Redo()
-        {
-            if (redos.Count > 0)
-            {
-                var change = await CreateChangeMessage("Undo");
-                undos.Push(change);
-                var redo = redos.Pop();
-                var block = await Task.Run(() => ItemSerializer.DeserializeContents(redo.Model));
-                Reset();
-                InsertBlock(block, false);
             }
         }
 
@@ -563,7 +628,7 @@ namespace Sheet
             {
                 if (BlockEditor.HaveSelected(selectedBlock))
                 {
-                    RegisterChange("Cut");
+                    History.Register("Cut");
                     Copy();
                     Delete();
                 }
@@ -580,7 +645,7 @@ namespace Sheet
             try
             {
                 var block = BlockEditor.HaveSelected(selectedBlock) ?
-                    BlockSerializer.SerializerBlockContents(selectedBlock, 0, 0.0, 0.0, -1, "SELECTED") : SerializeLogicBlock();
+                    BlockSerializer.SerializerBlockContents(selectedBlock, 0, 0.0, 0.0, -1, "SELECTED") : Serialize();
                 var text = ItemSerializer.SerializeContents(block);
                 Clipboard.SetData(DataFormats.UnicodeText, text);
                 //string json = JsonConvert.SerializeObject(block, Formatting.Indented);
@@ -599,7 +664,7 @@ namespace Sheet
             {
                 var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
                 var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
-                RegisterChange("Paste");
+                History.Register("Paste");
                 InsertBlock(block, true);
                 //var block = JsonConvert.DeserializeObject<BlockItem>(text);
                 //InsertBlock(block, true);
@@ -634,7 +699,7 @@ namespace Sheet
                 selectedBlock.Blocks = new List<Block>();
             }
 
-            RegisterChange("Insert Block");
+            History.Register("Insert Block");
 
             var block = BlockSerializer.DeserializeBlockItem(logicSheet, logicBlock, blockItem, select, thickness);
 
@@ -703,7 +768,7 @@ namespace Sheet
 
         #endregion
 
-        #region Reset
+        #region Reset Overlay
 
         private void ResetOverlay()
         {
@@ -754,15 +819,6 @@ namespace Sheet
             }
         }
 
-        public void Reset()
-        {
-            ResetOverlay();
-
-            BlockEditor.RemoveBlock(logicSheet, logicBlock);
-
-            InitContentBlocks();
-        }
-
         #endregion
 
         #region Delete
@@ -771,7 +827,8 @@ namespace Sheet
         {
             if (BlockEditor.HaveSelected(selectedBlock))
             {
-                RegisterChange("Delete");
+                FinishEdit();
+                History.Register("Delete");
                 BlockEditor.RemoveSelectedFromBlock(logicSheet, logicBlock, selectedBlock);
             }
         }
@@ -784,7 +841,8 @@ namespace Sheet
         {
             if (BlockEditor.HaveSelected(selectedBlock))
             {
-                RegisterChange("Move");
+                FinishEdit();
+                History.Register("Move");
                 BlockEditor.Move(x, y, selectedBlock);
             }
         }
@@ -868,7 +926,7 @@ namespace Sheet
         {
             if (isFirstMove)
             {
-                RegisterChange("Move");
+                History.Register("Move");
                 isFirstMove = false;
                 Cursor = Cursors.SizeAll;
             }
@@ -1131,7 +1189,7 @@ namespace Sheet
                 overlaySheet.Remove(tempLine);
                 overlaySheet.Remove(tempStartEllipse);
                 overlaySheet.Remove(tempEndEllipse);
-                RegisterChange("Create Line");
+                History.Register("Create Line");
                 logicBlock.Lines.Add(tempLine);
                 logicSheet.Add(tempLine);
                 tempLine = null;
@@ -1194,7 +1252,7 @@ namespace Sheet
             {
                 overlaySheet.ReleaseCapture();
                 overlaySheet.Remove(tempRectangle);
-                RegisterChange("Create Rectangle");
+                History.Register("Create Rectangle");
                 logicBlock.Rectangles.Add(tempRectangle);
                 logicSheet.Add(tempRectangle);
                 tempRectangle = null;
@@ -1251,7 +1309,7 @@ namespace Sheet
             {
                 overlaySheet.ReleaseCapture();
                 overlaySheet.Remove(tempEllipse);
-                RegisterChange("Create Ellipse");
+                History.Register("Create Ellipse");
                 logicBlock.Ellipses.Add(tempEllipse);
                 logicSheet.Add(tempEllipse);
                 tempEllipse = null;
@@ -1282,7 +1340,7 @@ namespace Sheet
         {
             double x = ItemEditor.Snap(p.X, options.SnapSize);
             double y = ItemEditor.Snap(p.Y, options.SnapSize);
-            RegisterChange("Create Text");
+            History.Register("Create Text");
             var text = BlockFactory.CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0, BlockFactory.TransparentBrush, BlockFactory.NormalBrush);
             logicBlock.Texts.Add(text);
             logicSheet.Add(text);
@@ -1304,7 +1362,7 @@ namespace Sheet
 
                 Action<string> ok = (text) =>
                 {
-                    RegisterChange("Edit Text");
+                    History.Register("Edit Text");
                     tb.Text = text;
                     EditorCanvas.Children.Remove(tc);
                     Focus();
@@ -1493,7 +1551,7 @@ namespace Sheet
                                 try
                                 {
                                     var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
-                                    RegisterChange("Open");
+                                    History.Register("Open");
                                     Reset();
                                     InsertBlock(block, false);
                                 }
@@ -1510,7 +1568,7 @@ namespace Sheet
                                 try
                                 {
                                      var block = await Task.Run(() => JsonConvert.DeserializeObject<BlockItem>(text));
-                                     RegisterChange("Open");
+                                     History.Register("Open");
                                      Reset();
                                      InsertBlock(block, false);
                                 }
@@ -1542,7 +1600,7 @@ namespace Sheet
                         {
                             try
                             {
-                                var block = SerializeLogicBlock();
+                                var block = Serialize();
 
                                 Task.Run(() =>
                                 {
@@ -1562,7 +1620,7 @@ namespace Sheet
                         {
                             try
                             {
-                                var block = SerializeLogicBlock();
+                                var block = Serialize();
 
                                 Task.Run(() =>
                                 {
@@ -2311,7 +2369,7 @@ namespace Sheet
 
             if (BlockEditor.HaveOneBlockSelected(temp))
             {
-                RegisterChange("Bind Data");
+                History.Register("Bind Data");
                 var block = temp.Blocks[0];
                 BindDataToBlock(block, dataItem);
                 BlockEditor.DeselectBlock(temp);
@@ -2432,7 +2490,7 @@ namespace Sheet
             // add for horizontal or vertical line start ellipse and shorten line
             if (BlockEditor.HaveSelected(selectedBlock) && selectedBlock.Lines != null && selectedBlock.Lines.Count > 0)
             {
-                RegisterChange("Invert Line Start");
+                History.Register("Invert Line Start");
 
                 foreach (var line in selectedBlock.Lines)
                 {
@@ -2480,7 +2538,7 @@ namespace Sheet
             // add for horizontal or vertical line end ellipse and shorten line
             if (BlockEditor.HaveSelected(selectedBlock) && selectedBlock.Lines != null && selectedBlock.Lines.Count > 0)
             {
-                RegisterChange("Invert Line End");
+                History.Register("Invert Line End");
 
                 foreach (var line in selectedBlock.Lines)
                 {
