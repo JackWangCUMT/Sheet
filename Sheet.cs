@@ -1884,7 +1884,7 @@ namespace Sheet
 
     #endregion
 
-    #region Block Editor
+    #region Block Controller
 
     public static class BlockController
     {
