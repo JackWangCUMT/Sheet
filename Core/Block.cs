@@ -1,1441 +1,61 @@
-using Newtonsoft.Json;
-using Splat;
+﻿using Splat;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
-using System.IO.Packaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 namespace Sheet
 {
-    #region Base64
-
-    public static class Base64
-    {
-        public static string ToBase64(byte[] bytes)
-        {
-            if (bytes != null)
-            {
-                return Convert.ToBase64String(bytes);
-            }
-            return null;
-        }
-
-        public static MemoryStream ToStream(byte[] bytes)
-        {
-            if (bytes != null)
-            {
-                return new MemoryStream(bytes, 0, bytes.Length);
-            }
-            return null;
-        }
-
-        public static byte[] ToBytes(string base64)
-        {
-            if (!string.IsNullOrEmpty(base64))
-            {
-                return Convert.FromBase64String(base64);
-            }
-            return null;
-        }
-
-        public static MemoryStream ToStream(string base64)
-        {
-            if (!string.IsNullOrEmpty(base64))
-            {
-                byte[] bytes = ToBytes(base64);
-                if (bytes != null)
-                {
-                    return new MemoryStream(bytes, 0, bytes.Length);
-                }
-                return null;
-            }
-            return null;
-        }
-
-        public static byte[] ReadAllBytes(string path)
-        {
-            if (!string.IsNullOrEmpty(path))
-            {
-                return System.IO.File.ReadAllBytes(path);
-            }
-            return null;
-        }
-
-        public static string FromFileToBase64(string path)
-        {
-            if (!string.IsNullOrEmpty(path))
-            {
-                byte[] bytes = ReadAllBytes(path);
-                if (bytes != null)
-                {
-                    return ToBase64(bytes);
-                }
-                return null;
-            }
-            return null;
-        }
-
-        public static MemoryStream FromFileToStream(string path)
-        {
-            if (!string.IsNullOrEmpty(path))
-            {
-                byte[] bytes = ReadAllBytes(path);
-                if (bytes != null)
-                {
-                    return new MemoryStream(bytes, 0, bytes.Length);
-                }
-                return null;
-            }
-            return null;
-        }
-    }
-
-    #endregion
-
-    #region Entry Model
-
-    public abstract class Entry
-    {
-        public string Name { get; set; }
-        public bool IsNew { get; set; }
-        public bool IsModified { get; set; }
-    }
-
-    public class SolutionEntry : Entry
-    {
-        public ObservableCollection<DocumentEntry> Documents { get; set; }
-    }
-
-    public class DocumentEntry : Entry
-    {
-        public SolutionEntry Solution { get; set; }
-        public ObservableCollection<PageEntry> Pages { get; set; }
-    }
-
-    public class PageEntry : Entry
-    {
-        public DocumentEntry Document { get; set; }
-        public string Content { get; set; }
-    }
-
-    public interface IEntryController
-    {
-        void Set(string text);
-        string Get();
-        void Export(string text);
-        void Export(IEnumerable<string> texts);
-    }
-
-    #endregion
-
-    #region Entry Serializer
-
-    public static class EntrySerializer
-    {
-        #region Fields
-
-        private static char[] entryNameSeparator = { '/' };
-
-        #endregion
-
-        #region Add
-
-        public static void AddDocumentEntry(ZipArchive zip, string document)
-        {
-            var name = string.Concat(document, '/');
-            var entry = zip.CreateEntry(name);
-        }
-
-        public static void AddPageEntry(ZipArchive zip, string document, string page, string content)
-        {
-            var name = string.Concat(document, '/', page);
-            var entry = zip.CreateEntry(name);
-            using (var writer = new StreamWriter(entry.Open()))
-            {
-                writer.Write(content);
-            }
-        }
-
-        #endregion
-
-        #region Serialize
-
-        public static void Serialize(SolutionEntry solution, string path)
-        {
-            using (FileStream fs = new FileStream(path, FileMode.Create))
-            {
-                using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Update))
-                {
-                    foreach (var document in solution.Documents)
-                    {
-                        if (document.Pages.Count <= 0)
-                        {
-                            AddDocumentEntry(zip, document.Name);
-                        }
-
-                        foreach (var page in document.Pages)
-                        {
-                            AddPageEntry(zip, document.Name, page.Name, page.Content);
-                        }
-                    }
-                }
-            }
-        }
-
-        public static void Serialize(SolutionEntry solution)
-        {
-            Serialize(solution, string.Concat(solution.Name, ".zip"));
-        }
-
-        #endregion
-
-        #region Deserialize
-
-        public static SolutionEntry Deserialize(string path)
-        {
-            string solutionName = System.IO.Path.GetFileNameWithoutExtension(path);
-
-            var dict = new Dictionary<string, List<Tuple<string, string>>>();
-            var solution = new SolutionEntry() { Name = solutionName, Documents = new ObservableCollection<DocumentEntry>() };
-
-            using (var zip = ZipFile.Open(path, ZipArchiveMode.Read))
-            {
-                foreach (var entry in zip.Entries)
-                {
-                    var e = entry.FullName.Split(entryNameSeparator);
-                    if (e.Length == 1)
-                    {
-                        string key = e[0];
-
-                        if (!dict.ContainsKey(key))
-                        {
-                            dict.Add(key, new List<Tuple<string, string>>());
-                        }
-                    }
-                    else if (e.Length == 2)
-                    {
-                        string key = e[0];
-                        string data = e[1];
-                        string content = null;
-
-                        using (var reader = new StreamReader(entry.Open()))
-                        {
-                            content = reader.ReadToEnd();
-                        }
-
-                        if (!dict.ContainsKey(key))
-                        {
-                            dict.Add(key, new List<Tuple<string, string>>());
-                        }
-
-                        dict[key].Add(new Tuple<string, string>(data, content));
-                    }
-                }
-            }
-
-            foreach (var item in dict)
-            {
-                var document = EntryFactory.CreateDocument(solution, item.Key);
-                solution.Documents.Add(document);
-                foreach (var tuple in item.Value)
-                {
-                    var page = EntryFactory.CreatePage(document, tuple.Item2, tuple.Item1);
-                    document.Pages.Add(page);
-                }
-            }
-
-            return solution;
-        }
-
-        #endregion
-    }
-
-    #endregion
-
-    #region Entry Controller
-
-    public static class EntryController
-    {
-        #region Page
-
-        public static PageEntry AddPage(DocumentEntry document, string content)
-        {
-            var page = EntryFactory.CreatePage(document, content);
-            document.Pages.Add(page);
-            return page;
-        }
-
-        public static PageEntry AddPageBefore(DocumentEntry document, PageEntry beofore, string content)
-        {
-            var page = EntryFactory.CreatePage(document, content);
-            int index = document.Pages.IndexOf(beofore);
-            document.Pages.Insert(index, page);
-            return page;
-        }
-
-        public static PageEntry AddPageAfter(DocumentEntry document, PageEntry after, string content)
-        {
-            var page = EntryFactory.CreatePage(document, content);
-            int index = document.Pages.IndexOf(after);
-            document.Pages.Insert(index + 1, page);
-            return page;
-        }
-
-        public static void AddPageAfter(object item)
-        {
-            if (item != null && item is PageEntry)
-            {
-                var page = item as PageEntry;
-                var document = page.Document;
-                if (document != null)
-                {
-                    AddPageAfter(document, page, "");
-                }
-            }
-        }
-
-        public static void AddPageBefore(object item)
-        {
-            if (item != null && item is PageEntry)
-            {
-                var page = item as PageEntry;
-                var document = page.Document;
-                if (document != null)
-                {
-                    AddPageBefore(document, page, "");
-                }
-            }
-        }
-
-        public static void DuplicatePage(object item)
-        {
-            if (item != null && item is PageEntry)
-            {
-                var page = item as PageEntry;
-                var document = page.Document;
-                if (document != null)
-                {
-                    AddPage(document, page.Content);
-                }
-            }
-        }
-
-        public static void RemovePage(object item)
-        {
-            if (item != null && item is PageEntry)
-            {
-                var page = item as PageEntry;
-                var document = page.Document;
-                if (document != null)
-                {
-                    document.Pages.Remove(page);
-                }
-            }
-        }
-
-        #endregion
-
-        #region Document
-
-        public static DocumentEntry AddDocumentBefore(SolutionEntry solution, DocumentEntry after)
-        {
-            var document = EntryFactory.CreateDocument(solution);
-            int index = solution.Documents.IndexOf(after);
-            solution.Documents.Insert(index, document);
-            return document;
-        }
-
-        public static DocumentEntry AddDocumentAfter(SolutionEntry solution, DocumentEntry after)
-        {
-            var document = EntryFactory.CreateDocument(solution);
-            int index = solution.Documents.IndexOf(after);
-            solution.Documents.Insert(index + 1, document);
-            return document;
-        }
-
-        public static DocumentEntry AddDocument(SolutionEntry solution)
-        {
-            var document = EntryFactory.CreateDocument(solution);
-            solution.Documents.Add(document);
-            return document;
-        }
-
-        public static void DocumentAddPage(object item)
-        {
-            if (item != null && item is DocumentEntry)
-            {
-                var document = item as DocumentEntry;
-                AddPage(document, "");
-            }
-        }
-
-        public static void AddDocumentAfter(object item)
-        {
-            if (item != null && item is DocumentEntry)
-            {
-                var document = item as DocumentEntry;
-                var solution = document.Solution;
-                if (solution != null)
-                {
-                    AddDocumentAfter(solution, document);
-                }
-            }
-        }
-
-        public static void AddDocumentBefore(object item)
-        {
-            if (item != null && item is DocumentEntry)
-            {
-                var document = item as DocumentEntry;
-                var solution = document.Solution;
-                if (solution != null)
-                {
-                    AddDocumentBefore(solution, document);
-                }
-            }
-        }
-
-        public static void DulicateDocument(object item)
-        {
-            if (item != null && item is DocumentEntry)
-            {
-                var document = item as DocumentEntry;
-                var solution = document.Solution;
-                if (solution != null)
-                {
-                    var duplicate = AddDocument(solution);
-                    foreach (var page in document.Pages)
-                    {
-                        AddPage(duplicate, page.Content);
-                    }
-                }
-            }
-        }
-
-        public static void RemoveDocument(object item)
-        {
-            if (item != null && item is DocumentEntry)
-            {
-                var document = item as DocumentEntry;
-                var solution = document.Solution;
-                if (solution != null)
-                {
-                    solution.Documents.Remove(document);
-                }
-            }
-        }
-
-        #endregion
-    }
-
-    #endregion
-
-    #region Entry Factory
-
-    public static class EntryFactory
-    {
-        #region Empty
-
-        public static void CreateEmpty(string path)
-        {
-            using (FileStream fs = new FileStream(path, FileMode.Create))
-            {
-                using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Update))
-                {
-                    EntrySerializer.AddPageEntry(zip, "Document0", "Page", "");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Create
-
-        public static PageEntry CreatePage(DocumentEntry document, string content, string name = null)
-        {
-            var page = new PageEntry()
-            {
-                Name = name == null ? "Page" : name,
-                Content = content,
-                Document = document
-            };
-            return page;
-        }
-
-        public static DocumentEntry CreateDocument(SolutionEntry solution, string name = null)
-        {
-            var document = new DocumentEntry()
-            {
-                Name = name == null ? string.Concat("Document", solution.Documents.Count) : name,
-                Pages = new ObservableCollection<PageEntry>(),
-                Solution = solution
-            };
-            return document;
-        }
-
-        #endregion
-    }
-
-    #endregion
-
-    #region Item Model
-
-    public abstract class Item
-    {
-        public int Id { get; set; }
-    }
-
-    public class ItemColor
-    {
-        public int Alpha { get; set; }
-        public int Red { get; set; }
-        public int Green { get; set; }
-        public int Blue { get; set; }
-    }
-
-    public class LineItem : Item
-    {
-        public double X1 { get; set; }
-        public double Y1 { get; set; }
-        public double X2 { get; set; }
-        public double Y2 { get; set; }
-        public ItemColor Stroke { get; set; }
-        public double StrokeThickness { get; set; }
-    }
-
-    public class RectangleItem : Item
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
-        public bool IsFilled { get; set; }
-        public ItemColor Stroke { get; set; }
-        public ItemColor Fill { get; set; }
-        public double StrokeThickness { get; set; }
-    }
-
-    public class EllipseItem : Item
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
-        public bool IsFilled { get; set; }
-        public ItemColor Stroke { get; set; }
-        public ItemColor Fill { get; set; }
-        public double StrokeThickness { get; set; }
-    }
-
-    public class TextItem : Item
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
-        public int HAlign { get; set; }
-        public int VAlign { get; set; }
-        public double Size { get; set; }
-        public string Text { get; set; }
-        public ItemColor Foreground { get; set; }
-        public ItemColor Backgroud { get; set; }
-    }
-
-    public class ImageItem : Item
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
-        public byte[] Data { get; set; }
-    }
-
-    public class BlockItem : Item
-    {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public string Name { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
-        public ItemColor Backgroud { get; set; }
-        public int DataId { get; set; }
-        public List<LineItem> Lines { get; set; }
-        public List<RectangleItem> Rectangles { get; set; }
-        public List<EllipseItem> Ellipses { get; set; }
-        public List<TextItem> Texts { get; set; }
-        public List<ImageItem> Images { get; set; }
-        public List<BlockItem> Blocks { get; set; }
-        public void Init(int id, double x, double y, int dataId, string name)
-        {
-            X = x;
-            Y = y;
-            Id = id;
-            DataId = dataId;
-            Name = name;
-            Width = 0.0;
-            Height = 0.0;
-            Backgroud = new ItemColor() { Alpha = 0, Red = 0, Green = 0, Blue = 0 };
-            Lines = new List<LineItem>();
-            Rectangles = new List<RectangleItem>();
-            Ellipses = new List<EllipseItem>();
-            Texts = new List<TextItem>();
-            Images = new List<ImageItem>();
-            Blocks = new List<BlockItem>();
-        }
-    }
-
-    public interface ILibrary
-    {
-        BlockItem GetSelected();
-        void SetSelected(BlockItem block);
-        IEnumerable<BlockItem> GetSource();
-        void SetSource(IEnumerable<BlockItem> source);
-    }
-
-    public class DataItem
-    {
-        public string[] Columns { get; set; }
-        public string[] Data { get; set; }
-    }
-
-    public interface IDatabase
-    {
-        string[] Get(int index);
-        bool Update(int index, string[] item);
-        int Add(string[] item);
-    }
-
-    public interface ITextController
-    {
-        void Set(Action<string> ok, Action cancel, string title, string label, string text);
-    }
-
-    public interface IBlockController
-    {
-        BlockItem Serialize();
-        void Insert(BlockItem block);
-        void Reset();
-    }
-
-    public interface IHistoryController
-    {
-        void Register(string message);
-        void Reset();
-        void Undo();
-        void Redo();
-    }
-
-    #endregion
-
-    #region Item Serializer
-
-    public class ItemSerializeOptions
-    {
-        #region Properties
-
-        public string LineSeparator { get; set; }
-        public string ModelSeparator { get; set; }
-        public char[] LineSeparators { get; set; }
-        public char[] ModelSeparators { get; set; }
-        public char[] WhiteSpace { get; set; }
-        public string IndentWhiteSpace { get; set; }
-        public static ItemSerializeOptions Default
-        {
-            get
-            {
-                return new ItemSerializeOptions()
-                {
-                    LineSeparator = "\r\n",
-                    ModelSeparator = ";",
-                    LineSeparators = new char[] { '\r', '\n' },
-                    ModelSeparators = new char[] { ';' },
-                    WhiteSpace = new char[] { ' ', '\t' },
-                    IndentWhiteSpace = "    "
-                };
-            }
-        }
-
-        #endregion
-    }
-
-    public static class ItemSerializer
-    {
-        #region Serialize
-
-        public static void Serialize(StringBuilder sb, ItemColor color, ItemSerializeOptions options)
-        {
-            sb.Append(color.Alpha);
-            sb.Append(options.ModelSeparator);
-            sb.Append(color.Red);
-            sb.Append(options.ModelSeparator);
-            sb.Append(color.Green);
-            sb.Append(options.ModelSeparator);
-            sb.Append(color.Blue);
-        }
-
-        public static void Serialize(StringBuilder sb, LineItem line, string indent, ItemSerializeOptions options)
-        {
-            sb.Append(indent);
-            sb.Append("LINE");
-            sb.Append(options.ModelSeparator);
-            sb.Append(line.Id);
-            sb.Append(options.ModelSeparator);
-            sb.Append(line.X1);
-            sb.Append(options.ModelSeparator);
-            sb.Append(line.Y1);
-            sb.Append(options.ModelSeparator);
-            sb.Append(line.X2);
-            sb.Append(options.ModelSeparator);
-            sb.Append(line.Y2);
-            sb.Append(options.ModelSeparator);
-            Serialize(sb, line.Stroke, options);
-            sb.Append(options.LineSeparator);
-        }
-
-        public static void Serialize(StringBuilder sb, RectangleItem rectangle, string indent, ItemSerializeOptions options)
-        {
-            sb.Append(indent);
-            sb.Append("RECTANGLE");
-            sb.Append(options.ModelSeparator);
-            sb.Append(rectangle.Id);
-            sb.Append(options.ModelSeparator);
-            sb.Append(rectangle.X);
-            sb.Append(options.ModelSeparator);
-            sb.Append(rectangle.Y);
-            sb.Append(options.ModelSeparator);
-            sb.Append(rectangle.Width);
-            sb.Append(options.ModelSeparator);
-            sb.Append(rectangle.Height);
-            sb.Append(options.ModelSeparator);
-            sb.Append(rectangle.IsFilled);
-            sb.Append(options.ModelSeparator);
-            Serialize(sb, rectangle.Stroke, options);
-            sb.Append(options.ModelSeparator);
-            Serialize(sb, rectangle.Fill, options);
-            sb.Append(options.LineSeparator);
-        }
-
-        public static void Serialize(StringBuilder sb, EllipseItem ellipse, string indent, ItemSerializeOptions options)
-        {
-            sb.Append(indent);
-            sb.Append("ELLIPSE");
-            sb.Append(options.ModelSeparator);
-            sb.Append(ellipse.Id);
-            sb.Append(options.ModelSeparator);
-            sb.Append(ellipse.X);
-            sb.Append(options.ModelSeparator);
-            sb.Append(ellipse.Y);
-            sb.Append(options.ModelSeparator);
-            sb.Append(ellipse.Width);
-            sb.Append(options.ModelSeparator);
-            sb.Append(ellipse.Height);
-            sb.Append(options.ModelSeparator);
-            sb.Append(ellipse.IsFilled);
-            sb.Append(options.ModelSeparator);
-            Serialize(sb, ellipse.Stroke, options);
-            sb.Append(options.ModelSeparator);
-            Serialize(sb, ellipse.Fill, options);
-            sb.Append(options.LineSeparator);
-        }
-
-        public static void Serialize(StringBuilder sb, TextItem text, string indent, ItemSerializeOptions options)
-        {
-            sb.Append(indent);
-            sb.Append("TEXT");
-            sb.Append(options.ModelSeparator);
-            sb.Append(text.Id);
-            sb.Append(options.ModelSeparator);
-            sb.Append(text.X);
-            sb.Append(options.ModelSeparator);
-            sb.Append(text.Y);
-            sb.Append(options.ModelSeparator);
-            sb.Append(text.Width);
-            sb.Append(options.ModelSeparator);
-            sb.Append(text.Height);
-            sb.Append(options.ModelSeparator);
-            sb.Append(text.HAlign);
-            sb.Append(options.ModelSeparator);
-            sb.Append(text.VAlign);
-            sb.Append(options.ModelSeparator);
-            sb.Append(text.Size);
-            sb.Append(options.ModelSeparator);
-            Serialize(sb, text.Foreground, options);
-            sb.Append(options.ModelSeparator);
-            Serialize(sb, text.Backgroud, options);
-            sb.Append(options.ModelSeparator);
-            sb.Append(text.Text);
-            sb.Append(options.LineSeparator);
-        }
-
-        public static void Serialize(StringBuilder sb, ImageItem image, string indent, ItemSerializeOptions options)
-        {
-            sb.Append(indent);
-            sb.Append("IMAGE");
-            sb.Append(options.ModelSeparator);
-            sb.Append(image.Id);
-            sb.Append(options.ModelSeparator);
-            sb.Append(image.X);
-            sb.Append(options.ModelSeparator);
-            sb.Append(image.Y);
-            sb.Append(options.ModelSeparator);
-            sb.Append(image.Width);
-            sb.Append(options.ModelSeparator);
-            sb.Append(image.Height);
-            sb.Append(options.ModelSeparator);
-            sb.Append(Base64.ToBase64(image.Data));
-            sb.Append(options.LineSeparator);
-        }
-
-        public static void Serialize(StringBuilder sb, BlockItem block, string indent, ItemSerializeOptions options)
-        {
-            sb.Append(indent);
-            sb.Append("BLOCK");
-            sb.Append(options.ModelSeparator);
-            sb.Append(block.Id);
-            sb.Append(options.ModelSeparator);
-            sb.Append(block.X);
-            sb.Append(options.ModelSeparator);
-            sb.Append(block.Y);
-            sb.Append(options.ModelSeparator);
-            sb.Append(block.Name);
-            sb.Append(options.ModelSeparator);
-            sb.Append(block.Width);
-            sb.Append(options.ModelSeparator);
-            sb.Append(block.Height);
-            sb.Append(options.ModelSeparator);
-            Serialize(sb, block.Backgroud, options);
-            sb.Append(options.ModelSeparator);
-            sb.Append(block.DataId);
-            sb.Append(options.LineSeparator);
-
-            Serialize(sb, block.Lines, indent + options.IndentWhiteSpace, options);
-            Serialize(sb, block.Rectangles, indent + options.IndentWhiteSpace, options);
-            Serialize(sb, block.Ellipses, indent + options.IndentWhiteSpace, options);
-            Serialize(sb, block.Texts, indent + options.IndentWhiteSpace, options);
-            Serialize(sb, block.Images, indent + options.IndentWhiteSpace, options);
-            Serialize(sb, block.Blocks, indent + options.IndentWhiteSpace, options);
-
-            sb.Append(indent);
-            sb.Append("END");
-            sb.Append(options.LineSeparator);
-        }
-
-        public static void Serialize(StringBuilder sb, IEnumerable<LineItem> lines, string indent, ItemSerializeOptions options)
-        {
-            foreach (var line in lines)
-            {
-                Serialize(sb, line, indent, options);
-            }
-        }
-
-        public static void Serialize(StringBuilder sb, IEnumerable<RectangleItem> rectangles, string indent, ItemSerializeOptions options)
-        {
-            foreach (var rectangle in rectangles)
-            {
-                Serialize(sb, rectangle, indent, options);
-            }
-        }
-
-        public static void Serialize(StringBuilder sb, IEnumerable<EllipseItem> ellipses, string indent, ItemSerializeOptions options)
-        {
-            foreach (var ellipse in ellipses)
-            {
-                Serialize(sb, ellipse, indent, options);
-            }
-        }
-
-        public static void Serialize(StringBuilder sb, IEnumerable<TextItem> texts, string indent, ItemSerializeOptions options)
-        {
-            foreach (var text in texts)
-            {
-                Serialize(sb, text, indent, options);
-            }
-        }
-
-        public static void Serialize(StringBuilder sb, IEnumerable<ImageItem> images, string indent, ItemSerializeOptions options)
-        {
-            foreach (var image in images)
-            {
-                Serialize(sb, image, indent, options);
-            }
-        }
-
-        public static void Serialize(StringBuilder sb, IEnumerable<BlockItem> blocks, string indent, ItemSerializeOptions options)
-        {
-            foreach (var block in blocks)
-            {
-                Serialize(sb, block, indent, options);
-            }
-        }
-
-        public static string SerializeContents(BlockItem block, ItemSerializeOptions options)
-        {
-            var sb = new StringBuilder();
-
-            Serialize(sb, block.Lines, "", options);
-            Serialize(sb, block.Rectangles, "", options);
-            Serialize(sb, block.Ellipses, "", options);
-            Serialize(sb, block.Texts, "", options);
-            Serialize(sb, block.Images, "", options);
-            Serialize(sb, block.Blocks, "", options);
-
-            return sb.ToString();
-        }
-
-        public static string SerializeContents(BlockItem block)
-        {
-            return SerializeContents(block, ItemSerializeOptions.Default);
-        }
-
-        #endregion
-
-        #region Deserialize
-
-        private static LineItem DeserializeLine(string[] m)
-        {
-            var lineItem = new LineItem();
-            lineItem.Id = int.Parse(m[1]);
-            lineItem.X1 = double.Parse(m[2]);
-            lineItem.Y1 = double.Parse(m[3]);
-            lineItem.X2 = double.Parse(m[4]);
-            lineItem.Y2 = double.Parse(m[5]);
-            lineItem.Stroke = new ItemColor()
-            {
-                Alpha = int.Parse(m[6]),
-                Red = int.Parse(m[7]),
-                Green = int.Parse(m[8]),
-                Blue = int.Parse(m[9])
-            };
-            return lineItem;
-        }
-
-        private static RectangleItem DeserializeRectangle(string[] m)
-        {
-            var rectangleItem = new RectangleItem();
-            rectangleItem.Id = int.Parse(m[1]);
-            rectangleItem.X = double.Parse(m[2]);
-            rectangleItem.Y = double.Parse(m[3]);
-            rectangleItem.Width = double.Parse(m[4]);
-            rectangleItem.Height = double.Parse(m[5]);
-            rectangleItem.IsFilled = bool.Parse(m[6]);
-            rectangleItem.Stroke = new ItemColor()
-            {
-                Alpha = int.Parse(m[7]),
-                Red = int.Parse(m[8]),
-                Green = int.Parse(m[9]),
-                Blue = int.Parse(m[10])
-            };
-            rectangleItem.Fill = new ItemColor()
-            {
-                Alpha = int.Parse(m[11]),
-                Red = int.Parse(m[12]),
-                Green = int.Parse(m[13]),
-                Blue = int.Parse(m[14])
-            };
-            return rectangleItem;
-        }
-
-        private static EllipseItem DeserializeEllipse(string[] m)
-        {
-            var ellipseItem = new EllipseItem();
-            ellipseItem.Id = int.Parse(m[1]);
-            ellipseItem.X = double.Parse(m[2]);
-            ellipseItem.Y = double.Parse(m[3]);
-            ellipseItem.Width = double.Parse(m[4]);
-            ellipseItem.Height = double.Parse(m[5]);
-            ellipseItem.IsFilled = bool.Parse(m[6]);
-            ellipseItem.Stroke = new ItemColor()
-            {
-                Alpha = int.Parse(m[7]),
-                Red = int.Parse(m[8]),
-                Green = int.Parse(m[9]),
-                Blue = int.Parse(m[10])
-            };
-            ellipseItem.Fill = new ItemColor()
-            {
-                Alpha = int.Parse(m[11]),
-                Red = int.Parse(m[12]),
-                Green = int.Parse(m[13]),
-                Blue = int.Parse(m[14])
-            };
-            return ellipseItem;
-        }
-
-        private static TextItem DeserializeText(string[] m)
-        {
-            var textItem = new TextItem();
-            textItem.Id = int.Parse(m[1]);
-            textItem.X = double.Parse(m[2]);
-            textItem.Y = double.Parse(m[3]);
-            textItem.Width = double.Parse(m[4]);
-            textItem.Height = double.Parse(m[5]);
-            textItem.HAlign = int.Parse(m[6]);
-            textItem.VAlign = int.Parse(m[7]);
-            textItem.Size = double.Parse(m[8]);
-            textItem.Foreground = new ItemColor()
-            {
-                Alpha = int.Parse(m[9]),
-                Red = int.Parse(m[10]),
-                Green = int.Parse(m[11]),
-                Blue = int.Parse(m[12])
-            };
-            textItem.Backgroud = new ItemColor()
-            {
-                Alpha = int.Parse(m[13]),
-                Red = int.Parse(m[14]),
-                Green = int.Parse(m[15]),
-                Blue = int.Parse(m[16])
-            };
-            textItem.Text = m[17];
-            return textItem;
-        }
-
-        private static ImageItem DeserializeImage(string[] m)
-        {
-            var imageItem = new ImageItem();
-            imageItem.Id = int.Parse(m[1]);
-            imageItem.X = double.Parse(m[2]);
-            imageItem.Y = double.Parse(m[3]);
-            imageItem.Width = double.Parse(m[4]);
-            imageItem.Height = double.Parse(m[5]);
-            imageItem.Data = Base64.ToBytes(m[6]);
-            return imageItem;
-        }
-
-        private static BlockItem DeserializeBlockRecursive(string[] lines,
-            int length,
-            ref int end,
-            string[] m,
-            ItemSerializeOptions options)
-        {
-            var blockItem = DeserializeRootBlock(lines,
-                length,
-                ref end,
-                m[4],
-                int.Parse(m[1]),
-                double.Parse(m[2]),
-                double.Parse(m[3]),
-                int.Parse(m[11]),
-                options);
-
-            blockItem.Width = double.Parse(m[5]);
-            blockItem.Width = double.Parse(m[6]);
-            blockItem.Backgroud = new ItemColor()
-            {
-                Alpha = int.Parse(m[7]),
-                Red = int.Parse(m[8]),
-                Green = int.Parse(m[9]),
-                Blue = int.Parse(m[10])
-            };
-            blockItem.DataId = int.Parse(m[11]);
-            return blockItem;
-        }
-
-        private static BlockItem DeserializeRootBlock(string[] lines,
-            int length,
-            ref int end,
-            string name,
-            int id,
-            double x,
-            double y,
-            int dataId,
-            ItemSerializeOptions options)
-        {
-            var root = new BlockItem();
-            root.Init(id, x, y, dataId, name);
-
-            for (; end < length; end++)
-            {
-                string line = lines[end].TrimStart(options.WhiteSpace);
-                var m = line.Split(options.ModelSeparators);
-                if (m.Length == 10 && string.Compare(m[0], "LINE", true) == 0)
-                {
-                    if (m.Length == 10)
-                    {
-                        var lineItem = DeserializeLine(m);
-                        root.Lines.Add(lineItem);
-                    }
-                    else
-                    {
-                        throw new Exception(string.Format("Invalid LINE item at line {0}", end + 1));
-                    }
-                }
-                else if (string.Compare(m[0], "RECTANGLE", true) == 0)
-                {
-                    if (m.Length == 15)
-                    {
-                        var rectangleItem = DeserializeRectangle(m);
-                        root.Rectangles.Add(rectangleItem);
-                    }
-                    else
-                    {
-                        throw new Exception(string.Format("Invalid RECTANGLE item at line {0}", end + 1));
-                    }
-                }
-                else if (string.Compare(m[0], "ELLIPSE", true) == 0)
-                {
-                    if (m.Length == 15)
-                    {
-                        var ellipseItem = DeserializeEllipse(m);
-                        root.Ellipses.Add(ellipseItem);
-                    }
-                    else
-                    {
-                        throw new Exception(string.Format("Invalid ELLIPSE item at line {0}", end + 1));
-                    }
-                }
-                else if (string.Compare(m[0], "TEXT", true) == 0)
-                {
-                    if (m.Length == 18)
-                    {
-                        var textItem = DeserializeText(m);
-                        root.Texts.Add(textItem);
-                    }
-                    else
-                    {
-                        throw new Exception(string.Format("Invalid TEXT item at line {0}", end + 1));
-                    }
-                }
-                else if (string.Compare(m[0], "IMAGE", true) == 0)
-                {
-                    if (m.Length == 7)
-                    {
-                        var imageItem = DeserializeImage(m);
-                        root.Images.Add(imageItem);
-                    }
-                    else
-                    {
-                        throw new Exception(string.Format("Invalid IMAGE item at line {0}", end + 1));
-                    }
-                }
-                else if (string.Compare(m[0], "BLOCK", true) == 0)
-                {
-                    if (m.Length == 12)
-                    {
-                        end++;
-                        var blockItem = DeserializeBlockRecursive(lines, length, ref end, m, options);
-                        root.Blocks.Add(blockItem);
-                        continue;
-                    }
-                    else
-                    {
-                        throw new Exception(string.Format("Invalid BLOCK item at line {0}", end + 1));
-                    }
-                }
-                else if (string.Compare(m[0], "END", true) == 0)
-                {
-                    if (m.Length == 1)
-                    {
-                        return root;
-                    }
-                    else
-                    {
-                        throw new Exception(string.Format("Invalid END item at line {0}", end + 1));
-                    }
-                }
-                else if (m[0].StartsWith("//"))
-                {
-                    continue;
-                }
-                else
-                {
-                    throw new Exception(string.Format("Invalid item at line {0}", end + 1));
-                }
-            }
-            return root;
-        }
-
-        public static BlockItem DeserializeContents(string model, ItemSerializeOptions options)
-        {
-            try
-            {
-                string[] lines = model.Split(options.LineSeparators, StringSplitOptions.RemoveEmptyEntries);
-                int length = lines.Length;
-                int end = 0;
-                return DeserializeRootBlock(lines, length, ref end, "", 0, 0.0, 0.0, -1, options);
-            }
-            catch (Exception ex)
-            {
-                Debug.Print(ex.Message);
-                Debug.Print(ex.StackTrace);
-            }
-            return null;
-        }
-
-        public static BlockItem DeserializeContents(string model)
-        {
-            return DeserializeContents(model, ItemSerializeOptions.Default);
-        }
-
-        #endregion
-    }
-
-    #endregion
-
-    #region Item Controller
-
-    public static class ItemController
-    {
-        #region Text
-
-        public async static Task<string> OpenText(string fileName)
-        {
-            try
-            {
-                using (var stream = System.IO.File.OpenText(fileName))
-                {
-                    return await stream.ReadToEndAsync();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.Print(ex.Message);
-                Debug.Print(ex.StackTrace);
-            }
-            return null;
-        }
-
-        public async static void SaveText(string fileName, string text)
-        {
-            try
-            {
-                if (text != null)
-                {
-                    using (var stream = System.IO.File.CreateText(fileName))
-                    {
-                        await stream.WriteAsync(text);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.Print(ex.Message);
-                Debug.Print(ex.StackTrace);
-            }
-        }
-
-        #endregion
-
-        #region Position
-
-        public static void ResetPosition(BlockItem block, double originX, double originY, double width, double height)
-        {
-            double minX = width;
-            double minY = height;
-            double maxX = originX;
-            double maxY = originY;
-            MinMax(block, ref minX, ref minY, ref maxX, ref maxY);
-            double x = -(maxX - (maxX - minX));
-            double y = -(maxY - (maxY - minY));
-            Move(block, x, y);
-        }
-
-        #endregion
-
-        #region MinMax
-
-        public static void MinMax(BlockItem block, ref double minX, ref double minY, ref double maxX, ref double maxY)
-        {
-            MinMax(block.Lines, ref minX, ref minY, ref maxX, ref maxY);
-            MinMax(block.Rectangles, ref minX, ref minY, ref maxX, ref maxY);
-            MinMax(block.Ellipses, ref minX, ref minY, ref maxX, ref maxY);
-            MinMax(block.Texts, ref minX, ref minY, ref maxX, ref maxY);
-            MinMax(block.Images, ref minX, ref minY, ref maxX, ref maxY);
-            MinMax(block.Blocks, ref minX, ref minY, ref maxX, ref maxY);
-        }
-
-        public static void MinMax(IEnumerable<BlockItem> blocks, ref double minX, ref double minY, ref double maxX, ref double maxY)
-        {
-            foreach (var block in blocks)
-            {
-                MinMax(block, ref minX, ref minY, ref maxX, ref maxY);
-            }
-        }
-
-        public static void MinMax(IEnumerable<LineItem> lines, ref double minX, ref double minY, ref double maxX, ref double maxY)
-        {
-            foreach (var line in lines)
-            {
-                minX = Math.Min(minX, line.X1);
-                minX = Math.Min(minX, line.X2);
-                minY = Math.Min(minY, line.Y1);
-                minY = Math.Min(minY, line.Y2);
-                maxX = Math.Max(maxX, line.X1);
-                maxX = Math.Max(maxX, line.X2);
-                maxY = Math.Max(maxY, line.Y1);
-                maxY = Math.Max(maxY, line.Y2);
-            }
-        }
-
-        public static void MinMax(IEnumerable<RectangleItem> rectangles, ref double minX, ref double minY, ref double maxX, ref double maxY)
-        {
-            foreach (var rectangle in rectangles)
-            {
-                minX = Math.Min(minX, rectangle.X);
-                minY = Math.Min(minY, rectangle.Y);
-                maxX = Math.Max(maxX, rectangle.X);
-                maxY = Math.Max(maxY, rectangle.Y);
-            }
-        }
-
-        public static void MinMax(IEnumerable<EllipseItem> ellipses, ref double minX, ref double minY, ref double maxX, ref double maxY)
-        {
-            foreach (var ellipse in ellipses)
-            {
-                minX = Math.Min(minX, ellipse.X);
-                minY = Math.Min(minY, ellipse.Y);
-                maxX = Math.Max(maxX, ellipse.X);
-                maxY = Math.Max(maxY, ellipse.Y);
-            }
-        }
-
-        public static void MinMax(IEnumerable<TextItem> texts, ref double minX, ref double minY, ref double maxX, ref double maxY)
-        {
-            foreach (var text in texts)
-            {
-                minX = Math.Min(minX, text.X);
-                minY = Math.Min(minY, text.Y);
-                maxX = Math.Max(maxX, text.X);
-                maxY = Math.Max(maxY, text.Y);
-            }
-        }
-
-        public static void MinMax(IEnumerable<ImageItem> images, ref double minX, ref double minY, ref double maxX, ref double maxY)
-        {
-            foreach (var image in images)
-            {
-                minX = Math.Min(minX, image.X);
-                minY = Math.Min(minY, image.Y);
-                maxX = Math.Max(maxX, image.X);
-                maxY = Math.Max(maxY, image.Y);
-            }
-        }
-
-        #endregion
-
-        #region Move
-
-        public static void Move(IEnumerable<BlockItem> blocks, double x, double y)
-        {
-            foreach (var block in blocks)
-            {
-                Move(block, x, y);
-            }
-        }
-
-        public static void Move(BlockItem block, double x, double y)
-        {
-            Move(block.Lines, x, y);
-            Move(block.Rectangles, x, y);
-            Move(block.Ellipses, x, y);
-            Move(block.Texts, x, y);
-            Move(block.Images, x, y);
-            Move(block.Blocks, x, y);
-        }
-
-        public static void Move(IEnumerable<LineItem> lines, double x, double y)
-        {
-            foreach (var line in lines)
-            {
-                Move(line, x, y);
-            }
-        }
-
-        public static void Move(IEnumerable<RectangleItem> rectangles, double x, double y)
-        {
-            foreach (var rectangle in rectangles)
-            {
-                Move(rectangle, x, y);
-            }
-        }
-
-        public static void Move(IEnumerable<EllipseItem> ellipses, double x, double y)
-        {
-            foreach (var ellipse in ellipses)
-            {
-                Move(ellipse, x, y);
-            }
-        }
-
-        public static void Move(IEnumerable<TextItem> texts, double x, double y)
-        {
-            foreach (var text in texts)
-            {
-                Move(text, x, y);
-            }
-        }
-
-        public static void Move(IEnumerable<ImageItem> images, double x, double y)
-        {
-            foreach (var image in images)
-            {
-                Move(image, x, y);
-            }
-        }
-
-        public static void Move(LineItem line, double x, double y)
-        {
-            line.X1 += x;
-            line.Y1 += y;
-            line.X2 += x;
-            line.Y2 += y;
-        }
-
-        public static void Move(RectangleItem rectangle, double x, double y)
-        {
-            rectangle.X += x;
-            rectangle.Y += y;
-        }
-
-        public static void Move(EllipseItem ellipse, double x, double y)
-        {
-            ellipse.X += x;
-            ellipse.Y += y;
-        }
-
-        public static void Move(TextItem text, double x, double y)
-        {
-            text.X += x;
-            text.Y += y;
-        }
-
-        public static void Move(ImageItem image, double x, double y)
-        {
-            image.X += x;
-            image.Y += y;
-        }
-
-        #endregion
-
-        #region Snap
-
-        public static double Snap(double val, double snap)
-        {
-            double r = val % snap;
-            return r >= snap / 2.0 ? val + snap - r : val - r;
-        }
-
-        #endregion
-    }
-
-    #endregion
-
     #region Block Model
+
+    public enum Mode
+    {
+        None,
+        Selection,
+        Insert,
+        Pan,
+        Move,
+        Edit,
+        Line,
+        Rectangle,
+        Ellipse,
+        Text,
+        Image,
+        TextEditor
+    }
+
+    public class SheetOptions
+    {
+        public double PageOriginX { get; set; }
+        public double PageOriginY { get; set; }
+        public double PageWidth { get; set; }
+        public double PageHeight { get; set; }
+        public double SnapSize { get; set; }
+        public double GridSize { get; set; }
+        public double FrameThickness { get; set; }
+        public double GridThickness { get; set; }
+        public double SelectionThickness { get; set; }
+        public double LineThickness { get; set; }
+        public double HitTestSize { get; set; }
+        public int DefaultZoomIndex { get; set; }
+        public int MaxZoomIndex { get; set; }
+        public double[] ZoomFactors { get; set; }
+    }
+
+    public interface ISheet<T> where T : class
+    {
+        T GetParent();
+        void Add(T element);
+        void Remove(T element);
+        void Capture();
+        void ReleaseCapture();
+        bool IsCaptured { get; }
+    }
 
     public class Block
     {
@@ -1504,67 +124,7 @@ namespace Sheet
         }
     }
 
-    public enum Mode
-    {
-        None,
-        Selection,
-        Insert,
-        Pan,
-        Move,
-        Edit,
-        Line,
-        Rectangle,
-        Ellipse,
-        Text,
-        Image,
-        TextEditor
-    }
-
-    public enum ItemType
-    {
-        None,
-        Line,
-        Rectangle,
-        Ellipse,
-        Text,
-        Image
-    }
-
-    public class SheetOptions
-    {
-        public double PageOriginX { get; set; }
-        public double PageOriginY { get; set; }
-        public double PageWidth { get; set; }
-        public double PageHeight { get; set; }
-        public double SnapSize { get; set; }
-        public double GridSize { get; set; }
-        public double FrameThickness { get; set; }
-        public double GridThickness { get; set; }
-        public double SelectionThickness { get; set; }
-        public double LineThickness { get; set; }
-        public double HitTestSize { get; set; }
-        public int DefaultZoomIndex { get; set; }
-        public int MaxZoomIndex { get; set; }
-        public double[] ZoomFactors { get; set; }
-    }
-
-    public class ChangeMessage
-    {
-        public string Message { get; set; }
-        public string Model { get; set; }
-    }
-
-    public interface ISheet
-    {
-        FrameworkElement GetParent();
-        void Add(UIElement element);
-        void Remove(UIElement element);
-        void Capture();
-        void ReleaseCapture();
-        bool IsCaptured { get; }
-    }
-
-    public class CanvasSheet : ISheet
+    public class CanvasSheet : ISheet<FrameworkElement>
     {
         #region Fields
 
@@ -1588,12 +148,12 @@ namespace Sheet
             return canvas;
         }
 
-        public void Add(UIElement element)
+        public void Add(FrameworkElement element)
         {
             canvas.Children.Add(element);
         }
 
-        public void Remove(UIElement element)
+        public void Remove(FrameworkElement element)
         {
             canvas.Children.Remove(element);
         }
@@ -1830,7 +390,7 @@ namespace Sheet
 
         #region Deserialize
 
-        public static Line DeserializeLineItem(ISheet sheet, Block parent, LineItem lineItem, double thickness)
+        public static Line DeserializeLineItem(ISheet<FrameworkElement> sheet, Block parent, LineItem lineItem, double thickness)
         {
             var line = BlockFactory.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2, BlockFactory.NormalBrush);
 
@@ -1847,7 +407,7 @@ namespace Sheet
             return line;
         }
 
-        public static Rectangle DeserializeRectangleItem(ISheet sheet, Block parent, RectangleItem rectangleItem, double thickness)
+        public static Rectangle DeserializeRectangleItem(ISheet<FrameworkElement> sheet, Block parent, RectangleItem rectangleItem, double thickness)
         {
             var rectangle = BlockFactory.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
 
@@ -1864,7 +424,7 @@ namespace Sheet
             return rectangle;
         }
 
-        public static Ellipse DeserializeEllipseItem(ISheet sheet, Block parent, EllipseItem ellipseItem, double thickness)
+        public static Ellipse DeserializeEllipseItem(ISheet<FrameworkElement> sheet, Block parent, EllipseItem ellipseItem, double thickness)
         {
             var ellipse = BlockFactory.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
 
@@ -1881,7 +441,7 @@ namespace Sheet
             return ellipse;
         }
 
-        public static Grid DeserializeTextItem(ISheet sheet, Block parent, TextItem textItem)
+        public static Grid DeserializeTextItem(ISheet<FrameworkElement> sheet, Block parent, TextItem textItem)
         {
             var text = BlockFactory.CreateText(textItem.Text,
                 textItem.X, textItem.Y,
@@ -1905,7 +465,7 @@ namespace Sheet
             return text;
         }
 
-        public static Image DeserializeImageItem(ISheet sheet, Block parent, ImageItem imageItem)
+        public static Image DeserializeImageItem(ISheet<FrameworkElement> sheet, Block parent, ImageItem imageItem)
         {
             var image = BlockFactory.CreateImage(imageItem.X, imageItem.Y, imageItem.Width, imageItem.Height, imageItem.Data);
 
@@ -1922,7 +482,7 @@ namespace Sheet
             return image;
         }
 
-        public static Block DeserializeBlockItem(ISheet sheet, Block parent, BlockItem blockItem, bool select, double thickness)
+        public static Block DeserializeBlockItem(ISheet<FrameworkElement> sheet, Block parent, BlockItem blockItem, bool select, double thickness)
         {
             var block = new Block(blockItem.Id, blockItem.X, blockItem.Y, blockItem.DataId, blockItem.Name);
             block.Init();
@@ -2001,7 +561,7 @@ namespace Sheet
     {
         #region Add
 
-        public static void AddLines(ISheet sheet, IEnumerable<LineItem> lineItems, Block parent, Block selected, bool select, double thickness)
+        public static void AddLines(ISheet<FrameworkElement> sheet, IEnumerable<LineItem> lineItems, Block parent, Block selected, bool select, double thickness)
         {
             if (select)
             {
@@ -2020,7 +580,7 @@ namespace Sheet
             }
         }
 
-        public static void AddRectangles(ISheet sheet, IEnumerable<RectangleItem> rectangleItems, Block parent, Block selected, bool select, double thickness)
+        public static void AddRectangles(ISheet<FrameworkElement> sheet, IEnumerable<RectangleItem> rectangleItems, Block parent, Block selected, bool select, double thickness)
         {
             if (select)
             {
@@ -2039,7 +599,7 @@ namespace Sheet
             }
         }
 
-        public static void AddEllipses(ISheet sheet, IEnumerable<EllipseItem> ellipseItems, Block parent, Block selected, bool select, double thickness)
+        public static void AddEllipses(ISheet<FrameworkElement> sheet, IEnumerable<EllipseItem> ellipseItems, Block parent, Block selected, bool select, double thickness)
         {
             if (select)
             {
@@ -2058,7 +618,7 @@ namespace Sheet
             }
         }
 
-        public static void AddTexts(ISheet sheet, IEnumerable<TextItem> textItems, Block parent, Block selected, bool select, double thickness)
+        public static void AddTexts(ISheet<FrameworkElement> sheet, IEnumerable<TextItem> textItems, Block parent, Block selected, bool select, double thickness)
         {
             if (select)
             {
@@ -2077,7 +637,7 @@ namespace Sheet
             }
         }
 
-        public static void AddImages(ISheet sheet, IEnumerable<ImageItem> imageItems, Block parent, Block selected, bool select, double thickness)
+        public static void AddImages(ISheet<FrameworkElement> sheet, IEnumerable<ImageItem> imageItems, Block parent, Block selected, bool select, double thickness)
         {
             if (select)
             {
@@ -2096,7 +656,7 @@ namespace Sheet
             }
         }
 
-        public static void AddBlocks(ISheet sheet, IEnumerable<BlockItem> blockItems, Block parent, Block selected, bool select, double thickness)
+        public static void AddBlocks(ISheet<FrameworkElement> sheet, IEnumerable<BlockItem> blockItems, Block parent, Block selected, bool select, double thickness)
         {
             if (select)
             {
@@ -2114,7 +674,7 @@ namespace Sheet
             }
         }
 
-        public static void AddBlockContents(ISheet sheet, BlockItem blockItem, Block logic, Block selected, bool select, double thickness)
+        public static void AddBlockContents(ISheet<FrameworkElement> sheet, BlockItem blockItem, Block logic, Block selected, bool select, double thickness)
         {
             if (blockItem != null)
             {
@@ -2127,7 +687,7 @@ namespace Sheet
             }
         }
 
-        public static void AddBrokenBlock(ISheet sheet, BlockItem blockItem, Block logic, Block selected, bool select, double thickness)
+        public static void AddBrokenBlock(ISheet<FrameworkElement> sheet, BlockItem blockItem, Block logic, Block selected, bool select, double thickness)
         {
             AddTexts(sheet, blockItem.Texts, logic, selected, select, thickness);
             AddImages(sheet, blockItem.Images, logic, selected, select, thickness);
@@ -2150,7 +710,7 @@ namespace Sheet
 
         #region Remove
 
-        public static void RemoveLines(ISheet sheet, IEnumerable<Line> lines)
+        public static void RemoveLines(ISheet<FrameworkElement> sheet, IEnumerable<Line> lines)
         {
             if (lines != null)
             {
@@ -2161,7 +721,7 @@ namespace Sheet
             }
         }
 
-        public static void RemoveRectangles(ISheet sheet, IEnumerable<Rectangle> rectangles)
+        public static void RemoveRectangles(ISheet<FrameworkElement> sheet, IEnumerable<Rectangle> rectangles)
         {
             if (rectangles != null)
             {
@@ -2172,7 +732,7 @@ namespace Sheet
             }
         }
 
-        public static void RemoveEllipses(ISheet sheet, IEnumerable<Ellipse> ellipses)
+        public static void RemoveEllipses(ISheet<FrameworkElement> sheet, IEnumerable<Ellipse> ellipses)
         {
             if (ellipses != null)
             {
@@ -2183,7 +743,7 @@ namespace Sheet
             }
         }
 
-        public static void RemoveTexts(ISheet sheet, IEnumerable<Grid> texts)
+        public static void RemoveTexts(ISheet<FrameworkElement> sheet, IEnumerable<Grid> texts)
         {
             if (texts != null)
             {
@@ -2194,7 +754,7 @@ namespace Sheet
             }
         }
 
-        public static void RemoveImages(ISheet sheet, IEnumerable<Image> images)
+        public static void RemoveImages(ISheet<FrameworkElement> sheet, IEnumerable<Image> images)
         {
             if (images != null)
             {
@@ -2205,7 +765,7 @@ namespace Sheet
             }
         }
 
-        public static void RemoveBlocks(ISheet sheet, IEnumerable<Block> blocks)
+        public static void RemoveBlocks(ISheet<FrameworkElement> sheet, IEnumerable<Block> blocks)
         {
             if (blocks != null)
             {
@@ -2216,7 +776,7 @@ namespace Sheet
             }
         }
 
-        public static void RemoveBlock(ISheet sheet, Block block)
+        public static void RemoveBlock(ISheet<FrameworkElement> sheet, Block block)
         {
             RemoveLines(sheet, block.Lines);
             RemoveRectangles(sheet, block.Rectangles);
@@ -2226,7 +786,7 @@ namespace Sheet
             RemoveBlocks(sheet, block.Blocks);
         }
 
-        public static void RemoveSelectedFromBlock(ISheet sheet, Block parent, Block selected)
+        public static void RemoveSelectedFromBlock(ISheet<FrameworkElement> sheet, Block parent, Block selected)
         {
             if (selected.Lines != null)
             {
@@ -3032,7 +1592,7 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestClick(ISheet sheet, Block parent, Block selected, Point p, double size, bool selectInsideBlock, bool resetSelected)
+        public static bool HitTestClick(ISheet<FrameworkElement> sheet, Block parent, Block selected, Point p, double size, bool selectInsideBlock, bool resetSelected)
         {
             if (resetSelected)
             {
@@ -3109,7 +1669,7 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestForBlocks(ISheet sheet, Block parent, Block selected, Point p, double size)
+        public static bool HitTestForBlocks(ISheet<FrameworkElement> sheet, Block parent, Block selected, Point p, double size)
         {
             selected.Init();
 
@@ -3129,7 +1689,7 @@ namespace Sheet
             return false;
         }
 
-        public static void HitTestSelectionRect(ISheet sheet, Block parent, Block selected, Rect rect, bool resetSelected)
+        public static void HitTestSelectionRect(ISheet<FrameworkElement> sheet, Block parent, Block selected, Rect rect, bool resetSelected)
         {
             if (resetSelected)
             {
@@ -3241,70 +1801,6 @@ namespace Sheet
 
         #region Create
 
-        public static TextBlock GetTextBlock(Grid text)
-        {
-            return text.Children[0] as TextBlock;
-        }
-
-        public static Grid CreateText(string text,
-            double x, double y, double width, double height,
-            HorizontalAlignment halign, VerticalAlignment valign,
-            double fontSize,
-            Brush backgroud, Brush foreground)
-        {
-            var grid = new Grid();
-            grid.Background = backgroud;
-            grid.Width = width;
-            grid.Height = height;
-            Canvas.SetLeft(grid, x);
-            Canvas.SetTop(grid, y);
-
-            var tb = new TextBlock();
-            tb.HorizontalAlignment = halign;
-            tb.VerticalAlignment = valign;
-            tb.Background = backgroud;
-            tb.Foreground = foreground;
-            tb.FontSize = fontSize;
-            tb.FontFamily = new FontFamily("Calibri");
-            tb.Text = text;
-
-            grid.Children.Add(tb);
-
-            return grid;
-        }
-
-        public static Image CreateImage(double x, double y, double width, double height, byte[] data)
-        {
-            Image image = new Image();
-
-            // enable high quality image scaling
-            RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
-
-            // store original image data is Tag property
-            image.Tag = data;
-
-            // opacity mask is used for determining selection state
-            image.OpacityMask = NormalBrush;
-
-            //using(var ms = new MemoryStream(data))
-            //{
-            //    image = Image.FromStream(ms);
-            //}
-            using (var ms = new MemoryStream(data))
-            {
-                IBitmap profileImage = BitmapLoader.Current.Load(ms, null, null).Result;
-                image.Source = profileImage.ToNative();
-            }
-            
-            image.Width = width;
-            image.Height = height;
-
-            Canvas.SetLeft(image, x);
-            Canvas.SetTop(image, y);
-
-            return image;
-        }
-
         public static Line CreateLine(double thickness, double x1, double y1, double x2, double y2, Brush stroke)
         {
             var line = new Line()
@@ -3358,6 +1854,177 @@ namespace Sheet
             Canvas.SetTop(ellipse, y);
 
             return ellipse;
+        }
+
+        public static TextBlock GetTextBlock(Grid text)
+        {
+            return text.Children[0] as TextBlock;
+        }
+
+        public static Grid CreateText(string text,
+            double x, double y, double width, double height,
+            HorizontalAlignment halign, VerticalAlignment valign,
+            double fontSize,
+            Brush backgroud, Brush foreground)
+        {
+            var grid = new Grid();
+            grid.Background = backgroud;
+            grid.Width = width;
+            grid.Height = height;
+            Canvas.SetLeft(grid, x);
+            Canvas.SetTop(grid, y);
+
+            var tb = new TextBlock();
+            tb.HorizontalAlignment = halign;
+            tb.VerticalAlignment = valign;
+            tb.Background = backgroud;
+            tb.Foreground = foreground;
+            tb.FontSize = fontSize;
+            tb.FontFamily = new FontFamily("Calibri");
+            tb.Text = text;
+
+            grid.Children.Add(tb);
+
+            return grid;
+        }
+
+        public static Image CreateImage(double x, double y, double width, double height, byte[] data)
+        {
+            Image image = new Image();
+
+            // enable high quality image scaling
+            RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
+
+            // store original image data is Tag property
+            image.Tag = data;
+
+            // opacity mask is used for determining selection state
+            image.OpacityMask = NormalBrush;
+
+            //using(var ms = new System.IO.MemoryStream(data))
+            //{
+            //    image = Image.FromStream(ms);
+            //}
+            using (var ms = new System.IO.MemoryStream(data))
+            {
+                IBitmap profileImage = BitmapLoader.Current.Load(ms, null, null).Result;
+                image.Source = profileImage.ToNative();
+            }
+
+            image.Width = width;
+            image.Height = height;
+
+            Canvas.SetLeft(image, x);
+            Canvas.SetTop(image, y);
+
+            return image;
+        }
+
+        #endregion
+    }
+
+    #endregion
+
+    #region Page Factory
+
+    public static class PageFactory
+    {
+        #region Create
+
+        public static void CreateLine(ISheet<FrameworkElement> sheet, List<Line> lines, double thickness, double x1, double y1, double x2, double y2, Brush stroke)
+        {
+            var line = BlockFactory.CreateLine(thickness, x1, y1, x2, y2, stroke);
+
+            if (lines != null)
+            {
+                lines.Add(line);
+            }
+
+            if (sheet != null)
+            {
+                sheet.Add(line);
+            }
+        }
+
+        public static void CreateText(ISheet<FrameworkElement> sheet, List<Grid> texts, string content, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size, Brush foreground)
+        {
+            var text = BlockFactory.CreateText(content, x, y, width, height, halign, valign, size, BlockFactory.TransparentBrush, foreground);
+
+            if (texts != null)
+            {
+                texts.Add(text);
+            }
+
+            if (sheet != null)
+            {
+                sheet.Add(text);
+            }
+        }
+
+        public static void CreateFrame(ISheet<FrameworkElement> sheet, Block block, double size, double thickness, Brush stroke)
+        {
+            double padding = 6.0;
+            double width = 1260.0;
+            double height = 891.0;
+            double startX = padding;
+            double startY = padding;
+            double rowsStart = 60;
+            double rowsEnd = 780.0;
+
+            // frame left rows
+            int leftRowNumber = 1;
+            for (double y = rowsStart; y < rowsEnd; y += size)
+            {
+                CreateLine(sheet, block.Lines, thickness, startX, y, 330.0, y, stroke);
+                CreateText(sheet, block.Texts, leftRowNumber.ToString("00"), startX, y, 30.0 - padding, size, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0, stroke);
+                leftRowNumber++;
+            }
+
+            // frame right rows
+            int rightRowNumber = 1;
+            for (double y = rowsStart; y < rowsEnd; y += size)
+            {
+                CreateLine(sheet, block.Lines, thickness, 930.0, y, 1260.0 - padding, y, stroke);
+                CreateText(sheet, block.Texts, rightRowNumber.ToString("00"), 1260.0 - 30.0, y, 30.0 - padding, size, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0, stroke);
+                rightRowNumber++;
+            }
+
+            // frame columns
+            double[] columnWidth = { 30.0, 210.0, 90.0, 600.0, 210.0, 90.0 };
+            double[] columnX = { 30.0, 30.0, startY, startY, 30.0, 30.0 };
+            double[] columnY = { rowsEnd, rowsEnd, rowsEnd, rowsEnd, rowsEnd, rowsEnd };
+
+            double start = 0.0;
+            for (int i = 0; i < columnWidth.Length; i++)
+            {
+                start += columnWidth[i];
+                CreateLine(sheet, block.Lines, thickness, start, columnX[i], start, columnY[i], stroke);
+            }
+
+            // frame header
+            CreateLine(sheet, block.Lines, thickness, startX, 30.0, width - padding, 30.0, stroke);
+
+            // frame footer
+            CreateLine(sheet, block.Lines, thickness, startX, rowsEnd, width - padding, rowsEnd, stroke);
+
+            // frame border
+            CreateLine(sheet, block.Lines, thickness, startX, startY, width - padding, startY, stroke);
+            CreateLine(sheet, block.Lines, thickness, startX, height - padding, width - padding, height - padding, stroke);
+            CreateLine(sheet, block.Lines, thickness, startX, startY, startX, height - padding, stroke);
+            CreateLine(sheet, block.Lines, thickness, width - padding, startY, width - padding, height - padding, stroke);
+        }
+
+        public static void CreateGrid(ISheet<FrameworkElement> sheet, Block block, double startX, double startY, double width, double height, double size, double thickness, Brush stroke)
+        {
+            for (double y = startY + size; y < height + startY; y += size)
+            {
+                CreateLine(sheet, block.Lines, thickness, startX, y, width + startX, y, stroke);
+            }
+
+            for (double x = startX + size; x < startX + width; x += size)
+            {
+                CreateLine(sheet, block.Lines, thickness, x, startY, x, height + startY, stroke);
+            }
         }
 
         public static Rectangle CreateSelectionRectangle(double thickness, double x, double y, double width, double height)

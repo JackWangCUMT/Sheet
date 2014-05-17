@@ -93,6 +93,11 @@
     <Compile Include="Controls\DatabaseControl.xaml.cs">
       <DependentUpon>DatabaseControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Core\Base64.cs" />
+    <Compile Include="Core\Block.cs" />
+    <Compile Include="Core\Entry.cs" />
+    <Compile Include="Core\History.cs" />
+    <Compile Include="Core\Item.cs" />
     <Compile Include="Dxf\Dxf.cs" />
     <Compile Include="Dxf\DxfInspect.cs" />
     <Compile Include="Dxf\BlockDxfWriter.cs" />
@@ -130,7 +135,6 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Sheet.cs" />
     <Compile Include="Controls\SheetControl.xaml.cs">
       <DependentUpon>SheetControl.xaml</DependentUpon>
     </Compile>
