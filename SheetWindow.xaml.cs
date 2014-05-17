@@ -20,15 +20,40 @@ namespace Sheet
 
     public class SizeBorder : Border
     {
-        public Action<Size> Execute { get; set; }
+        #region Properties
+
+        public Action<Size> ExecuteUpdateSize { get; set; }
+        public Action ExecuteSizeChanged { get; set; }
+
+        #endregion
+
+        #region Constructor
+
+        public SizeBorder()
+        {
+            SizeChanged += (sender, e) =>
+            {
+                if (Child != null && ExecuteSizeChanged != null)
+                {
+                    ExecuteSizeChanged();
+                }
+            };
+        } 
+
+        #endregion
+
+        #region ArrangeOverride
+
         protected override Size ArrangeOverride(Size finalSize)
         {
-            if (Execute != null)
+            if (ExecuteUpdateSize != null)
             {
-                Execute(finalSize);
+                ExecuteUpdateSize(finalSize);
             }
             return base.ArrangeOverride(finalSize);
-        }
+        } 
+
+        #endregion
     } 
 
     #endregion
@@ -51,7 +76,8 @@ namespace Sheet
         {
             Sheet.Library = Library;
             Sheet.Database = Csv;
-            SizeBorder.Execute = (size) => Sheet.SetAutoFitSize(size);
+            SizeBorder.ExecuteUpdateSize = (size) => Sheet.SetAutoFitSize(size);
+            SizeBorder.ExecuteSizeChanged = () => Sheet.AutoFit();
             Solution.Controller = Sheet;
             UpdateModeMenu();
             CreateTestDatabase();
