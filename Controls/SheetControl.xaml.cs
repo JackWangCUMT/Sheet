@@ -1051,6 +1051,7 @@ namespace Sheet
                             break;
                         }
                     }
+                    zoomIndex = Math.Min(zoomIndex, options.MaxZoomIndex) - 1;
                     ZoomTo(p.X, p.Y, zoomIndex + 1);
                 }
             }
@@ -1070,6 +1071,7 @@ namespace Sheet
                             break;
                         }
                     }
+                    zoomIndex = Math.Min(zoomIndex, options.MaxZoomIndex) - 1;
                     ZoomTo(p.X, p.Y, zoomIndex + 1);
                 }
             }
@@ -1113,6 +1115,9 @@ namespace Sheet
             PanY = panY - dy;
 
             lastFactor = factor;
+
+            //Debug.Print(string.Format("AutoFit: {0}, {1}", finalSize, new StackFrame(1).GetMethod().Name));
+            //Debug.Print(new StackTrace().ToString());
         }
 
         private void InitPan(Point p)
