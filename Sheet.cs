@@ -1076,7 +1076,7 @@ namespace Sheet
 
     #endregion
 
-    #region Item Editor
+    #region Item Controller
 
     public static class ItemController
     {
