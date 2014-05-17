@@ -384,8 +384,6 @@ namespace Sheet
 
             LoadStandardLibrary();
 
-            AutoFit();
-
             Focus();
         }
 
@@ -1060,8 +1058,6 @@ namespace Sheet
         public void SetAutoFitSize(Size finalSize)
         {
             lastFinalSize = finalSize;
-            //Debug.Print(string.Format("SetAutoFitSize: {0}", finalSize));
-            //Debug.Print(new StackTrace().ToString());
         }
 
         public void AutoFit(Size size)
@@ -1072,7 +1068,6 @@ namespace Sheet
             double factor = Math.Min(fwidth, fheight);
             double panX = (size.Width - (options.PageWidth * factor)) / 2.0;
             double panY = (size.Height - (options.PageHeight * factor)) / 2.0;
-
             double dx = Math.Max(0, (size.Width - DesiredSize.Width) / 2.0);
             double dy = Math.Max(0, (size.Height - DesiredSize.Height) / 2.0);
 
