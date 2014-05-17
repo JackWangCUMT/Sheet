@@ -210,11 +210,11 @@ namespace Sheet
 
             foreach (var item in dict)
             {
-                var document = EntryController.CreateDocument(solution, item.Key);
+                var document = EntryFactory.CreateDocument(solution, item.Key);
                 solution.Documents.Add(document);
                 foreach (var tuple in item.Value)
                 {
-                    var page = EntryController.CreatePage(document, tuple.Item2, tuple.Item1);
+                    var page = EntryFactory.CreatePage(document, tuple.Item2, tuple.Item1);
                     document.Pages.Add(page);
                 }
             }
@@ -267,44 +267,18 @@ namespace Sheet
 
         #endregion
 
-        #region Factory
-
-        public static PageEntry CreatePage(DocumentEntry document, string content, string name = null)
-        {
-            var page = new PageEntry()
-            {
-                Name = name == null ? "Page" : name,
-                Content = content,
-                Document = document
-            };
-            return page;
-        }
-
-        public static DocumentEntry CreateDocument(SolutionEntry solution, string name = null)
-        {
-            var document = new DocumentEntry()
-            {
-                Name = name == null ? string.Concat("Document", solution.Documents.Count) : name,
-                Pages = new ObservableCollection<PageEntry>(),
-                Solution = solution
-            };
-            return document;
-        }
-
-        #endregion
-
         #region Page
 
         public static PageEntry AddPage(DocumentEntry document, string content)
         {
-            var page = CreatePage(document, content);
+            var page = EntryFactory.CreatePage(document, content);
             document.Pages.Add(page);
             return page;
         }
 
         public static PageEntry AddPageBefore(DocumentEntry document, PageEntry beofore, string content)
         {
-            var page = CreatePage(document, content);
+            var page = EntryFactory.CreatePage(document, content);
             int index = document.Pages.IndexOf(beofore);
             document.Pages.Insert(index, page);
             return page;
@@ -312,7 +286,7 @@ namespace Sheet
 
         public static PageEntry AddPageAfter(DocumentEntry document, PageEntry after, string content)
         {
-            var page = CreatePage(document, content);
+            var page = EntryFactory.CreatePage(document, content);
             int index = document.Pages.IndexOf(after);
             document.Pages.Insert(index + 1, page);
             return page;
@@ -376,7 +350,7 @@ namespace Sheet
 
         public static DocumentEntry AddDocumentBefore(SolutionEntry solution, DocumentEntry after)
         {
-            var document = CreateDocument(solution);
+            var document = EntryFactory.CreateDocument(solution);
             int index = solution.Documents.IndexOf(after);
             solution.Documents.Insert(index, document);
             return document;
@@ -384,7 +358,7 @@ namespace Sheet
 
         public static DocumentEntry AddDocumentAfter(SolutionEntry solution, DocumentEntry after)
         {
-            var document = CreateDocument(solution);
+            var document = EntryFactory.CreateDocument(solution);
             int index = solution.Documents.IndexOf(after);
             solution.Documents.Insert(index + 1, document);
             return document;
@@ -392,7 +366,7 @@ namespace Sheet
 
         public static DocumentEntry AddDocument(SolutionEntry solution)
         {
-            var document = CreateDocument(solution);
+            var document = EntryFactory.CreateDocument(solution);
             solution.Documents.Add(document);
             return document;
         }
@@ -460,6 +434,39 @@ namespace Sheet
                     solution.Documents.Remove(document);
                 }
             }
+        }
+
+        #endregion
+    }
+
+    #endregion
+
+    #region Entry Factory
+
+    public static class EntryFactory
+    {
+        #region Create
+
+        public static PageEntry CreatePage(DocumentEntry document, string content, string name = null)
+        {
+            var page = new PageEntry()
+            {
+                Name = name == null ? "Page" : name,
+                Content = content,
+                Document = document
+            };
+            return page;
+        }
+
+        public static DocumentEntry CreateDocument(SolutionEntry solution, string name = null)
+        {
+            var document = new DocumentEntry()
+            {
+                Name = name == null ? string.Concat("Document", solution.Documents.Count) : name,
+                Pages = new ObservableCollection<PageEntry>(),
+                Solution = solution
+            };
+            return document;
         }
 
         #endregion
