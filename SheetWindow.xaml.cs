@@ -74,13 +74,76 @@ namespace Sheet
 
         private void Init()
         {
-            Sheet.Library = Library;
-            Sheet.Database = Csv;
-            SizeBorder.ExecuteUpdateSize = (size) => Sheet.SetAutoFitSize(size);
-            SizeBorder.ExecuteSizeChanged = () => Sheet.AutoFit();
-            Solution.Controller = Sheet;
+            InitSheet();
+            InitSizeBorder();
+            InitSolution();
+            InitDrop();
+
             UpdateModeMenu();
             CreateTestDatabase();
+        }
+
+        private void InitSheet()
+        {
+            Sheet.Library = Library;
+            Sheet.Database = Csv;
+        }
+
+        private void InitSizeBorder()
+        {
+            SizeBorder.ExecuteUpdateSize = (size) => Sheet.SetAutoFitSize(size);
+            SizeBorder.ExecuteSizeChanged = () => Sheet.AutoFit();
+        }
+
+        private void InitSolution()
+        {
+            Solution.Controller = Sheet;
+        }
+
+        private void InitDrop()
+        {
+            AllowDrop = true;
+
+            PreviewDrop += async (sender, e) =>
+            {
+                try
+                {
+                    if (e.Data.GetDataPresent(DataFormats.FileDrop, true))
+                    {
+                        string[] paths = e.Data.GetData(DataFormats.FileDrop, true) as string[];
+                        await Open(paths);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.Print(ex.Message);
+                    Debug.Print(ex.StackTrace);
+                }
+            };
+        }
+
+        #endregion
+
+        #region Open
+
+        private async Task Open(string[] paths)
+        {
+            var files = paths.Where(x => (System.IO.File.GetAttributes(x) & System.IO.FileAttributes.Directory) != System.IO.FileAttributes.Directory).OrderBy(f => f);
+            string path = files.FirstOrDefault();
+            string ext = System.IO.Path.GetExtension(path);
+
+            if (string.Compare(ext, ".txt", true) == 0)
+            {
+                await GetSheet().OpenTextFile(path);
+            }
+            else if (string.Compare(ext, ".json", true) == 0)
+            {
+                await GetSheet().OpenJsonFile(path);
+            }
+            else if (string.Compare(ext, ".zip", true) == 0)
+            {
+                await OpenSolution(path);
+            }
         }
 
         #endregion
