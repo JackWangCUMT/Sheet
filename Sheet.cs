@@ -58,7 +58,7 @@ namespace Sheet
 
     #endregion
 
-    #region Entry Editor
+    #region Entry Controller
 
     public static class EntryController
     {
