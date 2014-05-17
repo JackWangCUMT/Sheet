@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Splat;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -177,7 +178,7 @@ namespace Sheet
             {
                 writer.Write(content);
             }
-        } 
+        }
 
         #endregion
 
@@ -428,7 +429,7 @@ namespace Sheet
         public ItemColor Stroke { get; set; }
         public ItemColor Fill { get; set; }
         public double StrokeThickness { get; set; }
-    } 
+    }
 
     public class TextItem : Item
     {
@@ -444,6 +445,15 @@ namespace Sheet
         public ItemColor Backgroud { get; set; }
     }
 
+    public class ImageItem : Item
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public byte[] Data { get; set; }
+    }
+
     public class BlockItem : Item
     {
         public double X { get; set; }
@@ -457,6 +467,7 @@ namespace Sheet
         public List<RectangleItem> Rectangles { get; set; }
         public List<EllipseItem> Ellipses { get; set; }
         public List<TextItem> Texts { get; set; }
+        public List<ImageItem> Images { get; set; }
         public List<BlockItem> Blocks { get; set; }
         public void Init(int id, double x, double y, int dataId, string name)
         {
@@ -472,6 +483,7 @@ namespace Sheet
             Rectangles = new List<RectangleItem>();
             Ellipses = new List<EllipseItem>();
             Texts = new List<TextItem>();
+            Images = new List<ImageItem>();
             Blocks = new List<BlockItem>();
         }
     }
@@ -502,6 +514,21 @@ namespace Sheet
         void Set(Action<string> ok, Action cancel, string title, string label, string text);
     }
 
+    public interface IBlockController
+    {
+        BlockItem Serialize();
+        void Insert(BlockItem block);
+        void Reset();
+    }
+
+    public interface IHistoryController
+    {
+        void Register(string message);
+        void Reset();
+        void Undo();
+        void Redo();
+    }
+
     #endregion
 
     #region Item Serializer
@@ -530,7 +557,7 @@ namespace Sheet
                     IndentWhiteSpace = "    "
                 };
             }
-        } 
+        }
 
         #endregion
     }
@@ -644,6 +671,25 @@ namespace Sheet
             sb.Append(options.LineSeparator);
         }
 
+        public static void Serialize(StringBuilder sb, ImageItem image, string indent, ItemSerializeOptions options)
+        {
+            sb.Append(indent);
+            sb.Append("IMAGE");
+            sb.Append(options.ModelSeparator);
+            sb.Append(image.Id);
+            sb.Append(options.ModelSeparator);
+            sb.Append(image.X);
+            sb.Append(options.ModelSeparator);
+            sb.Append(image.Y);
+            sb.Append(options.ModelSeparator);
+            sb.Append(image.Width);
+            sb.Append(options.ModelSeparator);
+            sb.Append(image.Height);
+            sb.Append(options.ModelSeparator);
+            sb.Append(Base64.ToBase64(image.Data));
+            sb.Append(options.LineSeparator);
+        }
+
         public static void Serialize(StringBuilder sb, BlockItem block, string indent, ItemSerializeOptions options)
         {
             sb.Append(indent);
@@ -670,6 +716,7 @@ namespace Sheet
             Serialize(sb, block.Rectangles, indent + options.IndentWhiteSpace, options);
             Serialize(sb, block.Ellipses, indent + options.IndentWhiteSpace, options);
             Serialize(sb, block.Texts, indent + options.IndentWhiteSpace, options);
+            Serialize(sb, block.Images, indent + options.IndentWhiteSpace, options);
             Serialize(sb, block.Blocks, indent + options.IndentWhiteSpace, options);
 
             sb.Append(indent);
@@ -709,6 +756,14 @@ namespace Sheet
             }
         }
 
+        public static void Serialize(StringBuilder sb, IEnumerable<ImageItem> images, string indent, ItemSerializeOptions options)
+        {
+            foreach (var image in images)
+            {
+                Serialize(sb, image, indent, options);
+            }
+        }
+
         public static void Serialize(StringBuilder sb, IEnumerable<BlockItem> blocks, string indent, ItemSerializeOptions options)
         {
             foreach (var block in blocks)
@@ -725,6 +780,7 @@ namespace Sheet
             Serialize(sb, block.Rectangles, "", options);
             Serialize(sb, block.Ellipses, "", options);
             Serialize(sb, block.Texts, "", options);
+            Serialize(sb, block.Images, "", options);
             Serialize(sb, block.Blocks, "", options);
 
             return sb.ToString();
@@ -756,7 +812,7 @@ namespace Sheet
             };
             return lineItem;
         }
-        
+
         private static RectangleItem DeserializeRectangle(string[] m)
         {
             var rectangleItem = new RectangleItem();
@@ -782,7 +838,7 @@ namespace Sheet
             };
             return rectangleItem;
         }
-        
+
         private static EllipseItem DeserializeEllipse(string[] m)
         {
             var ellipseItem = new EllipseItem();
@@ -808,7 +864,7 @@ namespace Sheet
             };
             return ellipseItem;
         }
-        
+
         private static TextItem DeserializeText(string[] m)
         {
             var textItem = new TextItem();
@@ -838,20 +894,32 @@ namespace Sheet
             return textItem;
         }
 
-        private static BlockItem DeserializeBlockRecursive(string[] lines, 
-            int length, 
-            ref int end, 
-            string[] m, 
+        private static ImageItem DeserializeImage(string[] m)
+        {
+            var imageItem = new ImageItem();
+            imageItem.Id = int.Parse(m[1]);
+            imageItem.X = double.Parse(m[2]);
+            imageItem.Y = double.Parse(m[3]);
+            imageItem.Width = double.Parse(m[4]);
+            imageItem.Height = double.Parse(m[5]);
+            imageItem.Data = Base64.ToBytes(m[6]);
+            return imageItem;
+        }
+
+        private static BlockItem DeserializeBlockRecursive(string[] lines,
+            int length,
+            ref int end,
+            string[] m,
             ItemSerializeOptions options)
         {
-            var blockItem = DeserializeRootBlock(lines, 
-                length, 
-                ref end, 
-                m[4], 
+            var blockItem = DeserializeRootBlock(lines,
+                length,
+                ref end,
+                m[4],
                 int.Parse(m[1]),
                 double.Parse(m[2]),
                 double.Parse(m[3]),
-                int.Parse(m[11]), 
+                int.Parse(m[11]),
                 options);
 
             blockItem.Width = double.Parse(m[5]);
@@ -867,14 +935,14 @@ namespace Sheet
             return blockItem;
         }
 
-        private static BlockItem DeserializeRootBlock(string[] lines, 
-            int length, 
-            ref int end, 
-            string name, 
-            int id, 
-            double x, 
+        private static BlockItem DeserializeRootBlock(string[] lines,
+            int length,
+            ref int end,
+            string name,
+            int id,
+            double x,
             double y,
-            int dataId, 
+            int dataId,
             ItemSerializeOptions options)
         {
             var root = new BlockItem();
@@ -901,7 +969,7 @@ namespace Sheet
                     if (m.Length == 15)
                     {
                         var rectangleItem = DeserializeRectangle(m);
-                        root.Rectangles.Add(rectangleItem); 
+                        root.Rectangles.Add(rectangleItem);
                     }
                     else
                     {
@@ -913,7 +981,7 @@ namespace Sheet
                     if (m.Length == 15)
                     {
                         var ellipseItem = DeserializeEllipse(m);
-                        root.Ellipses.Add(ellipseItem); 
+                        root.Ellipses.Add(ellipseItem);
                     }
                     else
                     {
@@ -925,11 +993,23 @@ namespace Sheet
                     if (m.Length == 18)
                     {
                         var textItem = DeserializeText(m);
-                        root.Texts.Add(textItem); 
+                        root.Texts.Add(textItem);
                     }
                     else
                     {
                         throw new Exception(string.Format("Invalid TEXT item at line {0}", end + 1));
+                    }
+                }
+                else if (string.Compare(m[0], "IMAGE", true) == 0)
+                {
+                    if (m.Length == 7)
+                    {
+                        var imageItem = DeserializeImage(m);
+                        root.Images.Add(imageItem);
+                    }
+                    else
+                    {
+                        throw new Exception(string.Format("Invalid IMAGE item at line {0}", end + 1));
                     }
                 }
                 else if (string.Compare(m[0], "BLOCK", true) == 0)
@@ -978,7 +1058,7 @@ namespace Sheet
                 int end = 0;
                 return DeserializeRootBlock(lines, length, ref end, "", 0, 0.0, 0.0, -1, options);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.Print(ex.Message);
                 Debug.Print(ex.StackTrace);
@@ -1064,6 +1144,7 @@ namespace Sheet
             MinMax(block.Rectangles, ref minX, ref minY, ref maxX, ref maxY);
             MinMax(block.Ellipses, ref minX, ref minY, ref maxX, ref maxY);
             MinMax(block.Texts, ref minX, ref minY, ref maxX, ref maxY);
+            MinMax(block.Images, ref minX, ref minY, ref maxX, ref maxY);
             MinMax(block.Blocks, ref minX, ref minY, ref maxX, ref maxY);
         }
 
@@ -1123,6 +1204,17 @@ namespace Sheet
             }
         }
 
+        public static void MinMax(IEnumerable<ImageItem> images, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        {
+            foreach (var image in images)
+            {
+                minX = Math.Min(minX, image.X);
+                minY = Math.Min(minY, image.Y);
+                maxX = Math.Max(maxX, image.X);
+                maxY = Math.Max(maxY, image.Y);
+            }
+        }
+
         #endregion
 
         #region Move
@@ -1141,6 +1233,7 @@ namespace Sheet
             Move(block.Rectangles, x, y);
             Move(block.Ellipses, x, y);
             Move(block.Texts, x, y);
+            Move(block.Images, x, y);
             Move(block.Blocks, x, y);
         }
 
@@ -1176,6 +1269,14 @@ namespace Sheet
             }
         }
 
+        public static void Move(IEnumerable<ImageItem> images, double x, double y)
+        {
+            foreach (var image in images)
+            {
+                Move(image, x, y);
+            }
+        }
+
         public static void Move(LineItem line, double x, double y)
         {
             line.X1 += x;
@@ -1200,6 +1301,12 @@ namespace Sheet
         {
             text.X += x;
             text.Y += y;
+        }
+
+        public static void Move(ImageItem image, double x, double y)
+        {
+            image.X += x;
+            image.Y += y;
         }
 
         #endregion
@@ -1233,6 +1340,7 @@ namespace Sheet
         public List<Rectangle> Rectangles { get; set; }
         public List<Ellipse> Ellipses { get; set; }
         public List<Grid> Texts { get; set; }
+        public List<Image> Images { get; set; }
         public List<Block> Blocks { get; set; }
         public Block(int id, double x, double y, int dataId, string name)
         {
@@ -1248,33 +1356,39 @@ namespace Sheet
             Rectangles = new List<Rectangle>();
             Ellipses = new List<Ellipse>();
             Texts = new List<Grid>();
+            Images = new List<Image>();
             Blocks = new List<Block>();
         }
         public void ReInit()
         {
             if (Lines == null)
             {
-                Lines = new List<Line>(); 
+                Lines = new List<Line>();
             }
 
             if (Rectangles == null)
             {
-                Rectangles = new List<Rectangle>(); 
+                Rectangles = new List<Rectangle>();
             }
 
             if (Ellipses == null)
             {
-                Ellipses = new List<Ellipse>(); 
+                Ellipses = new List<Ellipse>();
             }
 
             if (Texts == null)
             {
-                Texts = new List<Grid>(); 
+                Texts = new List<Grid>();
+            }
+
+            if (Images == null)
+            {
+                Images = new List<Image>();
             }
 
             if (Blocks == null)
             {
-                Blocks = new List<Block>(); 
+                Blocks = new List<Block>();
             }
         }
     }
@@ -1291,6 +1405,7 @@ namespace Sheet
         Rectangle,
         Ellipse,
         Text,
+        Image,
         TextEditor
     }
 
@@ -1300,7 +1415,8 @@ namespace Sheet
         Line,
         Rectangle,
         Ellipse,
-        Text
+        Text,
+        Image
     }
 
     public class SheetOptions
@@ -1481,6 +1597,20 @@ namespace Sheet
             return textItem;
         }
 
+        public static ImageItem SerializeImage(Image image)
+        {
+            var imageItem = new ImageItem();
+
+            imageItem.Id = 0;
+            imageItem.X = Canvas.GetLeft(image);
+            imageItem.Y = Canvas.GetTop(image);
+            imageItem.Width = image.Width;
+            imageItem.Height = image.Height;
+            imageItem.Data = image.Tag as byte[];
+
+            return imageItem;
+        }
+
         public static BlockItem SerializeBlock(Block parent)
         {
             var blockItem = new BlockItem();
@@ -1509,6 +1639,11 @@ namespace Sheet
                 blockItem.Texts.Add(SerializeText(text));
             }
 
+            foreach (var image in parent.Images)
+            {
+                blockItem.Images.Add(SerializeImage(image));
+            }
+
             foreach (var block in parent.Blocks)
             {
                 blockItem.Blocks.Add(SerializeBlock(block));
@@ -1523,6 +1658,7 @@ namespace Sheet
             var rectangles = parent.Rectangles;
             var ellipses = parent.Ellipses;
             var texts = parent.Texts;
+            var images = parent.Images;
             var blocks = parent.Blocks;
 
             var sheet = new BlockItem() { Backgroud = new ItemColor() };
@@ -1557,6 +1693,14 @@ namespace Sheet
                 foreach (var text in texts)
                 {
                     sheet.Texts.Add(SerializeText(text));
+                }
+            }
+
+            if (images != null)
+            {
+                foreach (var image in images)
+                {
+                    sheet.Images.Add(SerializeImage(image));
                 }
             }
 
@@ -1650,6 +1794,23 @@ namespace Sheet
             return text;
         }
 
+        public static Image DeserializeImageItem(ISheet sheet, Block parent, ImageItem imageItem)
+        {
+            var image = BlockFactory.CreateImage(imageItem.X, imageItem.Y, imageItem.Width, imageItem.Height, imageItem.Data);
+
+            if (parent != null)
+            {
+                parent.Images.Add(image);
+            }
+
+            if (sheet != null)
+            {
+                sheet.Add(image);
+            }
+
+            return image;
+        }
+
         public static Block DeserializeBlockItem(ISheet sheet, Block parent, BlockItem blockItem, bool select, double thickness)
         {
             var block = new Block(blockItem.Id, blockItem.X, blockItem.Y, blockItem.DataId, blockItem.Name);
@@ -1662,6 +1823,16 @@ namespace Sheet
                 if (select)
                 {
                     BlockEditor.SelectText(text);
+                }
+            }
+
+            foreach (var imageItem in blockItem.Images)
+            {
+                var image = DeserializeImageItem(sheet, block, imageItem);
+
+                if (select)
+                {
+                    BlockEditor.SelectImage(image);
                 }
             }
 
@@ -1795,6 +1966,25 @@ namespace Sheet
             }
         }
 
+        public static void AddImages(ISheet sheet, IEnumerable<ImageItem> imageItems, Block parent, Block selected, bool select, double thickness)
+        {
+            if (select)
+            {
+                selected.Images = new List<Image>();
+            }
+
+            foreach (var imageItem in imageItems)
+            {
+                var image = BlockSerializer.DeserializeImageItem(sheet, parent, imageItem);
+
+                if (select)
+                {
+                    SelectImage(image);
+                    selected.Images.Add(image);
+                }
+            }
+        }
+
         public static void AddBlocks(ISheet sheet, IEnumerable<BlockItem> blockItems, Block parent, Block selected, bool select, double thickness)
         {
             if (select)
@@ -1818,6 +2008,7 @@ namespace Sheet
             if (blockItem != null)
             {
                 AddTexts(sheet, blockItem.Texts, logic, selected, select, thickness);
+                AddImages(sheet, blockItem.Images, logic, selected, select, thickness);
                 AddLines(sheet, blockItem.Lines, logic, selected, select, thickness);
                 AddRectangles(sheet, blockItem.Rectangles, logic, selected, select, thickness);
                 AddEllipses(sheet, blockItem.Ellipses, logic, selected, select, thickness);
@@ -1828,6 +2019,7 @@ namespace Sheet
         public static void AddBrokenBlock(ISheet sheet, BlockItem blockItem, Block logic, Block selected, bool select, double thickness)
         {
             AddTexts(sheet, blockItem.Texts, logic, selected, select, thickness);
+            AddImages(sheet, blockItem.Images, logic, selected, select, thickness);
             AddLines(sheet, blockItem.Lines, logic, selected, select, thickness);
             AddRectangles(sheet, blockItem.Rectangles, logic, selected, select, thickness);
             AddEllipses(sheet, blockItem.Ellipses, logic, selected, select, thickness);
@@ -1835,6 +2027,7 @@ namespace Sheet
             foreach (var block in blockItem.Blocks)
             {
                 AddTexts(sheet, block.Texts, logic, selected, select, thickness);
+                AddImages(sheet, block.Images, logic, selected, select, thickness);
                 AddLines(sheet, block.Lines, logic, selected, select, thickness);
                 AddRectangles(sheet, block.Rectangles, logic, selected, select, thickness);
                 AddEllipses(sheet, block.Ellipses, logic, selected, select, thickness);
@@ -1864,7 +2057,7 @@ namespace Sheet
                 foreach (var rectangle in rectangles)
                 {
                     sheet.Remove(rectangle);
-                } 
+                }
             }
         }
 
@@ -1875,7 +2068,7 @@ namespace Sheet
                 foreach (var ellipse in ellipses)
                 {
                     sheet.Remove(ellipse);
-                } 
+                }
             }
         }
 
@@ -1886,7 +2079,18 @@ namespace Sheet
                 foreach (var text in texts)
                 {
                     sheet.Remove(text);
-                } 
+                }
+            }
+        }
+
+        public static void RemoveImages(ISheet sheet, IEnumerable<Image> images)
+        {
+            if (images != null)
+            {
+                foreach (var image in images)
+                {
+                    sheet.Remove(image);
+                }
             }
         }
 
@@ -1907,6 +2111,7 @@ namespace Sheet
             RemoveRectangles(sheet, block.Rectangles);
             RemoveEllipses(sheet, block.Ellipses);
             RemoveTexts(sheet, block.Texts);
+            RemoveImages(sheet, block.Images);
             RemoveBlocks(sheet, block.Blocks);
         }
 
@@ -1960,6 +2165,18 @@ namespace Sheet
                 selected.Texts = null;
             }
 
+            if (selected.Images != null)
+            {
+                RemoveImages(sheet, selected.Images);
+
+                foreach (var image in selected.Images)
+                {
+                    parent.Images.Remove(image);
+                }
+
+                selected.Images = null;
+            }
+
             if (selected.Blocks != null)
             {
                 foreach (var block in selected.Blocks)
@@ -1968,6 +2185,7 @@ namespace Sheet
                     RemoveRectangles(sheet, block.Rectangles);
                     RemoveEllipses(sheet, block.Ellipses);
                     RemoveTexts(sheet, block.Texts);
+                    RemoveImages(sheet, block.Images);
                     RemoveBlocks(sheet, block.Blocks);
 
                     parent.Blocks.Remove(block);
@@ -2019,6 +2237,15 @@ namespace Sheet
             }
         }
 
+        public static void MoveImages(double x, double y, IEnumerable<Image> images)
+        {
+            foreach (var image in images)
+            {
+                Canvas.SetLeft(image, Canvas.GetLeft(image) + x);
+                Canvas.SetTop(image, Canvas.GetTop(image) + y);
+            }
+        }
+
         public static void MoveBlocks(double x, double y, IEnumerable<Block> blocks)
         {
             foreach (var block in blocks)
@@ -2027,6 +2254,7 @@ namespace Sheet
                 MoveRectangles(x, y, block.Rectangles);
                 MoveEllipses(x, y, block.Ellipses);
                 MoveTexts(x, y, block.Texts);
+                MoveImages(x, y, block.Images);
                 MoveBlocks(x, y, block.Blocks);
             }
         }
@@ -2051,6 +2279,11 @@ namespace Sheet
             if (block.Texts != null)
             {
                 MoveTexts(x, y, block.Texts);
+            }
+
+            if (block.Images != null)
+            {
+                MoveImages(x, y, block.Images);
             }
 
             if (block.Blocks != null)
@@ -2092,6 +2325,12 @@ namespace Sheet
             Panel.SetZIndex(text, DeselectedZIndex);
         }
 
+        public static void DeselectImage(Image image)
+        {
+            image.OpacityMask = BlockFactory.NormalBrush;
+            Panel.SetZIndex(image, DeselectedZIndex);
+        }
+
         public static void DeselectBlock(Block parent)
         {
             if (parent.Lines != null)
@@ -2123,6 +2362,14 @@ namespace Sheet
                 foreach (var text in parent.Texts)
                 {
                     DeselectText(text);
+                }
+            }
+
+            if (parent.Images != null)
+            {
+                foreach (var image in parent.Images)
+                {
+                    DeselectImage(image);
                 }
             }
 
@@ -2161,6 +2408,12 @@ namespace Sheet
             Panel.SetZIndex(text, SelectedZIndex);
         }
 
+        public static void SelectImage(Image image)
+        {
+            image.OpacityMask = BlockFactory.SelectedBrush;
+            Panel.SetZIndex(image, SelectedZIndex);
+        }
+
         public static void SelectBlock(Block parent)
         {
             foreach (var line in parent.Lines)
@@ -2181,6 +2434,11 @@ namespace Sheet
             foreach (var text in parent.Texts)
             {
                 SelectText(text);
+            }
+
+            foreach (var image in parent.Images)
+            {
+                SelectImage(image);
             }
 
             foreach (var block in parent.Blocks)
@@ -2217,6 +2475,12 @@ namespace Sheet
                 selected.Texts.Add(text);
             }
 
+            foreach (var image in logic.Images)
+            {
+                SelectImage(image);
+                selected.Images.Add(image);
+            }
+
             foreach (var parent in logic.Blocks)
             {
                 foreach (var line in parent.Lines)
@@ -2237,6 +2501,11 @@ namespace Sheet
                 foreach (var text in parent.Texts)
                 {
                     SelectText(text);
+                }
+
+                foreach (var image in parent.Images)
+                {
+                    SelectImage(image);
                 }
 
                 foreach (var block in parent.Blocks)
@@ -2290,6 +2559,16 @@ namespace Sheet
                 selected.Texts = null;
             }
 
+            if (selected.Images != null)
+            {
+                foreach (var image in selected.Images)
+                {
+                    DeselectImage(image);
+                }
+
+                selected.Images = null;
+            }
+
             if (selected.Blocks != null)
             {
                 foreach (var parent in selected.Blocks)
@@ -2314,6 +2593,11 @@ namespace Sheet
                         DeselectText(text);
                     }
 
+                    foreach (var image in parent.Images)
+                    {
+                        DeselectImage(image);
+                    }
+
                     foreach (var block in parent.Blocks)
                     {
                         DeselectBlock(block);
@@ -2330,6 +2614,7 @@ namespace Sheet
                 || selected.Rectangles != null
                 || selected.Ellipses != null
                 || selected.Texts != null
+                || selected.Images != null
                 || selected.Blocks != null);
         }
 
@@ -2340,6 +2625,7 @@ namespace Sheet
                 && selected.Rectangles == null
                 && selected.Ellipses == null
                 && selected.Texts == null
+                && selected.Images == null
                 && selected.Blocks == null);
         }
 
@@ -2350,6 +2636,7 @@ namespace Sheet
                 && selected.Rectangles.Count == 1
                 && selected.Ellipses == null
                 && selected.Texts == null
+                && selected.Images == null
                 && selected.Blocks == null);
         }
 
@@ -2360,6 +2647,7 @@ namespace Sheet
                 && selected.Ellipses != null
                 && selected.Ellipses.Count == 1
                 && selected.Texts == null
+                && selected.Images == null
                 && selected.Blocks == null);
         }
 
@@ -2370,6 +2658,18 @@ namespace Sheet
                 && selected.Ellipses == null
                 && selected.Texts != null
                 && selected.Texts.Count == 1
+                && selected.Images == null
+                && selected.Blocks == null);
+        }
+
+        public static bool HaveOneImageSelected(Block selected)
+        {
+            return (selected.Lines == null
+                && selected.Rectangles == null
+                && selected.Ellipses == null
+                && selected.Texts == null
+                && selected.Images != null
+                && selected.Images.Count == 1
                 && selected.Blocks == null);
         }
 
@@ -2379,6 +2679,7 @@ namespace Sheet
                 && selected.Rectangles == null
                 && selected.Ellipses == null
                 && selected.Texts == null
+                && selected.Images == null
                 && selected.Blocks != null
                 && selected.Blocks.Count == 1);
         }
@@ -2436,7 +2737,7 @@ namespace Sheet
                         else
                         {
                             DeselectRectangle(rectangle);
-                            selected.Rectangles.Add(rectangle);
+                            selected.Rectangles.Remove(rectangle);
                         }
                     }
 
@@ -2514,6 +2815,38 @@ namespace Sheet
             return false;
         }
 
+        public static bool HitTestImages(IEnumerable<Image> images, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
+        {
+            foreach (var image in images)
+            {
+                var bounds = VisualTreeHelper.GetContentBounds(image);
+                var offset = image.TranslatePoint(new Point(0, 0), relative);
+                bounds.Offset(offset.X, offset.Y);
+                if (rect.IntersectsWith(bounds))
+                {
+                    if (select)
+                    {
+                        if (image.OpacityMask != BlockFactory.SelectedBrush)
+                        {
+                            SelectImage(image);
+                            selected.Images.Add(image);
+                        }
+                        else
+                        {
+                            DeselectImage(image);
+                            selected.Images.Remove(image);
+                        }
+                    }
+
+                    if (onlyFirst)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public static bool HitTestBlocks(IEnumerable<Block> blocks, Block selected, Rect rect, bool onlyFirst, bool select, bool selectInsideBlock, UIElement relative)
         {
             foreach (var block in blocks)
@@ -2550,6 +2883,12 @@ namespace Sheet
             bool result = false;
 
             result = HitTestTexts(parent.Texts, selected, rect, onlyFirst, selectInsideBlock, relative);
+            if (result && onlyFirst)
+            {
+                return true;
+            }
+
+            result = HitTestImages(parent.Images, selected, rect, onlyFirst, selectInsideBlock, relative);
             if (result && onlyFirst)
             {
                 return true;
@@ -2598,6 +2937,16 @@ namespace Sheet
             if (parent.Texts != null)
             {
                 bool result = HitTestTexts(parent.Texts, selected, rect, true, true, sheet.GetParent());
+                if (result)
+                {
+                    HitTestClean(selected);
+                    return true;
+                }
+            }
+
+            if (parent.Images != null)
+            {
+                bool result = HitTestImages(parent.Images, selected, rect, true, true, sheet.GetParent());
                 if (result)
                 {
                     HitTestClean(selected);
@@ -2700,6 +3049,11 @@ namespace Sheet
                 HitTestTexts(parent.Texts, selected, rect, false, true, sheet.GetParent());
             }
 
+            if (parent.Images != null)
+            {
+                HitTestImages(parent.Images, selected, rect, false, true, sheet.GetParent());
+            }
+
             if (parent.Blocks != null)
             {
                 HitTestBlocks(parent.Blocks, selected, rect, false, true, false, sheet.GetParent());
@@ -2728,6 +3082,11 @@ namespace Sheet
             if (selected.Texts != null && selected.Texts.Count == 0)
             {
                 selected.Texts = null;
+            }
+
+            if (selected.Images != null && selected.Images.Count == 0)
+            {
+                selected.Images = null;
             }
 
             if (selected.Blocks != null && selected.Blocks.Count == 0)
@@ -2801,6 +3160,38 @@ namespace Sheet
             grid.Children.Add(tb);
 
             return grid;
+        }
+
+        public static Image CreateImage(double x, double y, double width, double height, byte[] data)
+        {
+            Image image = new Image();
+
+            // enable high quality image scaling
+            RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
+
+            // store original image data is Tag property
+            image.Tag = data;
+
+            // opacity mask is used for determining selection state
+            image.OpacityMask = NormalBrush;
+
+            //using(var ms = new MemoryStream(data))
+            //{
+            //    image = Image.FromStream(ms);
+            //}
+            using (var ms = new MemoryStream(data))
+            {
+                IBitmap profileImage = BitmapLoader.Current.Load(ms, null, null).Result;
+                image.Source = profileImage.ToNative();
+            }
+            
+            image.Width = width;
+            image.Height = height;
+
+            Canvas.SetLeft(image, x);
+            Canvas.SetTop(image, y);
+
+            return image;
         }
 
         public static Line CreateLine(double thickness, double x1, double y1, double x2, double y2, Brush stroke)
@@ -2878,6 +3269,91 @@ namespace Sheet
         }
 
         #endregion
+    }
+
+    #endregion
+
+    #region Base64
+
+    public static class Base64
+    {
+        public static string ToBase64(byte[] bytes)
+        {
+            if (bytes != null)
+            {
+                return Convert.ToBase64String(bytes);
+            }
+            return null;
+        }
+
+        public static MemoryStream ToStream(byte[] bytes)
+        {
+            if (bytes != null)
+            {
+                return new MemoryStream(bytes, 0, bytes.Length); 
+            }
+            return null;
+        }
+
+        public static byte[] ToBytes(string base64)
+        {
+            if (!string.IsNullOrEmpty(base64))
+            {
+                return Convert.FromBase64String(base64);
+            }
+            return null;
+        }
+
+        public static MemoryStream ToStream(string base64)
+        {
+            if (!string.IsNullOrEmpty(base64))
+            {
+                byte[] bytes = ToBytes(base64);
+                if (bytes != null)
+                {
+                    return new MemoryStream(bytes, 0, bytes.Length);
+                }
+                return null;
+            }
+            return null;
+        }
+
+        public static byte[] ReadAllBytes(string path)
+        {
+            if (!string.IsNullOrEmpty(path))
+            {
+                return System.IO.File.ReadAllBytes(path);
+            }
+            return null;
+        }
+
+        public static string FromFileToBase64(string path)
+        {
+            if (!string.IsNullOrEmpty(path))
+            {
+                byte[] bytes = ReadAllBytes(path);
+                if (bytes != null)
+                {
+                    return ToBase64(bytes); 
+                }
+                return null;
+            }
+            return null;
+        }
+
+        public static MemoryStream FromFileToStream(string path)
+        {
+            if (!string.IsNullOrEmpty(path))
+            {
+                byte[] bytes = ReadAllBytes(path);
+                if (bytes != null)
+                {
+                    return new MemoryStream(bytes, 0, bytes.Length); 
+                }
+                return null;
+            }
+            return null;
+        }
     }
 
     #endregion

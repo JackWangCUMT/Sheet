@@ -33,6 +33,6 @@
             </Grid.RenderTransform>
             <local:CanvasControl x:Name="Root"/>
         </Grid>
-        <Canvas x:Name="EditorCanvas" Width="1260" Height="891" Background="Transparent"/>
+        <Canvas x:Name="EditorCanvas" Width="1260" Height="891" Background="{x:Null}"/>
     </Grid>
 </UserControl>

@@ -85,6 +85,7 @@
                 <MenuItem x:Name="ModeRectangle" Header="_Rectangle" InputGestureText="R" Click="ModeRectangle_Click"/>
                 <MenuItem x:Name="ModeEllipse" Header="_Ellipse" InputGestureText="E" Click="ModeEllipse_Click"/>
                 <MenuItem x:Name="ModeText" Header="_Text" InputGestureText="T" Click="ModeText_Click"/>
+                <MenuItem x:Name="ModeImage" Header="Ima_ge" InputGestureText="D" Click="ModeImage_Click"/>
             </MenuItem>
             <MenuItem Header="_Logic">
                 <MenuItem x:Name="LogicInvertLineStart" Header="Invert Line _Start" InputGestureText="Q" Click="LogicInvertLineStart_Click"/>

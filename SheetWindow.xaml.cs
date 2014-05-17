@@ -104,6 +104,7 @@ namespace Sheet
             ModeRectangle.IsChecked = mode == Mode.Rectangle ? true : false;
             ModeEllipse.IsChecked = mode == Mode.Ellipse ? true : false;
             ModeText.IsChecked = mode == Mode.Text ? true : false;
+            ModeImage.IsChecked = mode == Mode.Image ? true : false;
         }
 
         #endregion
@@ -186,10 +187,16 @@ namespace Sheet
                     }
                     break;
                 // Ctrl+D: Database
+                // D: Mode Image
                 case Key.D:
                     if (ctrl)
                     {
                         Database();
+                    }
+                    else
+                    {
+                        GetSheet().ModeImage();
+                        UpdateModeMenu();
                     }
                     break;
                 // Ctrl+Z: Undo
@@ -351,7 +358,7 @@ namespace Sheet
         }
 
         #endregion
-
+        
         #region Solution
 
         public string SolutionPath { get; set; }
@@ -652,6 +659,12 @@ namespace Sheet
         private void ModeText_Click(object sender, RoutedEventArgs e)
         {
             GetSheet().ModeText();
+            UpdateModeMenu();
+        }
+        
+        private void ModeImage_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().ModeImage();
             UpdateModeMenu();
         }
 

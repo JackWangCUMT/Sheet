@@ -40,6 +40,7 @@ Keyboard  Shortcuts:
     R               Mode Rectangle
     E               Mode Ellipse
     T               Mode Text
+    D               Mode Image
     (Logic)
     Q               Invert Line Start
     W               Invert Line End

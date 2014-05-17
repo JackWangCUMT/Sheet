@@ -22,21 +22,6 @@ namespace Sheet
 {
     #region History
 
-    public interface IBlockController
-    {
-        BlockItem Serialize();
-        void Insert(BlockItem block);
-        void Reset();
-    }
-
-    public interface IHistoryController
-    {
-        void Register(string message);
-        void Reset();
-        void Undo();
-        void Redo();
-    }
-
     public class CanvasHistoryController : IHistoryController
     {
         #region Properties
@@ -441,6 +426,11 @@ namespace Sheet
             SetMode(Mode.Text);
         }
 
+        public void ModeImage()
+        {
+            SetMode(Mode.Image);
+        }
+
         public void ModeTextEditor()
         {
             SetMode(Mode.TextEditor);
@@ -461,7 +451,7 @@ namespace Sheet
 
             if (sheet != null)
             {
-                sheet.Add(line); 
+                sheet.Add(line);
             }
         }
 
@@ -509,12 +499,12 @@ namespace Sheet
             }
 
             // frame columns
-            double[] columnWidth = {  30.0, 210.0,   90.0,  600.0, 210.0,  90.0 };
-            double[] columnX     = {  30.0,  30.0, startY, startY,  30.0,  30.0 };
-            double[] columnY     = {  rowsEnd,  rowsEnd,   rowsEnd,   rowsEnd,  rowsEnd,  rowsEnd };
+            double[] columnWidth = { 30.0, 210.0, 90.0, 600.0, 210.0, 90.0 };
+            double[] columnX = { 30.0, 30.0, startY, startY, 30.0, 30.0 };
+            double[] columnY = { rowsEnd, rowsEnd, rowsEnd, rowsEnd, rowsEnd, rowsEnd };
 
             double start = 0.0;
-            for(int i = 0; i < columnWidth.Length; i++)
+            for (int i = 0; i < columnWidth.Length; i++)
             {
                 start += columnWidth[i];
                 CreateLine(sheet, block.Lines, thickness, start, columnX[i], start, columnY[i], stroke);
@@ -522,7 +512,7 @@ namespace Sheet
 
             // frame header
             CreateLine(sheet, block.Lines, thickness, startX, 30.0, width - padding, 30.0, stroke);
-            
+
             // frame footer
             CreateLine(sheet, block.Lines, thickness, startX, rowsEnd, width - padding, rowsEnd, stroke);
 
@@ -594,7 +584,7 @@ namespace Sheet
                     }, TaskScheduler.FromCurrentSynchronizationContext());
                 };
 
-                Action cancel = () => 
+                Action cancel = () =>
                 {
                     EditorCanvas.Children.Remove(tc);
                     Focus();
@@ -633,7 +623,7 @@ namespace Sheet
                     Delete();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.Print(ex.Message);
                 Debug.Print(ex.StackTrace);
@@ -941,7 +931,7 @@ namespace Sheet
             {
                 BlockEditor.Move(dx, dy, selectedBlock);
                 panStartPoint = p;
-            }  
+            }
         }
 
         private void FinishMove()
@@ -1051,7 +1041,7 @@ namespace Sheet
                 {
                     ZoomTo(p.X, p.Y, zoomIndex++);
                 }
-                else if(zoomIndex == -1)
+                else if (zoomIndex == -1)
                 {
                     for (int i = 0; i < options.ZoomFactors.Length; i++)
                     {
@@ -1231,7 +1221,7 @@ namespace Sheet
         {
             double x = ItemEditor.Snap(p.X, options.SnapSize);
             double y = ItemEditor.Snap(p.Y, options.SnapSize);
-            if (Math.Round(x, 1) != Math.Round(tempLine.X2, 1) 
+            if (Math.Round(x, 1) != Math.Round(tempLine.X2, 1)
                 || Math.Round(y, 1) != Math.Round(tempLine.Y2, 1))
             {
                 tempLine.X2 = x;
@@ -1574,7 +1564,7 @@ namespace Sheet
                     string extension = System.IO.Path.GetExtension(fileName);
 
                     int counter = 0;
-                    foreach(var page in pages)
+                    foreach (var page in pages)
                     {
                         string fileNameWithCounter = System.IO.Path.Combine(path, string.Concat(name, '-', counter.ToString("000"), extension));
                         writer.Create(fileNameWithCounter, options.PageWidth, options.PageHeight, page);
@@ -1620,7 +1610,7 @@ namespace Sheet
                                     Reset();
                                     InsertBlock(block, false);
                                 }
-                                catch(Exception ex)
+                                catch (Exception ex)
                                 {
                                     Debug.Print(ex.Message);
                                     Debug.Print(ex.StackTrace);
@@ -1632,12 +1622,12 @@ namespace Sheet
                             {
                                 try
                                 {
-                                     var block = await Task.Run(() => JsonConvert.DeserializeObject<BlockItem>(text));
-                                     History.Register("Open");
-                                     Reset();
-                                     InsertBlock(block, false);
+                                    var block = await Task.Run(() => JsonConvert.DeserializeObject<BlockItem>(text));
+                                    History.Register("Open");
+                                    Reset();
+                                    InsertBlock(block, false);
                                 }
-                                catch(Exception ex)
+                                catch (Exception ex)
                                 {
                                     Debug.Print(ex.Message);
                                     Debug.Print(ex.StackTrace);
@@ -1726,7 +1716,7 @@ namespace Sheet
 
             if (dlg.ShowDialog() == true)
             {
-                switch(dlg.FilterIndex)
+                switch (dlg.FilterIndex)
                 {
                     case 1:
                     case 3:
@@ -1772,6 +1762,33 @@ namespace Sheet
                 try
                 {
                     LoadLibrary(dlg.FileName);
+                }
+                catch (Exception ex)
+                {
+                    Debug.Print(ex.Message);
+                    Debug.Print(ex.StackTrace);
+                }
+            }
+        }
+
+        public void Image(Point p)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog()
+            {
+                Filter = "Supported Files (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg|PNG Files (*.png)|*.png|JPG Files (*.jpg)|*.jpg|JPEG Files (*.jpeg)|*.jpeg|All Files (*.*)|*.*"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    var path = dlg.FileName;
+                    byte[] data = Base64.ReadAllBytes(path);
+                    double x = ItemEditor.Snap(p.X, options.SnapSize);
+                    double y = ItemEditor.Snap(p.Y, options.SnapSize);
+                    var image = BlockFactory.CreateImage(x, y, 120.0, 90.0, data);
+                    logicBlock.Images.Add(image);
+                    logicSheet.Add(image);
                 }
                 catch (Exception ex)
                 {
@@ -1827,6 +1844,11 @@ namespace Sheet
                 InitTextEditor();
                 return true;
             }
+            else if (BlockEditor.HaveOneImageSelected(selectedBlock))
+            {
+                InitImageEditor();
+                return true;
+            }
             return false;
         }
 
@@ -1840,6 +1862,7 @@ namespace Sheet
                 case ItemType.Rectangle:
                 case ItemType.Ellipse:
                 case ItemType.Text:
+                case ItemType.Image:
                     FinishFrameworkElementEditor();
                     break;
             }
@@ -1906,7 +1929,7 @@ namespace Sheet
                 overlaySheet.Add(lineThumbStart);
                 overlaySheet.Add(lineThumbEnd);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Debug.Print(ex.Message);
                 Debug.Print(ex.StackTrace);
@@ -2200,11 +2223,36 @@ namespace Sheet
 
         #endregion
 
+        #region Edit Image
+
+        private void InitImageEditor()
+        {
+            StoreTempMode();
+            ModeEdit();
+
+            try
+            {
+                var image = selectedBlock.Images.FirstOrDefault();
+                selectedType = ItemType.Image;
+                selectedElement = image;
+                InitFrameworkElementEditor();
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
+        }
+
+        #endregion
+
         #region Events
 
         private void UserControl_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             Focus();
+
+            bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
 
             // edit mode
             if (selectedType != ItemType.None)
@@ -2225,8 +2273,6 @@ namespace Sheet
             {
                 return;
             }
-
-            bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
 
             // move mode
             if (!ctrl)
@@ -2251,7 +2297,8 @@ namespace Sheet
                 }
                 else
                 {
-                    bool editModeEnabled = TryToEditSelected();
+                    // TODO: If control key is pressed then switch to move mode instead to edit mode
+                    bool editModeEnabled = ctrl == true ? false : TryToEditSelected();
                     if (!editModeEnabled)
                     {
                         InitMove(e.GetPosition(overlaySheet.GetParent()));
@@ -2293,6 +2340,10 @@ namespace Sheet
             else if (GetMode() == Mode.Text && !overlaySheet.IsCaptured)
             {
                 CreateText(e.GetPosition(overlaySheet.GetParent()));
+            }
+            else if (GetMode() == Mode.Image && !overlaySheet.IsCaptured)
+            {
+                Image(e.GetPosition(overlaySheet.GetParent()));
             }
         }
 
@@ -2448,8 +2499,8 @@ namespace Sheet
 
         private bool BindDataToBlock(Block block, DataItem dataItem)
         {
-            if (block != null && block.Texts != null 
-                && dataItem != null && dataItem.Columns != null  && dataItem.Data != null
+            if (block != null && block.Texts != null
+                && dataItem != null && dataItem.Columns != null && dataItem.Data != null
                 && block.Texts.Count == dataItem.Columns.Length - 1)
             {
                 // assign block data id
