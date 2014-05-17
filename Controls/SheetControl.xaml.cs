@@ -1600,6 +1600,34 @@ namespace Sheet
 
         #endregion
 
+        #region Open
+
+        public async Task OpenTextFile(string path)
+        {
+            var text = await ItemController.OpenText(path);
+            if (text != null)
+            {
+                var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
+                History.Register("Open Text");
+                Reset();
+                InsertBlock(block, false);
+            }
+        }
+
+        public async Task OpenJsonFile(string path)
+        {
+            var text = await ItemController.OpenText(path);
+            if (text != null)
+            {
+                var block = await Task.Run(() => JsonConvert.DeserializeObject<BlockItem>(text));
+                History.Register("Open Json");
+                Reset();
+                InsertBlock(block, false);
+            }
+        }
+
+        #endregion
+
         #region File Dialogs
 
         public async void Open()
@@ -1611,45 +1639,36 @@ namespace Sheet
 
             if (dlg.ShowDialog() == true)
             {
-                var text = await ItemController.OpenText(dlg.FileName);
-                if (text != null)
+                string path = dlg.FileName;
+                switch (dlg.FilterIndex)
                 {
-                    switch (dlg.FilterIndex)
-                    {
-                        case 1:
+                    case 1:
+                        {
+                            try
                             {
-                                try
-                                {
-                                    var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
-                                    History.Register("Open");
-                                    Reset();
-                                    InsertBlock(block, false);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Debug.Print(ex.Message);
-                                    Debug.Print(ex.StackTrace);
-                                }
+                                await OpenTextFile(path);
                             }
-                            break;
-                        case 2:
-                        case 3:
+                            catch (Exception ex)
                             {
-                                try
-                                {
-                                    var block = await Task.Run(() => JsonConvert.DeserializeObject<BlockItem>(text));
-                                    History.Register("Open");
-                                    Reset();
-                                    InsertBlock(block, false);
-                                }
-                                catch (Exception ex)
-                                {
-                                    Debug.Print(ex.Message);
-                                    Debug.Print(ex.StackTrace);
-                                }
+                                Debug.Print(ex.Message);
+                                Debug.Print(ex.StackTrace);
                             }
-                            break;
-                    }
+                        }
+                        break;
+                    case 2:
+                    case 3:
+                        {
+                            try
+                            {
+                                await OpenJsonFile(path);
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.Print(ex.Message);
+                                Debug.Print(ex.StackTrace);
+                            }
+                        }
+                        break;
                 }
             }
         }
