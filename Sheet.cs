@@ -60,7 +60,7 @@ namespace Sheet
 
     #region Entry Editor
 
-    public static class EntryEditor
+    public static class EntryController
     {
         #region Fields
 
@@ -76,7 +76,7 @@ namespace Sheet
             {
                 using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Update))
                 {
-                    EntryEditor.AddPageEntry(zip, "Document0", "Page", "");
+                    EntryController.AddPageEntry(zip, "Document0", "Page", "");
                 }
             }
         }
@@ -125,11 +125,11 @@ namespace Sheet
 
             foreach (var item in dict)
             {
-                var document = EntryEditor.CreateDocument(solution, item.Key);
+                var document = EntryController.CreateDocument(solution, item.Key);
                 solution.Documents.Add(document);
                 foreach (var tuple in item.Value)
                 {
-                    var page = EntryEditor.CreatePage(document, tuple.Item2, tuple.Item1);
+                    var page = EntryController.CreatePage(document, tuple.Item2, tuple.Item1);
                     document.Pages.Add(page);
                 }
             }

@@ -155,22 +155,22 @@ namespace Sheet
 
         private void PageInsertBefore_Click(object sender, RoutedEventArgs e)
         {
-            EntryEditor.AddPageBefore(SolutionTree.SelectedItem);
+            EntryController.AddPageBefore(SolutionTree.SelectedItem);
         }
 
         private void PageInsertAfter_Click(object sender, RoutedEventArgs e)
         {
-            EntryEditor.AddPageAfter(SolutionTree.SelectedItem);
+            EntryController.AddPageAfter(SolutionTree.SelectedItem);
         }
 
         private void PageDuplicate_Click(object sender, RoutedEventArgs e)
         {
-            EntryEditor.DuplicatePage(SolutionTree.SelectedItem);
+            EntryController.DuplicatePage(SolutionTree.SelectedItem);
         }
 
         private void PageRemove_Click(object sender, RoutedEventArgs e)
         {
-            EntryEditor.RemovePage(SolutionTree.SelectedItem);
+            EntryController.RemovePage(SolutionTree.SelectedItem);
         }
 
         private void PageExport_Click(object sender, RoutedEventArgs e)
@@ -184,27 +184,27 @@ namespace Sheet
 
         private void DocumentAddPage_Click(object sender, RoutedEventArgs e)
         {
-            EntryEditor.DocumentAddPage(SolutionTree.SelectedItem);
+            EntryController.DocumentAddPage(SolutionTree.SelectedItem);
         }
 
         private void DocumentInsertBofre_Click(object sender, RoutedEventArgs e)
         {
-            EntryEditor.AddDocumentBefore(SolutionTree.SelectedItem);
+            EntryController.AddDocumentBefore(SolutionTree.SelectedItem);
         }
 
         private void DocumentInsertAfter_Click(object sender, RoutedEventArgs e)
         {
-            EntryEditor.AddDocumentAfter(SolutionTree.SelectedItem);
+            EntryController.AddDocumentAfter(SolutionTree.SelectedItem);
         }
 
         private void DocumentDuplicate_Click(object sender, RoutedEventArgs e)
         {
-            EntryEditor.DulicateDocument(SolutionTree.SelectedItem);
+            EntryController.DulicateDocument(SolutionTree.SelectedItem);
         }
 
         private void DocumentRemove_Click(object sender, RoutedEventArgs e)
         {
-            EntryEditor.RemoveDocument(SolutionTree.SelectedItem);
+            EntryController.RemoveDocument(SolutionTree.SelectedItem);
         }
 
         private void DocumentExport_Click(object sender, RoutedEventArgs e)
@@ -220,7 +220,7 @@ namespace Sheet
         {
             if (DataContext != null && DataContext is SolutionEntry)
             {
-                EntryEditor.AddDocument(DataContext as SolutionEntry);
+                EntryController.AddDocument(DataContext as SolutionEntry);
             }
         }
 

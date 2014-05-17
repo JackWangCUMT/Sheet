@@ -387,8 +387,8 @@ namespace Sheet
 
         private async Task NewSolution(string path)
         {
-            await Task.Run(() => EntryEditor.NewSolutionArchive(path));
-            var solution = await Task.Run(() => EntryEditor.OpenSolutionArchive(path));
+            await Task.Run(() => EntryController.NewSolutionArchive(path));
+            var solution = await Task.Run(() => EntryController.OpenSolutionArchive(path));
 
             if (solution != null)
             {
@@ -422,7 +422,7 @@ namespace Sheet
 
         private async Task OpenSolution(string path)
         {
-            var solution = await Task.Run(() => EntryEditor.OpenSolutionArchive(path));
+            var solution = await Task.Run(() => EntryController.OpenSolutionArchive(path));
 
             if (solution != null)
             {
@@ -445,7 +445,7 @@ namespace Sheet
                     if (solution != null)
                     {
                         Solution.UpdateSelectedPage();
-                        EntryEditor.CreateSolutionArchive(solution, path);
+                        EntryController.CreateSolutionArchive(solution, path);
                     }
                 }
                 catch (Exception ex)
