@@ -20,7 +20,7 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
-    #region History
+    #region History Controller
 
     public class CanvasHistoryController : IHistoryController
     {
@@ -96,6 +96,113 @@ namespace Sheet
                 var block = await Task.Run(() => ItemSerializer.DeserializeContents(redo.Model));
                 BlockController.Reset();
                 BlockController.Insert(block);
+            }
+        }
+
+        #endregion
+    }
+
+    #endregion
+
+    #region Page Factory
+
+    public static class PageFactory
+    {
+        #region Create
+
+        public static void CreateLine(ISheet sheet, List<Line> lines, double thickness, double x1, double y1, double x2, double y2, Brush stroke)
+        {
+            var line = BlockFactory.CreateLine(thickness, x1, y1, x2, y2, stroke);
+
+            if (lines != null)
+            {
+                lines.Add(line);
+            }
+
+            if (sheet != null)
+            {
+                sheet.Add(line);
+            }
+        }
+
+        public static void CreateText(ISheet sheet, List<Grid> texts, string content, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size, Brush foreground)
+        {
+            var text = BlockFactory.CreateText(content, x, y, width, height, halign, valign, size, BlockFactory.TransparentBrush, foreground);
+
+            if (texts != null)
+            {
+                texts.Add(text);
+            }
+
+            if (sheet != null)
+            {
+                sheet.Add(text);
+            }
+        }
+
+        public static void CreateFrame(ISheet sheet, Block block, double size, double thickness, Brush stroke)
+        {
+            double padding = 6.0;
+            double width = 1260.0;
+            double height = 891.0;
+            double startX = padding;
+            double startY = padding;
+            double rowsStart = 60;
+            double rowsEnd = 780.0;
+
+            // frame left rows
+            int leftRowNumber = 1;
+            for (double y = rowsStart; y < rowsEnd; y += size)
+            {
+                CreateLine(sheet, block.Lines, thickness, startX, y, 330.0, y, stroke);
+                CreateText(sheet, block.Texts, leftRowNumber.ToString("00"), startX, y, 30.0 - padding, size, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0, stroke);
+                leftRowNumber++;
+            }
+
+            // frame right rows
+            int rightRowNumber = 1;
+            for (double y = rowsStart; y < rowsEnd; y += size)
+            {
+                CreateLine(sheet, block.Lines, thickness, 930.0, y, 1260.0 - padding, y, stroke);
+                CreateText(sheet, block.Texts, rightRowNumber.ToString("00"), 1260.0 - 30.0, y, 30.0 - padding, size, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0, stroke);
+                rightRowNumber++;
+            }
+
+            // frame columns
+            double[] columnWidth = { 30.0, 210.0, 90.0, 600.0, 210.0, 90.0 };
+            double[] columnX = { 30.0, 30.0, startY, startY, 30.0, 30.0 };
+            double[] columnY = { rowsEnd, rowsEnd, rowsEnd, rowsEnd, rowsEnd, rowsEnd };
+
+            double start = 0.0;
+            for (int i = 0; i < columnWidth.Length; i++)
+            {
+                start += columnWidth[i];
+                CreateLine(sheet, block.Lines, thickness, start, columnX[i], start, columnY[i], stroke);
+            }
+
+            // frame header
+            CreateLine(sheet, block.Lines, thickness, startX, 30.0, width - padding, 30.0, stroke);
+
+            // frame footer
+            CreateLine(sheet, block.Lines, thickness, startX, rowsEnd, width - padding, rowsEnd, stroke);
+
+            // frame border
+            CreateLine(sheet, block.Lines, thickness, startX, startY, width - padding, startY, stroke);
+            CreateLine(sheet, block.Lines, thickness, startX, height - padding, width - padding, height - padding, stroke);
+            CreateLine(sheet, block.Lines, thickness, startX, startY, startX, height - padding, stroke);
+            CreateLine(sheet, block.Lines, thickness, width - padding, startY, width - padding, height - padding, stroke);
+        }
+
+        public static void CreateGrid(ISheet sheet, Block block, double startX, double startY, double width, double height, double size, double thickness, Brush stroke)
+        {
+            for (double y = startY + size; y < height + startY; y += size)
+            {
+                CreateLine(sheet, block.Lines, thickness, startX, y, width + startX, y, stroke);
+            }
+
+            for (double x = startX + size; x < startX + width; x += size)
+            {
+                CreateLine(sheet, block.Lines, thickness, x, startY, x, height + startY, stroke);
             }
         }
 
@@ -269,8 +376,8 @@ namespace Sheet
 
         private void InitLoaded()
         {
-            CreateGrid(backSheet, gridBlock, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
-            CreateFrame(backSheet, frameBlock, options.GridSize, options.GridThickness, BlockFactory.FrameBrush);
+            PageFactory.CreateGrid(backSheet, gridBlock, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
+            PageFactory.CreateFrame(backSheet, frameBlock, options.GridSize, options.GridThickness, BlockFactory.FrameBrush);
             AdjustThickness(gridBlock, options.GridThickness / GetZoom(zoomIndex));
             AdjustThickness(frameBlock, options.FrameThickness / GetZoom(zoomIndex));
             LoadStandardLibrary();
@@ -434,106 +541,6 @@ namespace Sheet
         public void ModeTextEditor()
         {
             SetMode(Mode.TextEditor);
-        }
-
-        #endregion
-
-        #region Back
-
-        private static void CreateLine(ISheet sheet, List<Line> lines, double thickness, double x1, double y1, double x2, double y2, Brush stroke)
-        {
-            var line = BlockFactory.CreateLine(thickness, x1, y1, x2, y2, stroke);
-
-            if (lines != null)
-            {
-                lines.Add(line);
-            }
-
-            if (sheet != null)
-            {
-                sheet.Add(line);
-            }
-        }
-
-        private static void CreateText(ISheet sheet, List<Grid> texts, string content, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size, Brush foreground)
-        {
-            var text = BlockFactory.CreateText(content, x, y, width, height, halign, valign, size, BlockFactory.TransparentBrush, foreground);
-
-            if (texts != null)
-            {
-                texts.Add(text);
-            }
-
-            if (sheet != null)
-            {
-                sheet.Add(text);
-            }
-        }
-
-        private static void CreateFrame(ISheet sheet, Block block, double size, double thickness, Brush stroke)
-        {
-            double padding = 6.0;
-            double width = 1260.0;
-            double height = 891.0;
-            double startX = padding;
-            double startY = padding;
-            double rowsStart = 60;
-            double rowsEnd = 780.0;
-
-            // frame left rows
-            int leftRowNumber = 1;
-            for (double y = rowsStart; y < rowsEnd; y += size)
-            {
-                CreateLine(sheet, block.Lines, thickness, startX, y, 330.0, y, stroke);
-                CreateText(sheet, block.Texts, leftRowNumber.ToString("00"), startX, y, 30.0 - padding, size, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0, stroke);
-                leftRowNumber++;
-            }
-
-            // frame right rows
-            int rightRowNumber = 1;
-            for (double y = rowsStart; y < rowsEnd; y += size)
-            {
-                CreateLine(sheet, block.Lines, thickness, 930.0, y, 1260.0 - padding, y, stroke);
-                CreateText(sheet, block.Texts, rightRowNumber.ToString("00"), 1260.0 - 30.0, y, 30.0 - padding, size, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0, stroke);
-                rightRowNumber++;
-            }
-
-            // frame columns
-            double[] columnWidth = { 30.0, 210.0, 90.0, 600.0, 210.0, 90.0 };
-            double[] columnX = { 30.0, 30.0, startY, startY, 30.0, 30.0 };
-            double[] columnY = { rowsEnd, rowsEnd, rowsEnd, rowsEnd, rowsEnd, rowsEnd };
-
-            double start = 0.0;
-            for (int i = 0; i < columnWidth.Length; i++)
-            {
-                start += columnWidth[i];
-                CreateLine(sheet, block.Lines, thickness, start, columnX[i], start, columnY[i], stroke);
-            }
-
-            // frame header
-            CreateLine(sheet, block.Lines, thickness, startX, 30.0, width - padding, 30.0, stroke);
-
-            // frame footer
-            CreateLine(sheet, block.Lines, thickness, startX, rowsEnd, width - padding, rowsEnd, stroke);
-
-            // frame border
-            CreateLine(sheet, block.Lines, thickness, startX, startY, width - padding, startY, stroke);
-            CreateLine(sheet, block.Lines, thickness, startX, height - padding, width - padding, height - padding, stroke);
-            CreateLine(sheet, block.Lines, thickness, startX, startY, startX, height - padding, stroke);
-            CreateLine(sheet, block.Lines, thickness, width - padding, startY, width - padding, height - padding, stroke);
-        }
-
-        private static void CreateGrid(ISheet sheet, Block block, double startX, double startY, double width, double height, double size, double thickness, Brush stroke)
-        {
-            for (double y = startY + size; y < height + startY; y += size)
-            {
-                CreateLine(sheet, block.Lines, thickness, startX, y, width + startX, y, stroke);
-            }
-
-            for (double x = startX + size; x < startX + width; x += size)
-            {
-                CreateLine(sheet, block.Lines, thickness, x, startY, x, height + startY, stroke);
-            }
         }
 
         #endregion
@@ -1463,8 +1470,8 @@ namespace Sheet
             var canvas = new CanvasControl();
             var sheet = new CanvasSheet(canvas.Sheet);
 
-            CreateGrid(sheet, null, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
-            CreateFrame(sheet, null, options.GridSize, options.GridThickness, BlockFactory.NormalBrush);
+            PageFactory.CreateGrid(sheet, null, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
+            PageFactory.CreateFrame(sheet, null, options.GridSize, options.GridThickness, BlockFactory.NormalBrush);
 
             var blockItem = BlockSerializer.SerializerBlockContents(logicBlock, 0, 0.0, 0.0, -1, "PREVIEW");
             BlockController.AddBlockContents(sheet, blockItem, null, null, false, options.LineThickness);
