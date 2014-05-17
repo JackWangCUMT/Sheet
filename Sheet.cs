@@ -1822,7 +1822,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    BlockEditor.SelectText(text);
+                    BlockController.SelectText(text);
                 }
             }
 
@@ -1832,7 +1832,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    BlockEditor.SelectImage(image);
+                    BlockController.SelectImage(image);
                 }
             }
 
@@ -1842,7 +1842,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    BlockEditor.SelectLine(line);
+                    BlockController.SelectLine(line);
                 }
             }
 
@@ -1852,7 +1852,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    BlockEditor.SelectRectangle(rectangle);
+                    BlockController.SelectRectangle(rectangle);
                 }
             }
 
@@ -1862,7 +1862,7 @@ namespace Sheet
 
                 if (select)
                 {
-                    BlockEditor.SelectEllipse(ellipse);
+                    BlockController.SelectEllipse(ellipse);
                 }
             }
 
@@ -1886,7 +1886,7 @@ namespace Sheet
 
     #region Block Editor
 
-    public static class BlockEditor
+    public static class BlockController
     {
         #region Add
 
