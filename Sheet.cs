@@ -1078,7 +1078,7 @@ namespace Sheet
 
     #region Item Editor
 
-    public static class ItemEditor
+    public static class ItemController
     {
         #region Text
 
