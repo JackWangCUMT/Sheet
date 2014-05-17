@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Windows;
@@ -14,32 +15,6 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
-    #region CsvReader
-
-    using Microsoft.VisualBasic.FileIO;
-    using System.Diagnostics;
-
-    public static class CsvReader
-    {
-        public static IEnumerable<string[]> Read(string path)
-        {
-            // reference Microsoft.VisualBasic, namespace Microsoft.VisualBasic.FileIO
-            using (TextFieldParser parser = new TextFieldParser(path))
-            {
-                parser.CommentTokens = new string[] { "#" };
-                parser.SetDelimiters(new string[] { ";" });
-                parser.HasFieldsEnclosedInQuotes = true;
-                while (!parser.EndOfData)
-                {
-                    string[] fields = parser.ReadFields();
-                    yield return fields;
-                }
-            }
-        }
-    } 
-
-    #endregion
-
     public partial class DatabaseControl : UserControl, IDatabase
     {
         #region Fields
@@ -140,7 +115,8 @@ namespace Sheet
 
         public void Open(string fileName)
         {
-            var fields = CsvReader.Read(fileName);
+            var reader = new CsvDataReader();
+            var fields = reader.Read(fileName);
             SetColumns(fields.FirstOrDefault());
             SetData(fields.Skip(1).ToList());
         }

@@ -51,14 +51,14 @@ namespace Sheet
         private Block frameBlock = null;
         private Block gridBlock = null;
 
+        private Size lastFinalSize = new Size();
+
         #endregion
 
         #region Properties
 
         public IHistoryController History { get; private set; }
-
         public ILibrary Library { get; set; }
-
         public IDatabase Database { get; set; }
 
         private int zoomIndex = -1;
@@ -118,7 +118,7 @@ namespace Sheet
 
         #endregion
 
-        #region Default Options
+        #region Options
 
         private SheetOptions DefaultOptions()
         {
@@ -357,7 +357,158 @@ namespace Sheet
 
         #endregion
 
-        #region Block
+        #region Clipboard
+
+        public void Cut()
+        {
+            try
+            {
+                if (BlockController.HaveSelected(selectedBlock))
+                {
+                    History.Register("Cut");
+                    Copy();
+                    Delete();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
+        }
+
+        public void Copy()
+        {
+            try
+            {
+                var block = BlockController.HaveSelected(selectedBlock) ?
+                    BlockSerializer.SerializerBlockContents(selectedBlock, 0, 0.0, 0.0, -1, "SELECTED") : Serialize();
+                var text = ItemSerializer.SerializeContents(block);
+                Clipboard.SetData(DataFormats.UnicodeText, text);
+                //string json = JsonConvert.SerializeObject(block, Formatting.Indented);
+                //Clipboard.SetData(DataFormats.UnicodeText, json);
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
+        }
+
+        public async void Paste()
+        {
+            try
+            {
+                var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
+                var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
+                History.Register("Paste");
+                InsertBlock(block, true);
+                //var block = JsonConvert.DeserializeObject<BlockItem>(text);
+                //InsertBlock(block, true);
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
+        }
+
+        #endregion
+
+        #region Overlay
+
+        private void ResetOverlay()
+        {
+            if (tempLine != null)
+            {
+                overlaySheet.Remove(tempLine);
+                tempLine = null;
+            }
+
+            if (tempStartEllipse != null)
+            {
+                overlaySheet.Remove(tempStartEllipse);
+                tempLine = null;
+            }
+
+            if (tempEndEllipse != null)
+            {
+                overlaySheet.Remove(tempEndEllipse);
+                tempEndEllipse = null;
+            }
+
+            if (tempRectangle != null)
+            {
+                overlaySheet.Remove(tempRectangle);
+                tempRectangle = null;
+            }
+
+            if (tempEllipse != null)
+            {
+                overlaySheet.Remove(tempEllipse);
+                tempEllipse = null;
+            }
+
+            if (tempSelectionRect != null)
+            {
+                overlaySheet.Remove(tempSelectionRect);
+                tempSelectionRect = null;
+            }
+
+            if (lineThumbStart != null)
+            {
+                overlaySheet.Remove(lineThumbStart);
+            }
+
+            if (lineThumbEnd != null)
+            {
+                overlaySheet.Remove(lineThumbEnd);
+            }
+        }
+
+        #endregion
+
+        #region Delete
+
+        public void Delete()
+        {
+            if (BlockController.HaveSelected(selectedBlock))
+            {
+                FinishEdit();
+                History.Register("Delete");
+                BlockController.RemoveSelectedFromBlock(logicSheet, logicBlock, selectedBlock);
+            }
+        }
+
+        #endregion
+
+        #region Select All
+
+        public void SelecteAll()
+        {
+            BlockController.SelectAll(selectedBlock, logicBlock);
+        }
+
+        #endregion
+
+        #region Toggle Fill
+
+        public void ToggleFill()
+        {
+            if (tempRectangle != null)
+            {
+                BlockController.ToggleFill(tempRectangle);
+            }
+
+            if (tempEllipse != null)
+            {
+                BlockController.ToggleFill(tempEllipse);
+            }
+        }
+
+        #endregion
+
+        #region Insert Mode
 
         public void InsertBlock(BlockItem block, bool select)
         {
@@ -429,222 +580,7 @@ namespace Sheet
 
         #endregion
 
-        #region Clipboard
-
-        public void Cut()
-        {
-            try
-            {
-                if (BlockController.HaveSelected(selectedBlock))
-                {
-                    History.Register("Cut");
-                    Copy();
-                    Delete();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.Print(ex.Message);
-                Debug.Print(ex.StackTrace);
-            }
-        }
-
-        public void Copy()
-        {
-            try
-            {
-                var block = BlockController.HaveSelected(selectedBlock) ?
-                    BlockSerializer.SerializerBlockContents(selectedBlock, 0, 0.0, 0.0, -1, "SELECTED") : Serialize();
-                var text = ItemSerializer.SerializeContents(block);
-                Clipboard.SetData(DataFormats.UnicodeText, text);
-                //string json = JsonConvert.SerializeObject(block, Formatting.Indented);
-                //Clipboard.SetData(DataFormats.UnicodeText, json);
-            }
-            catch (Exception ex)
-            {
-                Debug.Print(ex.Message);
-                Debug.Print(ex.StackTrace);
-            }
-        }
-
-        public async void Paste()
-        {
-            try
-            {
-                var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
-                var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
-                History.Register("Paste");
-                InsertBlock(block, true);
-                //var block = JsonConvert.DeserializeObject<BlockItem>(text);
-                //InsertBlock(block, true);
-            }
-            catch (Exception ex)
-            {
-                Debug.Print(ex.Message);
-                Debug.Print(ex.StackTrace);
-            }
-        }
-
-        #endregion
-
-        #region Library
-
-        private void Insert(Point p)
-        {
-            if (Library != null)
-            {
-                var blockItem = Library.GetSelected() as BlockItem;
-                Insert(blockItem, p, true);
-            }
-        }
-
-        private Block Insert(BlockItem blockItem, Point p, bool select)
-        {
-            BlockController.DeselectAll(selectedBlock);
-            double thickness = options.LineThickness / Zoom;
-
-            if (select)
-            {
-                selectedBlock.Blocks = new List<Block>();
-            }
-
-            History.Register("Insert Block");
-
-            var block = BlockSerializer.DeserializeBlockItem(logicSheet, logicBlock, blockItem, select, thickness);
-
-            if (select)
-            {
-                selectedBlock.Blocks.Add(block);
-            }
-
-            BlockController.Move(ItemController.Snap(p.X, options.SnapSize), ItemController.Snap(p.Y, options.SnapSize), block);
-
-            return block;
-        }
-
-        private async void LoadStandardLibrary()
-        {
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            if (assembly == null)
-            {
-                return;
-            }
-
-            var name = "Sheet.Libraries.Digital.txt";
-
-            using (var stream = assembly.GetManifestResourceStream(name))
-            {
-                using (var reader = new System.IO.StreamReader(stream))
-                {
-                    string text = await reader.ReadToEndAsync();
-                    if (text != null)
-                    {
-                        InitLibrary(text);
-                    }
-                }
-            }
-        }
-
-        private async void LoadLibrary(string fileName)
-        {
-            var text = await ItemController.OpenText(fileName);
-            if (text != null)
-            {
-                InitLibrary(text);
-            }
-        }
-
-        private async void InitLibrary(string text)
-        {
-            if (Library != null && text != null)
-            {
-                var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
-                Library.SetSource(block.Blocks);
-            }
-        }
-
-        private void AddToLibrary(BlockItem blockItem)
-        {
-            if (Library != null && blockItem != null)
-            {
-                var source = Library.GetSource() as IEnumerable<BlockItem>;
-                var items = new List<BlockItem>(source);
-                ItemController.ResetPosition(blockItem, options.PageOriginX, options.PageOriginY, options.PageWidth, options.PageHeight);
-                items.Add(blockItem);
-                Library.SetSource(items);
-            }
-        }
-
-        #endregion
-
-        #region Reset Overlay
-
-        private void ResetOverlay()
-        {
-            if (tempLine != null)
-            {
-                overlaySheet.Remove(tempLine);
-                tempLine = null;
-            }
-
-            if (tempStartEllipse != null)
-            {
-                overlaySheet.Remove(tempStartEllipse);
-                tempLine = null;
-            }
-
-            if (tempEndEllipse != null)
-            {
-                overlaySheet.Remove(tempEndEllipse);
-                tempEndEllipse = null;
-            }
-
-            if (tempRectangle != null)
-            {
-                overlaySheet.Remove(tempRectangle);
-                tempRectangle = null;
-            }
-
-            if (tempEllipse != null)
-            {
-                overlaySheet.Remove(tempEllipse);
-                tempEllipse = null;
-            }
-
-            if (tempSelectionRect != null)
-            {
-                overlaySheet.Remove(tempSelectionRect);
-                tempSelectionRect = null;
-            }
-
-            if (lineThumbStart != null)
-            {
-                overlaySheet.Remove(lineThumbStart);
-            }
-
-            if (lineThumbEnd != null)
-            {
-                overlaySheet.Remove(lineThumbEnd);
-            }
-        }
-
-        #endregion
-
-        #region Delete
-
-        public void Delete()
-        {
-            if (BlockController.HaveSelected(selectedBlock))
-            {
-                FinishEdit();
-                History.Register("Delete");
-                BlockController.RemoveSelectedFromBlock(logicSheet, logicBlock, selectedBlock);
-            }
-        }
-
-        #endregion
-
-        #region Move
+        #region Move Mode
 
         private void Move(double x, double y)
         {
@@ -675,36 +611,6 @@ namespace Sheet
         {
             Move(options.SnapSize, 0.0);
         }
-
-        #endregion
-
-        #region Select
-
-        public void SelecteAll()
-        {
-            BlockController.SelectAll(selectedBlock, logicBlock);
-        }
-
-        #endregion
-
-        #region Fill
-
-        public void ToggleFill()
-        {
-            if (tempRectangle != null)
-            {
-                BlockController.ToggleFill(tempRectangle);
-            }
-
-            if (tempEllipse != null)
-            {
-                BlockController.ToggleFill(tempEllipse);
-            }
-        }
-
-        #endregion
-
-        #region Move Mode
 
         private bool CanInitMove(Point p)
         {
@@ -762,7 +668,122 @@ namespace Sheet
 
         #endregion
 
-        #region Pan & Zoom Thickness
+        #region Pan & Zoom Mode
+
+        private int FindZoomIndex(double factor)
+        {
+            int index = -1;
+            for (int i = 0; i < options.ZoomFactors.Length; i++)
+            {
+                if (options.ZoomFactors[i] > factor)
+                {
+                    index = i;
+                    break;
+                }
+            }
+            index = Math.Max(0, index);
+            index = Math.Min(index, options.MaxZoomIndex);
+            return index;
+        }
+
+        public void SetAutoFitSize(Size finalSize)
+        {
+            lastFinalSize = finalSize;
+        }
+
+        public void AutoFit(Size size)
+        {
+            // calculate factor
+            double fwidth = size.Width / options.PageWidth;
+            double fheight = size.Height / options.PageHeight;
+            double factor = Math.Min(fwidth, fheight);
+            double panX = (size.Width - (options.PageWidth * factor)) / 2.0;
+            double panY = (size.Height - (options.PageHeight * factor)) / 2.0;
+            double dx = Math.Max(0, (size.Width - DesiredSize.Width) / 2.0);
+            double dy = Math.Max(0, (size.Height - DesiredSize.Height) / 2.0);
+
+            // adjust zoom
+            zoomIndex = FindZoomIndex(factor);
+            Zoom = factor;
+
+            // adjust pan
+            PanX = panX - dx;
+            PanY = panY - dy;
+        }
+
+        public void AutoFit()
+        {
+            AutoFit(lastFinalSize);
+        }
+
+        private void ResetPanAndZoom()
+        {
+            zoomIndex = options.DefaultZoomIndex;
+            Zoom = options.ZoomFactors[zoomIndex];
+            PanX = 0.0;
+            PanY = 0.0;
+        }
+
+        private void ZoomTo(double x, double y, int oldZoomIndex)
+        {
+            double oldZoom = GetZoom(oldZoomIndex);
+            double newZoom = GetZoom(zoomIndex);
+            Zoom = newZoom;
+
+            PanX = (x * oldZoom + PanX) - x * newZoom;
+            PanY = (y * oldZoom + PanY) - y * newZoom;
+        }
+
+        private void ZoomTo(int delta, Point p)
+        {
+            if (delta > 0)
+            {
+                if (zoomIndex > -1 && zoomIndex < options.MaxZoomIndex)
+                {
+                    ZoomTo(p.X, p.Y, zoomIndex++);
+                }
+            }
+            else
+            {
+                if (zoomIndex > 0)
+                {
+                    ZoomTo(p.X, p.Y, zoomIndex--);
+                }
+            }
+        }
+
+        public double GetZoom(int index)
+        {
+            if (index >= 0 && index < options.MaxZoomIndex)
+            {
+                return options.ZoomFactors[index];
+            }
+            return zoom.ScaleX;
+        }
+
+        private void InitPan(Point p)
+        {
+            StoreTempMode();
+            ModePan();
+            panStartPoint = p;
+            ResetOverlay();
+            Cursor = Cursors.ScrollAll;
+            overlaySheet.Capture();
+        }
+
+        private void Pan(Point p)
+        {
+            PanX = PanX + p.X - panStartPoint.X;
+            PanY = PanY + p.Y - panStartPoint.Y;
+            panStartPoint = p;
+        }
+
+        private void FinishPan()
+        {
+            RestoreTempMode();
+            Cursor = Cursors.Arrow;
+            overlaySheet.ReleaseCapture();
+        }
 
         private static void AdjustThickness(IEnumerable<Line> lines, double thickness)
         {
@@ -840,135 +861,6 @@ namespace Sheet
             {
                 tempSelectionRect.StrokeThickness = selectionThicknessZoomed;
             }
-        }
-
-        #endregion
-
-        #region Pan & Zoom AutoFit
-
-        private Size lastFinalSize = new Size();
-
-        private int FindZoomIndex(double factor)
-        {
-            int index = -1;
-            for (int i = 0; i < options.ZoomFactors.Length; i++)
-            {
-                if (options.ZoomFactors[i] > factor)
-                {
-                    index = i;
-                    break;
-                }
-            }
-            index = Math.Max(0, index);
-            index = Math.Min(index, options.MaxZoomIndex);
-            return index;
-        }
-
-        public void SetAutoFitSize(Size finalSize)
-        {
-            lastFinalSize = finalSize;
-        }
-
-        public void AutoFit(Size size)
-        {
-            // calculate factor
-            double fwidth = size.Width / options.PageWidth;
-            double fheight = size.Height / options.PageHeight;
-            double factor = Math.Min(fwidth, fheight);
-            double panX = (size.Width - (options.PageWidth * factor)) / 2.0;
-            double panY = (size.Height - (options.PageHeight * factor)) / 2.0;
-            double dx = Math.Max(0, (size.Width - DesiredSize.Width) / 2.0);
-            double dy = Math.Max(0, (size.Height - DesiredSize.Height) / 2.0);
-
-            // adjust zoom
-            zoomIndex = FindZoomIndex(factor);
-            Zoom = factor;
-
-            // adjust pan
-            PanX = panX - dx;
-            PanY = panY - dy;
-        }
-
-        public void AutoFit()
-        {
-            AutoFit(lastFinalSize);
-        }
-
-        #endregion
-
-        #region Pan & Zoom Reset
-
-        private void ResetPanAndZoom()
-        {
-            zoomIndex = options.DefaultZoomIndex;
-            Zoom = options.ZoomFactors[zoomIndex];
-            PanX = 0.0;
-            PanY = 0.0;
-        }
-
-        #endregion
-
-        #region Pan & Zoom Mode
-
-        private void ZoomTo(double x, double y, int oldZoomIndex)
-        {
-            double oldZoom = GetZoom(oldZoomIndex);
-            double newZoom = GetZoom(zoomIndex);
-            Zoom = newZoom;
-
-            PanX = (x * oldZoom + PanX) - x * newZoom;
-            PanY = (y * oldZoom + PanY) - y * newZoom;
-        }
-
-        private void ZoomTo(int delta, Point p)
-        {
-            if (delta > 0)
-            {
-                if (zoomIndex > -1 && zoomIndex < options.MaxZoomIndex)
-                {
-                    ZoomTo(p.X, p.Y, zoomIndex++);
-                }
-            }
-            else
-            {
-                if (zoomIndex > 0)
-                {
-                    ZoomTo(p.X, p.Y, zoomIndex--);
-                }
-            }
-        }
-
-        public double GetZoom(int index)
-        {
-            if (index >= 0 && index < options.MaxZoomIndex)
-            {
-                return options.ZoomFactors[index];
-            }
-            return zoom.ScaleX;
-        }
-
-        private void InitPan(Point p)
-        {
-            StoreTempMode();
-            ModePan();
-            panStartPoint = p;
-            ResetOverlay();
-            Cursor = Cursors.ScrollAll;
-            overlaySheet.Capture();
-        }
-
-        private void Pan(Point p)
-        {
-            PanX = PanX + p.X - panStartPoint.X;
-            PanY = PanY + p.Y - panStartPoint.Y;
-            panStartPoint = p;
-        }
-
-        private void FinishPan()
-        {
-            RestoreTempMode();
-            Cursor = Cursors.Arrow;
-            overlaySheet.ReleaseCapture();
         }
 
         #endregion
@@ -1268,351 +1160,7 @@ namespace Sheet
 
         #endregion
 
-        #region Preview
-
-        public void Preview()
-        {
-            var window = new Window()
-            {
-                Title = "Preview",
-                SizeToContent = SizeToContent.WidthAndHeight,
-                WindowStartupLocation = WindowStartupLocation.CenterScreen
-            };
-
-            var canvas = new CanvasControl();
-            var sheet = new CanvasSheet(canvas.Sheet);
-
-            PageFactory.CreateGrid(sheet, null, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
-            PageFactory.CreateFrame(sheet, null, options.GridSize, options.GridThickness, BlockFactory.NormalBrush);
-
-            var blockItem = BlockSerializer.SerializerBlockContents(logicBlock, 0, 0.0, 0.0, -1, "PREVIEW");
-            BlockController.AddBlockContents(sheet, blockItem, null, null, false, options.LineThickness);
-
-            window.Content = canvas;
-            window.Show();
-        }
-
-        #endregion
-
-        #region Export
-
-        private IEnumerable<BlockItem> CreateFromCurrent()
-        {
-            var block = BlockSerializer.SerializerBlockContents(logicBlock, 0, logicBlock.X, logicBlock.Y, logicBlock.DataId, "LOGIC");
-            return ToSingle(block);
-        }
-
-        private BlockItem CreateGridBlock()
-        {
-            var grid = new BlockItem();
-            grid.Init(0, 0.0, 0.0, -1, "");
-
-            foreach (var line in gridBlock.Lines)
-            {
-                var lineItem = BlockSerializer.SerializeLine(line);
-                lineItem.StrokeThickness = 0.013 * 72.0 / 2.54;// 0.13mm
-                //lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
-                grid.Lines.Add(lineItem);
-            }
-            return grid;
-        }
-
-        private BlockItem CreateFrameBlock()
-        {
-            var frame = new BlockItem();
-            frame.Init(0, 0.0, 0.0, -1, "");
-
-            foreach (var line in frameBlock.Lines)
-            {
-                var lineItem = BlockSerializer.SerializeLine(line);
-                lineItem.StrokeThickness = 0.018 * 72.0 / 2.54; // 0.18mm
-                lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
-                frame.Lines.Add(lineItem);
-            }
-            return frame;
-        }
-
-        private BlockItem CreatePage(BlockItem block, bool enableFrame, bool enableGrid)
-        {
-            var page = new BlockItem();
-            page.Init(0, 0.0, 0.0, -1, "");
-
-            if (enableGrid)
-            {
-                var grid = CreateGridBlock();
-                page.Blocks.Add(grid);
-            }
-
-            if (enableFrame)
-            {
-                var frame = CreateFrameBlock();
-                page.Blocks.Add(frame);
-            }
-
-            page.Blocks.Add(block);
-
-            return page;
-        }
-
-        #endregion
-
-        #region Export To Pdf
-
-        private void ExportToPdf(IEnumerable<BlockItem> blocks, string fileName)
-        {
-            var pages = blocks.Select(block => CreatePage(block, true, false)).ToList();
-
-            Task.Run(() =>
-            {
-                var writer = new BlockPdfWriter();
-                writer.Create(fileName, options.PageWidth, options.PageHeight, pages);
-            });
-        }
-
-        #endregion
-
-        #region Export To Dxf
-
-        private void ExportToDxf(IEnumerable<BlockItem> blocks, string fileName)
-        {
-            var pages = blocks.Select(block => CreatePage(block, false, false)).ToList();
-
-            Task.Run(() =>
-            {
-                var writer = new BlockDxfWriter();
-
-                if (blocks.Count() > 1)
-                {
-                    string path = System.IO.Path.GetDirectoryName(fileName);
-                    string name = System.IO.Path.GetFileNameWithoutExtension(fileName);
-                    string extension = System.IO.Path.GetExtension(fileName);
-
-                    int counter = 0;
-                    foreach (var page in pages)
-                    {
-                        string fileNameWithCounter = System.IO.Path.Combine(path, string.Concat(name, '-', counter.ToString("000"), extension));
-                        writer.Create(fileNameWithCounter, options.PageWidth, options.PageHeight, page);
-                        counter++;
-                    }
-                }
-                else
-                {
-                    var page = pages.FirstOrDefault();
-                    if (page != null)
-                    {
-                        writer.Create(fileName, options.PageWidth, options.PageHeight, page);
-                    }
-                }
-
-            });
-        }
-
-        #endregion
-
-        #region Open
-
-        public async Task OpenTextFile(string path)
-        {
-            var text = await ItemController.OpenText(path);
-            if (text != null)
-            {
-                var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
-                History.Register("Open Text");
-                Reset();
-                InsertBlock(block, false);
-            }
-        }
-
-        public async Task OpenJsonFile(string path)
-        {
-            var text = await ItemController.OpenText(path);
-            if (text != null)
-            {
-                var block = await Task.Run(() => JsonConvert.DeserializeObject<BlockItem>(text));
-                History.Register("Open Json");
-                Reset();
-                InsertBlock(block, false);
-            }
-        }
-
-        #endregion
-
-        #region File Dialogs
-
-        public async void Open()
-        {
-            var dlg = new Microsoft.Win32.OpenFileDialog()
-            {
-                Filter = "TXT Files (*.txt)|*.txt|JSON Files (*.json)|*.json|All Files (*.*)|*.*"
-            };
-
-            if (dlg.ShowDialog() == true)
-            {
-                string path = dlg.FileName;
-                switch (dlg.FilterIndex)
-                {
-                    case 1:
-                        {
-                            try
-                            {
-                                await OpenTextFile(path);
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.Print(ex.Message);
-                                Debug.Print(ex.StackTrace);
-                            }
-                        }
-                        break;
-                    case 2:
-                    case 3:
-                        {
-                            try
-                            {
-                                await OpenJsonFile(path);
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.Print(ex.Message);
-                                Debug.Print(ex.StackTrace);
-                            }
-                        }
-                        break;
-                }
-            }
-        }
-
-        public void Save()
-        {
-            var dlg = new Microsoft.Win32.SaveFileDialog()
-            {
-                Filter = "TXT Files (*.txt)|*.txt|JSON Files (*.json)|*.json|All Files (*.*)|*.*",
-                FileName = "sheet"
-            };
-
-            if (dlg.ShowDialog() == true)
-            {
-                switch (dlg.FilterIndex)
-                {
-                    case 1:
-                        {
-                            try
-                            {
-                                var block = Serialize();
-
-                                Task.Run(() =>
-                                {
-                                    var text = ItemSerializer.SerializeContents(block);
-                                    ItemController.SaveText(dlg.FileName, text);
-                                });
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.Print(ex.Message);
-                                Debug.Print(ex.StackTrace);
-                            }
-                        }
-                        break;
-                    case 2:
-                    case 3:
-                        {
-                            try
-                            {
-                                var block = Serialize();
-
-                                Task.Run(() =>
-                                {
-                                    string text = JsonConvert.SerializeObject(block, Formatting.Indented);
-                                    ItemController.SaveText(dlg.FileName, text);
-                                });
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.Print(ex.Message);
-                                Debug.Print(ex.StackTrace);
-                            }
-                        }
-                        break;
-                }
-            }
-        }
-
-        public void Export()
-        {
-            var blocks = CreateFromCurrent();
-            Export(blocks);
-        }
-
-        public void Export(SolutionEntry solution)
-        {
-            var texts = solution.Documents.SelectMany(document => document.Pages).Select(page => page.Content);
-            Export(texts);
-        }
-
-        public void Export(IEnumerable<BlockItem> blocks)
-        {
-            var dlg = new Microsoft.Win32.SaveFileDialog()
-            {
-                Filter = "PDF Documents (*.pdf)|*.pdf|DXF Documents (*.dxf)|*.dxf|All Files (*.*)|*.*",
-                FileName = "sheet"
-            };
-
-            if (dlg.ShowDialog() == true)
-            {
-                switch (dlg.FilterIndex)
-                {
-                    case 1:
-                    case 3:
-                    default:
-                        {
-                            try
-                            {
-                                ExportToPdf(blocks, dlg.FileName);
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.Print(ex.Message);
-                                Debug.Print(ex.StackTrace);
-                            }
-                        }
-                        break;
-                    case 2:
-                        {
-                            try
-                            {
-                                ExportToDxf(blocks, dlg.FileName);
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.Print(ex.Message);
-                                Debug.Print(ex.StackTrace);
-                            }
-                        }
-                        break;
-                }
-            }
-        }
-
-        public void Load()
-        {
-            var dlg = new Microsoft.Win32.OpenFileDialog()
-            {
-                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*"
-            };
-
-            if (dlg.ShowDialog() == true)
-            {
-                try
-                {
-                    LoadLibrary(dlg.FileName);
-                }
-                catch (Exception ex)
-                {
-                    Debug.Print(ex.Message);
-                    Debug.Print(ex.StackTrace);
-                }
-            }
-        }
+        #region Image Mode
 
         public void Image(Point p)
         {
@@ -1625,13 +1173,7 @@ namespace Sheet
             {
                 try
                 {
-                    var path = dlg.FileName;
-                    byte[] data = Base64.ReadAllBytes(path);
-                    double x = ItemController.Snap(p.X, options.SnapSize);
-                    double y = ItemController.Snap(p.Y, options.SnapSize);
-                    var image = BlockFactory.CreateImage(x, y, 120.0, 90.0, data);
-                    logicBlock.Images.Add(image);
-                    logicSheet.Add(image);
+                    InsertImage(p, dlg.FileName);
                 }
                 catch (Exception ex)
                 {
@@ -1639,6 +1181,16 @@ namespace Sheet
                     Debug.Print(ex.StackTrace);
                 }
             }
+        }
+
+        private void InsertImage(Point p, string path)
+        {
+            byte[] data = Base64.ReadAllBytes(path);
+            double x = ItemController.Snap(p.X, options.SnapSize);
+            double y = ItemController.Snap(p.Y, options.SnapSize);
+            var image = BlockFactory.CreateImage(x, y, 120.0, 90.0, data);
+            logicBlock.Images.Add(image);
+            logicSheet.Add(image);
         }
 
         #endregion
@@ -2432,6 +1984,436 @@ namespace Sheet
                     e.Handled = true;
                 }
             }
+        }
+
+        #endregion
+
+        #region Open
+
+        public async Task OpenTextFile(string path)
+        {
+            var text = await ItemController.OpenText(path);
+            if (text != null)
+            {
+                var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
+                History.Register("Open Text");
+                Reset();
+                InsertBlock(block, false);
+            }
+        }
+
+        public async Task OpenJsonFile(string path)
+        {
+            var text = await ItemController.OpenText(path);
+            if (text != null)
+            {
+                var block = await Task.Run(() => JsonConvert.DeserializeObject<BlockItem>(text));
+                History.Register("Open Json");
+                Reset();
+                InsertBlock(block, false);
+            }
+        }
+
+        public async void Open()
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog()
+            {
+                Filter = "TXT Files (*.txt)|*.txt|JSON Files (*.json)|*.json|All Files (*.*)|*.*"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                string path = dlg.FileName;
+                switch (dlg.FilterIndex)
+                {
+                    case 1:
+                        {
+                            try
+                            {
+                                await OpenTextFile(path);
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.Print(ex.Message);
+                                Debug.Print(ex.StackTrace);
+                            }
+                        }
+                        break;
+                    case 2:
+                    case 3:
+                        {
+                            try
+                            {
+                                await OpenJsonFile(path);
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.Print(ex.Message);
+                                Debug.Print(ex.StackTrace);
+                            }
+                        }
+                        break;
+                }
+            }
+        }
+
+        #endregion
+
+        #region Save
+
+        public void Save()
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog()
+            {
+                Filter = "TXT Files (*.txt)|*.txt|JSON Files (*.json)|*.json|All Files (*.*)|*.*",
+                FileName = "sheet"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                switch (dlg.FilterIndex)
+                {
+                    case 1:
+                        {
+                            try
+                            {
+                                var block = Serialize();
+
+                                Task.Run(() =>
+                                {
+                                    var text = ItemSerializer.SerializeContents(block);
+                                    ItemController.SaveText(dlg.FileName, text);
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.Print(ex.Message);
+                                Debug.Print(ex.StackTrace);
+                            }
+                        }
+                        break;
+                    case 2:
+                    case 3:
+                        {
+                            try
+                            {
+                                var block = Serialize();
+
+                                Task.Run(() =>
+                                {
+                                    string text = JsonConvert.SerializeObject(block, Formatting.Indented);
+                                    ItemController.SaveText(dlg.FileName, text);
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.Print(ex.Message);
+                                Debug.Print(ex.StackTrace);
+                            }
+                        }
+                        break;
+                }
+            }
+        }
+
+        #endregion
+
+        #region Export
+
+        private IEnumerable<BlockItem> CreateFromCurrent()
+        {
+            var block = BlockSerializer.SerializerBlockContents(logicBlock, 0, logicBlock.X, logicBlock.Y, logicBlock.DataId, "LOGIC");
+            return ToSingle(block);
+        }
+
+        private BlockItem CreateGridBlock()
+        {
+            var grid = new BlockItem();
+            grid.Init(0, 0.0, 0.0, -1, "");
+
+            foreach (var line in gridBlock.Lines)
+            {
+                var lineItem = BlockSerializer.SerializeLine(line);
+                lineItem.StrokeThickness = 0.013 * 72.0 / 2.54;// 0.13mm
+                //lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
+                grid.Lines.Add(lineItem);
+            }
+            return grid;
+        }
+
+        private BlockItem CreateFrameBlock()
+        {
+            var frame = new BlockItem();
+            frame.Init(0, 0.0, 0.0, -1, "");
+
+            foreach (var line in frameBlock.Lines)
+            {
+                var lineItem = BlockSerializer.SerializeLine(line);
+                lineItem.StrokeThickness = 0.018 * 72.0 / 2.54; // 0.18mm
+                lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
+                frame.Lines.Add(lineItem);
+            }
+            return frame;
+        }
+
+        private BlockItem CreatePage(BlockItem block, bool enableFrame, bool enableGrid)
+        {
+            var page = new BlockItem();
+            page.Init(0, 0.0, 0.0, -1, "");
+
+            if (enableGrid)
+            {
+                var grid = CreateGridBlock();
+                page.Blocks.Add(grid);
+            }
+
+            if (enableFrame)
+            {
+                var frame = CreateFrameBlock();
+                page.Blocks.Add(frame);
+            }
+
+            page.Blocks.Add(block);
+
+            return page;
+        }
+
+        private void ExportToPdf(IEnumerable<BlockItem> blocks, string fileName)
+        {
+            var pages = blocks.Select(block => CreatePage(block, true, false)).ToList();
+
+            Task.Run(() =>
+            {
+                var writer = new BlockPdfWriter();
+                writer.Create(fileName, options.PageWidth, options.PageHeight, pages);
+            });
+        }
+
+        private void ExportToDxf(IEnumerable<BlockItem> blocks, string fileName)
+        {
+            var pages = blocks.Select(block => CreatePage(block, false, false)).ToList();
+
+            Task.Run(() =>
+            {
+                var writer = new BlockDxfWriter();
+
+                if (blocks.Count() > 1)
+                {
+                    string path = System.IO.Path.GetDirectoryName(fileName);
+                    string name = System.IO.Path.GetFileNameWithoutExtension(fileName);
+                    string extension = System.IO.Path.GetExtension(fileName);
+
+                    int counter = 0;
+                    foreach (var page in pages)
+                    {
+                        string fileNameWithCounter = System.IO.Path.Combine(path, string.Concat(name, '-', counter.ToString("000"), extension));
+                        writer.Create(fileNameWithCounter, options.PageWidth, options.PageHeight, page);
+                        counter++;
+                    }
+                }
+                else
+                {
+                    var page = pages.FirstOrDefault();
+                    if (page != null)
+                    {
+                        writer.Create(fileName, options.PageWidth, options.PageHeight, page);
+                    }
+                }
+
+            });
+        }
+
+        public void Export(SolutionEntry solution)
+        {
+            var texts = solution.Documents.SelectMany(document => document.Pages).Select(page => page.Content);
+            Export(texts);
+        }
+
+        public void Export(IEnumerable<BlockItem> blocks)
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog()
+            {
+                Filter = "PDF Documents (*.pdf)|*.pdf|DXF Documents (*.dxf)|*.dxf|All Files (*.*)|*.*",
+                FileName = "sheet"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                switch (dlg.FilterIndex)
+                {
+                    case 1:
+                    case 3:
+                    default:
+                        {
+                            try
+                            {
+                                ExportToPdf(blocks, dlg.FileName);
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.Print(ex.Message);
+                                Debug.Print(ex.StackTrace);
+                            }
+                        }
+                        break;
+                    case 2:
+                        {
+                            try
+                            {
+                                ExportToDxf(blocks, dlg.FileName);
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.Print(ex.Message);
+                                Debug.Print(ex.StackTrace);
+                            }
+                        }
+                        break;
+                }
+            }
+        }
+
+        public void Export()
+        {
+            var blocks = CreateFromCurrent();
+            Export(blocks);
+        }
+
+        #endregion
+
+        #region Library
+
+        private void Insert(Point p)
+        {
+            if (Library != null)
+            {
+                var blockItem = Library.GetSelected() as BlockItem;
+                Insert(blockItem, p, true);
+            }
+        }
+
+        private Block Insert(BlockItem blockItem, Point p, bool select)
+        {
+            BlockController.DeselectAll(selectedBlock);
+            double thickness = options.LineThickness / Zoom;
+
+            if (select)
+            {
+                selectedBlock.Blocks = new List<Block>();
+            }
+
+            History.Register("Insert Block");
+
+            var block = BlockSerializer.DeserializeBlockItem(logicSheet, logicBlock, blockItem, select, thickness);
+
+            if (select)
+            {
+                selectedBlock.Blocks.Add(block);
+            }
+
+            BlockController.Move(ItemController.Snap(p.X, options.SnapSize), ItemController.Snap(p.Y, options.SnapSize), block);
+
+            return block;
+        }
+
+        private async void LoadStandardLibrary()
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            if (assembly == null)
+            {
+                return;
+            }
+
+            var name = "Sheet.Libraries.Digital.txt";
+
+            using (var stream = assembly.GetManifestResourceStream(name))
+            {
+                using (var reader = new System.IO.StreamReader(stream))
+                {
+                    string text = await reader.ReadToEndAsync();
+                    if (text != null)
+                    {
+                        InitLibrary(text);
+                    }
+                }
+            }
+        }
+
+        private async void LoadLibrary(string fileName)
+        {
+            var text = await ItemController.OpenText(fileName);
+            if (text != null)
+            {
+                InitLibrary(text);
+            }
+        }
+
+        private async void InitLibrary(string text)
+        {
+            if (Library != null && text != null)
+            {
+                var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
+                Library.SetSource(block.Blocks);
+            }
+        }
+
+        private void AddToLibrary(BlockItem blockItem)
+        {
+            if (Library != null && blockItem != null)
+            {
+                var source = Library.GetSource() as IEnumerable<BlockItem>;
+                var items = new List<BlockItem>(source);
+                ItemController.ResetPosition(blockItem, options.PageOriginX, options.PageOriginY, options.PageWidth, options.PageHeight);
+                items.Add(blockItem);
+                Library.SetSource(items);
+            }
+        }
+
+        public void LoadLibrary()
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog()
+            {
+                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    LoadLibrary(dlg.FileName);
+                }
+                catch (Exception ex)
+                {
+                    Debug.Print(ex.Message);
+                    Debug.Print(ex.StackTrace);
+                }
+            }
+        }
+
+        #endregion
+
+        #region Preview
+
+        public void ShowPreview()
+        {
+            var window = new Window()
+            {
+                Title = "Preview",
+                SizeToContent = SizeToContent.WidthAndHeight,
+                WindowStartupLocation = WindowStartupLocation.CenterScreen
+            };
+
+            var canvas = new CanvasControl();
+            var sheet = new CanvasSheet(canvas.Sheet);
+
+            PageFactory.CreateGrid(sheet, null, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
+            PageFactory.CreateFrame(sheet, null, options.GridSize, options.GridThickness, BlockFactory.NormalBrush);
+
+            var blockItem = BlockSerializer.SerializerBlockContents(logicBlock, 0, 0.0, 0.0, -1, "PREVIEW");
+            BlockController.AddBlockContents(sheet, blockItem, null, null, false, options.LineThickness);
+
+            window.Content = canvas;
+            window.Show();
         }
 
         #endregion

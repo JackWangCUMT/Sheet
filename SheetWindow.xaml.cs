@@ -267,7 +267,7 @@ namespace Sheet
                 case Key.L:
                     if (ctrl)
                     {
-                        GetSheet().Load();
+                        GetSheet().LoadLibrary();
                     }
                     else
                     {
@@ -600,7 +600,7 @@ namespace Sheet
 
         private void FileLibrary_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().Load();
+            GetSheet().LoadLibrary();
         }
 
         private void FileDatabase_Click(object sender, RoutedEventArgs e)
