@@ -143,9 +143,9 @@ namespace Sheet
 
     #endregion
 
-    #region Entry Controller
+    #region Entry Serializer
 
-    public static class EntryController
+    public static class EntrySerializer
     {
         #region Fields
 
@@ -153,20 +153,60 @@ namespace Sheet
 
         #endregion
 
-        #region Archive
+        #region Add
 
-        public static void NewSolutionArchive(string path)
+        public static void AddDocumentEntry(ZipArchive zip, string document)
+        {
+            var name = string.Concat(document, '/');
+            var entry = zip.CreateEntry(name);
+        }
+
+        public static void AddPageEntry(ZipArchive zip, string document, string page, string content)
+        {
+            var name = string.Concat(document, '/', page);
+            var entry = zip.CreateEntry(name);
+            using (var writer = new StreamWriter(entry.Open()))
+            {
+                writer.Write(content);
+            }
+        }
+
+        #endregion
+
+        #region Serialize
+
+        public static void Serialize(SolutionEntry solution, string path)
         {
             using (FileStream fs = new FileStream(path, FileMode.Create))
             {
                 using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Update))
                 {
-                    EntryController.AddPageEntry(zip, "Document0", "Page", "");
+                    foreach (var document in solution.Documents)
+                    {
+                        if (document.Pages.Count <= 0)
+                        {
+                            AddDocumentEntry(zip, document.Name);
+                        }
+
+                        foreach (var page in document.Pages)
+                        {
+                            AddPageEntry(zip, document.Name, page.Name, page.Content);
+                        }
+                    }
                 }
             }
         }
 
-        public static SolutionEntry OpenSolutionArchive(string path)
+        public static void Serialize(SolutionEntry solution)
+        {
+            Serialize(solution, string.Concat(solution.Name, ".zip"));
+        }
+
+        #endregion
+
+        #region Deserialize
+
+        public static SolutionEntry Deserialize(string path)
         {
             string solutionName = System.IO.Path.GetFileNameWithoutExtension(path);
 
@@ -222,51 +262,15 @@ namespace Sheet
             return solution;
         }
 
-        public static void CreateSolutionArchive(SolutionEntry solution, string path)
-        {
-            using (FileStream fs = new FileStream(path, FileMode.Create))
-            {
-                using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Update))
-                {
-                    foreach (var document in solution.Documents)
-                    {
-                        if (document.Pages.Count <= 0)
-                        {
-                            AddDocumentEntry(zip, document.Name);
-                        }
-
-                        foreach (var page in document.Pages)
-                        {
-                            AddPageEntry(zip, document.Name, page.Name, page.Content);
-                        }
-                    }
-                }
-            }
-        }
-
-        public static void CreateSolutionArchive(SolutionEntry solution)
-        {
-            CreateSolutionArchive(solution, string.Concat(solution.Name, ".zip"));
-        }
-
-        public static void AddDocumentEntry(ZipArchive zip, string document)
-        {
-            var name = string.Concat(document, '/');
-            var entry = zip.CreateEntry(name);
-        }
-
-        public static void AddPageEntry(ZipArchive zip, string document, string page, string content)
-        {
-            var name = string.Concat(document, '/', page);
-            var entry = zip.CreateEntry(name);
-            using (var writer = new StreamWriter(entry.Open()))
-            {
-                writer.Write(content);
-            }
-        }
-
         #endregion
+    }
 
+    #endregion
+
+    #region Entry Controller
+
+    public static class EntryController
+    {
         #region Page
 
         public static PageEntry AddPage(DocumentEntry document, string content)
@@ -445,6 +449,21 @@ namespace Sheet
 
     public static class EntryFactory
     {
+        #region Empty
+
+        public static void CreateEmpty(string path)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Create))
+            {
+                using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Update))
+                {
+                    EntrySerializer.AddPageEntry(zip, "Document0", "Page", "");
+                }
+            }
+        }
+
+        #endregion
+
         #region Create
 
         public static PageEntry CreatePage(DocumentEntry document, string content, string name = null)
