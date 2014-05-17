@@ -51,7 +51,7 @@ namespace Sheet
         {
             Sheet.Library = Library;
             Sheet.Database = Csv;
-            SizeBorder.Execute = (size) => Sheet.AutoFit(size);
+            SizeBorder.Execute = (size) => Sheet.SetAutoFitSize(size);
             Solution.Controller = Sheet;
             UpdateModeMenu();
             CreateTestDatabase();

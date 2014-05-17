@@ -378,9 +378,14 @@ namespace Sheet
         {
             PageFactory.CreateGrid(backSheet, gridBlock, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
             PageFactory.CreateFrame(backSheet, frameBlock, options.GridSize, options.GridThickness, BlockFactory.FrameBrush);
+
             AdjustThickness(gridBlock, options.GridThickness / GetZoom(zoomIndex));
             AdjustThickness(frameBlock, options.FrameThickness / GetZoom(zoomIndex));
+
             LoadStandardLibrary();
+
+            AutoFit();
+
             Focus();
         }
 
@@ -950,7 +955,7 @@ namespace Sheet
 
         #endregion
 
-        #region Pan & Zoom Mode
+        #region Pan & Zoom Thickness
 
         private static void AdjustThickness(IEnumerable<Line> lines, double thickness)
         {
@@ -1030,6 +1035,77 @@ namespace Sheet
             }
         }
 
+        #endregion
+
+        #region Pan & Zoom AutoFit
+
+        private Size lastFinalSize = new Size();
+
+        private int FindZoomIndex(double factor)
+        {
+            int index = -1;
+            for (int i = 0; i < options.ZoomFactors.Length; i++)
+            {
+                if (options.ZoomFactors[i] > factor)
+                {
+                    index = i;
+                    break;
+                }
+            }
+            index = Math.Max(0, index);
+            index = Math.Min(index, options.MaxZoomIndex);
+            return index;
+        }
+
+        public void SetAutoFitSize(Size finalSize)
+        {
+            lastFinalSize = finalSize;
+            //Debug.Print(string.Format("SetAutoFitSize: {0}", finalSize));
+            //Debug.Print(new StackTrace().ToString());
+        }
+
+        public void AutoFit(Size size)
+        {
+            // calculate factor
+            double fwidth = size.Width / options.PageWidth;
+            double fheight = size.Height / options.PageHeight;
+            double factor = Math.Min(fwidth, fheight);
+            double panX = (size.Width - (options.PageWidth * factor)) / 2.0;
+            double panY = (size.Height - (options.PageHeight * factor)) / 2.0;
+
+            double dx = Math.Max(0, (size.Width - DesiredSize.Width) / 2.0);
+            double dy = Math.Max(0, (size.Height - DesiredSize.Height) / 2.0);
+
+            // adjust zoom
+            zoomIndex = FindZoomIndex(factor);
+            Zoom = factor;
+
+            // adjust pan
+            PanX = panX - dx;
+            PanY = panY - dy;
+        }
+
+        public void AutoFit()
+        {
+            AutoFit(lastFinalSize);
+        }
+
+        #endregion
+
+        #region Pan & Zoom Reset
+
+        private void ResetPanAndZoom()
+        {
+            zoomIndex = options.DefaultZoomIndex;
+            Zoom = options.ZoomFactors[zoomIndex];
+            PanX = 0.0;
+            PanY = 0.0;
+        }
+
+        #endregion
+
+        #region Pan & Zoom Mode
+
         private void ZoomTo(double x, double y, int oldZoomIndex)
         {
             double oldZoom = GetZoom(oldZoomIndex);
@@ -1048,19 +1124,6 @@ namespace Sheet
                 {
                     ZoomTo(p.X, p.Y, zoomIndex++);
                 }
-                else if (zoomIndex == -1)
-                {
-                    for (int i = 0; i < options.ZoomFactors.Length; i++)
-                    {
-                        if (options.ZoomFactors[i] > lastFactor)
-                        {
-                            zoomIndex = i;
-                            break;
-                        }
-                    }
-                    zoomIndex = Math.Min(zoomIndex, options.MaxZoomIndex) - 1;
-                    ZoomTo(p.X, p.Y, zoomIndex + 1);
-                }
             }
             else
             {
@@ -1068,63 +1131,16 @@ namespace Sheet
                 {
                     ZoomTo(p.X, p.Y, zoomIndex--);
                 }
-                else if (zoomIndex == -1)
-                {
-                    for (int i = 0; i < options.ZoomFactors.Length; i++)
-                    {
-                        if (options.ZoomFactors[i] > lastFactor)
-                        {
-                            zoomIndex = i - 1;
-                            break;
-                        }
-                    }
-                    zoomIndex = Math.Min(zoomIndex, options.MaxZoomIndex) - 1;
-                    ZoomTo(p.X, p.Y, zoomIndex + 1);
-                }
             }
         }
 
         public double GetZoom(int index)
         {
-            if (index >= 0)
+            if (index >= 0 && index < options.MaxZoomIndex)
             {
                 return options.ZoomFactors[index];
             }
-            else
-            {
-                return lastFactor;
-            }
-        }
-
-        private double lastFactor = 1.0;
-        private Size lastFinalSize = new Size();
-
-        public void AutoFit(Size finalSize)
-        {
-            lastFinalSize = finalSize;
-
-            // calculate factor
-            double fwidth = finalSize.Width / options.PageWidth;
-            double fheight = finalSize.Height / options.PageHeight;
-            double factor = Math.Min(fwidth, fheight);
-            double panX = (finalSize.Width - (options.PageWidth * factor)) / 2.0;
-            double panY = (finalSize.Height - (options.PageHeight * factor)) / 2.0;
-
-            double dx = Math.Max(0, (finalSize.Width - DesiredSize.Width) / 2.0);
-            double dy = Math.Max(0, (finalSize.Height - DesiredSize.Height) / 2.0);
-
-            // adjust zoom
-            zoomIndex = -1;
-            Zoom = factor;
-
-            // adjust pan
-            PanX = panX - dx;
-            PanY = panY - dy;
-
-            lastFactor = factor;
-
-            //Debug.Print(string.Format("AutoFit: {0}, {1}", finalSize, new StackFrame(1).GetMethod().Name));
-            //Debug.Print(new StackTrace().ToString());
+            return zoom.ScaleX;
         }
 
         private void InitPan(Point p)
@@ -1149,14 +1165,6 @@ namespace Sheet
             RestoreTempMode();
             Cursor = Cursors.Arrow;
             overlaySheet.ReleaseCapture();
-        }
-
-        private void ResetPanAndZoom()
-        {
-            zoomIndex = options.DefaultZoomIndex;
-            Zoom = options.ZoomFactors[zoomIndex];
-            PanX = 0.0;
-            PanY = 0.0;
         }
 
         #endregion
@@ -2482,8 +2490,18 @@ namespace Sheet
         {
             if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
             {
-                //ResetPanAndZoom();
-                AutoFit(lastFinalSize);
+                bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
+
+                // Mouse Middle Double-Click + Control key pressed to reset Pan and Zoom
+                // Mouse Middle Double-Click to Auto Fit page to window size
+                if (ctrl)
+                {
+                    ResetPanAndZoom();
+                }
+                else
+                {
+                    AutoFit();
+                }
             }
         }
 

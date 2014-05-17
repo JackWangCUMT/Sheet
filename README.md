@@ -51,7 +51,7 @@ Mouse:
                           Select/deselect single/multiple items while Ctrl key is pressesed.
     Right Click           Pan / Cancel Create / Cancel Selection / Deselect / Edit Text
     Mouse Wheel           Zoom
-    Double Middle Click   Reset Pan and Zoom
+    Double Middle Click   Auto-Fit (+Ctrl key to Reset Pan and Zoom)
     Mouse Over (+Shift)   Select signle item under mouse cursor.
 
 Icons:
