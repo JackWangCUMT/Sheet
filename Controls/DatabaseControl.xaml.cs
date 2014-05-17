@@ -157,10 +157,7 @@ namespace Sheet
             int i = 0;
             foreach (var column in columns)
             {
-                if (i > 0)
-                {
-                    gv.Columns.Add(new GridViewColumn { Header = column, Width = double.NaN, DisplayMemberBinding = new Binding("[" + i + "]") });
-                }
+                gv.Columns.Add(new GridViewColumn { Header = column, Width = double.NaN, DisplayMemberBinding = new Binding("[" + i + "]") });
                 i++;
             }
             return gv;
