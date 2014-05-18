@@ -2044,6 +2044,49 @@ namespace Sheet
             CreateLine(sheet, block.Lines, thickness, startX, height - padding, width - padding, height - padding, stroke);
             CreateLine(sheet, block.Lines, thickness, startX, startY, startX, height - padding, stroke);
             CreateLine(sheet, block.Lines, thickness, width - padding, startY, width - padding, height - padding, stroke);
+
+            // frame table
+            double tableStartX = startX;
+            double tableStartY = rowsEnd + 25.0;
+
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 0, tableStartY + 0, tableStartX + 1248, tableStartY + 0, stroke);
+
+            // table horizontal lines
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 0, tableStartY + 20, tableStartX + 175, tableStartY + 20, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 405, tableStartY + 20, tableStartX + 1248, tableStartY + 20, stroke);
+
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 175, tableStartY + 40, tableStartX + 0, tableStartY + 40, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 405, tableStartY + 40, tableStartX + 695, tableStartY + 40, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 965, tableStartY + 40, tableStartX + 1248, tableStartY + 40, stroke);
+
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 0, tableStartY + 60, tableStartX + 175, tableStartY + 60, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 405, tableStartY + 60, tableStartX + 695, tableStartY + 60, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 965, tableStartY + 60, tableStartX + 1248, tableStartY + 60, stroke);
+
+            // table vertical lines
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 30, tableStartY + 0, tableStartX + 30, tableStartY + 80, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 75, tableStartY + 0, tableStartX + 75, tableStartY + 80, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 175, tableStartY + 80, tableStartX + 175, tableStartY + 0, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 290, tableStartY + 0, tableStartX + 290, tableStartY + 80, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 405, tableStartY + 80, tableStartX + 405, tableStartY + 0, stroke);
+
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 465, tableStartY + 0, tableStartX + 465, tableStartY + 80, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 595, tableStartY + 80, tableStartX + 595, tableStartY + 0, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 640, tableStartY + 0, tableStartX + 640, tableStartY + 80, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 695, tableStartY + 80, tableStartX + 695, tableStartY + 0, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 965, tableStartY + 0, tableStartX + 965, tableStartY + 80, stroke);
+
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 1005, tableStartY + 80, tableStartX + 1005, tableStartY + 0, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 1045, tableStartY + 0, tableStartX + 1045, tableStartY + 80, stroke);
+            CreateLine(sheet, block.Lines, thickness, tableStartX + 1100, tableStartY + 80, tableStartX + 1100, tableStartY + 0, stroke);
+
+            // table label text
+
+            // TODO:
+
+            // table tag text
+
+            // TODO:
         }
 
         public static void CreateGrid(ISheet<FrameworkElement> sheet, Block block, double startX, double startY, double width, double height, double size, double thickness, Brush stroke)
