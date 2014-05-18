@@ -11,6 +11,46 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
+    #region Wpf Helper
+
+    public static class WpfHelper
+    {
+        public static T FindVisualParent<T>(DependencyObject child) where T : DependencyObject
+        {
+            DependencyObject parentObject = VisualTreeHelper.GetParent(child);
+            if (parentObject == null)
+            {
+                return null;
+            }
+
+            T parent = parentObject as T;
+            if (parent != null)
+            {
+                return parent;
+            }
+            else
+            {
+                return FindVisualParent<T>(parentObject);
+            }
+        }
+
+        public static Rect GetContentBounds(UIElement reference)
+        {
+            var bounds = VisualTreeHelper.GetContentBounds(reference);
+            return bounds;
+        }
+
+        public static Rect GetContentBounds(UIElement reference, UIElement relativeTo)
+        {
+            var bounds = VisualTreeHelper.GetContentBounds(reference);
+            var offset = reference.TranslatePoint(new Point(0, 0), relativeTo);
+            bounds.Offset(offset.X, offset.Y);
+            return bounds;
+        }
+    }
+
+    #endregion
+
     #region Block Model
 
     public enum Mode
@@ -1363,7 +1403,7 @@ namespace Sheet
         {
             foreach (var line in lines)
             {
-                var bounds = VisualTreeHelper.GetContentBounds(line);
+                var bounds = WpfHelper.GetContentBounds(line);
                 if (rect.IntersectsWith(bounds))
                 {
                     if (select)
@@ -1389,13 +1429,11 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestRectangles(IEnumerable<Rectangle> rectangles, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
+        public static bool HitTestRectangles(IEnumerable<Rectangle> rectangles, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relativeTo)
         {
             foreach (var rectangle in rectangles)
             {
-                var bounds = VisualTreeHelper.GetContentBounds(rectangle);
-                var offset = rectangle.TranslatePoint(new Point(0, 0), relative);
-                bounds.Offset(offset.X, offset.Y);
+                var bounds = WpfHelper.GetContentBounds(rectangle, relativeTo);
                 if (rect.IntersectsWith(bounds))
                 {
                     if (select)
@@ -1421,13 +1459,11 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestEllipses(IEnumerable<Ellipse> ellipses, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
+        public static bool HitTestEllipses(IEnumerable<Ellipse> ellipses, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relativeTo)
         {
             foreach (var ellipse in ellipses)
             {
-                var bounds = VisualTreeHelper.GetContentBounds(ellipse);
-                var offset = ellipse.TranslatePoint(new Point(0, 0), relative);
-                bounds.Offset(offset.X, offset.Y);
+                var bounds = WpfHelper.GetContentBounds(ellipse, relativeTo);
                 if (rect.IntersectsWith(bounds))
                 {
                     if (select)
@@ -1453,13 +1489,11 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestTexts(IEnumerable<Grid> texts, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
+        public static bool HitTestTexts(IEnumerable<Grid> texts, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relativeTo)
         {
             foreach (var text in texts)
             {
-                var bounds = VisualTreeHelper.GetContentBounds(text);
-                var offset = text.TranslatePoint(new Point(0, 0), relative);
-                bounds.Offset(offset.X, offset.Y);
+                var bounds = WpfHelper.GetContentBounds(text, relativeTo);
                 if (rect.IntersectsWith(bounds))
                 {
                     if (select)
@@ -1486,13 +1520,11 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestImages(IEnumerable<Image> images, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relative)
+        public static bool HitTestImages(IEnumerable<Image> images, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relativeTo)
         {
             foreach (var image in images)
             {
-                var bounds = VisualTreeHelper.GetContentBounds(image);
-                var offset = image.TranslatePoint(new Point(0, 0), relative);
-                bounds.Offset(offset.X, offset.Y);
+                var bounds = WpfHelper.GetContentBounds(image, relativeTo);
                 if (rect.IntersectsWith(bounds))
                 {
                     if (select)
@@ -1518,11 +1550,11 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestBlocks(IEnumerable<Block> blocks, Block selected, Rect rect, bool onlyFirst, bool select, bool selectInsideBlock, UIElement relative)
+        public static bool HitTestBlocks(IEnumerable<Block> blocks, Block selected, Rect rect, bool onlyFirst, bool select, bool selectInsideBlock, UIElement relativeTo)
         {
             foreach (var block in blocks)
             {
-                bool result = HitTestBlock(block, selected, rect, true, selectInsideBlock, relative);
+                bool result = HitTestBlock(block, selected, rect, true, selectInsideBlock, relativeTo);
 
                 if (result)
                 {
@@ -1549,17 +1581,17 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestBlock(Block parent, Block selected, Rect rect, bool onlyFirst, bool selectInsideBlock, UIElement relative)
+        public static bool HitTestBlock(Block parent, Block selected, Rect rect, bool onlyFirst, bool selectInsideBlock, UIElement relativeTo)
         {
             bool result = false;
 
-            result = HitTestTexts(parent.Texts, selected, rect, onlyFirst, selectInsideBlock, relative);
+            result = HitTestTexts(parent.Texts, selected, rect, onlyFirst, selectInsideBlock, relativeTo);
             if (result && onlyFirst)
             {
                 return true;
             }
 
-            result = HitTestImages(parent.Images, selected, rect, onlyFirst, selectInsideBlock, relative);
+            result = HitTestImages(parent.Images, selected, rect, onlyFirst, selectInsideBlock, relativeTo);
             if (result && onlyFirst)
             {
                 return true;
@@ -1571,19 +1603,19 @@ namespace Sheet
                 return true;
             }
 
-            result = HitTestRectangles(parent.Rectangles, selected, rect, onlyFirst, selectInsideBlock, relative);
+            result = HitTestRectangles(parent.Rectangles, selected, rect, onlyFirst, selectInsideBlock, relativeTo);
             if (result && onlyFirst)
             {
                 return true;
             }
 
-            result = HitTestEllipses(parent.Ellipses, selected, rect, onlyFirst, selectInsideBlock, relative);
+            result = HitTestEllipses(parent.Ellipses, selected, rect, onlyFirst, selectInsideBlock, relativeTo);
             if (result && onlyFirst)
             {
                 return true;
             }
 
-            result = HitTestBlocks(parent.Blocks, selected, rect, onlyFirst, false, selectInsideBlock, relative);
+            result = HitTestBlocks(parent.Blocks, selected, rect, onlyFirst, false, selectInsideBlock, relativeTo);
             if (result && onlyFirst)
             {
                 return true;

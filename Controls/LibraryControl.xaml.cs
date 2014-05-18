@@ -16,6 +16,12 @@ namespace Sheet
 {
     public partial class LibraryControl : UserControl, ILibrary
     {
+        #region Fields
+
+        private Point dragStartPoint;
+
+        #endregion
+
         #region Constructor
 
         public LibraryControl()
@@ -74,26 +80,7 @@ namespace Sheet
 
         #endregion
 
-        #region Fields
-
-        private Point dragStartPoint;
-
-        #endregion
-
         #region Drag
-
-        private static T FindVisualParent<T>(DependencyObject child) where T : DependencyObject
-        {
-            DependencyObject parentObject = VisualTreeHelper.GetParent(child);
-            if (parentObject == null)
-                return null;
-
-            T parent = parentObject as T;
-            if (parent != null)
-                return parent;
-            else
-                return FindVisualParent<T>(parentObject);
-        }
 
         private void Blocks_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -109,7 +96,7 @@ namespace Sheet
                  Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance))
             {
                 var listBox = sender as ListBox;
-                var listBoxItem = FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
+                var listBoxItem = WpfHelper.FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
                 if (listBoxItem != null)
                 {
                     BlockItem block = (BlockItem)listBox.ItemContainerGenerator.ItemFromContainer(listBoxItem);
