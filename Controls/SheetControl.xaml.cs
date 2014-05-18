@@ -2054,17 +2054,27 @@ namespace Sheet
 
             if (dlg.ShowDialog() == true)
             {
+                BlockItem content = null;
+
+                try
+                {
+                    content = Serialize();
+                }
+                catch (Exception ex)
+                {
+                    Debug.Print(ex.Message);
+                    Debug.Print(ex.StackTrace);
+                }
+
                 switch (dlg.FilterIndex)
                 {
                     case 1:
                         {
                             try
                             {
-                                var block = Serialize();
-
                                 Task.Run(() =>
                                 {
-                                    var text = ItemSerializer.SerializeContents(block);
+                                    var text = ItemSerializer.SerializeContents(content);
                                     ItemController.SaveText(dlg.FileName, text);
                                 });
                             }
@@ -2080,11 +2090,9 @@ namespace Sheet
                         {
                             try
                             {
-                                var block = Serialize();
-
                                 Task.Run(() =>
                                 {
-                                    string text = JsonConvert.SerializeObject(block, Formatting.Indented);
+                                    string text = JsonConvert.SerializeObject(content, Formatting.Indented);
                                     ItemController.SaveText(dlg.FileName, text);
                                 });
                             }
