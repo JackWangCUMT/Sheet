@@ -754,7 +754,7 @@ namespace Sheet
 
         public double GetZoom(int index)
         {
-            if (index >= 0 && index < options.MaxZoomIndex)
+            if (index >= 0 && index <= options.MaxZoomIndex)
             {
                 return options.ZoomFactors[index];
             }
