@@ -2127,50 +2127,71 @@ namespace Sheet
             return ToSingle(block);
         }
 
-        private BlockItem CreateGridBlock()
+        private BlockItem CreateGridBlock(Block gridBlock, bool adjustThickness, bool adjustColor)
         {
-            var grid = new BlockItem();
-            grid.Init(0, 0.0, 0.0, -1, "");
+            var grid = BlockSerializer.SerializerBlockContents(gridBlock, -1, 0.0, 0.0, -1, "GRID");
 
-            foreach (var line in gridBlock.Lines)
+            // lines
+            foreach (var lineItem in grid.Lines)
             {
-                var lineItem = BlockSerializer.SerializeLine(line);
-                lineItem.StrokeThickness = 0.013 * 72.0 / 2.54; // 0.13mm
-                //lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
-                grid.Lines.Add(lineItem);
+                if (adjustThickness)
+                {
+                    lineItem.StrokeThickness = 0.013 * 72.0 / 2.54; // 0.13mm 
+                }
+
+                if (adjustColor)
+                {
+                    lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
+                }
             }
+
             return grid;
         }
 
-        private BlockItem CreateFrameBlock()
+        private BlockItem CreateFrameBlock(Block frameBlock, bool adjustThickness, bool adjustColor)
         {
-            var frame = new BlockItem();
-            frame.Init(0, 0.0, 0.0, -1, "");
+            var frame = BlockSerializer.SerializerBlockContents(frameBlock, -1, 0.0, 0.0, -1, "FRAME");
 
-            foreach (var line in frameBlock.Lines)
+            // texts
+            foreach (var textItem in frame.Texts)
             {
-                var lineItem = BlockSerializer.SerializeLine(line);
-                lineItem.StrokeThickness = 0.018 * 72.0 / 2.54; // 0.18mm
-                lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
-                frame.Lines.Add(lineItem);
+                if (adjustColor)
+                {
+                    textItem.Foreground = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
+                }
             }
+
+            // lines
+            foreach (var lineItem in frame.Lines)
+            {
+                if (adjustThickness)
+                {
+                    lineItem.StrokeThickness = 0.018 * 72.0 / 2.54; // 0.18mm 
+                }
+
+                if (adjustColor)
+                {
+                    lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
+                }
+            }
+
             return frame;
         }
 
         private BlockItem CreatePage(BlockItem block, bool enableFrame, bool enableGrid)
         {
             var page = new BlockItem();
-            page.Init(0, 0.0, 0.0, -1, "");
+            page.Init(0, 0.0, 0.0, -1, "PAGE");
 
             if (enableGrid)
             {
-                var grid = CreateGridBlock();
+                var grid = CreateGridBlock(gridBlock, true, false);
                 page.Blocks.Add(grid);
             }
 
             if (enableFrame)
             {
-                var frame = CreateFrameBlock();
+                var frame = CreateFrameBlock(frameBlock, true, true);
                 page.Blocks.Add(frame);
             }
 
@@ -2187,12 +2208,13 @@ namespace Sheet
             {
                 var writer = new BlockPdfWriter();
                 writer.Create(fileName, options.PageWidth, options.PageHeight, pages);
+                Process.Start(fileName);
             });
         }
 
         private void ExportToDxf(IEnumerable<BlockItem> blocks, string fileName)
         {
-            var pages = blocks.Select(block => CreatePage(block, false, false)).ToList();
+            var pages = blocks.Select(block => CreatePage(block, true, false)).ToList();
 
             Task.Run(() =>
             {
@@ -2220,7 +2242,6 @@ namespace Sheet
                         writer.Create(fileName, options.PageWidth, options.PageHeight, page);
                     }
                 }
-
             });
         }
 
