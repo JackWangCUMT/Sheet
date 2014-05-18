@@ -1652,7 +1652,8 @@ namespace Sheet
             // edit mode
             if (selectedType != ItemType.None)
             {
-                if (!((e.OriginalSource as FrameworkElement).TemplatedParent is Thumb))
+                var source = (e.OriginalSource as FrameworkElement).TemplatedParent;
+                if (!(source is Thumb))
                 {
                     BlockController.DeselectAll(selectedBlock);
                     FinishEdit();
