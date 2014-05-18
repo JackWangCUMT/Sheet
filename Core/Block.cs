@@ -105,8 +105,8 @@ namespace Sheet
         public string Name { get; set; }
         public double Width { get; set; }
         public double Height { get; set; }
-        public Color Backgroud { get; set; }
         public int DataId { get; set; }
+        public Color Backgroud { get; set; }
         public List<Line> Lines { get; set; }
         public List<Rectangle> Rectangles { get; set; }
         public List<Ellipse> Ellipses { get; set; }
