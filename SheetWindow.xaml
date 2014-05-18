@@ -77,6 +77,12 @@
                 <Separator/>
                 <MenuItem x:Name="EditToggleFill" Header="Toggle _Fill" InputGestureText="F" Click="EditToggleFill_Click"/>
             </MenuItem>
+            <MenuItem Header="_View">
+                <MenuItem Header="_Zoom">
+                    <MenuItem x:Name="ViewZoomToPageLevel" Header="Zoom to _Page Level" InputGestureText="Ctrl+0" Click="ViewZoomToPageLevel_Click"/>
+                    <MenuItem x:Name="ViewZoomActualSize" Header="Act_ual Size" InputGestureText="Ctrl+1" Click="ViewZoomActualSize_Click"/>
+                </MenuItem>
+            </MenuItem>
             <MenuItem Header="_Mode">
                 <MenuItem x:Name="ModeNone" Header="_None" InputGestureText="N" Click="ModeNone_Click"/>
                 <MenuItem x:Name="ModeSelection" Header="_Selection" InputGestureText="S" Click="ModeSelection_Click"/>

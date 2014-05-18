@@ -212,6 +212,22 @@ namespace Sheet
 
             switch (e.Key)
             {
+                // Ctrl+0: Zoom to Page Level
+                case Key.D0:
+                case Key.NumPad0:
+                    if (ctrl)
+                    {
+                        GetSheet().AutoFit();
+                    }
+                    break;
+                // Ctrl+1: Actual Size
+                case Key.D1:
+                case Key.NumPad1:
+                    if (ctrl)
+                    {
+                        GetSheet().ActualSize();
+                    }
+                    break;
                 // Ctrl+O: Open
                 // Ctrl+Shift+O: Open Solution
                 case Key.O:
@@ -703,6 +719,20 @@ namespace Sheet
         private void EditToggleFill_Click(object sender, RoutedEventArgs e)
         {
             GetSheet().ToggleFill();
+        }
+
+        #endregion
+
+        #region View Menu Events
+
+        private void ViewZoomToPageLevel_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().AutoFit();
+        }
+
+        private void ViewZoomActualSize_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().ActualSize();
         }
 
         #endregion

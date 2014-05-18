@@ -32,6 +32,9 @@ Keyboard  Shortcuts:
     Left            Move Left
     Right           Move Right
     F               Toggle Fill
+    (View)
+    Ctrl+0          Zoom to Page Level
+    Ctrl+1          Actual Size
     (Mode)
     N               Mode None
     S               Mode Selection

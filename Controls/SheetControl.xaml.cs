@@ -716,7 +716,7 @@ namespace Sheet
             AutoFit(lastFinalSize);
         }
 
-        private void ResetPanAndZoom()
+        public void ActualSize()
         {
             zoomIndex = options.DefaultZoomIndex;
             Zoom = options.ZoomFactors[zoomIndex];
@@ -1872,7 +1872,7 @@ namespace Sheet
                 // Mouse Middle Double-Click to Auto Fit page to window size
                 if (ctrl)
                 {
-                    ResetPanAndZoom();
+                    ActualSize();
                 }
                 else
                 {
