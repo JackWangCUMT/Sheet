@@ -85,7 +85,7 @@ namespace Sheet
                 redos.Push(change);
                 var undo = undos.Pop();
                 var block = await Task.Run(() => ItemSerializer.DeserializeContents(undo.Model));
-                BlockController.Reset();
+                BlockController.ResetContent();
                 BlockController.Insert(block);
             }
         }
@@ -98,7 +98,7 @@ namespace Sheet
                 undos.Push(change);
                 var redo = redos.Pop();
                 var block = await Task.Run(() => ItemSerializer.DeserializeContents(redo.Model));
-                BlockController.Reset();
+                BlockController.ResetContent();
                 BlockController.Insert(block);
             }
         }

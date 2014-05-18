@@ -26,10 +26,20 @@ namespace Sheet
 
     public class ItemColor
     {
-        public int Alpha { get; set; }
-        public int Red { get; set; }
-        public int Green { get; set; }
-        public int Blue { get; set; }
+        public byte Alpha { get; set; }
+        public byte Red { get; set; }
+        public byte Green { get; set; }
+        public byte Blue { get; set; }
+    }
+
+    public static class ItemColors
+    {
+        public static ItemColor Transparent { get { return new ItemColor() { Alpha = 0, Red = 255, Green = 255, Blue = 255 }; } }
+        public static ItemColor White { get { return new ItemColor() { Alpha = 255, Red = 255, Green = 255, Blue = 255 }; } }
+        public static ItemColor Black { get { return new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 }; } }
+        public static ItemColor Red { get { return new ItemColor() { Alpha = 255, Red = 255, Green = 0, Blue = 0 }; } }
+        public static ItemColor LightGray { get { return new ItemColor() { Alpha = 255, Red = 211, Green = 211, Blue = 211 }; } }
+        public static ItemColor DarkGray { get { return new ItemColor() { Alpha = 255, Red = 169, Green = 169, Blue = 169 }; } }
     }
 
     public class LineItem : Item
@@ -104,15 +114,15 @@ namespace Sheet
         public List<TextItem> Texts { get; set; }
         public List<ImageItem> Images { get; set; }
         public List<BlockItem> Blocks { get; set; }
-        public void Init(int id, double x, double y, int dataId, string name)
+        public void Init(int id, double x, double y, double widht, double height, int dataId, string name)
         {
             X = x;
             Y = y;
             Id = id;
             DataId = dataId;
             Name = name;
-            Width = 0.0;
-            Height = 0.0;
+            Width = widht;
+            Height = height;
             Backgroud = new ItemColor() { Alpha = 0, Red = 0, Green = 0, Blue = 0 };
             Lines = new List<LineItem>();
             Rectangles = new List<RectangleItem>();
@@ -154,6 +164,7 @@ namespace Sheet
         BlockItem Serialize();
         void Insert(BlockItem block);
         void Reset();
+        void ResetContent();
     }
 
     #endregion
@@ -432,10 +443,10 @@ namespace Sheet
             lineItem.Y2 = double.Parse(m[5]);
             lineItem.Stroke = new ItemColor()
             {
-                Alpha = int.Parse(m[6]),
-                Red = int.Parse(m[7]),
-                Green = int.Parse(m[8]),
-                Blue = int.Parse(m[9])
+                Alpha = byte.Parse(m[6]),
+                Red = byte.Parse(m[7]),
+                Green = byte.Parse(m[8]),
+                Blue = byte.Parse(m[9])
             };
             return lineItem;
         }
@@ -451,17 +462,17 @@ namespace Sheet
             rectangleItem.IsFilled = bool.Parse(m[6]);
             rectangleItem.Stroke = new ItemColor()
             {
-                Alpha = int.Parse(m[7]),
-                Red = int.Parse(m[8]),
-                Green = int.Parse(m[9]),
-                Blue = int.Parse(m[10])
+                Alpha = byte.Parse(m[7]),
+                Red = byte.Parse(m[8]),
+                Green = byte.Parse(m[9]),
+                Blue = byte.Parse(m[10])
             };
             rectangleItem.Fill = new ItemColor()
             {
-                Alpha = int.Parse(m[11]),
-                Red = int.Parse(m[12]),
-                Green = int.Parse(m[13]),
-                Blue = int.Parse(m[14])
+                Alpha = byte.Parse(m[11]),
+                Red = byte.Parse(m[12]),
+                Green = byte.Parse(m[13]),
+                Blue = byte.Parse(m[14])
             };
             return rectangleItem;
         }
@@ -477,17 +488,17 @@ namespace Sheet
             ellipseItem.IsFilled = bool.Parse(m[6]);
             ellipseItem.Stroke = new ItemColor()
             {
-                Alpha = int.Parse(m[7]),
-                Red = int.Parse(m[8]),
-                Green = int.Parse(m[9]),
-                Blue = int.Parse(m[10])
+                Alpha = byte.Parse(m[7]),
+                Red = byte.Parse(m[8]),
+                Green = byte.Parse(m[9]),
+                Blue = byte.Parse(m[10])
             };
             ellipseItem.Fill = new ItemColor()
             {
-                Alpha = int.Parse(m[11]),
-                Red = int.Parse(m[12]),
-                Green = int.Parse(m[13]),
-                Blue = int.Parse(m[14])
+                Alpha = byte.Parse(m[11]),
+                Red = byte.Parse(m[12]),
+                Green = byte.Parse(m[13]),
+                Blue = byte.Parse(m[14])
             };
             return ellipseItem;
         }
@@ -505,17 +516,17 @@ namespace Sheet
             textItem.Size = double.Parse(m[8]);
             textItem.Foreground = new ItemColor()
             {
-                Alpha = int.Parse(m[9]),
-                Red = int.Parse(m[10]),
-                Green = int.Parse(m[11]),
-                Blue = int.Parse(m[12])
+                Alpha = byte.Parse(m[9]),
+                Red = byte.Parse(m[10]),
+                Green = byte.Parse(m[11]),
+                Blue = byte.Parse(m[12])
             };
             textItem.Backgroud = new ItemColor()
             {
-                Alpha = int.Parse(m[13]),
-                Red = int.Parse(m[14]),
-                Green = int.Parse(m[15]),
-                Blue = int.Parse(m[16])
+                Alpha = byte.Parse(m[13]),
+                Red = byte.Parse(m[14]),
+                Green = byte.Parse(m[15]),
+                Blue = byte.Parse(m[16])
             };
             textItem.Text = m[17];
             return textItem;
@@ -546,17 +557,17 @@ namespace Sheet
                 int.Parse(m[1]),
                 double.Parse(m[2]),
                 double.Parse(m[3]),
+                double.Parse(m[5]),
+                double.Parse(m[6]),
                 int.Parse(m[11]),
                 options);
 
-            blockItem.Width = double.Parse(m[5]);
-            blockItem.Width = double.Parse(m[6]);
             blockItem.Backgroud = new ItemColor()
             {
-                Alpha = int.Parse(m[7]),
-                Red = int.Parse(m[8]),
-                Green = int.Parse(m[9]),
-                Blue = int.Parse(m[10])
+                Alpha = byte.Parse(m[7]),
+                Red = byte.Parse(m[8]),
+                Green = byte.Parse(m[9]),
+                Blue = byte.Parse(m[10])
             };
             blockItem.DataId = int.Parse(m[11]);
             return blockItem;
@@ -569,11 +580,13 @@ namespace Sheet
             int id,
             double x,
             double y,
+            double width,
+            double height,
             int dataId,
             ItemSerializeOptions options)
         {
             var root = new BlockItem();
-            root.Init(id, x, y, dataId, name);
+            root.Init(id, x, y, width, height, dataId, name);
 
             for (; end < length; end++)
             {
@@ -683,7 +696,7 @@ namespace Sheet
                 string[] lines = model.Split(options.LineSeparators, StringSplitOptions.RemoveEmptyEntries);
                 int length = lines.Length;
                 int end = 0;
-                return DeserializeRootBlock(lines, length, ref end, "", 0, 0.0, 0.0, -1, options);
+                return DeserializeRootBlock(lines, length, ref end, "", 0, 0.0, 0.0, 0.0, 0.0, -1, options);
             }
             catch (Exception ex)
             {

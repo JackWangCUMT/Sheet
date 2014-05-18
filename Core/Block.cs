@@ -113,11 +113,13 @@ namespace Sheet
         public List<Grid> Texts { get; set; }
         public List<Image> Images { get; set; }
         public List<Block> Blocks { get; set; }
-        public Block(int id, double x, double y, int dataId, string name)
+        public Block(int id, double x, double y, double width, double height, int dataId, string name)
         {
             Id = id;
             X = x;
             Y = y;
+            Width = width;
+            Height = height;
             DataId = dataId;
             Name = name;
         }
@@ -325,7 +327,7 @@ namespace Sheet
         public static BlockItem SerializeBlock(Block parent)
         {
             var blockItem = new BlockItem();
-            blockItem.Init(0, parent.X, parent.Y, parent.DataId, parent.Name);
+            blockItem.Init(0, parent.X, parent.Y, parent.Width, parent.Height, parent.DataId, parent.Name);
             blockItem.Width = 0;
             blockItem.Height = 0;
             blockItem.Backgroud = ToItemColor(parent.Backgroud);
@@ -363,7 +365,7 @@ namespace Sheet
             return blockItem;
         }
 
-        public static BlockItem SerializerBlockContents(Block parent, int id, double x, double y, int dataId, string name)
+        public static BlockItem SerializerBlockContents(Block parent, int id, double x, double y, double width, double height, int dataId, string name)
         {
             var lines = parent.Lines;
             var rectangles = parent.Rectangles;
@@ -373,7 +375,7 @@ namespace Sheet
             var blocks = parent.Blocks;
 
             var sheet = new BlockItem() { Backgroud = new ItemColor() };
-            sheet.Init(id, x, y, dataId, name);
+            sheet.Init(id, x, y, width, height, dataId, name);
 
             if (lines != null)
             {
@@ -432,7 +434,7 @@ namespace Sheet
 
         public static Line DeserializeLineItem(ISheet<FrameworkElement> sheet, Block parent, LineItem lineItem, double thickness)
         {
-            var line = BlockFactory.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2, BlockFactory.NormalBrush);
+            var line = BlockFactory.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2, lineItem.Stroke);
 
             if (parent != null)
             {
@@ -489,8 +491,8 @@ namespace Sheet
                 (HorizontalAlignment)textItem.HAlign,
                 (VerticalAlignment)textItem.VAlign,
                 textItem.Size,
-                BlockFactory.TransparentBrush,
-                BlockFactory.NormalBrush);
+                textItem.Backgroud,
+                textItem.Foreground);
 
             if (parent != null)
             {
@@ -524,7 +526,7 @@ namespace Sheet
 
         public static Block DeserializeBlockItem(ISheet<FrameworkElement> sheet, Block parent, BlockItem blockItem, bool select, double thickness)
         {
-            var block = new Block(blockItem.Id, blockItem.X, blockItem.Y, blockItem.DataId, blockItem.Name);
+            var block = new Block(blockItem.Id, blockItem.X, blockItem.Y, blockItem.Width, blockItem.Height, blockItem.DataId, blockItem.Name);
             block.Init();
 
             foreach (var textItem in blockItem.Texts)
@@ -1826,18 +1828,18 @@ namespace Sheet
         public static SolidColorBrush NormalBrush = Brushes.Black;
         public static SolidColorBrush SelectedBrush = Brushes.Red;
         public static SolidColorBrush TransparentBrush = Brushes.Transparent;
-        public static SolidColorBrush GridBrush = Brushes.LightGray;
-        public static SolidColorBrush FrameBrush = Brushes.DarkGray;
 
         #endregion
 
         #region Create
 
-        public static Line CreateLine(double thickness, double x1, double y1, double x2, double y2, Brush stroke)
+        public static Line CreateLine(double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
         {
+            var strokeBrush = new SolidColorBrush(Color.FromArgb(stroke.Alpha, stroke.Red, stroke.Green, stroke.Blue));
+
             var line = new Line()
             {
-                Stroke = stroke,
+                Stroke = strokeBrush,
                 StrokeThickness = thickness,
                 StrokeStartLineCap = PenLineCap.Round,
                 StrokeEndLineCap = PenLineCap.Round,
@@ -1897,10 +1899,13 @@ namespace Sheet
             double x, double y, double width, double height,
             HorizontalAlignment halign, VerticalAlignment valign,
             double fontSize,
-            Brush backgroud, Brush foreground)
+            ItemColor backgroud, ItemColor foreground)
         {
+            var backgroundBrush = new SolidColorBrush(Color.FromArgb(backgroud.Alpha, backgroud.Red, backgroud.Green, backgroud.Blue));
+            var foregroundBrush = new SolidColorBrush(Color.FromArgb(foreground.Alpha, foreground.Red, foreground.Green, foreground.Blue));
+
             var grid = new Grid();
-            grid.Background = backgroud;
+            grid.Background = new SolidColorBrush(Color.FromArgb(backgroud.Alpha, backgroud.Red, backgroud.Green, backgroud.Blue));
             grid.Width = width;
             grid.Height = height;
             Canvas.SetLeft(grid, x);
@@ -1909,8 +1914,8 @@ namespace Sheet
             var tb = new TextBlock();
             tb.HorizontalAlignment = halign;
             tb.VerticalAlignment = valign;
-            tb.Background = backgroud;
-            tb.Foreground = foreground;
+            tb.Background = backgroundBrush;
+            tb.Foreground = foregroundBrush;
             tb.FontSize = fontSize;
             tb.FontFamily = new FontFamily("Calibri");
             tb.Text = text;
@@ -1963,7 +1968,7 @@ namespace Sheet
     {
         #region Create
 
-        public static void CreateLine(ISheet<FrameworkElement> sheet, List<Line> lines, double thickness, double x1, double y1, double x2, double y2, Brush stroke)
+        public static void CreateLine(ISheet<FrameworkElement> sheet, List<Line> lines, double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
         {
             var line = BlockFactory.CreateLine(thickness, x1, y1, x2, y2, stroke);
 
@@ -1978,9 +1983,9 @@ namespace Sheet
             }
         }
 
-        public static void CreateText(ISheet<FrameworkElement> sheet, List<Grid> texts, string content, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size, Brush foreground)
+        public static void CreateText(ISheet<FrameworkElement> sheet, List<Grid> texts, string content, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size, ItemColor foreground)
         {
-            var text = BlockFactory.CreateText(content, x, y, width, height, halign, valign, size, BlockFactory.TransparentBrush, foreground);
+            var text = BlockFactory.CreateText(content, x, y, width, height, halign, valign, size, ItemColors.Transparent, foreground);
 
             if (texts != null)
             {
@@ -1993,7 +1998,7 @@ namespace Sheet
             }
         }
 
-        public static void CreateFrame(ISheet<FrameworkElement> sheet, Block block, double size, double thickness, Brush stroke)
+        public static void CreateFrame(ISheet<FrameworkElement> sheet, Block block, double size, double thickness, ItemColor stroke)
         {
             double padding = 6.0;
             double width = 1260.0;
@@ -2115,7 +2120,7 @@ namespace Sheet
             }
         }
 
-        public static void CreateGrid(ISheet<FrameworkElement> sheet, Block block, double startX, double startY, double width, double height, double size, double thickness, Brush stroke)
+        public static void CreateGrid(ISheet<FrameworkElement> sheet, Block block, double startX, double startY, double width, double height, double size, double thickness, ItemColor stroke)
         {
             for (double y = startY + size; y < height + startY; y += size)
             {
