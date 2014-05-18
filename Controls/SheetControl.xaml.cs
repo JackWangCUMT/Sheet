@@ -2135,7 +2135,7 @@ namespace Sheet
             foreach (var line in gridBlock.Lines)
             {
                 var lineItem = BlockSerializer.SerializeLine(line);
-                lineItem.StrokeThickness = 0.013 * 72.0 / 2.54;// 0.13mm
+                lineItem.StrokeThickness = 0.013 * 72.0 / 2.54; // 0.13mm
                 //lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
                 grid.Lines.Add(lineItem);
             }
