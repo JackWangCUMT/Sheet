@@ -27,7 +27,7 @@ namespace Sheet
         private SheetOptions options = null;
 
         private ISheet<FrameworkElement> backSheet = null;
-        private ISheet<FrameworkElement> logicSheet = null;
+        private ISheet<FrameworkElement> contentSheet = null;
         private ISheet<FrameworkElement> overlaySheet = null;
 
         private Mode mode = Mode.Selection;
@@ -45,11 +45,8 @@ namespace Sheet
         private Ellipse tempEllipse = null;
         private Rectangle tempSelectionRect = null;
 
-        private Block logicBlock = null;
+        private Block contentBlock = null;
         private Block selectedBlock = null;
-
-        private Block frameBlock = null;
-        private Block gridBlock = null;
 
         private Size lastFinalSize = new Size();
 
@@ -118,7 +115,7 @@ namespace Sheet
 
         #endregion
 
-        #region Options
+        #region Default Options
 
         private SheetOptions DefaultOptions()
         {
@@ -148,7 +145,7 @@ namespace Sheet
         private void Init()
         {
             InitOptions();
-            InitCanvas();
+            InitSheets();
             InitContentBlocks();
             InitPageBlocks();
         }
@@ -159,37 +156,24 @@ namespace Sheet
             zoomIndex = options.DefaultZoomIndex;
         }
 
-        private void InitCanvas()
+        private void InitSheets()
         {
             backSheet = new CanvasSheet(Root.Back);
-            logicSheet = new CanvasSheet(Root.Sheet);
+            contentSheet = new CanvasSheet(Root.Sheet);
             overlaySheet = new CanvasSheet(Root.Overlay);
         }
 
         private void InitContentBlocks()
         {
-            logicBlock = new Block(0, 0.0, 0.0, -1, "LOGIC");
-            logicBlock.Init();
+            contentBlock = new Block(0, 0.0, 0.0, -1, "CONTENT");
+            contentBlock.Init();
 
             selectedBlock = new Block(0, 0.0, 0.0, -1, "SELECTED");
         }
 
-        private void InitPageBlocks()
-        {
-            frameBlock = new Block(0, 0.0, 0.0, -1, "FRAME");
-            frameBlock.Init();
-
-            gridBlock = new Block(0, 0.0, 0.0, -1, "GRID");
-            gridBlock.Init();
-        }
-
         private void InitLoaded()
         {
-            PageFactory.CreateGrid(backSheet, gridBlock, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
-            PageFactory.CreateFrame(backSheet, frameBlock, options.GridSize, options.GridThickness, BlockFactory.FrameBrush);
-
-            AdjustThickness(gridBlock, options.GridThickness / GetZoom(zoomIndex));
-            AdjustThickness(frameBlock, options.FrameThickness / GetZoom(zoomIndex));
+            InitLoadedPage();
 
             LoadStandardLibrary();
 
@@ -254,7 +238,7 @@ namespace Sheet
 
         public BlockItem Serialize()
         {
-            return BlockSerializer.SerializerBlockContents(logicBlock, 0, logicBlock.X, logicBlock.Y, logicBlock.DataId, "LOGIC");
+            return BlockSerializer.SerializerBlockContents(contentBlock, 0, contentBlock.X, contentBlock.Y, contentBlock.DataId, "CONTENT");
         }
 
         public void Insert(BlockItem block)
@@ -266,7 +250,7 @@ namespace Sheet
         {
             ResetOverlay();
 
-            BlockController.RemoveBlock(logicSheet, logicBlock);
+            BlockController.RemoveBlock(contentSheet, contentBlock);
 
             InitContentBlocks();
         }
@@ -476,7 +460,7 @@ namespace Sheet
             {
                 FinishEdit();
                 History.Register("Delete");
-                BlockController.RemoveSelectedFromBlock(logicSheet, logicBlock, selectedBlock);
+                BlockController.RemoveSelectedFromBlock(contentSheet, contentBlock, selectedBlock);
             }
         }
 
@@ -486,7 +470,7 @@ namespace Sheet
 
         public void SelecteAll()
         {
-            BlockController.SelectAll(selectedBlock, logicBlock);
+            BlockController.SelectAll(selectedBlock, contentBlock);
         }
 
         #endregion
@@ -513,7 +497,7 @@ namespace Sheet
         public void InsertBlock(BlockItem block, bool select)
         {
             BlockController.DeselectAll(selectedBlock);
-            BlockController.AddBlockContents(logicSheet, block, logicBlock, selectedBlock, select, options.LineThickness / Zoom);
+            BlockController.AddBlockContents(contentSheet, block, contentBlock, selectedBlock, select, options.LineThickness / Zoom);
         }
 
         private static string SerializeBlockContents(int id, double x, double y, int dataId, string name, Block parent)
@@ -574,7 +558,7 @@ namespace Sheet
                 var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
                 History.Register("Break Block");
                 Delete();
-                BlockController.AddBrokenBlock(logicSheet, block, logicBlock, selectedBlock, true, options.LineThickness / Zoom);
+                BlockController.AddBrokenBlock(contentSheet, block, contentBlock, selectedBlock, true, options.LineThickness / Zoom);
             }
         }
 
@@ -615,7 +599,7 @@ namespace Sheet
         private bool CanInitMove(Point p)
         {
             var temp = new Block(0, 0.0, 0.0, -1, "TEMP");
-            BlockController.HitTestClick(logicSheet, selectedBlock, temp, p, options.HitTestSize, false, true);
+            BlockController.HitTestClick(contentSheet, selectedBlock, temp, p, options.HitTestSize, false, true);
 
             if (BlockController.HaveSelected(temp))
             {
@@ -823,14 +807,12 @@ namespace Sheet
 
         private void AdjustThickness(double zoom)
         {
-            double gridThicknessZoomed = options.GridThickness / zoom;
-            double frameThicknessZoomed = options.FrameThickness / zoom;
             double lineThicknessZoomed = options.LineThickness / zoom;
             double selectionThicknessZoomed = options.SelectionThickness / zoom;
 
-            AdjustThickness(gridBlock, gridThicknessZoomed);
-            AdjustThickness(frameBlock, frameThicknessZoomed);
-            AdjustThickness(logicBlock, lineThicknessZoomed);
+            AdjustPageThickness(zoom);
+
+            AdjustThickness(contentBlock, lineThicknessZoomed);
 
             if (tempLine != null)
             {
@@ -903,7 +885,7 @@ namespace Sheet
             // get selected items
             bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
             bool resetSelected = ctrl && BlockController.HaveSelected(selectedBlock) ? false : true;
-            BlockController.HitTestSelectionRect(logicSheet, logicBlock, selectedBlock, new Rect(x, y, width, height), resetSelected);
+            BlockController.HitTestSelectionRect(contentSheet, contentBlock, selectedBlock, new Rect(x, y, width, height), resetSelected);
 
             // edit mode
             TryToEditSelected();
@@ -961,8 +943,8 @@ namespace Sheet
                 overlaySheet.Remove(tempStartEllipse);
                 overlaySheet.Remove(tempEndEllipse);
                 History.Register("Create Line");
-                logicBlock.Lines.Add(tempLine);
-                logicSheet.Add(tempLine);
+                contentBlock.Lines.Add(tempLine);
+                contentSheet.Add(tempLine);
                 tempLine = null;
                 tempStartEllipse = null;
                 tempEndEllipse = null;
@@ -1024,8 +1006,8 @@ namespace Sheet
                 overlaySheet.ReleaseCapture();
                 overlaySheet.Remove(tempRectangle);
                 History.Register("Create Rectangle");
-                logicBlock.Rectangles.Add(tempRectangle);
-                logicSheet.Add(tempRectangle);
+                contentBlock.Rectangles.Add(tempRectangle);
+                contentSheet.Add(tempRectangle);
                 tempRectangle = null;
             }
         }
@@ -1081,8 +1063,8 @@ namespace Sheet
                 overlaySheet.ReleaseCapture();
                 overlaySheet.Remove(tempEllipse);
                 History.Register("Create Ellipse");
-                logicBlock.Ellipses.Add(tempEllipse);
-                logicSheet.Add(tempEllipse);
+                contentBlock.Ellipses.Add(tempEllipse);
+                contentSheet.Add(tempEllipse);
                 tempEllipse = null;
             }
         }
@@ -1113,14 +1095,14 @@ namespace Sheet
             double y = ItemController.Snap(p.Y, options.SnapSize);
             History.Register("Create Text");
             var text = BlockFactory.CreateText("Text", x, y, 30.0, 15.0, HorizontalAlignment.Center, VerticalAlignment.Center, 11.0, BlockFactory.TransparentBrush, BlockFactory.NormalBrush);
-            logicBlock.Texts.Add(text);
-            logicSheet.Add(text);
+            contentBlock.Texts.Add(text);
+            contentSheet.Add(text);
         }
 
         private bool TryToEditText(Point p)
         {
             var temp = new Block(0, 0.0, 0.0, -1, "TEMP");
-            BlockController.HitTestClick(logicSheet, logicBlock, temp, p, options.HitTestSize, true, true);
+            BlockController.HitTestClick(contentSheet, contentBlock, temp, p, options.HitTestSize, true, true);
 
             if (BlockController.HaveOneTextSelected(temp))
             {
@@ -1189,8 +1171,8 @@ namespace Sheet
             double x = ItemController.Snap(p.X, options.SnapSize);
             double y = ItemController.Snap(p.Y, options.SnapSize);
             var image = BlockFactory.CreateImage(x, y, 120.0, 90.0, data);
-            logicBlock.Images.Add(image);
-            logicSheet.Add(image);
+            contentBlock.Images.Add(image);
+            contentSheet.Add(image);
         }
 
         #endregion
@@ -1686,7 +1668,7 @@ namespace Sheet
 
             if (GetMode() == Mode.Selection)
             {
-                bool result = BlockController.HitTestClick(logicSheet, logicBlock, selectedBlock, e.GetPosition(overlaySheet.GetParent()), options.HitTestSize, false, resetSelected);
+                bool result = BlockController.HitTestClick(contentSheet, contentBlock, selectedBlock, e.GetPosition(overlaySheet.GetParent()), options.HitTestSize, false, resetSelected);
                 if ((ctrl || !BlockController.HaveSelected(selectedBlock)) && !result)
                 {
                     InitSelectionRect(e.GetPosition(overlaySheet.GetParent()));
@@ -1772,7 +1754,7 @@ namespace Sheet
                     BlockController.DeselectAll(selectedBlock);
                 }
 
-                BlockController.HitTestClick(logicSheet, logicBlock, selectedBlock, e.GetPosition(overlaySheet.GetParent()), options.HitTestSize, false, false);
+                BlockController.HitTestClick(contentSheet, contentBlock, selectedBlock, e.GetPosition(overlaySheet.GetParent()), options.HitTestSize, false, false);
             }
 
             if (GetMode() == Mode.Selection && overlaySheet.IsCaptured)
@@ -1888,7 +1870,7 @@ namespace Sheet
         private bool BindDataToBlock(Point p, DataItem dataItem)
         {
             var temp = new Block(0, 0.0, 0.0, -1, "TEMP");
-            BlockController.HitTestForBlocks(logicSheet, logicBlock, temp, p, options.HitTestSize);
+            BlockController.HitTestForBlocks(contentSheet, contentBlock, temp, p, options.HitTestSize);
 
             if (BlockController.HaveOneBlockSelected(temp))
             {
@@ -1947,7 +1929,7 @@ namespace Sheet
                         var temp = new Block(0, 0.0, 0.0, -1, "TEMP");
                         temp.Init();
                         temp.Blocks.Add(block);
-                        BlockController.RemoveSelectedFromBlock(logicSheet, logicBlock, temp);
+                        BlockController.RemoveSelectedFromBlock(contentSheet, contentBlock, temp);
                     }
                 }
             }
@@ -2121,88 +2103,9 @@ namespace Sheet
 
         #region Export
 
-        private IEnumerable<BlockItem> CreateFromCurrent()
-        {
-            var block = BlockSerializer.SerializerBlockContents(logicBlock, 0, logicBlock.X, logicBlock.Y, logicBlock.DataId, "LOGIC");
-            return ToSingle(block);
-        }
-
-        private BlockItem CreateGridBlock(Block gridBlock, bool adjustThickness, bool adjustColor)
-        {
-            var grid = BlockSerializer.SerializerBlockContents(gridBlock, -1, 0.0, 0.0, -1, "GRID");
-
-            // lines
-            foreach (var lineItem in grid.Lines)
-            {
-                if (adjustThickness)
-                {
-                    lineItem.StrokeThickness = 0.013 * 72.0 / 2.54; // 0.13mm 
-                }
-
-                if (adjustColor)
-                {
-                    lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
-                }
-            }
-
-            return grid;
-        }
-
-        private BlockItem CreateFrameBlock(Block frameBlock, bool adjustThickness, bool adjustColor)
-        {
-            var frame = BlockSerializer.SerializerBlockContents(frameBlock, -1, 0.0, 0.0, -1, "FRAME");
-
-            // texts
-            foreach (var textItem in frame.Texts)
-            {
-                if (adjustColor)
-                {
-                    textItem.Foreground = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
-                }
-            }
-
-            // lines
-            foreach (var lineItem in frame.Lines)
-            {
-                if (adjustThickness)
-                {
-                    lineItem.StrokeThickness = 0.018 * 72.0 / 2.54; // 0.18mm 
-                }
-
-                if (adjustColor)
-                {
-                    lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
-                }
-            }
-
-            return frame;
-        }
-
-        private BlockItem CreatePage(BlockItem block, bool enableFrame, bool enableGrid)
-        {
-            var page = new BlockItem();
-            page.Init(0, 0.0, 0.0, -1, "PAGE");
-
-            if (enableGrid)
-            {
-                var grid = CreateGridBlock(gridBlock, true, false);
-                page.Blocks.Add(grid);
-            }
-
-            if (enableFrame)
-            {
-                var frame = CreateFrameBlock(frameBlock, true, true);
-                page.Blocks.Add(frame);
-            }
-
-            page.Blocks.Add(block);
-
-            return page;
-        }
-
         private void ExportToPdf(IEnumerable<BlockItem> blocks, string fileName)
         {
-            var pages = blocks.Select(block => CreatePage(block, true, false)).ToList();
+            var pages = blocks.Select(content => CreatePage(content, true, false)).ToList();
 
             Task.Run(() =>
             {
@@ -2297,7 +2200,9 @@ namespace Sheet
 
         public void Export()
         {
-            var blocks = CreateFromCurrent();
+            var block = BlockSerializer.SerializerBlockContents(contentBlock, 0, contentBlock.X, contentBlock.Y, contentBlock.DataId, "CONTENT");
+            var blocks = ToSingle(block);
+
             Export(blocks);
         }
 
@@ -2326,7 +2231,7 @@ namespace Sheet
 
             History.Register("Insert Block");
 
-            var block = BlockSerializer.DeserializeBlockItem(logicSheet, logicBlock, blockItem, select, thickness);
+            var block = BlockSerializer.DeserializeBlockItem(contentSheet, contentBlock, blockItem, select, thickness);
 
             if (select)
             {
@@ -2431,11 +2336,126 @@ namespace Sheet
             PageFactory.CreateGrid(sheet, null, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
             PageFactory.CreateFrame(sheet, null, options.GridSize, options.GridThickness, BlockFactory.NormalBrush);
 
-            var blockItem = BlockSerializer.SerializerBlockContents(logicBlock, 0, 0.0, 0.0, -1, "PREVIEW");
+            var blockItem = BlockSerializer.SerializerBlockContents(contentBlock, 0, 0.0, 0.0, -1, "PREVIEW");
             BlockController.AddBlockContents(sheet, blockItem, null, null, false, options.LineThickness);
 
             window.Content = canvas;
             window.Show();
+        }
+
+        #endregion
+
+        #region Logic: Page Init
+
+        private Block frameBlock = null;
+        private Block gridBlock = null;
+
+        private void InitPageBlocks()
+        {
+            frameBlock = new Block(0, 0.0, 0.0, -1, "FRAME");
+            frameBlock.Init();
+
+            gridBlock = new Block(0, 0.0, 0.0, -1, "GRID");
+            gridBlock.Init();
+        }
+
+        private void InitLoadedPage()
+        {
+            PageFactory.CreateGrid(backSheet, gridBlock, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, BlockFactory.GridBrush);
+            PageFactory.CreateFrame(backSheet, frameBlock, options.GridSize, options.GridThickness, BlockFactory.FrameBrush);
+
+            AdjustThickness(gridBlock, options.GridThickness / GetZoom(zoomIndex));
+            AdjustThickness(frameBlock, options.FrameThickness / GetZoom(zoomIndex));
+        }
+
+        #endregion
+
+        #region Logic: Page Pan & Zoom
+
+        private void AdjustPageThickness(double zoom)
+        {
+            double gridThicknessZoomed = options.GridThickness / zoom;
+            double frameThicknessZoomed = options.FrameThickness / zoom;
+
+            AdjustThickness(gridBlock, gridThicknessZoomed);
+            AdjustThickness(frameBlock, frameThicknessZoomed);
+        }
+
+        #endregion
+
+        #region Logic: Page Export
+
+        private static BlockItem CreateGridBlock(Block gridBlock, bool adjustThickness, bool adjustColor)
+        {
+            var grid = BlockSerializer.SerializerBlockContents(gridBlock, -1, 0.0, 0.0, -1, "GRID");
+
+            // lines
+            foreach (var lineItem in grid.Lines)
+            {
+                if (adjustThickness)
+                {
+                    lineItem.StrokeThickness = 0.013 * 72.0 / 2.54; // 0.13mm 
+                }
+
+                if (adjustColor)
+                {
+                    lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
+                }
+            }
+
+            return grid;
+        }
+
+        private static BlockItem CreateFrameBlock(Block frameBlock, bool adjustThickness, bool adjustColor)
+        {
+            var frame = BlockSerializer.SerializerBlockContents(frameBlock, -1, 0.0, 0.0, -1, "FRAME");
+
+            // texts
+            foreach (var textItem in frame.Texts)
+            {
+                if (adjustColor)
+                {
+                    textItem.Foreground = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
+                }
+            }
+
+            // lines
+            foreach (var lineItem in frame.Lines)
+            {
+                if (adjustThickness)
+                {
+                    lineItem.StrokeThickness = 0.018 * 72.0 / 2.54; // 0.18mm 
+                }
+
+                if (adjustColor)
+                {
+                    lineItem.Stroke = new ItemColor() { Alpha = 255, Red = 0, Green = 0, Blue = 0 };
+                }
+            }
+
+            return frame;
+        }
+
+        private BlockItem CreatePage(BlockItem content, bool enableFrame, bool enableGrid)
+        {
+            var page = new BlockItem();
+            page.Init(0, 0.0, 0.0, -1, "PAGE");
+
+            if (enableGrid)
+            {
+                var grid = CreateGridBlock(gridBlock, true, false);
+                page.Blocks.Add(grid);
+            }
+
+            if (enableFrame)
+            {
+                var frame = CreateFrameBlock(frameBlock, true, true);
+                page.Blocks.Add(frame);
+            }
+
+            page.Blocks.Add(content);
+
+            return page;
         }
 
         #endregion
@@ -2448,8 +2468,8 @@ namespace Sheet
         private void AddInvertedLineEllipse(double x, double y, double width, double height)
         {
             var ellipse = BlockFactory.CreateEllipse(options.LineThickness / Zoom, x, y, width, height, false);
-            logicBlock.Ellipses.Add(ellipse);
-            logicSheet.Add(ellipse);
+            contentBlock.Ellipses.Add(ellipse);
+            contentSheet.Add(ellipse);
 
             BlockController.SelectEllipse(ellipse);
             if (selectedBlock.Ellipses == null)

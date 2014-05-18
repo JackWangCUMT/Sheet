@@ -714,35 +714,35 @@ namespace Sheet
             }
         }
 
-        public static void AddBlockContents(ISheet<FrameworkElement> sheet, BlockItem blockItem, Block logic, Block selected, bool select, double thickness)
+        public static void AddBlockContents(ISheet<FrameworkElement> sheet, BlockItem blockItem, Block content, Block selected, bool select, double thickness)
         {
             if (blockItem != null)
             {
-                AddTexts(sheet, blockItem.Texts, logic, selected, select, thickness);
-                AddImages(sheet, blockItem.Images, logic, selected, select, thickness);
-                AddLines(sheet, blockItem.Lines, logic, selected, select, thickness);
-                AddRectangles(sheet, blockItem.Rectangles, logic, selected, select, thickness);
-                AddEllipses(sheet, blockItem.Ellipses, logic, selected, select, thickness);
-                AddBlocks(sheet, blockItem.Blocks, logic, selected, select, thickness);
+                AddTexts(sheet, blockItem.Texts, content, selected, select, thickness);
+                AddImages(sheet, blockItem.Images, content, selected, select, thickness);
+                AddLines(sheet, blockItem.Lines, content, selected, select, thickness);
+                AddRectangles(sheet, blockItem.Rectangles, content, selected, select, thickness);
+                AddEllipses(sheet, blockItem.Ellipses, content, selected, select, thickness);
+                AddBlocks(sheet, blockItem.Blocks, content, selected, select, thickness);
             }
         }
 
-        public static void AddBrokenBlock(ISheet<FrameworkElement> sheet, BlockItem blockItem, Block logic, Block selected, bool select, double thickness)
+        public static void AddBrokenBlock(ISheet<FrameworkElement> sheet, BlockItem blockItem, Block content, Block selected, bool select, double thickness)
         {
-            AddTexts(sheet, blockItem.Texts, logic, selected, select, thickness);
-            AddImages(sheet, blockItem.Images, logic, selected, select, thickness);
-            AddLines(sheet, blockItem.Lines, logic, selected, select, thickness);
-            AddRectangles(sheet, blockItem.Rectangles, logic, selected, select, thickness);
-            AddEllipses(sheet, blockItem.Ellipses, logic, selected, select, thickness);
+            AddTexts(sheet, blockItem.Texts, content, selected, select, thickness);
+            AddImages(sheet, blockItem.Images, content, selected, select, thickness);
+            AddLines(sheet, blockItem.Lines, content, selected, select, thickness);
+            AddRectangles(sheet, blockItem.Rectangles, content, selected, select, thickness);
+            AddEllipses(sheet, blockItem.Ellipses, content, selected, select, thickness);
 
             foreach (var block in blockItem.Blocks)
             {
-                AddTexts(sheet, block.Texts, logic, selected, select, thickness);
-                AddImages(sheet, block.Images, logic, selected, select, thickness);
-                AddLines(sheet, block.Lines, logic, selected, select, thickness);
-                AddRectangles(sheet, block.Rectangles, logic, selected, select, thickness);
-                AddEllipses(sheet, block.Ellipses, logic, selected, select, thickness);
-                AddBlocks(sheet, block.Blocks, logic, selected, select, thickness);
+                AddTexts(sheet, block.Texts, content, selected, select, thickness);
+                AddImages(sheet, block.Images, content, selected, select, thickness);
+                AddLines(sheet, block.Lines, content, selected, select, thickness);
+                AddRectangles(sheet, block.Rectangles, content, selected, select, thickness);
+                AddEllipses(sheet, block.Ellipses, content, selected, select, thickness);
+                AddBlocks(sheet, block.Blocks, content, selected, select, thickness);
             }
         }
 
@@ -1158,41 +1158,41 @@ namespace Sheet
             }
         }
 
-        public static void SelectAll(Block selected, Block logic)
+        public static void SelectAll(Block selected, Block content)
         {
             selected.Init();
 
-            foreach (var line in logic.Lines)
+            foreach (var line in content.Lines)
             {
                 SelectLine(line);
                 selected.Lines.Add(line);
             }
 
-            foreach (var rectangle in logic.Rectangles)
+            foreach (var rectangle in content.Rectangles)
             {
                 SelectRectangle(rectangle);
                 selected.Rectangles.Add(rectangle);
             }
 
-            foreach (var ellipse in logic.Ellipses)
+            foreach (var ellipse in content.Ellipses)
             {
                 SelectEllipse(ellipse);
                 selected.Ellipses.Add(ellipse);
             }
 
-            foreach (var text in logic.Texts)
+            foreach (var text in content.Texts)
             {
                 SelectText(text);
                 selected.Texts.Add(text);
             }
 
-            foreach (var image in logic.Images)
+            foreach (var image in content.Images)
             {
                 SelectImage(image);
                 selected.Images.Add(image);
             }
 
-            foreach (var parent in logic.Blocks)
+            foreach (var parent in content.Blocks)
             {
                 foreach (var line in parent.Lines)
                 {
