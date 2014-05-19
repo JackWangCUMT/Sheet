@@ -21,7 +21,7 @@ namespace Sheet
     {
         #region Properties
 
-        public IEntryController Controller { get; set; }
+        public IPageController Controller { get; set; }
 
         #endregion
 
@@ -73,19 +73,19 @@ namespace Sheet
 
         private void EmptyPage()
         {
-            Controller.Set(null);
+            Controller.SetPage(null);
         }
 
         private void SetPage(object newValue)
         {
             var newPage = newValue as PageEntry;
-            Controller.Set(newPage.Content);
+            Controller.SetPage(newPage.Content);
         }
 
         private void UpdatePage(object oldValue)
         {
             var oldPage = oldValue as PageEntry;
-            var text = Controller.Get();
+            var text = Controller.GetPage();
             oldPage.Content = text;
         }
 
@@ -95,7 +95,7 @@ namespace Sheet
             if (item != null && item is PageEntry)
             {
                 var page = item as PageEntry;
-                var text = Controller.Get();
+                var text = Controller.GetPage();
                 page.Content = text;
             }
         }
@@ -111,7 +111,7 @@ namespace Sheet
                 if (item != null && item is PageEntry)
                 {
                     var page = item as PageEntry;
-                    Controller.Export(page.Content);
+                    Controller.ExportPage(page.Content);
                 }
             }
         }
@@ -124,7 +124,7 @@ namespace Sheet
                 {
                     var document = item as DocumentEntry;
                     var texts = document.Pages.Select(x => x.Content);
-                    Controller.Export(texts);
+                    Controller.ExportPages(texts);
                 }
             }
         }

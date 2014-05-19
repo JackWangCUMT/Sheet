@@ -2156,4 +2156,20 @@ namespace Sheet
     }
 
     #endregion
+
+    #region IPageController
+
+    public interface IPageController
+    {
+        void SetPage(string text);
+        string GetPage();
+        void ExportPage(string text);
+        void ExportPages(IEnumerable<string> texts);
+        BlockItem SerializePage();
+        void DeserializePage(BlockItem page);
+        void ResetPage();
+        void ResetPageContent();
+    } 
+
+    #endregion
 }

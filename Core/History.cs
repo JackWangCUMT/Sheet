@@ -30,7 +30,7 @@ namespace Sheet
     {
         #region Properties
 
-        public IBlockController BlockController { get; private set; }
+        public IPageController Controller { get; private set; }
 
         #endregion
 
@@ -43,9 +43,9 @@ namespace Sheet
 
         #region Constructor
 
-        public HistoryController(IBlockController blockController)
+        public HistoryController(IPageController controller)
         {
-            BlockController = blockController;
+            Controller = controller;
         }
 
         #endregion
@@ -54,7 +54,7 @@ namespace Sheet
 
         private async Task<ChangeMessage> CreateChangeMessage(string message)
         {
-            var block = BlockController.SerializePage();
+            var block = Controller.SerializePage();
             var text = await Task.Run(() => ItemSerializer.SerializeContents(block));
             var change = new ChangeMessage()
             {
@@ -85,8 +85,8 @@ namespace Sheet
                 redos.Push(change);
                 var undo = undos.Pop();
                 var block = await Task.Run(() => ItemSerializer.DeserializeContents(undo.Model));
-                BlockController.ResetPage();
-                BlockController.DeserializePage(block);
+                Controller.ResetPage();
+                Controller.DeserializePage(block);
             }
         }
 
@@ -98,8 +98,8 @@ namespace Sheet
                 undos.Push(change);
                 var redo = redos.Pop();
                 var block = await Task.Run(() => ItemSerializer.DeserializeContents(redo.Model));
-                BlockController.ResetPage();
-                BlockController.DeserializePage(block);
+                Controller.ResetPage();
+                Controller.DeserializePage(block);
             }
         }
 

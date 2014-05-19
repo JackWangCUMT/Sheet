@@ -20,7 +20,7 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
-    public partial class SheetControl : UserControl, IEntryController, IBlockController
+    public partial class SheetControl : UserControl, IPageController
     {
         #region Fields
 
@@ -143,6 +143,15 @@ namespace Sheet
 
         #endregion
 
+        #region ToSingle
+
+        public IEnumerable<T> ToSingle<T>(T item)
+        {
+            yield return item;
+        } 
+
+        #endregion
+
         #region Init
 
         private void Init()
@@ -190,14 +199,9 @@ namespace Sheet
 
         #endregion
 
-        #region IEntryController
+        #region IPageController
 
-        public IEnumerable<BlockItem> ToSingle(BlockItem block)
-        {
-            yield return block;
-        }
-
-        public async void Set(string text)
+        public async void SetPage(string text)
         {
             try
             {
@@ -221,28 +225,24 @@ namespace Sheet
             }
         }
 
-        public string Get()
+        public string GetPage()
         {
             var block = SerializePage();
             var text = ItemSerializer.SerializeContents(block);
             return text;
         }
 
-        public void Export(string text)
+        public void ExportPage(string text)
         {
             var block = ItemSerializer.DeserializeContents(text);
             Export(ToSingle(block));
         }
 
-        public void Export(IEnumerable<string> texts)
+        public void ExportPages(IEnumerable<string> texts)
         {
             var blocks = texts.Select(text => ItemSerializer.DeserializeContents(text));
             Export(blocks);
         }
-
-        #endregion
-
-        #region IBlockController
 
         public BlockItem SerializePage()
         {
@@ -2208,7 +2208,7 @@ namespace Sheet
         public void Export(SolutionEntry solution)
         {
             var texts = solution.Documents.SelectMany(document => document.Pages).Select(page => page.Content);
-            Export(texts);
+            ExportPages(texts);
         }
 
         public void Export(IEnumerable<BlockItem> blocks)

@@ -35,14 +35,6 @@ namespace Sheet
         public string Content { get; set; }
     }
 
-    public interface IEntryController
-    {
-        void Set(string text);
-        string Get();
-        void Export(string text);
-        void Export(IEnumerable<string> texts);
-    }
-
     #endregion
 
     #region Entry Serializer

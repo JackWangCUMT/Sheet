@@ -159,14 +159,6 @@ namespace Sheet
         void Set(Action<string> ok, Action cancel, string title, string label, string text);
     }
 
-    public interface IBlockController
-    {
-        BlockItem SerializePage();
-        void DeserializePage(BlockItem page);
-        void ResetPage();
-        void ResetPageContent();
-    }
-
     #endregion
 
     #region Item Serializer
