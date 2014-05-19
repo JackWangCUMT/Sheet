@@ -246,6 +246,8 @@ namespace Sheet
 
         public BlockItem SerializePage()
         {
+            BlockController.DeselectAll(selectedBlock);
+
             var grid = BlockSerializer.SerializerBlockContents(gridBlock, -1, gridBlock.X, gridBlock.Y, gridBlock.Width, gridBlock.Height, -1, "GRID");
             var frame = BlockSerializer.SerializerBlockContents(frameBlock, -1, frameBlock.X, frameBlock.Y, frameBlock.Width, frameBlock.Height, -1, "FRAME");
             var content = BlockSerializer.SerializerBlockContents(contentBlock, -1, contentBlock.X, contentBlock.Y, contentBlock.Width, contentBlock.Height, -1, "CONTENT");
