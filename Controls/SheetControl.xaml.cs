@@ -20,6 +20,36 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
+    public static class FileDialogSettings
+    {
+        #region Extensions
+
+        public static string SolutionExtension = ".solution";
+        public static string DocumentExtension = ".document";
+        public static string PageExtension = ".page";
+        public static string LibraryExtension = ".library";
+
+        public static string JsonSolutionExtension = ".jsolution";
+        public static string JsonDocumentExtension = ".jdocument";
+        public static string JsonPageExtension = ".jpage";
+        public static string JsonLibraryExtension = ".jlibrary";
+
+        #endregion
+
+        #region Filters
+
+        public static string SolutionFilter = "Solution Files (*.solution)|*.solution|Json Solution Files (*.jsolution)|*.jsolution|All Files (*.*)|*.*";
+        public static string DocumentFilter = "Document Files (*.document)|*.document|Json Document Files (*.jdocument)|*.jdocument|All Files (*.*)|*.*";
+        public static string PageFilter = "Page Files (*.page)|*.page|Json Page Files (*.jpage)|*.jpage|All Files (*.*)|*.*";
+        public static string LibraryFilter = "Library Files (*.library)|*.library|Json Library Files (*.jlibrary)|*.jlibrary|All Files (*.*)|*.*";
+
+        public static string DatabaseFilter = "Csv Files (*.csv)|*.csv|All Files (*.*)|*.*";
+        public static string ImageFilter = "Supported Files (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg|Png Files (*.png)|*.png|Jpg Files (*.jpg)|*.jpg|Jpeg Files (*.jpeg)|*.jpeg|All Files (*.*)|*.*";
+        public static string ExportFilter = "Pdf Documents (*.pdf)|*.pdf|Dxf Documents (*.dxf)|*.dxf|All Files (*.*)|*.*";
+
+        #endregion
+    }
+
     public partial class SheetControl : UserControl, IPageController
     {
         #region Fields
@@ -229,6 +259,7 @@ namespace Sheet
         {
             var block = SerializePage();
             var text = ItemSerializer.SerializeContents(block);
+
             return text;
         }
 
@@ -241,6 +272,7 @@ namespace Sheet
         public void ExportPages(IEnumerable<string> texts)
         {
             var blocks = texts.Select(text => ItemSerializer.DeserializeContents(text));
+
             Export(blocks);
         }
 
@@ -396,10 +428,28 @@ namespace Sheet
             {
                 if (BlockController.HaveSelected(selectedBlock))
                 {
+                    var copy = BlockController.ShallowCopy(selectedBlock);
                     History.Register("Cut");
-                    Copy();
-                    Delete();
+                    Copy(copy);
+                    Delete(copy);
                 }
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
+        }
+
+        private void Copy(Block block)
+        {
+            try
+            {
+                var selected = BlockSerializer.SerializerBlockContents(block, 0, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED");
+                var text = ItemSerializer.SerializeContents(selected);
+                Clipboard.SetData(DataFormats.UnicodeText, text);
+                //string json = JsonConvert.SerializeObject(selected, Formatting.Indented);
+                //Clipboard.SetData(DataFormats.UnicodeText, json);
             }
             catch (Exception ex)
             {
@@ -410,21 +460,9 @@ namespace Sheet
 
         public void Copy()
         {
-            try
+            if (BlockController.HaveSelected(selectedBlock))
             {
-                if (BlockController.HaveSelected(selectedBlock))
-                {
-                    var selected = BlockSerializer.SerializerBlockContents(selectedBlock, 0, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED");
-                    var text = ItemSerializer.SerializeContents(selected);
-                    Clipboard.SetData(DataFormats.UnicodeText, text);
-                    //string json = JsonConvert.SerializeObject(selected, Formatting.Indented);
-                    //Clipboard.SetData(DataFormats.UnicodeText, json);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.Print(ex.Message);
-                Debug.Print(ex.StackTrace);
+                Copy(selectedBlock);
             }
         }
 
@@ -503,13 +541,19 @@ namespace Sheet
 
         #region Delete
 
+        public void Delete(Block block)
+        {
+            FinishEdit();
+            BlockController.RemoveSelectedFromBlock(contentSheet, contentBlock, block);
+        }
+
         public void Delete()
         {
             if (BlockController.HaveSelected(selectedBlock))
             {
-                FinishEdit();
+                var copy = BlockController.ShallowCopy(selectedBlock);
                 History.Register("Delete");
-                BlockController.RemoveSelectedFromBlock(contentSheet, contentBlock, selectedBlock);
+                Delete(copy);
             }
         }
 
@@ -1206,7 +1250,7 @@ namespace Sheet
         {
             var dlg = new Microsoft.Win32.OpenFileDialog()
             {
-                Filter = "Supported Files (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg|PNG Files (*.png)|*.png|JPG Files (*.jpg)|*.jpg|JPEG Files (*.jpeg)|*.jpeg|All Files (*.*)|*.*"
+                Filter = FileDialogSettings.ImageFilter
             };
 
             if (dlg.ShowDialog() == true)
@@ -2039,7 +2083,6 @@ namespace Sheet
                 var page = await Task.Run(() => ItemSerializer.DeserializeContents(text));
                 History.Register("Open Text");
                 ResetPage();
-                //InsertContent(page, false);
                 DeserializePage(page);
             }
         }
@@ -2052,7 +2095,7 @@ namespace Sheet
                 var page = await Task.Run(() => JsonConvert.DeserializeObject<BlockItem>(text));
                 History.Register("Open Json");
                 ResetPage();
-                InsertContent(page, false);
+                DeserializePage(page);
             }
         }
 
@@ -2060,7 +2103,7 @@ namespace Sheet
         {
             var dlg = new Microsoft.Win32.OpenFileDialog()
             {
-                Filter = "TXT Files (*.txt)|*.txt|JSON Files (*.json)|*.json|All Files (*.*)|*.*"
+                Filter = FileDialogSettings.PageFilter
             };
 
             if (dlg.ShowDialog() == true)
@@ -2107,14 +2150,12 @@ namespace Sheet
         {
             var dlg = new Microsoft.Win32.SaveFileDialog()
             {
-                Filter = "TXT Files (*.txt)|*.txt|JSON Files (*.json)|*.json|All Files (*.*)|*.*",
+                Filter = FileDialogSettings.PageFilter,
                 FileName = "sheet"
             };
 
             if (dlg.ShowDialog() == true)
             {
-                BlockController.DeselectAll(selectedBlock);
-
                 var page = SerializePage();
 
                 switch (dlg.FilterIndex)
@@ -2217,7 +2258,7 @@ namespace Sheet
         {
             var dlg = new Microsoft.Win32.SaveFileDialog()
             {
-                Filter = "PDF Documents (*.pdf)|*.pdf|DXF Documents (*.dxf)|*.dxf|All Files (*.*)|*.*",
+                Filter = FileDialogSettings.ExportFilter,
                 FileName = "sheet"
             };
 
@@ -2287,17 +2328,13 @@ namespace Sheet
             BlockController.DeselectAll(selectedBlock);
             double thickness = options.LineThickness / Zoom;
 
-            if (select)
-            {
-                selectedBlock.Blocks = new List<Block>();
-            }
-
             History.Register("Insert Block");
 
             var block = BlockSerializer.DeserializeBlockItem(contentSheet, contentBlock, blockItem, select, thickness);
 
             if (select)
             {
+                selectedBlock.Blocks = new List<Block>();
                 selectedBlock.Blocks.Add(block);
             }
 
@@ -2363,7 +2400,7 @@ namespace Sheet
         {
             var dlg = new Microsoft.Win32.OpenFileDialog()
             {
-                Filter = "TXT Files (*.txt)|*.txt|All Files (*.*)|*.*"
+                Filter = FileDialogSettings.LibraryFilter
             };
 
             if (dlg.ShowDialog() == true)

@@ -132,15 +132,15 @@ namespace Sheet
             string path = files.FirstOrDefault();
             string ext = System.IO.Path.GetExtension(path);
 
-            if (string.Compare(ext, ".txt", true) == 0)
+            if (string.Compare(ext, FileDialogSettings.PageExtension, true) == 0)
             {
                 await GetSheet().OpenTextFile(path);
             }
-            else if (string.Compare(ext, ".json", true) == 0)
+            else if (string.Compare(ext, FileDialogSettings.JsonPageExtension, true) == 0)
             {
                 await GetSheet().OpenJsonFile(path);
             }
-            else if (string.Compare(ext, ".zip", true) == 0)
+            else if (string.Compare(ext, FileDialogSettings.SolutionExtension, true) == 0)
             {
                 await OpenSolution(path);
             }
@@ -472,7 +472,7 @@ namespace Sheet
         {
             var dlg = new Microsoft.Win32.SaveFileDialog()
             {
-                Filter = "ZIP Files (*.zip)|*.zip|All Files (*.*)|*.*",
+                Filter = FileDialogSettings.SolutionFilter,
                 FileName = "solution"
             };
 
@@ -510,13 +510,15 @@ namespace Sheet
         {
             var dlg = new Microsoft.Win32.OpenFileDialog()
             {
-                Filter = "ZIP Files (*.zip)|*.zip|All Files (*.*)|*.*"
+                Filter = FileDialogSettings.SolutionFilter
             };
 
             if (dlg.ShowDialog() == true)
             {
                 try
                 {
+                    GetSheet().ResetPage();
+
                     await OpenSolution(dlg.FileName);
                 }
                 catch (Exception ex)
@@ -567,6 +569,7 @@ namespace Sheet
         {
             SolutionPath = null;
             Solution.DataContext = null;
+
             GetSheet().ResetPage();
         }
 

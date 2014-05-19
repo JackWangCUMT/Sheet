@@ -93,7 +93,7 @@ namespace Sheet
         {
             var dlg = new Microsoft.Win32.OpenFileDialog()
             {
-                Filter = "CSV Files (*.csv)|*.csv|All Files (*.*)|*.*"
+                Filter = FileDialogSettings.DatabaseFilter
             };
 
             var result = dlg.ShowDialog();

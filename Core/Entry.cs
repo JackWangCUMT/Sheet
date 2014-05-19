@@ -93,7 +93,7 @@ namespace Sheet
 
         public static void Serialize(SolutionEntry solution)
         {
-            Serialize(solution, string.Concat(solution.Name, ".zip"));
+            Serialize(solution, string.Concat(solution.Name, FileDialogSettings.SolutionExtension));
         }
 
         #endregion

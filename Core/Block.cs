@@ -288,8 +288,6 @@ namespace Sheet
         {
             var blockItem = new BlockItem();
             blockItem.Init(0, parent.X, parent.Y, parent.Width, parent.Height, parent.DataId, parent.Name);
-            blockItem.Width = 0;
-            blockItem.Height = 0;
             blockItem.Backgroud = ToItemColor(parent.Backgroud);
 
             foreach (var line in parent.Lines)
@@ -1772,6 +1770,51 @@ namespace Sheet
         public static void ToggleFill(Ellipse ellipse)
         {
             ellipse.Fill = ellipse.Fill == BlockFactory.TransparentBrush ? BlockFactory.NormalBrush : BlockFactory.TransparentBrush;
+        }
+
+        #endregion
+
+        #region Copy
+
+        public static Block ShallowCopy(Block original)
+        {
+            var copy = new Block(original.Id, original.X, original.Y, original.Width, original.Height, original.DataId, original.Name);
+
+            if (original.Lines != null)
+            {
+                copy.Lines = new List<Line>(original.Lines);
+            }
+
+            if (original.Rectangles != null)
+            {
+                copy.Rectangles = new List<Rectangle>(original.Rectangles);
+            }
+
+            if (original.Ellipses != null)
+            {
+                copy.Ellipses = new List<Ellipse>(original.Ellipses);
+            }
+
+            if (original.Texts != null)
+            {
+                copy.Texts = new List<Grid>(original.Texts);
+            }
+
+            if (original.Images != null)
+            {
+                copy.Images = new List<Image>(original.Images);
+            }
+
+            if (original.Blocks != null)
+            {
+                copy.Blocks = new List<Block>();
+                foreach (var block in original.Blocks)
+                {
+                    copy.Blocks.Add(ShallowCopy(block));
+                }
+            }
+
+            return copy;
         }
 
         #endregion
