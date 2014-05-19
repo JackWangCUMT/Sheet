@@ -663,12 +663,17 @@ namespace Sheet
 
         #region Move Mode
 
+        private Block moveBlock = null;
+
         private void Move(double x, double y)
         {
             if (BlockController.HaveSelected(selectedBlock))
             {
+                moveBlock = BlockController.ShallowCopy(selectedBlock);
                 FinishEdit();
                 History.Register("Move");
+                BlockController.SelectBlock(moveBlock);
+                selectedBlock = moveBlock;
                 BlockController.Move(x, y, selectedBlock);
             }
         }
@@ -722,9 +727,12 @@ namespace Sheet
         {
             if (isFirstMove)
             {
+                moveBlock = BlockController.ShallowCopy(selectedBlock);
                 History.Register("Move");
                 isFirstMove = false;
                 Cursor = Cursors.SizeAll;
+                BlockController.SelectBlock(moveBlock);
+                selectedBlock = moveBlock;
             }
 
             p.X = ItemController.Snap(p.X, options.SnapSize);
