@@ -20,6 +20,8 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
+    #region FileDialogSettings
+
     public static class FileDialogSettings
     {
         #region Extensions
@@ -48,7 +50,9 @@ namespace Sheet
         public static string ExportFilter = "Pdf Documents (*.pdf)|*.pdf|Dxf Documents (*.dxf)|*.dxf|All Files (*.*)|*.*";
 
         #endregion
-    }
+    } 
+
+    #endregion
 
     public partial class SheetControl : UserControl, IPageController
     {
