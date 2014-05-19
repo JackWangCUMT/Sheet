@@ -109,7 +109,7 @@ namespace Sheet
         {
             InitializeComponent();
 
-            History = new HistoryController(this);
+            History = new PageHistory(this);
 
             Init();
 

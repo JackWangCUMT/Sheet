@@ -133,30 +133,16 @@ namespace Sheet
         }
     }
 
-    public interface ILibraryController
-    {
-        BlockItem GetSelected();
-        void SetSelected(BlockItem block);
-        IEnumerable<BlockItem> GetSource();
-        void SetSource(IEnumerable<BlockItem> source);
-    }
-
     public class DataItem
     {
         public string[] Columns { get; set; }
         public string[] Data { get; set; }
     }
 
-    public interface IDatabaseController
+    public class ChangeItem
     {
-        string[] Get(int index);
-        bool Update(int index, string[] item);
-        int Add(string[] item);
-    }
-
-    public interface ITextController
-    {
-        void Set(Action<string> ok, Action cancel, string title, string label, string text);
+        public string Message { get; set; }
+        public string Model { get; set; }
     }
 
     #endregion
