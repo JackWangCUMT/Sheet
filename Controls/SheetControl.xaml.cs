@@ -222,7 +222,7 @@ namespace Sheet
         {
             LoadStandardPage();
 
-            LoadStandardLibrary();
+            LoadLibraryFromResource(string.Concat("Sheet.Libraries", '.', "Digital.library"));
 
             Focus();
         }
@@ -2343,15 +2343,13 @@ namespace Sheet
             return block;
         }
 
-        private async void LoadStandardLibrary()
+        private async void LoadLibraryFromResource(string name)
         {
             var assembly = System.Reflection.Assembly.GetExecutingAssembly();
             if (assembly == null)
             {
                 return;
             }
-
-            var name = "Sheet.Libraries.Digital.txt";
 
             using (var stream = assembly.GetManifestResourceStream(name))
             {
