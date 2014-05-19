@@ -145,7 +145,7 @@ namespace Sheet
 
         #region ToSingle
 
-        public IEnumerable<T> ToSingle<T>(T item)
+        private IEnumerable<T> ToSingle<T>(T item)
         {
             yield return item;
         } 
@@ -541,7 +541,7 @@ namespace Sheet
 
         #region Insert Mode
 
-        public void InsertContent(BlockItem block, bool select)
+        private void InsertContent(BlockItem block, bool select)
         {
             BlockController.DeselectAll(selectedBlock);
             BlockController.AddBlockContents(contentSheet, block, contentBlock, selectedBlock, select, options.LineThickness / Zoom);
@@ -783,7 +783,7 @@ namespace Sheet
             }
         }
 
-        public double GetZoom(int index)
+        private double GetZoom(int index)
         {
             if (index >= 0 && index <= options.MaxZoomIndex)
             {
@@ -1200,7 +1200,7 @@ namespace Sheet
 
         #region Image Mode
 
-        public void Image(Point p)
+        private void Image(Point p)
         {
             var dlg = new Microsoft.Win32.OpenFileDialog()
             {
