@@ -147,7 +147,7 @@ namespace Sheet
         public string[] Data { get; set; }
     }
 
-    public interface IDatabase
+    public interface IDatabaseController
     {
         string[] Get(int index);
         bool Update(int index, string[] item);

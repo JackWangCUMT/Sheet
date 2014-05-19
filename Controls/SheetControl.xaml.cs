@@ -59,7 +59,7 @@ namespace Sheet
 
         public IHistoryController History { get; private set; }
         public ILibraryController Library { get; set; }
-        public IDatabase Database { get; set; }
+        public IDatabaseController Database { get; set; }
 
         private int zoomIndex = -1;
         public int ZoomIndex

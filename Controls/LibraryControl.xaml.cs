@@ -31,7 +31,7 @@ namespace Sheet
 
         #endregion
 
-        #region ILibrary
+        #region ILibraryController
 
         public BlockItem GetSelected()
         {

@@ -15,7 +15,7 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
-    public partial class DatabaseControl : UserControl, IDatabase
+    public partial class DatabaseControl : UserControl, IDatabaseController
     {
         #region Fields
 
@@ -57,7 +57,7 @@ namespace Sheet
 
         #endregion
 
-        #region IDatabase
+        #region IDatabaseController
 
         public string[] Get(int index)
         {
