@@ -663,13 +663,11 @@ namespace Sheet
 
         #region Move Mode
 
-        private Block moveBlock = null;
-
         private void Move(double x, double y)
         {
             if (BlockController.HaveSelected(selectedBlock))
             {
-                moveBlock = BlockController.ShallowCopy(selectedBlock);
+                Block moveBlock = BlockController.ShallowCopy(selectedBlock);
                 FinishEdit();
                 History.Register("Move");
                 BlockController.SelectBlock(moveBlock);
@@ -727,7 +725,7 @@ namespace Sheet
         {
             if (isFirstMove)
             {
-                moveBlock = BlockController.ShallowCopy(selectedBlock);
+                Block moveBlock = BlockController.ShallowCopy(selectedBlock);
                 History.Register("Move");
                 isFirstMove = false;
                 Cursor = Cursors.SizeAll;
