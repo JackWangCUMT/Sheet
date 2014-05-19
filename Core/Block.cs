@@ -1807,11 +1807,7 @@ namespace Sheet
 
             if (original.Blocks != null)
             {
-                copy.Blocks = new List<Block>();
-                foreach (var block in original.Blocks)
-                {
-                    copy.Blocks.Add(ShallowCopy(block));
-                }
+                copy.Blocks = new List<Block>(original.Blocks);
             }
 
             return copy;
