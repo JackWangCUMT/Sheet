@@ -2380,32 +2380,6 @@ namespace Sheet
 
         #endregion
 
-        #region Preview
-
-        public void ShowPreview()
-        {
-            var window = new Window()
-            {
-                Title = "Preview",
-                SizeToContent = SizeToContent.WidthAndHeight,
-                WindowStartupLocation = WindowStartupLocation.CenterScreen
-            };
-
-            var canvas = new CanvasControl();
-            var sheet = new CanvasSheet(canvas.Sheet);
-
-            PageFactory.CreateGrid(sheet, null, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, ItemColors.LightGray);
-            PageFactory.CreateFrame(sheet, null, options.GridSize, options.GridThickness, ItemColors.DarkGray);
-
-            var blockItem = BlockSerializer.SerializerBlockContents(contentBlock, 0, 0.0, 0.0, 0.0, 0.0, -1, "PREVIEW");
-            BlockController.AddBlockContents(sheet, blockItem, null, null, false, options.LineThickness);
-
-            window.Content = canvas;
-            window.Show();
-        }
-
-        #endregion
-
         #region Logic: Standard Page
 
         private void LoadStandardPage()
