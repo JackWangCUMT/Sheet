@@ -54,7 +54,7 @@ namespace Sheet
 
         private async Task<ChangeMessage> CreateChangeMessage(string message)
         {
-            var block = BlockController.Serialize();
+            var block = BlockController.SerializePage();
             var text = await Task.Run(() => ItemSerializer.SerializeContents(block));
             var change = new ChangeMessage()
             {
@@ -85,8 +85,8 @@ namespace Sheet
                 redos.Push(change);
                 var undo = undos.Pop();
                 var block = await Task.Run(() => ItemSerializer.DeserializeContents(undo.Model));
-                BlockController.ResetContent();
-                BlockController.Insert(block);
+                BlockController.ResetPage();
+                BlockController.DeserializePage(block);
             }
         }
 
@@ -98,8 +98,8 @@ namespace Sheet
                 undos.Push(change);
                 var redo = redos.Pop();
                 var block = await Task.Run(() => ItemSerializer.DeserializeContents(redo.Model));
-                BlockController.ResetContent();
-                BlockController.Insert(block);
+                BlockController.ResetPage();
+                BlockController.DeserializePage(block);
             }
         }
 

@@ -350,7 +350,7 @@ namespace Sheet
                     if (ctrl)
                     {
                         GetSheet().History.Register("Reset");
-                        GetSheet().Reset();
+                        GetSheet().ResetPage();
                     }
                     else
                     {
@@ -480,6 +480,8 @@ namespace Sheet
             {
                 try
                 {
+                    GetSheet().ResetPage();
+
                     await NewSolution(dlg.FileName);
                 }
                 catch (Exception ex)
@@ -565,7 +567,7 @@ namespace Sheet
         {
             SolutionPath = null;
             Solution.DataContext = null;
-            GetSheet().Reset();
+            GetSheet().ResetPage();
         }
 
         #endregion
@@ -666,7 +668,7 @@ namespace Sheet
         private void EditReset_Click(object sender, RoutedEventArgs e)
         {
             GetSheet().History.Register("Reset");
-            GetSheet().Reset();
+            GetSheet().ResetPage();
         }
 
         private void EditSelectAll_Click(object sender, RoutedEventArgs e)

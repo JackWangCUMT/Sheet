@@ -204,14 +204,14 @@ namespace Sheet
                 if (text == null)
                 {
                     History.Reset();
-                    ResetContent();
+                    ResetPage();
                 }
                 else
                 {
                     var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
                     History.Reset();
-                    ResetContent();
-                    InsertContent(block, false);
+                    ResetPage();
+                    DeserializePage(block);
                 }
             }
             catch (Exception ex)
@@ -223,7 +223,7 @@ namespace Sheet
 
         public string Get()
         {
-            var block = Serialize();
+            var block = SerializePage();
             var text = ItemSerializer.SerializeContents(block);
             return text;
         }
@@ -244,23 +244,45 @@ namespace Sheet
 
         #region IBlockController
 
-        public BlockItem Serialize()
+        public BlockItem SerializePage()
         {
-            return BlockSerializer.SerializerBlockContents(contentBlock, -1, 
-                contentBlock.X, 
-                contentBlock.Y, 
-                contentBlock.Width,
-                contentBlock.Height,
-                contentBlock.DataId, 
-                "CONTENT");
+            var grid = BlockSerializer.SerializerBlockContents(gridBlock, -1, gridBlock.X, gridBlock.Y, gridBlock.Width, gridBlock.Height, -1, "GRID");
+            var frame = BlockSerializer.SerializerBlockContents(frameBlock, -1, frameBlock.X, frameBlock.Y, frameBlock.Width, frameBlock.Height, -1, "FRAME");
+            var content = BlockSerializer.SerializerBlockContents(contentBlock, -1, contentBlock.X, contentBlock.Y, contentBlock.Width, contentBlock.Height, -1, "CONTENT");
+
+            var page = new BlockItem();
+            page.Init(-1, options.PageOriginX, options.PageOriginY, options.PageWidth, options.PageHeight, -1, "PAGE");
+
+            page.Blocks.Add(grid);
+            page.Blocks.Add(frame);
+            page.Blocks.Add(content);
+
+            return page;
         }
 
-        public void Insert(BlockItem block)
+        public void DeserializePage(BlockItem page)
         {
-            InsertContent(block, false);
+            BlockItem grid = page.Blocks.Where(block => block.Name == "GRID").FirstOrDefault();
+            BlockItem frame = page.Blocks.Where(block => block.Name == "FRAME").FirstOrDefault();
+            BlockItem content = page.Blocks.Where(block => block.Name == "CONTENT").FirstOrDefault();
+
+            if (grid != null)
+            {
+                BlockController.AddBlockContents(backSheet, grid, gridBlock, null, false, options.GridThickness / Zoom);
+            }
+
+            if (frame != null)
+            {
+                BlockController.AddBlockContents(backSheet, frame, frameBlock, null, false, options.FrameThickness / Zoom);
+            }
+
+            if (content != null)
+            {
+                BlockController.AddBlockContents(contentSheet, content, contentBlock, null, false, options.LineThickness / Zoom);
+            }
         }
 
-        public void Reset()
+        public void ResetPage()
         {
             ResetOverlay();
 
@@ -271,7 +293,7 @@ namespace Sheet
             InitBlocks();
         }
 
-        public void ResetContent()
+        public void ResetPageContent()
         {
             ResetOverlay();
 
@@ -2005,48 +2027,6 @@ namespace Sheet
 
         #endregion
 
-        #region Page
-
-        private BlockItem SerializePage()
-        {
-            var grid = BlockSerializer.SerializerBlockContents(gridBlock, -1, gridBlock.X, gridBlock.Y, gridBlock.Width, gridBlock.Height, -1, "GRID");
-            var frame = BlockSerializer.SerializerBlockContents(frameBlock, -1, frameBlock.X, frameBlock.Y, frameBlock.Width, frameBlock.Height, -1, "FRAME");
-            var content = BlockSerializer.SerializerBlockContents(contentBlock, -1, contentBlock.X, contentBlock.Y, contentBlock.Width, contentBlock.Height, -1, "CONTENT");
-
-            var page = new BlockItem();
-            page.Init(-1, options.PageOriginX, options.PageOriginY, options.PageWidth, options.PageHeight, -1, "PAGE");
-
-            page.Blocks.Add(grid);
-            page.Blocks.Add(frame);
-            page.Blocks.Add(content);
-
-            return page;
-        }
-
-        private void DeserializePage(BlockItem page)
-        {
-            BlockItem grid = page.Blocks.Where(block => block.Name == "GRID").FirstOrDefault();
-            BlockItem frame = page.Blocks.Where(block => block.Name == "FRAME").FirstOrDefault();
-            BlockItem content = page.Blocks.Where(block => block.Name == "CONTENT").FirstOrDefault();
-
-            if (grid != null)
-            {
-                BlockController.AddBlockContents(backSheet, grid, gridBlock, null, false, options.GridThickness / Zoom);
-            }
-
-            if (frame != null)
-            {
-                BlockController.AddBlockContents(backSheet, frame, frameBlock, null, false, options.FrameThickness / Zoom);
-            }
-
-            if (content != null)
-            {
-                BlockController.AddBlockContents(contentSheet, content, contentBlock, null, false, options.LineThickness / Zoom);
-            }
-        }
-
-        #endregion
-
         #region Open
 
         public async Task OpenTextFile(string path)
@@ -2056,7 +2036,7 @@ namespace Sheet
             {
                 var page = await Task.Run(() => ItemSerializer.DeserializeContents(text));
                 History.Register("Open Text");
-                Reset();
+                ResetPage();
                 //InsertContent(page, false);
                 DeserializePage(page);
             }
@@ -2069,7 +2049,7 @@ namespace Sheet
             {
                 var page = await Task.Run(() => JsonConvert.DeserializeObject<BlockItem>(text));
                 History.Register("Open Json");
-                Reset();
+                ResetPage();
                 InsertContent(page, false);
             }
         }

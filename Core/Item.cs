@@ -161,10 +161,10 @@ namespace Sheet
 
     public interface IBlockController
     {
-        BlockItem Serialize();
-        void Insert(BlockItem block);
-        void Reset();
-        void ResetContent();
+        BlockItem SerializePage();
+        void DeserializePage(BlockItem page);
+        void ResetPage();
+        void ResetPageContent();
     }
 
     #endregion
