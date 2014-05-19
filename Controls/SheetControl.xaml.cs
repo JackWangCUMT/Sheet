@@ -58,7 +58,7 @@ namespace Sheet
         #region Properties
 
         public IHistoryController History { get; private set; }
-        public ILibrary Library { get; set; }
+        public ILibraryController Library { get; set; }
         public IDatabase Database { get; set; }
 
         private int zoomIndex = -1;

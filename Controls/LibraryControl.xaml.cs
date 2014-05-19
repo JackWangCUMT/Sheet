@@ -14,7 +14,7 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
-    public partial class LibraryControl : UserControl, ILibrary
+    public partial class LibraryControl : UserControl, ILibraryController
     {
         #region Fields
 

@@ -133,7 +133,7 @@ namespace Sheet
         }
     }
 
-    public interface ILibrary
+    public interface ILibraryController
     {
         BlockItem GetSelected();
         void SetSelected(BlockItem block);
