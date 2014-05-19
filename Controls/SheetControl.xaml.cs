@@ -31,6 +31,8 @@ namespace Sheet
         public static string PageExtension = ".page";
         public static string LibraryExtension = ".library";
 
+        public static string DatabaseExtension = ".csv";
+
         public static string JsonSolutionExtension = ".jsolution";
         public static string JsonDocumentExtension = ".jdocument";
         public static string JsonPageExtension = ".jpage";
@@ -2374,7 +2376,7 @@ namespace Sheet
             }
         }
 
-        private async void LoadLibrary(string fileName)
+        public async Task LoadLibrary(string fileName)
         {
             var text = await ItemController.OpenText(fileName);
             if (text != null)
@@ -2404,7 +2406,7 @@ namespace Sheet
             }
         }
 
-        public void LoadLibrary()
+        public async void LoadLibrary()
         {
             var dlg = new Microsoft.Win32.OpenFileDialog()
             {
@@ -2415,7 +2417,7 @@ namespace Sheet
             {
                 try
                 {
-                    LoadLibrary(dlg.FileName);
+                    await LoadLibrary(dlg.FileName);
                 }
                 catch (Exception ex)
                 {

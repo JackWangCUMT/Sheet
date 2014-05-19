@@ -132,7 +132,11 @@ namespace Sheet
             string path = files.FirstOrDefault();
             string ext = System.IO.Path.GetExtension(path);
 
-            if (string.Compare(ext, FileDialogSettings.PageExtension, true) == 0)
+            if (string.Compare(ext, FileDialogSettings.SolutionExtension, true) == 0)
+            {
+                await OpenSolution(path);
+            }
+            else if (string.Compare(ext, FileDialogSettings.PageExtension, true) == 0)
             {
                 await GetSheet().OpenTextFile(path);
             }
@@ -140,9 +144,13 @@ namespace Sheet
             {
                 await GetSheet().OpenJsonFile(path);
             }
-            else if (string.Compare(ext, FileDialogSettings.SolutionExtension, true) == 0)
+            else if (string.Compare(ext, FileDialogSettings.LibraryExtension, true) == 0)
             {
-                await OpenSolution(path);
+                await GetSheet().LoadLibrary(path);
+            }
+            else if (string.Compare(ext, FileDialogSettings.DatabaseExtension, true) == 0)
+            {
+                Csv.Open(path);
             }
         }
 
