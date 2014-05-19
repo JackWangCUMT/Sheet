@@ -1087,34 +1087,52 @@ namespace Sheet
 
         public static void SelectBlock(Block parent)
         {
-            foreach (var line in parent.Lines)
+            if (parent.Lines != null)
             {
-                SelectLine(line);
+                foreach (var line in parent.Lines)
+                {
+                    SelectLine(line);
+                }
             }
 
-            foreach (var rectangle in parent.Rectangles)
+            if (parent.Rectangles != null)
             {
-                SelectRectangle(rectangle);
+                foreach (var rectangle in parent.Rectangles)
+                {
+                    SelectRectangle(rectangle);
+                } 
             }
 
-            foreach (var ellipse in parent.Ellipses)
+            if (parent.Ellipses != null)
             {
-                SelectEllipse(ellipse);
+                foreach (var ellipse in parent.Ellipses)
+                {
+                    SelectEllipse(ellipse);
+                } 
             }
 
-            foreach (var text in parent.Texts)
+            if (parent.Texts != null)
             {
-                SelectText(text);
+                foreach (var text in parent.Texts)
+                {
+                    SelectText(text);
+                } 
             }
 
-            foreach (var image in parent.Images)
+            if (parent.Images != null)
             {
-                SelectImage(image);
+                foreach (var image in parent.Images)
+                {
+                    SelectImage(image);
+                } 
             }
 
-            foreach (var block in parent.Blocks)
+            if (parent.Blocks != null)
             {
-                SelectBlock(block);
+                foreach (var block in parent.Blocks)
+                {
+                    SelectBlock(block);
+                } 
             }
         }
 
