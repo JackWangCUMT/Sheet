@@ -15,36 +15,11 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
-    public partial class DatabaseControl : UserControl, IDatabaseController
+    public partial class DatabaseControl : UserControl
     {
         #region Fields
 
         private Point dragStartPoint;
-
-        #endregion
-
-        #region Properties
-
-        private string[] columns = null;
-        private List<string[]> data = null;
-
-        public string[] Columns
-        {
-            get { return columns; }
-            set
-            {
-                columns = value;
-            }
-        }
-
-        public List<string[]> Data
-        {
-            get { return data;  }
-            set
-            {
-                data = value;
-            }
-        }
 
         #endregion
 
@@ -53,78 +28,34 @@ namespace Sheet
         public DatabaseControl()
         {
             InitializeComponent();
+
+            Loaded += (sender, e) => Init();
+            DataContextChanged += (sender, e) => Init();
         }
 
         #endregion
 
-        #region IDatabaseController
+        #region Init
 
-        public string[] Get(int index)
+        private void Init()
         {
-            return data.Where(x => int.Parse(x[0]) == index).FirstOrDefault();
-        }
-
-        public bool Update(int index, string[] item)
-        {
-            for (int i = 0; i < data.Count; i++)
+            var controller = DataContext as IDatabaseController;
+            if (controller != null)
             {
-                if (int.Parse(data[i][0]) == index)
-                {
-                    data[i] = item;
-                    return true;
-                }
+                SetColumns(controller.Columns);
+                SetData(controller.Data);
             }
-            return false;
-        }
-
-        public int Add(string[] item)
-        {
-            int index = data.Max((x) => int.Parse(x[0])) + 1;
-            item[0] = index.ToString();
-            data.Add(item);
-            return index;
-        }
-
-        #endregion
-
-        #region Open
-
-        public string Open()
-        {
-            var dlg = new Microsoft.Win32.OpenFileDialog()
-            {
-                Filter = FileDialogSettings.DatabaseFilter
-            };
-
-            var result = dlg.ShowDialog();
-            if (result.HasValue && result.Value == true)
-            {
-                try
-                {
-                    Open(dlg.FileName);
-                    return System.IO.Path.GetFileName(dlg.FileName);
-                }
-                catch (Exception ex)
-                {
-                    Debug.Print(ex.Message);
-                    Debug.Print(ex.StackTrace);
-                }
-            }
-            return null;
-        }
-
-        public void Open(string fileName)
-        {
-            var reader = new CsvDataReader();
-            var fields = reader.Read(fileName);
-            SetColumns(fields.FirstOrDefault());
-            SetData(fields.Skip(1).ToList());
         }
 
         public void SetColumns(string[] columns)
         {
-            Columns = columns;
             Database.View = CreateColumnsView(columns);
+        }
+
+        public void SetData(List<string[]> data)
+        {
+            Database.ItemsSource = null;
+            Database.ItemsSource = data;
         }
 
         private GridView CreateColumnsView(string[] columns)
@@ -137,13 +68,6 @@ namespace Sheet
                 i++;
             }
             return gv;
-        }
-
-        public void SetData(List<string[]> data)
-        {
-            Data = data;
-            Database.ItemsSource = null;
-            Database.ItemsSource = data;
         }
 
         #endregion
@@ -167,8 +91,9 @@ namespace Sheet
                 var listViewItem = WpfHelper.FindVisualParent<ListViewItem>((DependencyObject)e.OriginalSource);
                 if (listViewItem != null)
                 {
-                    string[] data = (string[])listView.ItemContainerGenerator.ItemFromContainer(listViewItem);
-                    var dataItem = new DataItem() { Columns = columns, Data = data };
+                    string[] row = (string[])listView.ItemContainerGenerator.ItemFromContainer(listViewItem);
+                    var controller = DataContext as IDatabaseController;
+                    var dataItem = new DataItem() { Columns = controller.Columns, Data = row };
                     DataObject dragData = new DataObject("Data", dataItem);
                     DragDrop.DoDragDrop(listViewItem, dragData, DragDropEffects.Move);
                 }
