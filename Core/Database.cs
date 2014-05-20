@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace Sheet
 {
+    #region Database Controller
+
     public class CsvDatabaseController : IDatabaseController
     {
         #region Properties
@@ -82,4 +84,6 @@ namespace Sheet
 
         #endregion
     }
+
+    #endregion
 }
