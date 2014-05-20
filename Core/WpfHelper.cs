@@ -44,7 +44,10 @@ namespace Sheet
         {
             var bounds = VisualTreeHelper.GetContentBounds(reference);
             var offset = reference.TranslatePoint(new Point(0, 0), relativeTo);
-            bounds.Offset(offset.X, offset.Y);
+            if (bounds != null && bounds.IsEmpty == false)
+            {
+                bounds.Offset(offset.X, offset.Y);
+            }
             return bounds;
         }
     }
