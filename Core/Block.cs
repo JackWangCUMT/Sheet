@@ -13,7 +13,159 @@ namespace Sheet
 {
     #region Block Model
 
-    public enum Mode
+    public abstract class XElement
+    {
+        public object Element { get; set; }
+    }
+
+    public class XPoint
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public XPoint(double x, double y)
+        {
+            X = x;
+            Y = y;
+        }
+    }
+
+    public class XThumb : XElement
+    {
+        public XThumb(object element)
+        {
+            Element = element;
+        }
+    }
+
+    public class XLine : XElement
+    {
+        public XPoint Start { get; set; }
+        public XPoint End { get; set; }
+        public XLine(object element)
+        {
+            Element = element;
+        }
+    }
+
+    public class XRectangle : XElement
+    {
+        public XRectangle(object element)
+        {
+            Element = element;
+        }
+    }
+
+    public class XEllipse : XElement
+    {
+        public XEllipse(object element)
+        {
+            Element = element;
+        }
+    }
+
+    public class XText : XElement
+    {
+        public XText(object element)
+        {
+            Element = element;
+        }
+    }
+
+    public class XImage : XElement
+    {
+        public XImage(object element)
+        {
+            Element = element;
+        }
+    }
+
+    public class XBlock
+    {
+        public int Id { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
+        public string Name { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public int DataId { get; set; }
+        public Color Backgroud { get; set; }
+        public List<XLine> Lines { get; set; }
+        public List<XRectangle> Rectangles { get; set; }
+        public List<XEllipse> Ellipses { get; set; }
+        public List<XText> Texts { get; set; }
+        public List<XImage> Images { get; set; }
+        public List<XBlock> Blocks { get; set; }
+        public List<XPoint> Pins { get; set; }
+        public XBlock(int id, double x, double y, double width, double height, int dataId, string name)
+        {
+            Id = id;
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+            DataId = dataId;
+            Name = name;
+        }
+        public void Init()
+        {
+            Lines = new List<XLine>();
+            Rectangles = new List<XRectangle>();
+            Ellipses = new List<XEllipse>();
+            Texts = new List<XText>();
+            Images = new List<XImage>();
+            Blocks = new List<XBlock>();
+            Pins = new List<XPoint>();
+        }
+        public void ReInit()
+        {
+            if (Lines == null)
+            {
+                Lines = new List<XLine>();
+            }
+
+            if (Rectangles == null)
+            {
+                Rectangles = new List<XRectangle>();
+            }
+
+            if (Ellipses == null)
+            {
+                Ellipses = new List<XEllipse>();
+            }
+
+            if (Texts == null)
+            {
+                Texts = new List<XText>();
+            }
+
+            if (Images == null)
+            {
+                Images = new List<XImage>();
+            }
+
+            if (Blocks == null)
+            {
+                Blocks = new List<XBlock>();
+            }
+
+            if (Pins == null)
+            {
+                Pins = new List<XPoint>();
+            }
+        }
+    }
+
+    public interface ISheet
+    {
+        object GetParent();
+        void Add(XElement element);
+        void Remove(XElement element);
+        void Capture();
+        void ReleaseCapture();
+        bool IsCaptured { get; }
+    }
+
+    public enum SheetMode
     {
         None,
         Selection,
@@ -47,137 +199,6 @@ namespace Sheet
         public double[] ZoomFactors { get; set; }
     }
 
-    public interface ISheet<T> where T : class
-    {
-        T GetParent();
-        void Add(T element);
-        void Remove(T element);
-        void Capture();
-        void ReleaseCapture();
-        bool IsCaptured { get; }
-    }
-
-    public class Block
-    {
-        public int Id { get; set; }
-        public double X { get; set; }
-        public double Y { get; set; }
-        public string Name { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
-        public int DataId { get; set; }
-        public Color Backgroud { get; set; }
-        public List<Line> Lines { get; set; }
-        public List<Rectangle> Rectangles { get; set; }
-        public List<Ellipse> Ellipses { get; set; }
-        public List<Grid> Texts { get; set; }
-        public List<Image> Images { get; set; }
-        public List<Block> Blocks { get; set; }
-        public Block(int id, double x, double y, double width, double height, int dataId, string name)
-        {
-            Id = id;
-            X = x;
-            Y = y;
-            Width = width;
-            Height = height;
-            DataId = dataId;
-            Name = name;
-        }
-        public void Init()
-        {
-            Lines = new List<Line>();
-            Rectangles = new List<Rectangle>();
-            Ellipses = new List<Ellipse>();
-            Texts = new List<Grid>();
-            Images = new List<Image>();
-            Blocks = new List<Block>();
-        }
-        public void ReInit()
-        {
-            if (Lines == null)
-            {
-                Lines = new List<Line>();
-            }
-
-            if (Rectangles == null)
-            {
-                Rectangles = new List<Rectangle>();
-            }
-
-            if (Ellipses == null)
-            {
-                Ellipses = new List<Ellipse>();
-            }
-
-            if (Texts == null)
-            {
-                Texts = new List<Grid>();
-            }
-
-            if (Images == null)
-            {
-                Images = new List<Image>();
-            }
-
-            if (Blocks == null)
-            {
-                Blocks = new List<Block>();
-            }
-        }
-    }
-
-    public class CanvasSheet : ISheet<FrameworkElement>
-    {
-        #region Fields
-
-        private Canvas canvas = null;
-
-        #endregion
-
-        #region Constructor
-
-        public CanvasSheet(Canvas canvas)
-        {
-            this.canvas = canvas;
-        }
-
-        #endregion
-
-        #region ISheet
-
-        public FrameworkElement GetParent()
-        {
-            return canvas;
-        }
-
-        public void Add(FrameworkElement element)
-        {
-            canvas.Children.Add(element);
-        }
-
-        public void Remove(FrameworkElement element)
-        {
-            canvas.Children.Remove(element);
-        }
-
-        public void Capture()
-        {
-            canvas.CaptureMouse();
-        }
-
-        public void ReleaseCapture()
-        {
-            canvas.ReleaseMouseCapture();
-        }
-
-        public bool IsCaptured
-        {
-            get { return canvas.IsMouseCaptured; }
-        }
-
-        #endregion
-    }
-
     #endregion
 
     #region Block Serializer
@@ -203,61 +224,61 @@ namespace Sheet
             };
         }
 
-        public static LineItem SerializeLine(Line line)
+        public static LineItem SerializeLine(XLine line)
         {
             var lineItem = new LineItem();
 
             lineItem.Id = 0;
-            lineItem.X1 = line.X1;
-            lineItem.Y1 = line.Y1;
-            lineItem.X2 = line.X2;
-            lineItem.Y2 = line.Y2;
-            lineItem.Stroke = ToItemColor(line.Stroke);
+            lineItem.X1 = (line.Element as Line).X1;
+            lineItem.Y1 = (line.Element as Line).Y1;
+            lineItem.X2 = (line.Element as Line).X2;
+            lineItem.Y2 = (line.Element as Line).Y2;
+            lineItem.Stroke = ToItemColor((line.Element as Line).Stroke);
 
             return lineItem;
         }
 
-        public static RectangleItem SerializeRectangle(Rectangle rectangle)
+        public static RectangleItem SerializeRectangle(XRectangle rectangle)
         {
             var rectangleItem = new RectangleItem();
 
             rectangleItem.Id = 0;
-            rectangleItem.X = Canvas.GetLeft(rectangle);
-            rectangleItem.Y = Canvas.GetTop(rectangle);
-            rectangleItem.Width = rectangle.Width;
-            rectangleItem.Height = rectangle.Height;
-            rectangleItem.IsFilled = rectangle.Fill == BlockFactory.TransparentBrush ? false : true;
-            rectangleItem.Stroke = ToItemColor(rectangle.Stroke);
-            rectangleItem.Fill = ToItemColor(rectangle.Fill);
+            rectangleItem.X = Canvas.GetLeft(rectangle.Element as Rectangle);
+            rectangleItem.Y = Canvas.GetTop(rectangle.Element as Rectangle);
+            rectangleItem.Width = (rectangle.Element as Rectangle).Width;
+            rectangleItem.Height = (rectangle.Element as Rectangle).Height;
+            rectangleItem.IsFilled = (rectangle.Element as Rectangle).Fill == BlockFactory.TransparentBrush ? false : true;
+            rectangleItem.Stroke = ToItemColor((rectangle.Element as Rectangle).Stroke);
+            rectangleItem.Fill = ToItemColor((rectangle.Element as Rectangle).Fill);
 
             return rectangleItem;
         }
 
-        public static EllipseItem SerializeEllipse(Ellipse ellipse)
+        public static EllipseItem SerializeEllipse(XEllipse ellipse)
         {
             var ellipseItem = new EllipseItem();
 
             ellipseItem.Id = 0;
-            ellipseItem.X = Canvas.GetLeft(ellipse);
-            ellipseItem.Y = Canvas.GetTop(ellipse);
-            ellipseItem.Width = ellipse.Width;
-            ellipseItem.Height = ellipse.Height;
-            ellipseItem.IsFilled = ellipse.Fill == BlockFactory.TransparentBrush ? false : true;
-            ellipseItem.Stroke = ToItemColor(ellipse.Stroke);
-            ellipseItem.Fill = ToItemColor(ellipse.Fill);
+            ellipseItem.X = Canvas.GetLeft(ellipse.Element as Ellipse);
+            ellipseItem.Y = Canvas.GetTop(ellipse.Element as Ellipse);
+            ellipseItem.Width = (ellipse.Element as Ellipse).Width;
+            ellipseItem.Height = (ellipse.Element as Ellipse).Height;
+            ellipseItem.IsFilled = (ellipse.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? false : true;
+            ellipseItem.Stroke = ToItemColor((ellipse.Element as Ellipse).Stroke);
+            ellipseItem.Fill = ToItemColor((ellipse.Element as Ellipse).Fill);
 
             return ellipseItem;
         }
 
-        public static TextItem SerializeText(Grid text)
+        public static TextItem SerializeText(XText text)
         {
             var textItem = new TextItem();
 
             textItem.Id = 0;
-            textItem.X = Canvas.GetLeft(text);
-            textItem.Y = Canvas.GetTop(text);
-            textItem.Width = text.Width;
-            textItem.Height = text.Height;
+            textItem.X = Canvas.GetLeft(text.Element as Grid);
+            textItem.Y = Canvas.GetTop(text.Element as Grid);
+            textItem.Width = (text.Element as Grid).Width;
+            textItem.Height = (text.Element as Grid).Height;
 
             var tb = BlockFactory.GetTextBlock(text);
             textItem.Text = tb.Text;
@@ -270,21 +291,21 @@ namespace Sheet
             return textItem;
         }
 
-        public static ImageItem SerializeImage(Image image)
+        public static ImageItem SerializeImage(XImage image)
         {
             var imageItem = new ImageItem();
 
             imageItem.Id = 0;
-            imageItem.X = Canvas.GetLeft(image);
-            imageItem.Y = Canvas.GetTop(image);
-            imageItem.Width = image.Width;
-            imageItem.Height = image.Height;
-            imageItem.Data = image.Tag as byte[];
+            imageItem.X = Canvas.GetLeft(image.Element as Image);
+            imageItem.Y = Canvas.GetTop(image.Element as Image);
+            imageItem.Width = (image.Element as Image).Width;
+            imageItem.Height = (image.Element as Image).Height;
+            imageItem.Data = (image.Element as Image).Tag as byte[];
 
             return imageItem;
         }
 
-        public static BlockItem SerializeBlock(Block parent)
+        public static BlockItem SerializeBlock(XBlock parent)
         {
             var blockItem = new BlockItem();
             blockItem.Init(0, parent.X, parent.Y, parent.Width, parent.Height, parent.DataId, parent.Name);
@@ -323,7 +344,7 @@ namespace Sheet
             return blockItem;
         }
 
-        public static BlockItem SerializerBlockContents(Block parent, int id, double x, double y, double width, double height, int dataId, string name)
+        public static BlockItem SerializerBlockContents(XBlock parent, int id, double x, double y, double width, double height, int dataId, string name)
         {
             var lines = parent.Lines;
             var rectangles = parent.Rectangles;
@@ -390,7 +411,7 @@ namespace Sheet
 
         #region Deserialize
 
-        public static Line DeserializeLineItem(ISheet<FrameworkElement> sheet, Block parent, LineItem lineItem, double thickness)
+        public static XLine DeserializeLineItem(ISheet sheet, XBlock parent, LineItem lineItem, double thickness)
         {
             var line = BlockFactory.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2, lineItem.Stroke);
 
@@ -407,7 +428,7 @@ namespace Sheet
             return line;
         }
 
-        public static Rectangle DeserializeRectangleItem(ISheet<FrameworkElement> sheet, Block parent, RectangleItem rectangleItem, double thickness)
+        public static XRectangle DeserializeRectangleItem(ISheet sheet, XBlock parent, RectangleItem rectangleItem, double thickness)
         {
             var rectangle = BlockFactory.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
 
@@ -424,7 +445,7 @@ namespace Sheet
             return rectangle;
         }
 
-        public static Ellipse DeserializeEllipseItem(ISheet<FrameworkElement> sheet, Block parent, EllipseItem ellipseItem, double thickness)
+        public static XEllipse DeserializeEllipseItem(ISheet sheet, XBlock parent, EllipseItem ellipseItem, double thickness)
         {
             var ellipse = BlockFactory.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
 
@@ -441,7 +462,7 @@ namespace Sheet
             return ellipse;
         }
 
-        public static Grid DeserializeTextItem(ISheet<FrameworkElement> sheet, Block parent, TextItem textItem)
+        public static XText DeserializeTextItem(ISheet sheet, XBlock parent, TextItem textItem)
         {
             var text = BlockFactory.CreateText(textItem.Text,
                 textItem.X, textItem.Y,
@@ -465,7 +486,7 @@ namespace Sheet
             return text;
         }
 
-        public static Image DeserializeImageItem(ISheet<FrameworkElement> sheet, Block parent, ImageItem imageItem)
+        public static XImage DeserializeImageItem(ISheet sheet, XBlock parent, ImageItem imageItem)
         {
             var image = BlockFactory.CreateImage(imageItem.X, imageItem.Y, imageItem.Width, imageItem.Height, imageItem.Data);
 
@@ -482,9 +503,9 @@ namespace Sheet
             return image;
         }
 
-        public static Block DeserializeBlockItem(ISheet<FrameworkElement> sheet, Block parent, BlockItem blockItem, bool select, double thickness)
+        public static XBlock DeserializeBlockItem(ISheet sheet, XBlock parent, BlockItem blockItem, bool select, double thickness)
         {
-            var block = new Block(blockItem.Id, blockItem.X, blockItem.Y, blockItem.Width, blockItem.Height, blockItem.DataId, blockItem.Name);
+            var block = new XBlock(blockItem.Id, blockItem.X, blockItem.Y, blockItem.Width, blockItem.Height, blockItem.DataId, blockItem.Name);
             block.Init();
 
             foreach (var textItem in blockItem.Texts)
@@ -561,11 +582,11 @@ namespace Sheet
     {
         #region Add
 
-        public static void AddLines(ISheet<FrameworkElement> sheet, IEnumerable<LineItem> lineItems, Block parent, Block selected, bool select, double thickness)
+        public static void AddLines(ISheet sheet, IEnumerable<LineItem> lineItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
             if (select)
             {
-                selected.Lines = new List<Line>();
+                selected.Lines = new List<XLine>();
             }
 
             foreach (var lineItem in lineItems)
@@ -580,11 +601,11 @@ namespace Sheet
             }
         }
 
-        public static void AddRectangles(ISheet<FrameworkElement> sheet, IEnumerable<RectangleItem> rectangleItems, Block parent, Block selected, bool select, double thickness)
+        public static void AddRectangles(ISheet sheet, IEnumerable<RectangleItem> rectangleItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
             if (select)
             {
-                selected.Rectangles = new List<Rectangle>();
+                selected.Rectangles = new List<XRectangle>();
             }
 
             foreach (var rectangleItem in rectangleItems)
@@ -599,11 +620,11 @@ namespace Sheet
             }
         }
 
-        public static void AddEllipses(ISheet<FrameworkElement> sheet, IEnumerable<EllipseItem> ellipseItems, Block parent, Block selected, bool select, double thickness)
+        public static void AddEllipses(ISheet sheet, IEnumerable<EllipseItem> ellipseItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
             if (select)
             {
-                selected.Ellipses = new List<Ellipse>();
+                selected.Ellipses = new List<XEllipse>();
             }
 
             foreach (var ellipseItem in ellipseItems)
@@ -618,11 +639,11 @@ namespace Sheet
             }
         }
 
-        public static void AddTexts(ISheet<FrameworkElement> sheet, IEnumerable<TextItem> textItems, Block parent, Block selected, bool select, double thickness)
+        public static void AddTexts(ISheet sheet, IEnumerable<TextItem> textItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
             if (select)
             {
-                selected.Texts = new List<Grid>();
+                selected.Texts = new List<XText>();
             }
 
             foreach (var textItem in textItems)
@@ -637,11 +658,11 @@ namespace Sheet
             }
         }
 
-        public static void AddImages(ISheet<FrameworkElement> sheet, IEnumerable<ImageItem> imageItems, Block parent, Block selected, bool select, double thickness)
+        public static void AddImages(ISheet sheet, IEnumerable<ImageItem> imageItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
             if (select)
             {
-                selected.Images = new List<Image>();
+                selected.Images = new List<XImage>();
             }
 
             foreach (var imageItem in imageItems)
@@ -656,11 +677,11 @@ namespace Sheet
             }
         }
 
-        public static void AddBlocks(ISheet<FrameworkElement> sheet, IEnumerable<BlockItem> blockItems, Block parent, Block selected, bool select, double thickness)
+        public static void AddBlocks(ISheet sheet, IEnumerable<BlockItem> blockItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
             if (select)
             {
-                selected.Blocks = new List<Block>();
+                selected.Blocks = new List<XBlock>();
             }
 
             foreach (var blockItem in blockItems)
@@ -674,7 +695,7 @@ namespace Sheet
             }
         }
 
-        public static void AddBlockContents(ISheet<FrameworkElement> sheet, BlockItem blockItem, Block content, Block selected, bool select, double thickness)
+        public static void AddBlockContents(ISheet sheet, BlockItem blockItem, XBlock content, XBlock selected, bool select, double thickness)
         {
             if (blockItem != null)
             {
@@ -687,7 +708,7 @@ namespace Sheet
             }
         }
 
-        public static void AddBrokenBlock(ISheet<FrameworkElement> sheet, BlockItem blockItem, Block content, Block selected, bool select, double thickness)
+        public static void AddBrokenBlock(ISheet sheet, BlockItem blockItem, XBlock content, XBlock selected, bool select, double thickness)
         {
             AddTexts(sheet, blockItem.Texts, content, selected, select, thickness);
             AddImages(sheet, blockItem.Images, content, selected, select, thickness);
@@ -710,7 +731,7 @@ namespace Sheet
 
         #region Remove
 
-        public static void RemoveLines(ISheet<FrameworkElement> sheet, IEnumerable<Line> lines)
+        public static void RemoveLines(ISheet sheet, IEnumerable<XLine> lines)
         {
             if (lines != null)
             {
@@ -721,7 +742,7 @@ namespace Sheet
             }
         }
 
-        public static void RemoveRectangles(ISheet<FrameworkElement> sheet, IEnumerable<Rectangle> rectangles)
+        public static void RemoveRectangles(ISheet sheet, IEnumerable<XRectangle> rectangles)
         {
             if (rectangles != null)
             {
@@ -732,7 +753,7 @@ namespace Sheet
             }
         }
 
-        public static void RemoveEllipses(ISheet<FrameworkElement> sheet, IEnumerable<Ellipse> ellipses)
+        public static void RemoveEllipses(ISheet sheet, IEnumerable<XEllipse> ellipses)
         {
             if (ellipses != null)
             {
@@ -743,7 +764,7 @@ namespace Sheet
             }
         }
 
-        public static void RemoveTexts(ISheet<FrameworkElement> sheet, IEnumerable<Grid> texts)
+        public static void RemoveTexts(ISheet sheet, IEnumerable<XText> texts)
         {
             if (texts != null)
             {
@@ -754,7 +775,7 @@ namespace Sheet
             }
         }
 
-        public static void RemoveImages(ISheet<FrameworkElement> sheet, IEnumerable<Image> images)
+        public static void RemoveImages(ISheet sheet, IEnumerable<XImage> images)
         {
             if (images != null)
             {
@@ -765,7 +786,7 @@ namespace Sheet
             }
         }
 
-        public static void RemoveBlocks(ISheet<FrameworkElement> sheet, IEnumerable<Block> blocks)
+        public static void RemoveBlocks(ISheet sheet, IEnumerable<XBlock> blocks)
         {
             if (blocks != null)
             {
@@ -776,7 +797,7 @@ namespace Sheet
             }
         }
 
-        public static void RemoveBlock(ISheet<FrameworkElement> sheet, Block block)
+        public static void RemoveBlock(ISheet sheet, XBlock block)
         {
             RemoveLines(sheet, block.Lines);
             RemoveRectangles(sheet, block.Rectangles);
@@ -786,7 +807,7 @@ namespace Sheet
             RemoveBlocks(sheet, block.Blocks);
         }
 
-        public static void RemoveSelectedFromBlock(ISheet<FrameworkElement> sheet, Block parent, Block selected)
+        public static void RemoveSelectedFromBlock(ISheet sheet, XBlock parent, XBlock selected)
         {
             if (selected.Lines != null)
             {
@@ -870,54 +891,54 @@ namespace Sheet
 
         #region Move
 
-        public static void MoveLines(double x, double y, IEnumerable<Line> lines)
+        public static void MoveLines(double x, double y, IEnumerable<XLine> lines)
         {
             foreach (var line in lines)
             {
-                line.X1 += x;
-                line.Y1 += y;
-                line.X2 += x;
-                line.Y2 += y;
+                (line.Element as Line).X1 += x;
+                (line.Element as Line).Y1 += y;
+                (line.Element as Line).X2 += x;
+                (line.Element as Line).Y2 += y;
             }
         }
 
-        public static void MoveRectangles(double x, double y, IEnumerable<Rectangle> rectangles)
+        public static void MoveRectangles(double x, double y, IEnumerable<XRectangle> rectangles)
         {
             foreach (var rectangle in rectangles)
             {
-                Canvas.SetLeft(rectangle, Canvas.GetLeft(rectangle) + x);
-                Canvas.SetTop(rectangle, Canvas.GetTop(rectangle) + y);
+                Canvas.SetLeft(rectangle.Element as Rectangle, Canvas.GetLeft(rectangle.Element as Rectangle) + x);
+                Canvas.SetTop(rectangle.Element as Rectangle, Canvas.GetTop(rectangle.Element as Rectangle) + y);
             }
         }
 
-        public static void MoveEllipses(double x, double y, IEnumerable<Ellipse> ellipses)
+        public static void MoveEllipses(double x, double y, IEnumerable<XEllipse> ellipses)
         {
             foreach (var ellipse in ellipses)
             {
-                Canvas.SetLeft(ellipse, Canvas.GetLeft(ellipse) + x);
-                Canvas.SetTop(ellipse, Canvas.GetTop(ellipse) + y);
+                Canvas.SetLeft(ellipse.Element as Ellipse, Canvas.GetLeft(ellipse.Element as Ellipse) + x);
+                Canvas.SetTop(ellipse.Element as Ellipse, Canvas.GetTop(ellipse.Element as Ellipse) + y);
             }
         }
 
-        public static void MoveTexts(double x, double y, IEnumerable<Grid> texts)
+        public static void MoveTexts(double x, double y, IEnumerable<XText> texts)
         {
             foreach (var text in texts)
             {
-                Canvas.SetLeft(text, Canvas.GetLeft(text) + x);
-                Canvas.SetTop(text, Canvas.GetTop(text) + y);
+                Canvas.SetLeft(text.Element as Grid, Canvas.GetLeft(text.Element as Grid) + x);
+                Canvas.SetTop(text.Element as Grid, Canvas.GetTop(text.Element as Grid) + y);
             }
         }
 
-        public static void MoveImages(double x, double y, IEnumerable<Image> images)
+        public static void MoveImages(double x, double y, IEnumerable<XImage> images)
         {
             foreach (var image in images)
             {
-                Canvas.SetLeft(image, Canvas.GetLeft(image) + x);
-                Canvas.SetTop(image, Canvas.GetTop(image) + y);
+                Canvas.SetLeft(image.Element as Image, Canvas.GetLeft(image.Element as Image) + x);
+                Canvas.SetTop(image.Element as Image, Canvas.GetTop(image.Element as Image) + y);
             }
         }
 
-        public static void MoveBlocks(double x, double y, IEnumerable<Block> blocks)
+        public static void MoveBlocks(double x, double y, IEnumerable<XBlock> blocks)
         {
             foreach (var block in blocks)
             {
@@ -930,7 +951,7 @@ namespace Sheet
             }
         }
 
-        public static void Move(double x, double y, Block block)
+        public static void Move(double x, double y, XBlock block)
         {
             if (block.Lines != null)
             {
@@ -970,39 +991,39 @@ namespace Sheet
         private static int DeselectedZIndex = 0;
         private static int SelectedZIndex = 1;
 
-        public static void DeselectLine(Line line)
+        public static void DeselectLine(XLine line)
         {
-            line.Stroke = BlockFactory.NormalBrush;
-            Panel.SetZIndex(line, DeselectedZIndex);
+            (line.Element as Line).Stroke = BlockFactory.NormalBrush;
+            Panel.SetZIndex((line.Element as Line), DeselectedZIndex);
         }
 
-        public static void DeselectRectangle(Rectangle rectangle)
+        public static void DeselectRectangle(XRectangle rectangle)
         {
-            rectangle.Stroke = BlockFactory.NormalBrush;
-            rectangle.Fill = rectangle.Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.NormalBrush;
-            Panel.SetZIndex(rectangle, DeselectedZIndex);
+            (rectangle.Element as Rectangle).Stroke = BlockFactory.NormalBrush;
+            (rectangle.Element as Rectangle).Fill = (rectangle.Element as Rectangle).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.NormalBrush;
+            Panel.SetZIndex(rectangle.Element as Rectangle, DeselectedZIndex);
         }
 
-        public static void DeselectEllipse(Ellipse ellipse)
+        public static void DeselectEllipse(XEllipse ellipse)
         {
-            ellipse.Stroke = BlockFactory.NormalBrush;
-            ellipse.Fill = ellipse.Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.NormalBrush;
-            Panel.SetZIndex(ellipse, DeselectedZIndex);
+            (ellipse.Element as Ellipse).Stroke = BlockFactory.NormalBrush;
+            (ellipse.Element as Ellipse).Fill = (ellipse.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.NormalBrush;
+            Panel.SetZIndex(ellipse.Element as Ellipse, DeselectedZIndex);
         }
 
-        public static void DeselectText(Grid text)
+        public static void DeselectText(XText text)
         {
             BlockFactory.GetTextBlock(text).Foreground = BlockFactory.NormalBrush;
-            Panel.SetZIndex(text, DeselectedZIndex);
+            Panel.SetZIndex(text.Element as Grid, DeselectedZIndex);
         }
 
-        public static void DeselectImage(Image image)
+        public static void DeselectImage(XImage image)
         {
-            image.OpacityMask = BlockFactory.NormalBrush;
-            Panel.SetZIndex(image, DeselectedZIndex);
+            (image.Element as Image).OpacityMask = BlockFactory.NormalBrush;
+            Panel.SetZIndex(image.Element as Image, DeselectedZIndex);
         }
 
-        public static void DeselectBlock(Block parent)
+        public static void DeselectBlock(XBlock parent)
         {
             if (parent.Lines != null)
             {
@@ -1053,39 +1074,39 @@ namespace Sheet
             }
         }
 
-        public static void SelectLine(Line line)
+        public static void SelectLine(XLine line)
         {
-            line.Stroke = BlockFactory.SelectedBrush;
-            Panel.SetZIndex(line, SelectedZIndex);
+            (line.Element as Line).Stroke = BlockFactory.SelectedBrush;
+            Panel.SetZIndex(line.Element as Line, SelectedZIndex);
         }
 
-        public static void SelectRectangle(Rectangle rectangle)
+        public static void SelectRectangle(XRectangle rectangle)
         {
-            rectangle.Stroke = BlockFactory.SelectedBrush;
-            rectangle.Fill = rectangle.Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.SelectedBrush;
-            Panel.SetZIndex(rectangle, SelectedZIndex);
+            (rectangle.Element as Rectangle).Stroke = BlockFactory.SelectedBrush;
+            (rectangle.Element as Rectangle).Fill = (rectangle.Element as Rectangle).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.SelectedBrush;
+            Panel.SetZIndex(rectangle.Element as Rectangle, SelectedZIndex);
         }
 
-        public static void SelectEllipse(Ellipse ellipse)
+        public static void SelectEllipse(XEllipse ellipse)
         {
-            ellipse.Stroke = BlockFactory.SelectedBrush;
-            ellipse.Fill = ellipse.Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.SelectedBrush;
-            Panel.SetZIndex(ellipse, SelectedZIndex);
+            (ellipse.Element as Ellipse).Stroke = BlockFactory.SelectedBrush;
+            (ellipse.Element as Ellipse).Fill = (ellipse.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.SelectedBrush;
+            Panel.SetZIndex(ellipse.Element as Ellipse, SelectedZIndex);
         }
 
-        public static void SelectText(Grid text)
+        public static void SelectText(XText text)
         {
             BlockFactory.GetTextBlock(text).Foreground = BlockFactory.SelectedBrush;
-            Panel.SetZIndex(text, SelectedZIndex);
+            Panel.SetZIndex(text.Element as Grid, SelectedZIndex);
         }
 
-        public static void SelectImage(Image image)
+        public static void SelectImage(XImage image)
         {
-            image.OpacityMask = BlockFactory.SelectedBrush;
-            Panel.SetZIndex(image, SelectedZIndex);
+            (image.Element as Image).OpacityMask = BlockFactory.SelectedBrush;
+            Panel.SetZIndex(image.Element as Image, SelectedZIndex);
         }
 
-        public static void SelectBlock(Block parent)
+        public static void SelectBlock(XBlock parent)
         {
             if (parent.Lines != null)
             {
@@ -1136,7 +1157,7 @@ namespace Sheet
             }
         }
 
-        public static void SelectAll(Block selected, Block content)
+        public static void SelectAll(XBlock selected, XBlock content)
         {
             selected.Init();
 
@@ -1206,7 +1227,7 @@ namespace Sheet
             }
         }
 
-        public static void DeselectAll(Block selected)
+        public static void DeselectAll(XBlock selected)
         {
             if (selected.Lines != null)
             {
@@ -1297,7 +1318,7 @@ namespace Sheet
             }
         }
 
-        public static bool HaveSelected(Block selected)
+        public static bool HaveSelected(XBlock selected)
         {
             return (selected.Lines != null
                 || selected.Rectangles != null
@@ -1307,7 +1328,7 @@ namespace Sheet
                 || selected.Blocks != null);
         }
 
-        public static bool HaveOneLineSelected(Block selected)
+        public static bool HaveOneLineSelected(XBlock selected)
         {
             return (selected.Lines != null
                 && selected.Lines.Count == 1
@@ -1318,7 +1339,7 @@ namespace Sheet
                 && selected.Blocks == null);
         }
 
-        public static bool HaveOneRectangleSelected(Block selected)
+        public static bool HaveOneRectangleSelected(XBlock selected)
         {
             return (selected.Lines == null
                 && selected.Rectangles != null
@@ -1329,7 +1350,7 @@ namespace Sheet
                 && selected.Blocks == null);
         }
 
-        public static bool HaveOneEllipseSelected(Block selected)
+        public static bool HaveOneEllipseSelected(XBlock selected)
         {
             return (selected.Lines == null
                 && selected.Rectangles == null
@@ -1340,7 +1361,7 @@ namespace Sheet
                 && selected.Blocks == null);
         }
 
-        public static bool HaveOneTextSelected(Block selected)
+        public static bool HaveOneTextSelected(XBlock selected)
         {
             return (selected.Lines == null
                 && selected.Rectangles == null
@@ -1351,7 +1372,7 @@ namespace Sheet
                 && selected.Blocks == null);
         }
 
-        public static bool HaveOneImageSelected(Block selected)
+        public static bool HaveOneImageSelected(XBlock selected)
         {
             return (selected.Lines == null
                 && selected.Rectangles == null
@@ -1362,7 +1383,7 @@ namespace Sheet
                 && selected.Blocks == null);
         }
 
-        public static bool HaveOneBlockSelected(Block selected)
+        public static bool HaveOneBlockSelected(XBlock selected)
         {
             return (selected.Lines == null
                 && selected.Rectangles == null
@@ -1377,16 +1398,16 @@ namespace Sheet
 
         #region HitTest
 
-        public static bool HitTestLines(IEnumerable<Line> lines, Block selected, Rect rect, bool onlyFirst, bool select)
+        public static bool HitTestLines(IEnumerable<XLine> lines, XBlock selected, Rect rect, bool onlyFirst, bool select)
         {
             foreach (var line in lines)
             {
-                var bounds = WpfHelper.GetContentBounds(line);
+                var bounds = WpfVisualHelper.GetContentBounds(line);
                 if (rect.IntersectsWith(bounds))
                 {
                     if (select)
                     {
-                        if (line.Stroke != BlockFactory.SelectedBrush)
+                        if ((line.Element as Line).Stroke != BlockFactory.SelectedBrush)
                         {
                             SelectLine(line);
                             selected.Lines.Add(line);
@@ -1407,16 +1428,16 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestRectangles(IEnumerable<Rectangle> rectangles, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relativeTo)
+        public static bool HitTestRectangles(IEnumerable<XRectangle> rectangles, XBlock selected, Rect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var rectangle in rectangles)
             {
-                var bounds = WpfHelper.GetContentBounds(rectangle, relativeTo);
+                var bounds = WpfVisualHelper.GetContentBounds(rectangle, relativeTo);
                 if (rect.IntersectsWith(bounds))
                 {
                     if (select)
                     {
-                        if (rectangle.Stroke != BlockFactory.SelectedBrush)
+                        if ((rectangle.Element as Rectangle).Stroke != BlockFactory.SelectedBrush)
                         {
                             SelectRectangle(rectangle);
                             selected.Rectangles.Add(rectangle);
@@ -1437,16 +1458,16 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestEllipses(IEnumerable<Ellipse> ellipses, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relativeTo)
+        public static bool HitTestEllipses(IEnumerable<XEllipse> ellipses, XBlock selected, Rect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var ellipse in ellipses)
             {
-                var bounds = WpfHelper.GetContentBounds(ellipse, relativeTo);
+                var bounds = WpfVisualHelper.GetContentBounds(ellipse, relativeTo);
                 if (rect.IntersectsWith(bounds))
                 {
                     if (select)
                     {
-                        if (ellipse.Stroke != BlockFactory.SelectedBrush)
+                        if ((ellipse.Element as Ellipse).Stroke != BlockFactory.SelectedBrush)
                         {
                             SelectEllipse(ellipse);
                             selected.Ellipses.Add(ellipse);
@@ -1467,11 +1488,11 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestTexts(IEnumerable<Grid> texts, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relativeTo)
+        public static bool HitTestTexts(IEnumerable<XText> texts, XBlock selected, Rect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var text in texts)
             {
-                var bounds = WpfHelper.GetContentBounds(text, relativeTo);
+                var bounds = WpfVisualHelper.GetContentBounds(text, relativeTo);
                 if (rect.IntersectsWith(bounds))
                 {
                     if (select)
@@ -1498,16 +1519,16 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestImages(IEnumerable<Image> images, Block selected, Rect rect, bool onlyFirst, bool select, UIElement relativeTo)
+        public static bool HitTestImages(IEnumerable<XImage> images, XBlock selected, Rect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var image in images)
             {
-                var bounds = WpfHelper.GetContentBounds(image, relativeTo);
+                var bounds = WpfVisualHelper.GetContentBounds(image, relativeTo);
                 if (rect.IntersectsWith(bounds))
                 {
                     if (select)
                     {
-                        if (image.OpacityMask != BlockFactory.SelectedBrush)
+                        if ((image.Element as Image).OpacityMask != BlockFactory.SelectedBrush)
                         {
                             SelectImage(image);
                             selected.Images.Add(image);
@@ -1528,7 +1549,7 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestBlocks(IEnumerable<Block> blocks, Block selected, Rect rect, bool onlyFirst, bool select, bool selectInsideBlock, UIElement relativeTo)
+        public static bool HitTestBlocks(IEnumerable<XBlock> blocks, XBlock selected, Rect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo)
         {
             foreach (var block in blocks)
             {
@@ -1559,7 +1580,7 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestBlock(Block parent, Block selected, Rect rect, bool onlyFirst, bool selectInsideBlock, UIElement relativeTo)
+        public static bool HitTestBlock(XBlock parent, XBlock selected, Rect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo)
         {
             bool result = false;
 
@@ -1602,7 +1623,7 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestClick(ISheet<FrameworkElement> sheet, Block parent, Block selected, Point p, double size, bool selectInsideBlock, bool resetSelected)
+        public static bool HitTestClick(ISheet sheet, XBlock parent, XBlock selected, Point p, double size, bool selectInsideBlock, bool resetSelected)
         {
             if (resetSelected)
             {
@@ -1679,7 +1700,7 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestForBlocks(ISheet<FrameworkElement> sheet, Block parent, Block selected, Point p, double size)
+        public static bool HitTestForBlocks(ISheet sheet, XBlock parent, XBlock selected, Point p, double size)
         {
             selected.Init();
 
@@ -1699,7 +1720,7 @@ namespace Sheet
             return false;
         }
 
-        public static void HitTestSelectionRect(ISheet<FrameworkElement> sheet, Block parent, Block selected, Rect rect, bool resetSelected)
+        public static void HitTestSelectionRect(ISheet sheet, XBlock parent, XBlock selected, Rect rect, bool resetSelected)
         {
             if (resetSelected)
             {
@@ -1743,7 +1764,7 @@ namespace Sheet
             HitTestClean(selected);
         }
 
-        private static void HitTestClean(Block selected)
+        private static void HitTestClean(XBlock selected)
         {
             if (selected.Lines != null && selected.Lines.Count == 0)
             {
@@ -1780,52 +1801,57 @@ namespace Sheet
 
         #region Fill
 
-        public static void ToggleFill(Rectangle rectangle)
+        public static void ToggleFill(XRectangle rectangle)
         {
-            rectangle.Fill = rectangle.Fill == BlockFactory.TransparentBrush ? BlockFactory.NormalBrush : BlockFactory.TransparentBrush;
+            (rectangle.Element as Rectangle).Fill = (rectangle.Element as Rectangle).Fill == BlockFactory.TransparentBrush ? BlockFactory.NormalBrush : BlockFactory.TransparentBrush;
         }
 
-        public static void ToggleFill(Ellipse ellipse)
+        public static void ToggleFill(XEllipse ellipse)
         {
-            ellipse.Fill = ellipse.Fill == BlockFactory.TransparentBrush ? BlockFactory.NormalBrush : BlockFactory.TransparentBrush;
+            (ellipse.Element as Ellipse).Fill = (ellipse.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.NormalBrush : BlockFactory.TransparentBrush;
         }
 
         #endregion
 
         #region Copy
 
-        public static Block ShallowCopy(Block original)
+        public static XBlock ShallowCopy(XBlock original)
         {
-            var copy = new Block(original.Id, original.X, original.Y, original.Width, original.Height, original.DataId, original.Name);
+            var copy = new XBlock(original.Id, original.X, original.Y, original.Width, original.Height, original.DataId, original.Name);
 
             if (original.Lines != null)
             {
-                copy.Lines = new List<Line>(original.Lines);
+                copy.Lines = new List<XLine>(original.Lines);
             }
 
             if (original.Rectangles != null)
             {
-                copy.Rectangles = new List<Rectangle>(original.Rectangles);
+                copy.Rectangles = new List<XRectangle>(original.Rectangles);
             }
 
             if (original.Ellipses != null)
             {
-                copy.Ellipses = new List<Ellipse>(original.Ellipses);
+                copy.Ellipses = new List<XEllipse>(original.Ellipses);
             }
 
             if (original.Texts != null)
             {
-                copy.Texts = new List<Grid>(original.Texts);
+                copy.Texts = new List<XText>(original.Texts);
             }
 
             if (original.Images != null)
             {
-                copy.Images = new List<Image>(original.Images);
+                copy.Images = new List<XImage>(original.Images);
             }
 
             if (original.Blocks != null)
             {
-                copy.Blocks = new List<Block>(original.Blocks);
+                copy.Blocks = new List<XBlock>(original.Blocks);
+            }
+
+            if (original.Pins != null)
+            {
+                copy.Pins = new List<XPoint>(original.Pins);
             }
 
             return copy;
@@ -1850,7 +1876,7 @@ namespace Sheet
 
         #region Create
 
-        public static Line CreateLine(double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
+        public static XLine CreateLine(double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
         {
             var strokeBrush = new SolidColorBrush(Color.FromArgb(stroke.Alpha, stroke.Red, stroke.Green, stroke.Blue));
 
@@ -1868,10 +1894,12 @@ namespace Sheet
                 Y2 = y2
             };
 
-            return line;
+            var xline = new XLine(line);
+
+            return xline;
         }
 
-        public static Rectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled)
+        public static XRectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled)
         {
             var rectangle = new Rectangle()
             {
@@ -1887,10 +1915,12 @@ namespace Sheet
             Canvas.SetLeft(rectangle, x);
             Canvas.SetTop(rectangle, y);
 
-            return rectangle;
+            var xrectangle = new XRectangle(rectangle);
+
+            return xrectangle;
         }
 
-        public static Ellipse CreateEllipse(double thickness, double x, double y, double width, double height, bool isFilled)
+        public static XEllipse CreateEllipse(double thickness, double x, double y, double width, double height, bool isFilled)
         {
             var ellipse = new Ellipse()
             {
@@ -1906,16 +1936,19 @@ namespace Sheet
             Canvas.SetLeft(ellipse, x);
             Canvas.SetTop(ellipse, y);
 
-            return ellipse;
+            var xellipse = new XEllipse(ellipse);
+
+            return xellipse;
         }
 
-        public static TextBlock GetTextBlock(Grid text)
+        public static TextBlock GetTextBlock(XText text)
         {
-            return text.Children[0] as TextBlock;
+            return (text.Element as Grid).Children[0] as TextBlock;
         }
 
-        public static Grid CreateText(string text,
-            double x, double y, double width, double height,
+        public static XText CreateText(string text,
+            double x, double y, 
+            double width, double height,
             HorizontalAlignment halign, VerticalAlignment valign,
             double fontSize,
             ItemColor backgroud, ItemColor foreground)
@@ -1944,10 +1977,12 @@ namespace Sheet
 
             grid.Children.Add(tb);
 
-            return grid;
+            var xtext = new XText(grid);
+
+            return xtext;
         }
 
-        public static Image CreateImage(double x, double y, double width, double height, byte[] data)
+        public static XImage CreateImage(double x, double y, double width, double height, byte[] data)
         {
             Image image = new Image();
 
@@ -1976,7 +2011,9 @@ namespace Sheet
             Canvas.SetLeft(image, x);
             Canvas.SetTop(image, y);
 
-            return image;
+            var ximage = new XImage(image);
+
+            return ximage;
         }
 
         #endregion

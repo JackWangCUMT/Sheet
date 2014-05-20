@@ -88,7 +88,7 @@ namespace Sheet
                  Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance))
             {
                 var listView = sender as ListView;
-                var listViewItem = WpfHelper.FindVisualParent<ListViewItem>((DependencyObject)e.OriginalSource);
+                var listViewItem = WpfVisualHelper.FindVisualParent<ListViewItem>((DependencyObject)e.OriginalSource);
                 if (listViewItem != null)
                 {
                     string[] row = (string[])listView.ItemContainerGenerator.ItemFromContainer(listViewItem);

@@ -100,7 +100,7 @@
     <Compile Include="Core\Entry.cs" />
     <Compile Include="Core\Item.cs" />
     <Compile Include="Core\Page.cs" />
-    <Compile Include="Core\WpfHelper.cs" />
+    <Compile Include="Core\Wpf.cs" />
     <Compile Include="Dxf\Dxf.cs" />
     <Compile Include="Dxf\DxfInspect.cs" />
     <Compile Include="Dxf\BlockDxfWriter.cs" />

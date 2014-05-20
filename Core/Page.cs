@@ -1,6 +1,7 @@
 ﻿using Splat;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -72,12 +73,20 @@ namespace Sheet
         {
             if (undos.Count > 0)
             {
-                var change = await CreateChange("Redo");
-                redos.Push(change);
-                var undo = undos.Pop();
-                var block = await Task.Run(() => ItemSerializer.DeserializeContents(undo.Model));
-                Controller.ResetPage();
-                Controller.DeserializePage(block);
+                try
+                {
+                    var change = await CreateChange("Redo");
+                    redos.Push(change);
+                    var undo = undos.Pop();
+                    var block = await Task.Run(() => ItemSerializer.DeserializeContents(undo.Model));
+                    Controller.ResetPage();
+                    Controller.DeserializePage(block);
+                }
+                catch(Exception ex)
+                {
+                    Debug.Print(ex.Message);
+                    Debug.Print(ex.StackTrace);
+                }
             }
         }
 
@@ -85,12 +94,20 @@ namespace Sheet
         {
             if (redos.Count > 0)
             {
-                var change = await CreateChange("Undo");
-                undos.Push(change);
-                var redo = redos.Pop();
-                var block = await Task.Run(() => ItemSerializer.DeserializeContents(redo.Model));
-                Controller.ResetPage();
-                Controller.DeserializePage(block);
+                try
+                {
+                    var change = await CreateChange("Undo");
+                    undos.Push(change);
+                    var redo = redos.Pop();
+                    var block = await Task.Run(() => ItemSerializer.DeserializeContents(redo.Model));
+                    Controller.ResetPage();
+                    Controller.DeserializePage(block);
+                }
+                catch(Exception ex)
+                {
+                    Debug.Print(ex.Message);
+                    Debug.Print(ex.StackTrace);
+                }
             }
         }
   
@@ -105,7 +122,7 @@ namespace Sheet
     {
         #region Create
 
-        public static void CreateLine(ISheet<FrameworkElement> sheet, List<Line> lines, double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
+        public static void CreateLine(ISheet sheet, List<XLine> lines, double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
         {
             var line = BlockFactory.CreateLine(thickness, x1, y1, x2, y2, stroke);
 
@@ -120,7 +137,7 @@ namespace Sheet
             }
         }
 
-        public static void CreateText(ISheet<FrameworkElement> sheet, List<Grid> texts, string content, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size, ItemColor foreground)
+        public static void CreateText(ISheet sheet, List<XText> texts, string content, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size, ItemColor foreground)
         {
             var text = BlockFactory.CreateText(content, x, y, width, height, halign, valign, size, ItemColors.Transparent, foreground);
 
@@ -135,7 +152,7 @@ namespace Sheet
             }
         }
 
-        public static void CreateFrame(ISheet<FrameworkElement> sheet, Block block, double size, double thickness, ItemColor stroke)
+        public static void CreateFrame(ISheet sheet, XBlock block, double size, double thickness, ItemColor stroke)
         {
             double padding = 6.0;
             double width = 1260.0;
@@ -257,7 +274,7 @@ namespace Sheet
             }
         }
 
-        public static void CreateGrid(ISheet<FrameworkElement> sheet, Block block, double startX, double startY, double width, double height, double size, double thickness, ItemColor stroke)
+        public static void CreateGrid(ISheet sheet, XBlock block, double startX, double startY, double width, double height, double size, double thickness, ItemColor stroke)
         {
             for (double y = startY + size; y < height + startY; y += size)
             {
@@ -270,7 +287,7 @@ namespace Sheet
             }
         }
 
-        public static Rectangle CreateSelectionRectangle(double thickness, double x, double y, double width, double height)
+        public static XRectangle CreateSelectionRectangle(double thickness, double x, double y, double width, double height)
         {
             var fillBrush = new SolidColorBrush(Color.FromArgb(0x3A, 0x00, 0x00, 0xFF));
             var strokeBrush = new SolidColorBrush(Color.FromArgb(0x7F, 0x00, 0x00, 0xFF));
@@ -292,7 +309,9 @@ namespace Sheet
             Canvas.SetLeft(rect, x);
             Canvas.SetTop(rect, y);
 
-            return rect;
+            var xrect = new XRectangle(rect);
+
+            return xrect;
         }
 
         #endregion
