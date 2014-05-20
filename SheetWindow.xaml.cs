@@ -91,18 +91,18 @@ namespace Sheet
 
         private void InitSheet()
         {
-            Sheet.Library = Library;
+            GetSheet().Library = Library;
         }
 
         private void InitSizeBorder()
         {
-            SizeBorder.ExecuteUpdateSize = (size) => Sheet.SetAutoFitSize(size);
-            SizeBorder.ExecuteSizeChanged = () => Sheet.AutoFit();
+            SizeBorder.ExecuteUpdateSize = (size) => GetSheet().SetAutoFitSize(size);
+            SizeBorder.ExecuteSizeChanged = () => GetSheet().AutoFit();
         }
 
         private void InitSolution()
         {
-            Solution.Controller = Sheet;
+            Solution.Controller = GetSheet();
         }
 
         private void InitDrop()
