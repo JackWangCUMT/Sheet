@@ -59,8 +59,6 @@ namespace Sheet
 
     #endregion
 
-
-
     public partial class SheetWindow : Window
     {
         #region Fields
