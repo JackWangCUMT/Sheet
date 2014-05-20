@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -58,8 +59,16 @@ namespace Sheet
 
     #endregion
 
+
+
     public partial class SheetWindow : Window
     {
+        #region Fields
+
+        private ObservableCollection<IDatabaseController> DatabaseControllers = new ObservableCollection<IDatabaseController>();
+
+        #endregion
+
         #region Constructor
 
         public SheetWindow()
@@ -78,15 +87,13 @@ namespace Sheet
             InitSizeBorder();
             InitSolution();
             InitDrop();
-
             UpdateModeMenu();
-            CreateTestDatabase();
+            InitDatabases();
         }
 
         private void InitSheet()
         {
             Sheet.Library = Library;
-            Sheet.Database = Csv;
         }
 
         private void InitSizeBorder()
@@ -122,6 +129,79 @@ namespace Sheet
             };
         }
 
+        private void InitDatabases()
+        {
+            Databases.ItemsSource = DatabaseControllers;
+
+            CreateTestDatabase();
+        }
+
+        #endregion
+
+        #region Database
+
+        private void CreateTestDatabase()
+        {
+            string[] columns = { "Index", "Designation", "Description", "Signal", "Condition" };
+
+            var data = new List<string[]>();
+            for (int i = 0; i < 10; i++)
+            {
+                string[] item = { i.ToString(), "Designation", "Description", "Signal", "Condition" };
+                data.Add(item);
+            }
+
+            var controller = CreateDatabaseController("Test", columns, data);
+            AddDatabaseController(controller);
+        }
+
+        public async void OpenDatabase()
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog()
+            {
+                Filter = FileDialogSettings.DatabaseFilter
+            };
+
+            var result = dlg.ShowDialog();
+            if (result.HasValue && result.Value == true)
+            {
+                try
+                {
+                    await OpenDatabase(dlg.FileName);
+                }
+                catch (Exception ex)
+                {
+                    Debug.Print(ex.Message);
+                    Debug.Print(ex.StackTrace);
+                }
+            }
+        }
+
+        public async Task OpenDatabase(string fileName)
+        {
+            var reader = new CsvDataReader();
+            var fields = await Task.Run(() => reader.Read(fileName));
+            var name = System.IO.Path.GetFileName(fileName);
+
+            var controller = CreateDatabaseController(name, fields.FirstOrDefault(), fields.Skip(1).ToList());
+            AddDatabaseController(controller);
+        }
+
+        private CsvDatabaseController CreateDatabaseController(string name, string[] columns, List<string[]> data)
+        {
+            var controller = new CsvDatabaseController(name);
+
+            controller.Columns = columns;
+            controller.Data = data;
+
+            return controller;
+        }
+
+        private void AddDatabaseController(IDatabaseController controller)
+        {
+            DatabaseControllers.Add(controller);
+        }
+
         #endregion
 
         #region Open
@@ -150,7 +230,7 @@ namespace Sheet
             }
             else if (string.Compare(ext, FileDialogSettings.DatabaseExtension, true) == 0)
             {
-                Csv.Open(path);
+                await OpenDatabase(path);
             }
         }
 
@@ -161,30 +241,6 @@ namespace Sheet
         private SheetControl GetSheet()
         {
             return Sheet;
-        }
-
-        #endregion
-
-        #region Database
-
-        public void Database()
-        {
-            Csv.Open();
-        }
-
-        private void CreateTestDatabase()
-        {
-            string[] columns = { "Index", "Designation", "Description", "Signal", "Condition" };
-
-            var data = new List<string[]>();
-            for (int i = 0; i < 10; i++)
-            {
-                string[] item = { i.ToString(), "Designation", "Description", "Signal", "Condition" };
-                data.Add(item);
-            }
-
-            Csv.SetColumns(columns);
-            Csv.SetData(data);
         }
 
         #endregion
@@ -304,7 +360,7 @@ namespace Sheet
                 case Key.D:
                     if (ctrl)
                     {
-                        Database();
+                        OpenDatabase();
                     }
                     else
                     {
@@ -634,7 +690,7 @@ namespace Sheet
 
         private void FileDatabase_Click(object sender, RoutedEventArgs e)
         {
-            Database();
+            OpenDatabase();
         }
 
         private void FileExit_Click(object sender, RoutedEventArgs e)
