@@ -42,13 +42,17 @@ namespace Sheet
 
         public static Rect GetContentBounds(XElement reference, object relativeTo)
         {
-            var bounds = VisualTreeHelper.GetContentBounds(reference.Element as UIElement);
-            var offset = (reference.Element as UIElement).TranslatePoint(new Point(0, 0), relativeTo as UIElement);
-            if (bounds != null && bounds.IsEmpty == false)
+            if (reference.Element != null)
             {
-                bounds.Offset(offset.X, offset.Y);
+                var bounds = VisualTreeHelper.GetContentBounds(reference.Element as UIElement);
+                var offset = (reference.Element as UIElement).TranslatePoint(new Point(0, 0), relativeTo as UIElement);
+                if (bounds != null && bounds.IsEmpty == false)
+                {
+                    bounds.Offset(offset.X, offset.Y);
+                }
+                return bounds;
             }
-            return bounds;
+            return Rect.Empty;
         }
     }
 
