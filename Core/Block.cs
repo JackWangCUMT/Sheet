@@ -26,17 +26,30 @@ namespace Sheet
         }
     }
 
+    public class XDependency
+    {
+        public XElement Element { get; set; }
+        public Action<XElement, XPoint> Update { get; set; }
+        public XDependency(XElement element, Action<XElement, XPoint> update)
+        {
+            Element = element;
+            Update = update;
+        }
+    }
+
     public class XPoint : XElement
     {
         public double X { get; set; }
         public double Y { get; set; }
         public bool IsVisible { get; set; }
+        public List<XDependency> Connected { get; set; }
         public XPoint(object element, double x, double y, bool isVisible)
         {
             Element = element;
             X = x;
             Y = y;
             IsVisible = isVisible;
+            Connected = new List<XDependency>();
         }
     }
 
@@ -999,77 +1012,137 @@ namespace Sheet
 
         #endregion
 
-        #region Move
+        #region Move Points
+
+        public static void Move(double x, double y, XPoint point)
+        {
+            if (point.Element != null)
+            {
+                point.X = Canvas.GetLeft(point.Element as Ellipse) + x;
+                point.Y = Canvas.GetTop(point.Element as Ellipse) + y;
+                Canvas.SetLeft(point.Element as Ellipse, point.X);
+                Canvas.SetTop(point.Element as Ellipse, point.Y);
+            }
+            else
+            {
+                point.X += x;
+                point.Y += y;
+            }
+
+            foreach (var dependency in point.Connected)
+            {
+                dependency.Update(dependency.Element, point);
+            }
+        }
 
         public static void Move(double x, double y, IEnumerable<XPoint> points)
         {
             foreach (var point in points)
             {
-                Canvas.SetLeft(point.Element as Ellipse, Canvas.GetLeft(point.Element as Ellipse) + x);
-                Canvas.SetTop(point.Element as Ellipse, Canvas.GetTop(point.Element as Ellipse) + y);
+                Move(x, y, point);
             }
         }
 
+        #endregion
+
+        #region Move Lines
+		 
         public static void Move(double x, double y, IEnumerable<XLine> lines)
         {
             foreach (var line in lines)
             {
-                (line.Element as Line).X1 += x;
-                (line.Element as Line).Y1 += y;
-                (line.Element as Line).X2 += x;
-                (line.Element as Line).Y2 += y;
+                MoveStart(x, y, line);
+                MoveEnd(x, y, line);
             }
+        }
+
+        public static void MoveStart(double x, double y, XLine line)
+        {
+            (line.Element as Line).X1 += x;
+            (line.Element as Line).Y1 += y;
+        }
+
+        public static void MoveEnd(double x, double y, XLine line)
+        {
+            (line.Element as Line).X2 += x;
+            (line.Element as Line).Y2 += y;
+        } 
+
+	    #endregion
+
+        #region Move Rectangles
+
+        public static void Move(double x, double y, XRectangle rectangle)
+        {
+            Canvas.SetLeft(rectangle.Element as Rectangle, Canvas.GetLeft(rectangle.Element as Rectangle) + x);
+            Canvas.SetTop(rectangle.Element as Rectangle, Canvas.GetTop(rectangle.Element as Rectangle) + y);
         }
 
         public static void Move(double x, double y, IEnumerable<XRectangle> rectangles)
         {
             foreach (var rectangle in rectangles)
             {
-                Canvas.SetLeft(rectangle.Element as Rectangle, Canvas.GetLeft(rectangle.Element as Rectangle) + x);
-                Canvas.SetTop(rectangle.Element as Rectangle, Canvas.GetTop(rectangle.Element as Rectangle) + y);
+                Move(x, y, rectangle);
             }
+        } 
+
+        #endregion
+
+        #region Move Ellipses
+
+        public static void Move(double x, double y, XEllipse ellipse)
+        {
+            Canvas.SetLeft(ellipse.Element as Ellipse, Canvas.GetLeft(ellipse.Element as Ellipse) + x);
+            Canvas.SetTop(ellipse.Element as Ellipse, Canvas.GetTop(ellipse.Element as Ellipse) + y);
         }
 
         public static void Move(double x, double y, IEnumerable<XEllipse> ellipses)
         {
             foreach (var ellipse in ellipses)
             {
-                Canvas.SetLeft(ellipse.Element as Ellipse, Canvas.GetLeft(ellipse.Element as Ellipse) + x);
-                Canvas.SetTop(ellipse.Element as Ellipse, Canvas.GetTop(ellipse.Element as Ellipse) + y);
+                Move(x, y, ellipse);
             }
+        }
+
+        #endregion
+
+        #region Move Texts
+
+        public static void Move(double x, double y, XText text)
+        {
+            Canvas.SetLeft(text.Element as Grid, Canvas.GetLeft(text.Element as Grid) + x);
+            Canvas.SetTop(text.Element as Grid, Canvas.GetTop(text.Element as Grid) + y);
         }
 
         public static void Move(double x, double y, IEnumerable<XText> texts)
         {
             foreach (var text in texts)
             {
-                Canvas.SetLeft(text.Element as Grid, Canvas.GetLeft(text.Element as Grid) + x);
-                Canvas.SetTop(text.Element as Grid, Canvas.GetTop(text.Element as Grid) + y);
+                Move(x, y, text);
             }
+        }
+
+        #endregion
+
+        #region Move Images
+
+        public static void Move(double x, double y, XImage image)
+        {
+            Canvas.SetLeft(image.Element as Image, Canvas.GetLeft(image.Element as Image) + x);
+            Canvas.SetTop(image.Element as Image, Canvas.GetTop(image.Element as Image) + y);
         }
 
         public static void Move(double x, double y, IEnumerable<XImage> images)
         {
             foreach (var image in images)
             {
-                Canvas.SetLeft(image.Element as Image, Canvas.GetLeft(image.Element as Image) + x);
-                Canvas.SetTop(image.Element as Image, Canvas.GetTop(image.Element as Image) + y);
+                Move(x, y, image);
             }
         }
 
-        public static void Move(double x, double y, IEnumerable<XBlock> blocks)
-        {
-            foreach (var block in blocks)
-            {
-                Move(x, y, block.Points);
-                Move(x, y, block.Lines);
-                Move(x, y, block.Rectangles);
-                Move(x, y, block.Ellipses);
-                Move(x, y, block.Texts);
-                Move(x, y, block.Images);
-                Move(x, y, block.Blocks);
-            }
-        }
+        #endregion
+
+        #region Move Blocks
 
         public static void Move(double x, double y, XBlock block)
         {
@@ -1105,6 +1178,20 @@ namespace Sheet
 
             if (block.Blocks != null)
             {
+                Move(x, y, block.Blocks);
+            }
+        }
+
+        public static void Move(double x, double y, IEnumerable<XBlock> blocks)
+        {
+            foreach (var block in blocks)
+            {
+                Move(x, y, block.Points);
+                Move(x, y, block.Lines);
+                Move(x, y, block.Rectangles);
+                Move(x, y, block.Ellipses);
+                Move(x, y, block.Texts);
+                Move(x, y, block.Images);
                 Move(x, y, block.Blocks);
             }
         }
