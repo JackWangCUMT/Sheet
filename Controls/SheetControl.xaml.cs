@@ -250,10 +250,10 @@ namespace Sheet
 
         private void LoadPointDemo()
         {
-            var p0 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 450, 300, true);
+            var p0 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 450, 300, false);
             var p1 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 600, 300, true);
             var p2 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 600, 450, true);
-            var p3 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 600, 150, true);
+            var p3 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 600, 150, false);
 
             var l0 = BlockFactory.CreateLine(options.LineThickness / Zoom, p0, p1, ItemColors.Black);
             var l1 = BlockFactory.CreateLine(options.LineThickness / Zoom, p1, p2, ItemColors.Black);
@@ -270,21 +270,23 @@ namespace Sheet
 
             History.Register("Point Demo");
 
+            contentBlock.Lines.Add(l0);
+            contentBlock.Lines.Add(l1);
+            contentBlock.Lines.Add(l2);
+
             contentBlock.Points.Add(p0);
             contentBlock.Points.Add(p1);
             contentBlock.Points.Add(p2);
             contentBlock.Points.Add(p3);
-            contentBlock.Lines.Add(l0);
-            contentBlock.Lines.Add(l1);
-            contentBlock.Lines.Add(l2);
+
+            contentSheet.Add(l0);
+            contentSheet.Add(l1);
+            contentSheet.Add(l2);
 
             contentSheet.Add(p0);
             contentSheet.Add(p1);
             contentSheet.Add(p2);
             contentSheet.Add(p3);
-            contentSheet.Add(l0);
-            contentSheet.Add(l1);
-            contentSheet.Add(l2);
         }
 
         #endregion
