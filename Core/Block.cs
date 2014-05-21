@@ -1911,6 +1911,12 @@ namespace Sheet
         {
             bool result = false;
 
+            result = HitTest(parent.Points, selected, rect, onlyFirst, selectInsideBlock, relativeTo);
+            if (result && onlyFirst)
+            {
+                return true;
+            }
+
             result = HitTest(parent.Texts, selected, rect, onlyFirst, selectInsideBlock, relativeTo);
             if (result && onlyFirst)
             {
@@ -1918,12 +1924,6 @@ namespace Sheet
             }
 
             result = HitTest(parent.Images, selected, rect, onlyFirst, selectInsideBlock, relativeTo);
-            if (result && onlyFirst)
-            {
-                return true;
-            }
-
-            result = HitTest(parent.Points, selected, rect, onlyFirst, selectInsideBlock, relativeTo);
             if (result && onlyFirst)
             {
                 return true;
