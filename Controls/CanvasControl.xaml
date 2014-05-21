@@ -10,24 +10,24 @@
              Width="1260"
              Focusable="False" 
              FocusVisualStyle="{x:Null}"
-             Background="Transparent" 
+             Background="{x:Null}" 
              UseLayoutRounding="False" SnapsToDevicePixels="True" 
              TextOptions.TextFormattingMode="Ideal" TextOptions.TextRenderingMode="ClearType" TextOptions.TextHintingMode="Auto">
     <Canvas Width="1260"
             Height="891"
-            Background="Transparent">
+            Background="{x:Null}">
         <Canvas x:Name="Back" 
                 Width="1260" 
                 Height="891" 
-                Background="Transparent"/>
+                Background="{x:Null}"/>
         <Canvas x:Name="Sheet" 
                 Width="1260" 
                 Height="891" 
-                Background="Transparent"/>
+                Background="{x:Null}"/>
         <Canvas x:Name="Overlay" 
                 Width="1260"
                 Height="891"  
-                Background="Transparent">
+                Background="{x:Null}">
         </Canvas>
     </Canvas>
 </UserControl>
