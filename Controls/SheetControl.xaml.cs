@@ -229,7 +229,60 @@ namespace Sheet
 
             LoadLibraryFromResource(string.Concat("Sheet.Libraries", '.', "Digital.library"));
 
+            LoadPointDemo();
+
             Focus();
+        }
+
+        #endregion
+
+        #region Point Demo
+
+        public static void AddPointToLineStartDependency(XPoint point, XLine line)
+        {
+            point.Connected.Add(new XDependency(line, (element, p) => { (element.Element as Line).X1 = p.X; (element.Element as Line).Y1 = p.Y; }));
+        }
+
+        public static void AddPointToLineEndDependency(XPoint point, XLine line)
+        {
+            point.Connected.Add(new XDependency(line, (element, p) => { (element.Element as Line).X2 = p.X; (element.Element as Line).Y2 = p.Y; }));
+        }
+
+        private void LoadPointDemo()
+        {
+            var p0 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 450, 300, true);
+            var p1 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 600, 300, true);
+            var p2 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 600, 450, true);
+            var p3 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 600, 150, true);
+
+            var l0 = BlockFactory.CreateLine(options.LineThickness / Zoom, p0, p1, ItemColors.Black);
+            var l1 = BlockFactory.CreateLine(options.LineThickness / Zoom, p1, p2, ItemColors.Black);
+            var l2 = BlockFactory.CreateLine(options.LineThickness / Zoom, p1, p3, ItemColors.Black);
+
+            AddPointToLineStartDependency(p0, l0);
+            AddPointToLineEndDependency(p1, l0);
+
+            AddPointToLineStartDependency(p1, l1);
+            AddPointToLineEndDependency(p2, l1);
+
+            AddPointToLineStartDependency(p1, l2);
+            AddPointToLineEndDependency(p3, l2);
+
+            contentBlock.Points.Add(p0);
+            contentBlock.Points.Add(p1);
+            contentBlock.Points.Add(p2);
+            contentBlock.Points.Add(p3);
+            contentBlock.Lines.Add(l0);
+            contentBlock.Lines.Add(l1);
+            contentBlock.Lines.Add(l2);
+
+            contentSheet.Add(p0);
+            contentSheet.Add(p1);
+            contentSheet.Add(p2);
+            contentSheet.Add(p3);
+            contentSheet.Add(l0);
+            contentSheet.Add(l1);
+            contentSheet.Add(l2);
         }
 
         #endregion
