@@ -12,6 +12,7 @@ namespace Sheet
     public enum ItemType
     {
         None,
+        Point,
         Line,
         Rectangle,
         Ellipse,
@@ -40,6 +41,12 @@ namespace Sheet
         public static ItemColor Red { get { return new ItemColor() { Alpha = 255, Red = 255, Green = 0, Blue = 0 }; } }
         public static ItemColor LightGray { get { return new ItemColor() { Alpha = 255, Red = 211, Green = 211, Blue = 211 }; } }
         public static ItemColor DarkGray { get { return new ItemColor() { Alpha = 255, Red = 169, Green = 169, Blue = 169 }; } }
+    }
+
+    public class PointItem : Item
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
     }
 
     public class LineItem : Item
@@ -108,6 +115,7 @@ namespace Sheet
         public double Height { get; set; }
         public ItemColor Backgroud { get; set; }
         public int DataId { get; set; }
+        public List<PointItem> Points { get; set; }
         public List<LineItem> Lines { get; set; }
         public List<RectangleItem> Rectangles { get; set; }
         public List<EllipseItem> Ellipses { get; set; }
@@ -124,6 +132,7 @@ namespace Sheet
             Width = widht;
             Height = height;
             Backgroud = new ItemColor() { Alpha = 0, Red = 0, Green = 0, Blue = 0 };
+            Points = new List<PointItem>();
             Lines = new List<LineItem>();
             Rectangles = new List<RectangleItem>();
             Ellipses = new List<EllipseItem>();
@@ -191,6 +200,19 @@ namespace Sheet
             sb.Append(color.Green);
             sb.Append(options.ModelSeparator);
             sb.Append(color.Blue);
+        }
+
+        public static void Serialize(StringBuilder sb, PointItem point, string indent, ItemSerializeOptions options)
+        {
+            sb.Append(indent);
+            sb.Append("POINT");
+            sb.Append(options.ModelSeparator);
+            sb.Append(point.Id);
+            sb.Append(options.ModelSeparator);
+            sb.Append(point.X);
+            sb.Append(options.ModelSeparator);
+            sb.Append(point.Y);
+            sb.Append(options.LineSeparator);
         }
 
         public static void Serialize(StringBuilder sb, LineItem line, string indent, ItemSerializeOptions options)
@@ -328,6 +350,7 @@ namespace Sheet
             sb.Append(block.DataId);
             sb.Append(options.LineSeparator);
 
+            Serialize(sb, block.Points, indent + options.IndentWhiteSpace, options);
             Serialize(sb, block.Lines, indent + options.IndentWhiteSpace, options);
             Serialize(sb, block.Rectangles, indent + options.IndentWhiteSpace, options);
             Serialize(sb, block.Ellipses, indent + options.IndentWhiteSpace, options);
@@ -338,6 +361,14 @@ namespace Sheet
             sb.Append(indent);
             sb.Append("END");
             sb.Append(options.LineSeparator);
+        }
+
+        public static void Serialize(StringBuilder sb, IEnumerable<PointItem> points, string indent, ItemSerializeOptions options)
+        {
+            foreach (var point in points)
+            {
+                Serialize(sb, point, indent, options);
+            }
         }
 
         public static void Serialize(StringBuilder sb, IEnumerable<LineItem> lines, string indent, ItemSerializeOptions options)
@@ -392,6 +423,7 @@ namespace Sheet
         {
             var sb = new StringBuilder();
 
+            Serialize(sb, block.Points, "", options);
             Serialize(sb, block.Lines, "", options);
             Serialize(sb, block.Rectangles, "", options);
             Serialize(sb, block.Ellipses, "", options);
@@ -410,6 +442,15 @@ namespace Sheet
         #endregion
 
         #region Deserialize
+
+        private static PointItem DeserializePoint(string[] m)
+        {
+            var pointItem = new PointItem();
+            pointItem.Id = int.Parse(m[1]);
+            pointItem.X = double.Parse(m[2]);
+            pointItem.Y = double.Parse(m[3]);
+            return pointItem;
+        }
 
         private static LineItem DeserializeLine(string[] m)
         {
@@ -547,7 +588,9 @@ namespace Sheet
                 Green = byte.Parse(m[9]),
                 Blue = byte.Parse(m[10])
             };
+
             blockItem.DataId = int.Parse(m[11]);
+
             return blockItem;
         }
 
@@ -556,10 +599,8 @@ namespace Sheet
             ref int end,
             string name,
             int id,
-            double x,
-            double y,
-            double width,
-            double height,
+            double x, double y,
+            double width, double height,
             int dataId,
             ItemSerializeOptions options)
         {
@@ -570,7 +611,20 @@ namespace Sheet
             {
                 string line = lines[end].TrimStart(options.WhiteSpace);
                 var m = line.Split(options.ModelSeparators);
-                if (m.Length == 10 && string.Compare(m[0], "LINE", true) == 0)
+
+                if (m.Length == 4 && string.Compare(m[0], "POINT", true) == 0)
+                {
+                    if (m.Length == 4)
+                    {
+                        var pointItem = DeserializePoint(m);
+                        root.Points.Add(pointItem);
+                    }
+                    else
+                    {
+                        throw new Exception(string.Format("Invalid POINT item at line {0}", end + 1));
+                    }
+                }
+                else if (m.Length == 10 && string.Compare(m[0], "LINE", true) == 0)
                 {
                     if (m.Length == 10)
                     {
@@ -664,6 +718,7 @@ namespace Sheet
                     throw new Exception(string.Format("Invalid item at line {0}", end + 1));
                 }
             }
+
             return root;
         }
 
@@ -758,6 +813,7 @@ namespace Sheet
 
         public static void MinMax(BlockItem block, ref double minX, ref double minY, ref double maxX, ref double maxY)
         {
+            MinMax(block.Points, ref minX, ref minY, ref maxX, ref maxY);
             MinMax(block.Lines, ref minX, ref minY, ref maxX, ref maxY);
             MinMax(block.Rectangles, ref minX, ref minY, ref maxX, ref maxY);
             MinMax(block.Ellipses, ref minX, ref minY, ref maxX, ref maxY);
@@ -771,6 +827,17 @@ namespace Sheet
             foreach (var block in blocks)
             {
                 MinMax(block, ref minX, ref minY, ref maxX, ref maxY);
+            }
+        }
+
+        public static void MinMax(IEnumerable<PointItem> points, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        {
+            foreach (var point in points)
+            {
+                minX = Math.Min(minX, point.X);
+                minY = Math.Min(minY, point.Y);
+                maxX = Math.Max(maxX, point.X);
+                maxY = Math.Max(maxY, point.Y);
             }
         }
 
@@ -847,12 +914,21 @@ namespace Sheet
 
         public static void Move(BlockItem block, double x, double y)
         {
+            Move(block.Points, x, y);
             Move(block.Lines, x, y);
             Move(block.Rectangles, x, y);
             Move(block.Ellipses, x, y);
             Move(block.Texts, x, y);
             Move(block.Images, x, y);
             Move(block.Blocks, x, y);
+        }
+
+        public static void Move(IEnumerable<PointItem> points, double x, double y)
+        {
+            foreach (var point in points)
+            {
+                Move(point, x, y);
+            }
         }
 
         public static void Move(IEnumerable<LineItem> lines, double x, double y)
@@ -893,6 +969,12 @@ namespace Sheet
             {
                 Move(image, x, y);
             }
+        }
+
+        public static void Move(PointItem point, double x, double y)
+        {
+            point.X += x;
+            point.Y += y;
         }
 
         public static void Move(LineItem line, double x, double y)

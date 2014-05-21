@@ -229,7 +229,62 @@ namespace Sheet
 
             LoadLibraryFromResource(string.Concat("Sheet.Libraries", '.', "Digital.library"));
 
+            //LoadPointDemo();
+
             Focus();
+        }
+
+        #endregion
+
+        #region Point Demo
+
+        public static void AddPointToLineStartDependency(XPoint point, XLine line)
+        {
+            point.Connected.Add(new XDependency(line, (element, p) => { (element.Element as Line).X1 = p.X; (element.Element as Line).Y1 = p.Y; }));
+        }
+
+        public static void AddPointToLineEndDependency(XPoint point, XLine line)
+        {
+            point.Connected.Add(new XDependency(line, (element, p) => { (element.Element as Line).X2 = p.X; (element.Element as Line).Y2 = p.Y; }));
+        }
+
+        private void LoadPointDemo()
+        {
+            var p0 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 450, 300, true);
+            var p1 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 600, 300, true);
+            var p2 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 600, 450, true);
+            var p3 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 600, 150, true);
+
+            var l0 = BlockFactory.CreateLine(options.LineThickness / Zoom, p0, p1, ItemColors.Black);
+            var l1 = BlockFactory.CreateLine(options.LineThickness / Zoom, p1, p2, ItemColors.Black);
+            var l2 = BlockFactory.CreateLine(options.LineThickness / Zoom, p1, p3, ItemColors.Black);
+
+            AddPointToLineStartDependency(p0, l0);
+            AddPointToLineEndDependency(p1, l0);
+
+            AddPointToLineStartDependency(p1, l1);
+            AddPointToLineEndDependency(p2, l1);
+
+            AddPointToLineStartDependency(p1, l2);
+            AddPointToLineEndDependency(p3, l2);
+
+            History.Register("Point Demo");
+
+            contentBlock.Points.Add(p0);
+            contentBlock.Points.Add(p1);
+            contentBlock.Points.Add(p2);
+            contentBlock.Points.Add(p3);
+            contentBlock.Lines.Add(l0);
+            contentBlock.Lines.Add(l1);
+            contentBlock.Lines.Add(l2);
+
+            contentSheet.Add(p0);
+            contentSheet.Add(p1);
+            contentSheet.Add(p2);
+            contentSheet.Add(p3);
+            contentSheet.Add(l0);
+            contentSheet.Add(l1);
+            contentSheet.Add(l2);
         }
 
         #endregion
@@ -283,11 +338,11 @@ namespace Sheet
 
         public BlockItem SerializePage()
         {
-            BlockController.DeselectAll(selectedBlock);
+            BlockController.DeselectContent(selectedBlock);
 
-            var grid = BlockSerializer.SerializerBlockContents(gridBlock, -1, gridBlock.X, gridBlock.Y, gridBlock.Width, gridBlock.Height, -1, "GRID");
-            var frame = BlockSerializer.SerializerBlockContents(frameBlock, -1, frameBlock.X, frameBlock.Y, frameBlock.Width, frameBlock.Height, -1, "FRAME");
-            var content = BlockSerializer.SerializerBlockContents(contentBlock, -1, contentBlock.X, contentBlock.Y, contentBlock.Width, contentBlock.Height, -1, "CONTENT");
+            var grid = BlockSerializer.SerializerContents(gridBlock, -1, gridBlock.X, gridBlock.Y, gridBlock.Width, gridBlock.Height, -1, "GRID");
+            var frame = BlockSerializer.SerializerContents(frameBlock, -1, frameBlock.X, frameBlock.Y, frameBlock.Width, frameBlock.Height, -1, "FRAME");
+            var content = BlockSerializer.SerializerContents(contentBlock, -1, contentBlock.X, contentBlock.Y, contentBlock.Width, contentBlock.Height, -1, "CONTENT");
 
             var page = new BlockItem();
             page.Init(-1, options.PageOriginX, options.PageOriginY, options.PageWidth, options.PageHeight, -1, "PAGE");
@@ -307,17 +362,17 @@ namespace Sheet
 
             if (grid != null)
             {
-                BlockController.AddBlockContents(backSheet, grid, gridBlock, null, false, options.GridThickness / Zoom);
+                BlockController.AddContents(backSheet, grid, gridBlock, null, false, options.GridThickness / Zoom);
             }
 
             if (frame != null)
             {
-                BlockController.AddBlockContents(backSheet, frame, frameBlock, null, false, options.FrameThickness / Zoom);
+                BlockController.AddContents(backSheet, frame, frameBlock, null, false, options.FrameThickness / Zoom);
             }
 
             if (content != null)
             {
-                BlockController.AddBlockContents(contentSheet, content, contentBlock, null, false, options.LineThickness / Zoom);
+                BlockController.AddContents(contentSheet, content, contentBlock, null, false, options.LineThickness / Zoom);
             }
         }
 
@@ -325,9 +380,9 @@ namespace Sheet
         {
             ResetOverlay();
 
-            BlockController.RemoveBlock(backSheet, gridBlock);
-            BlockController.RemoveBlock(backSheet, frameBlock);
-            BlockController.RemoveBlock(contentSheet, contentBlock);
+            BlockController.Remove(backSheet, gridBlock);
+            BlockController.Remove(backSheet, frameBlock);
+            BlockController.Remove(contentSheet, contentBlock);
 
             InitBlocks();
         }
@@ -336,7 +391,7 @@ namespace Sheet
         {
             ResetOverlay();
 
-            BlockController.RemoveBlock(contentSheet, contentBlock);
+            BlockController.Remove(contentSheet, contentBlock);
         }
 
         #endregion
@@ -450,7 +505,7 @@ namespace Sheet
         {
             try
             {
-                var selected = BlockSerializer.SerializerBlockContents(block, 0, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED");
+                var selected = BlockSerializer.SerializerContents(block, 0, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED");
                 var text = ItemSerializer.SerializeContents(selected);
                 Clipboard.SetData(DataFormats.UnicodeText, text);
                 //string json = JsonConvert.SerializeObject(selected, Formatting.Indented);
@@ -549,7 +604,7 @@ namespace Sheet
         public void Delete(XBlock block)
         {
             FinishEdit();
-            BlockController.RemoveSelectedFromBlock(contentSheet, contentBlock, block);
+            BlockController.RemoveSelected(contentSheet, contentBlock, block);
         }
 
         public void Delete()
@@ -568,7 +623,7 @@ namespace Sheet
 
         public void SelecteAll()
         {
-            BlockController.SelectAll(selectedBlock, contentBlock);
+            BlockController.SelectContent(selectedBlock, contentBlock);
         }
 
         #endregion
@@ -594,13 +649,13 @@ namespace Sheet
 
         private void InsertContent(BlockItem block, bool select)
         {
-            BlockController.DeselectAll(selectedBlock);
-            BlockController.AddBlockContents(contentSheet, block, contentBlock, selectedBlock, select, options.LineThickness / Zoom);
+            BlockController.DeselectContent(selectedBlock);
+            BlockController.AddContents(contentSheet, block, contentBlock, selectedBlock, select, options.LineThickness / Zoom);
         }
 
         private static string SerializeBlockContents(int id, double x, double y, double width, double height, int dataId, string name, XBlock parent)
         {
-            var block = BlockSerializer.SerializerBlockContents(parent, id, x, y, width, height, dataId, name);
+            var block = BlockSerializer.SerializerContents(parent, id, x, y, width, height, dataId, name);
             var sb = new StringBuilder();
             ItemSerializer.Serialize(sb, block, "", ItemSerializeOptions.Default);
             return sb.ToString();
@@ -652,11 +707,11 @@ namespace Sheet
         {
             if (BlockController.HaveSelected(selectedBlock))
             {
-                var text = ItemSerializer.SerializeContents(BlockSerializer.SerializerBlockContents(selectedBlock, 0, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED"));
+                var text = ItemSerializer.SerializeContents(BlockSerializer.SerializerContents(selectedBlock, 0, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED"));
                 var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
                 History.Register("Break Block");
                 Delete();
-                BlockController.AddBrokenBlock(contentSheet, block, contentBlock, selectedBlock, true, options.LineThickness / Zoom);
+                BlockController.AddBroken(contentSheet, block, contentBlock, selectedBlock, true, options.LineThickness / Zoom);
             }
         }
 
@@ -671,7 +726,7 @@ namespace Sheet
                 XBlock moveBlock = BlockController.ShallowCopy(selectedBlock);
                 FinishEdit();
                 History.Register("Move");
-                BlockController.SelectBlock(moveBlock);
+                BlockController.Select(moveBlock);
                 selectedBlock = moveBlock;
                 BlockController.Move(x, y, selectedBlock);
             }
@@ -730,7 +785,7 @@ namespace Sheet
                 History.Register("Move");
                 isFirstMove = false;
                 Cursor = Cursors.SizeAll;
-                BlockController.SelectBlock(moveBlock);
+                BlockController.Select(moveBlock);
                 selectedBlock = moveBlock;
             }
 
@@ -1256,11 +1311,11 @@ namespace Sheet
                 tc.Set(ok, cancel, "Edit Text", "Text:", tb.Text);
                 EditorCanvas.Children.Add(tc);
 
-                BlockController.DeselectBlock(temp);
+                BlockController.Deselect(temp);
                 return true;
             }
 
-            BlockController.DeselectBlock(temp);
+            BlockController.Deselect(temp);
             return false;
         }
 
@@ -1378,12 +1433,25 @@ namespace Sheet
         {
             if (line != null && thumb != null)
             {
-                double x = ItemController.Snap((line.Element as Line).X1 + dx, options.SnapSize);
-                double y = ItemController.Snap((line.Element as Line).Y1 + dy, options.SnapSize);
-                (line.Element as Line).X1 = x;
-                (line.Element as Line).Y1 = y;
-                Canvas.SetLeft(thumb.Element as Thumb, x);
-                Canvas.SetTop(thumb.Element as Thumb, y);
+                if (line.Start != null)
+                {
+                    double x = ItemController.Snap(line.Start.X + dx, options.SnapSize);
+                    double y = ItemController.Snap(line.Start.Y + dy, options.SnapSize);
+                    double sdx = x - line.Start.X;
+                    double sdy = y - line.Start.Y;
+                    BlockController.Move(sdx, sdy, line.Start);
+                    Canvas.SetLeft(thumb.Element as Thumb, x);
+                    Canvas.SetTop(thumb.Element as Thumb, y);
+                }
+                else
+                {
+                    double x = ItemController.Snap((line.Element as Line).X1 + dx, options.SnapSize);
+                    double y = ItemController.Snap((line.Element as Line).Y1 + dy, options.SnapSize);
+                    (line.Element as Line).X1 = x;
+                    (line.Element as Line).Y1 = y;
+                    Canvas.SetLeft(thumb.Element as Thumb, x);
+                    Canvas.SetTop(thumb.Element as Thumb, y);
+                }
             }
         }
 
@@ -1391,12 +1459,25 @@ namespace Sheet
         {
             if (line != null && thumb != null)
             {
-                double x = ItemController.Snap((line.Element as Line).X2 + dx, options.SnapSize);
-                double y = ItemController.Snap((line.Element as Line).Y2 + dy, options.SnapSize);
-                (line.Element as Line).X2 = x;
-                (line.Element as Line).Y2 = y;
-                Canvas.SetLeft(thumb.Element as Thumb, x);
-                Canvas.SetTop(thumb.Element as Thumb, y);
+                if (line.End != null)
+                {
+                    double x = ItemController.Snap(line.End.X + dx, options.SnapSize);
+                    double y = ItemController.Snap(line.End.Y + dy, options.SnapSize);
+                    double sdx = x - line.End.X;
+                    double sdy = y - line.End.Y;
+                    BlockController.Move(sdx, sdy, line.End);
+                    Canvas.SetLeft(thumb.Element as Thumb, x);
+                    Canvas.SetTop(thumb.Element as Thumb, y);
+                }
+                else
+                {
+                    double x = ItemController.Snap((line.Element as Line).X2 + dx, options.SnapSize);
+                    double y = ItemController.Snap((line.Element as Line).Y2 + dy, options.SnapSize);
+                    (line.Element as Line).X2 = x;
+                    (line.Element as Line).Y2 = y;
+                    Canvas.SetLeft(thumb.Element as Thumb, x);
+                    Canvas.SetTop(thumb.Element as Thumb, y);
+                }
             }
         }
 
@@ -1762,7 +1843,7 @@ namespace Sheet
                 var source = (e.OriginalSource as FrameworkElement).TemplatedParent;
                 if (!(source is Thumb))
                 {
-                    BlockController.DeselectAll(selectedBlock);
+                    BlockController.DeselectContent(selectedBlock);
                     FinishEdit();
                 }
                 else
@@ -1786,7 +1867,7 @@ namespace Sheet
                     return;
                 }
 
-                BlockController.DeselectAll(selectedBlock);
+                BlockController.DeselectContent(selectedBlock);
             }
 
             bool resetSelected = ctrl && BlockController.HaveSelected(selectedBlock) ? false : true;
@@ -1876,7 +1957,7 @@ namespace Sheet
             {
                 if (BlockController.HaveSelected(selectedBlock))
                 {
-                    BlockController.DeselectAll(selectedBlock);
+                    BlockController.DeselectContent(selectedBlock);
                 }
 
                 BlockController.HitTestClick(contentSheet, contentBlock, selectedBlock, e.GetPosition(overlaySheet.GetParent() as FrameworkElement), options.HitTestSize, false, false);
@@ -1920,7 +2001,7 @@ namespace Sheet
             // edit mode
             if (selectedType != ItemType.None)
             {
-                BlockController.DeselectAll(selectedBlock);
+                BlockController.DeselectContent(selectedBlock);
                 FinishEdit();
                 return;
             }
@@ -1932,7 +2013,7 @@ namespace Sheet
                 return;
             }
 
-            BlockController.DeselectAll(selectedBlock);
+            BlockController.DeselectContent(selectedBlock);
 
             if (GetMode() == SheetMode.Selection && overlaySheet.IsCaptured)
             {
@@ -2002,11 +2083,11 @@ namespace Sheet
                 History.Register("Bind Data");
                 var block = temp.Blocks[0];
                 BindDataToBlock(block, dataItem);
-                BlockController.DeselectBlock(temp);
+                BlockController.Deselect(temp);
                 return true;
             }
 
-            BlockController.DeselectBlock(temp);
+            BlockController.Deselect(temp);
             return false;
         }
 
@@ -2054,7 +2135,7 @@ namespace Sheet
                         var temp = new XBlock(-1, options.PageOriginX, options.PageOriginY, options.PageWidth, options.PageHeight, -1, "TEMP");
                         temp.Init();
                         temp.Blocks.Add(block);
-                        BlockController.RemoveSelectedFromBlock(contentSheet, contentBlock, temp);
+                        BlockController.RemoveSelected(contentSheet, contentBlock, temp);
                     }
                 }
             }
@@ -2323,7 +2404,7 @@ namespace Sheet
 
         public void Export()
         {
-            var block = BlockSerializer.SerializerBlockContents(contentBlock, 0, 
+            var block = BlockSerializer.SerializerContents(contentBlock, 0, 
                 contentBlock.X, contentBlock.Y, 
                 contentBlock.Width, contentBlock.Height,
                 contentBlock.DataId, "CONTENT");
@@ -2348,12 +2429,12 @@ namespace Sheet
 
         private XBlock Insert(BlockItem blockItem, Point p, bool select)
         {
-            BlockController.DeselectAll(selectedBlock);
+            BlockController.DeselectContent(selectedBlock);
             double thickness = options.LineThickness / Zoom;
 
             History.Register("Insert Block");
 
-            var block = BlockSerializer.DeserializeBlockItem(contentSheet, contentBlock, blockItem, select, thickness);
+            var block = BlockSerializer.Deserialize(contentSheet, contentBlock, blockItem, select, thickness);
 
             if (select)
             {
@@ -2453,7 +2534,7 @@ namespace Sheet
 
         private static BlockItem CreateGridBlock(XBlock gridBlock, bool adjustThickness, bool adjustColor)
         {
-            var grid = BlockSerializer.SerializerBlockContents(gridBlock, -1, 0.0, 0.0, 0.0, 0.0, -1, "GRID");
+            var grid = BlockSerializer.SerializerContents(gridBlock, -1, 0.0, 0.0, 0.0, 0.0, -1, "GRID");
 
             // lines
             foreach (var lineItem in grid.Lines)
@@ -2474,7 +2555,7 @@ namespace Sheet
 
         private static BlockItem CreateFrameBlock(XBlock frameBlock, bool adjustThickness, bool adjustColor)
         {
-            var frame = BlockSerializer.SerializerBlockContents(frameBlock, -1, 0.0, 0.0, 0.0, 0.0, -1, "FRAME");
+            var frame = BlockSerializer.SerializerContents(frameBlock, -1, 0.0, 0.0, 0.0, 0.0, -1, "FRAME");
 
             // texts
             foreach (var textItem in frame.Texts)
@@ -2537,7 +2618,7 @@ namespace Sheet
             contentBlock.Ellipses.Add(ellipse);
             contentSheet.Add(ellipse);
 
-            BlockController.SelectEllipse(ellipse);
+            BlockController.Select(ellipse);
             if (selectedBlock.Ellipses == null)
             {
                 selectedBlock.Ellipses = new List<XEllipse>();
