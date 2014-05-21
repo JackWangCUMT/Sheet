@@ -12,12 +12,12 @@ namespace Sheet
     public enum ItemType
     {
         None,
+        Point,
         Line,
         Rectangle,
         Ellipse,
         Text,
-        Image,
-        Point
+        Image
     }
 
     public abstract class Item
