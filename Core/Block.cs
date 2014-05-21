@@ -22,10 +22,12 @@ namespace Sheet
     {
         public double X { get; set; }
         public double Y { get; set; }
-        public XPoint(double x, double y)
+        public bool IsVisible { get; set; }
+        public XPoint(object element, double x, double y, bool isVisible)
         {
             X = x;
             Y = y;
+            IsVisible = isVisible;
         }
     }
 
@@ -437,6 +439,23 @@ namespace Sheet
 
         #region Deserialize
 
+        public static XPoint DeserializePointItem(ISheet sheet, XBlock parent, PointItem pointItem, double thickness)
+        {
+            var point = BlockFactory.CreatePoint(thickness, pointItem.X, pointItem.Y, false);
+
+            if (parent != null)
+            {
+                parent.Points.Add(point);
+            }
+
+            if (sheet != null)
+            {
+                sheet.Add(point);
+            }
+
+            return point;
+        }
+
         public static XLine DeserializeLineItem(ISheet sheet, XBlock parent, LineItem lineItem, double thickness)
         {
             var line = BlockFactory.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2, lineItem.Stroke);
@@ -589,6 +608,16 @@ namespace Sheet
                 DeserializeBlockItem(sheet, block, childBlockItem, select, thickness);
             }
 
+            foreach (var pointItem in blockItem.Points)
+            {
+                var point = DeserializePointItem(sheet, block, pointItem, thickness);
+
+                if (select)
+                {
+                    BlockController.SelectPoint(point);
+                }
+            }
+
             if (parent != null)
             {
                 parent.Blocks.Add(block);
@@ -607,6 +636,7 @@ namespace Sheet
     public static class BlockController
     {
         #region Add
+
 
         public static void AddLines(ISheet sheet, IEnumerable<LineItem> lineItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
@@ -1901,6 +1931,29 @@ namespace Sheet
         #endregion
 
         #region Create
+
+        public static XPoint CreatePoint(double thickness, double x, double y, bool isVisible)
+        {
+            var ellipse = new Ellipse()
+            {
+                Fill = NormalBrush,
+                Stroke = NormalBrush,
+                StrokeThickness = thickness,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+                Width = 8.0,
+                Height = 8.0,
+                Margin = new Thickness(-4.0, -4.0, 0.0, 0.0),
+                Visibility = isVisible ? Visibility.Visible : Visibility.Hidden
+            };
+
+            Canvas.SetLeft(ellipse, x);
+            Canvas.SetTop(ellipse, y);
+
+            var xpoint = new XPoint(ellipse, x, y, isVisible);
+
+            return xpoint;
+        }
 
         public static XLine CreateLine(double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
         {
