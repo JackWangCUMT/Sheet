@@ -1047,6 +1047,13 @@ namespace Sheet
         private static int DeselectedZIndex = 0;
         private static int SelectedZIndex = 1;
 
+        public static void DeselectPoint(XPoint point)
+        {
+            (point.Element as Ellipse).Stroke = BlockFactory.NormalBrush;
+            (point.Element as Ellipse).Fill = (point.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.NormalBrush;
+            Panel.SetZIndex(point.Element as Ellipse, DeselectedZIndex);
+        }
+
         public static void DeselectLine(XLine line)
         {
             (line.Element as Line).Stroke = BlockFactory.NormalBrush;
@@ -1081,6 +1088,14 @@ namespace Sheet
 
         public static void DeselectBlock(XBlock parent)
         {
+            if (parent.Points != null)
+            {
+                foreach (var point in parent.Points)
+                {
+                    DeselectPoint(point);
+                }
+            }
+
             if (parent.Lines != null)
             {
                 foreach (var line in parent.Lines)
@@ -1130,6 +1145,13 @@ namespace Sheet
             }
         }
 
+        public static void SelectPoint(XPoint point)
+        {
+            (point.Element as Ellipse).Stroke = BlockFactory.SelectedBrush;
+            (point.Element as Ellipse).Fill = (point.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.SelectedBrush;
+            Panel.SetZIndex(point.Element as Ellipse, SelectedZIndex);
+        }
+
         public static void SelectLine(XLine line)
         {
             (line.Element as Line).Stroke = BlockFactory.SelectedBrush;
@@ -1164,6 +1186,14 @@ namespace Sheet
 
         public static void SelectBlock(XBlock parent)
         {
+            if (parent.Points != null)
+            {
+                foreach (var point in parent.Points)
+                {
+                    SelectPoint(point);
+                }
+            }
+
             if (parent.Lines != null)
             {
                 foreach (var line in parent.Lines)
@@ -1217,6 +1247,12 @@ namespace Sheet
         {
             selected.Init();
 
+            foreach (var point in content.Points)
+            {
+                SelectPoint(point);
+                selected.Points.Add(point);
+            }
+
             foreach (var line in content.Lines)
             {
                 SelectLine(line);
@@ -1249,6 +1285,11 @@ namespace Sheet
 
             foreach (var parent in content.Blocks)
             {
+                foreach (var point in parent.Points)
+                {
+                    SelectPoint(point);
+                }
+
                 foreach (var line in parent.Lines)
                 {
                     SelectLine(line);
@@ -1285,6 +1326,16 @@ namespace Sheet
 
         public static void DeselectAll(XBlock selected)
         {
+            if (selected.Points != null)
+            {
+                foreach (var point in selected.Points)
+                {
+                    DeselectPoint(point);
+                }
+
+                selected.Points = null;
+            }
+
             if (selected.Lines != null)
             {
                 foreach (var line in selected.Lines)
@@ -1339,6 +1390,11 @@ namespace Sheet
             {
                 foreach (var parent in selected.Blocks)
                 {
+                    foreach (var point in parent.Points)
+                    {
+                        DeselectPoint(point);
+                    }
+
                     foreach (var line in parent.Lines)
                     {
                         DeselectLine(line);
@@ -1376,7 +1432,8 @@ namespace Sheet
 
         public static bool HaveSelected(XBlock selected)
         {
-            return (selected.Lines != null
+            return (selected.Points != null
+                || selected.Lines != null
                 || selected.Rectangles != null
                 || selected.Ellipses != null
                 || selected.Texts != null
@@ -1384,9 +1441,22 @@ namespace Sheet
                 || selected.Blocks != null);
         }
 
+        public static bool HaveOnePointSelected(XBlock selected)
+        {
+            return (selected.Points != null
+                && selected.Points.Count == 1
+                && selected.Lines == null
+                && selected.Rectangles == null
+                && selected.Ellipses == null
+                && selected.Texts == null
+                && selected.Images == null
+                && selected.Blocks == null);
+        }
+
         public static bool HaveOneLineSelected(XBlock selected)
         {
-            return (selected.Lines != null
+            return (selected.Points == null
+                && selected.Lines != null
                 && selected.Lines.Count == 1
                 && selected.Rectangles == null
                 && selected.Ellipses == null
@@ -1397,7 +1467,8 @@ namespace Sheet
 
         public static bool HaveOneRectangleSelected(XBlock selected)
         {
-            return (selected.Lines == null
+            return (selected.Points == null
+                && selected.Lines == null
                 && selected.Rectangles != null
                 && selected.Rectangles.Count == 1
                 && selected.Ellipses == null
@@ -1408,7 +1479,8 @@ namespace Sheet
 
         public static bool HaveOneEllipseSelected(XBlock selected)
         {
-            return (selected.Lines == null
+            return (selected.Points == null
+                && selected.Lines == null
                 && selected.Rectangles == null
                 && selected.Ellipses != null
                 && selected.Ellipses.Count == 1
@@ -1419,7 +1491,8 @@ namespace Sheet
 
         public static bool HaveOneTextSelected(XBlock selected)
         {
-            return (selected.Lines == null
+            return (selected.Points == null
+                && selected.Lines == null
                 && selected.Rectangles == null
                 && selected.Ellipses == null
                 && selected.Texts != null
@@ -1430,7 +1503,8 @@ namespace Sheet
 
         public static bool HaveOneImageSelected(XBlock selected)
         {
-            return (selected.Lines == null
+            return (selected.Points == null
+                && selected.Lines == null
                 && selected.Rectangles == null
                 && selected.Ellipses == null
                 && selected.Texts == null
@@ -1441,7 +1515,8 @@ namespace Sheet
 
         public static bool HaveOneBlockSelected(XBlock selected)
         {
-            return (selected.Lines == null
+            return (selected.Points == null
+                && selected.Lines == null
                 && selected.Rectangles == null
                 && selected.Ellipses == null
                 && selected.Texts == null
