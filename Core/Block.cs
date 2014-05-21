@@ -18,7 +18,7 @@ namespace Sheet
         public object Element { get; set; }
     }
 
-    public class XPoint
+    public class XPoint : XElement
     {
         public double X { get; set; }
         public double Y { get; set; }
@@ -223,6 +223,17 @@ namespace Sheet
                 Green = color.G,
                 Blue = color.B
             };
+        }
+
+        public static PointItem SerializePoint(XPoint point)
+        {
+            var pointItem = new PointItem();
+
+            pointItem.Id = 0;
+            pointItem.X = Canvas.GetLeft(point.Element as FrameworkElement);
+            pointItem.Y = Canvas.GetTop(point.Element as FrameworkElement);
+
+            return pointItem;
         }
 
         public static LineItem SerializeLine(XLine line)
