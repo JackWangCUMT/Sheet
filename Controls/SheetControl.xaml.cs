@@ -229,7 +229,7 @@ namespace Sheet
 
             LoadLibraryFromResource(string.Concat("Sheet.Libraries", '.', "Digital.library"));
 
-            LoadPointDemo();
+            //LoadPointDemo();
 
             Focus();
         }
@@ -267,6 +267,8 @@ namespace Sheet
 
             AddPointToLineStartDependency(p1, l2);
             AddPointToLineEndDependency(p3, l2);
+
+            History.Register("Point Demo");
 
             contentBlock.Points.Add(p0);
             contentBlock.Points.Add(p1);
