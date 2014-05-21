@@ -42,6 +42,12 @@ namespace Sheet
         public static ItemColor DarkGray { get { return new ItemColor() { Alpha = 255, Red = 169, Green = 169, Blue = 169 }; } }
     }
 
+    public class PointItem : Item
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+    }
+
     public class LineItem : Item
     {
         public double X1 { get; set; }
