@@ -814,6 +814,7 @@ namespace Sheet
 
         public static void MinMax(BlockItem block, ref double minX, ref double minY, ref double maxX, ref double maxY)
         {
+            MinMax(block.Points, ref minX, ref minY, ref maxX, ref maxY);
             MinMax(block.Lines, ref minX, ref minY, ref maxX, ref maxY);
             MinMax(block.Rectangles, ref minX, ref minY, ref maxX, ref maxY);
             MinMax(block.Ellipses, ref minX, ref minY, ref maxX, ref maxY);
@@ -827,6 +828,17 @@ namespace Sheet
             foreach (var block in blocks)
             {
                 MinMax(block, ref minX, ref minY, ref maxX, ref maxY);
+            }
+        }
+
+        public static void MinMax(IEnumerable<PointItem> points, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        {
+            foreach (var point in points)
+            {
+                minX = Math.Min(minX, point.X);
+                minY = Math.Min(minY, point.Y);
+                maxX = Math.Max(maxX, point.X);
+                maxY = Math.Max(maxY, point.Y);
             }
         }
 
@@ -903,12 +915,21 @@ namespace Sheet
 
         public static void Move(BlockItem block, double x, double y)
         {
+            Move(block.Points, x, y);
             Move(block.Lines, x, y);
             Move(block.Rectangles, x, y);
             Move(block.Ellipses, x, y);
             Move(block.Texts, x, y);
             Move(block.Images, x, y);
             Move(block.Blocks, x, y);
+        }
+
+        public static void Move(IEnumerable<PointItem> points, double x, double y)
+        {
+            foreach (var point in points)
+            {
+                Move(point, x, y);
+            }
         }
 
         public static void Move(IEnumerable<LineItem> lines, double x, double y)
@@ -949,6 +970,12 @@ namespace Sheet
             {
                 Move(image, x, y);
             }
+        }
+
+        public static void Move(PointItem point, double x, double y)
+        {
+            point.X += x;
+            point.Y += y;
         }
 
         public static void Move(LineItem line, double x, double y)
