@@ -613,7 +613,20 @@ namespace Sheet
             {
                 string line = lines[end].TrimStart(options.WhiteSpace);
                 var m = line.Split(options.ModelSeparators);
-                if (m.Length == 10 && string.Compare(m[0], "LINE", true) == 0)
+
+                if (m.Length == 4 && string.Compare(m[0], "POINT", true) == 0)
+                {
+                    if (m.Length == 4)
+                    {
+                        var pointItem = DeserializePoint(m);
+                        root.Points.Add(pointItem);
+                    }
+                    else
+                    {
+                        throw new Exception(string.Format("Invalid POINT item at line {0}", end + 1));
+                    }
+                }
+                else if (m.Length == 10 && string.Compare(m[0], "LINE", true) == 0)
                 {
                     if (m.Length == 10)
                     {
