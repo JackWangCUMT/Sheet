@@ -323,6 +323,11 @@ namespace Sheet
             blockItem.Init(0, parent.X, parent.Y, parent.Width, parent.Height, parent.DataId, parent.Name);
             blockItem.Backgroud = ToItemColor(parent.Backgroud);
 
+            foreach (var point in parent.Points)
+            {
+                blockItem.Points.Add(SerializePoint(point));
+            }
+
             foreach (var line in parent.Lines)
             {
                 blockItem.Lines.Add(SerializeLine(line));
@@ -358,6 +363,7 @@ namespace Sheet
 
         public static BlockItem SerializerBlockContents(XBlock parent, int id, double x, double y, double width, double height, int dataId, string name)
         {
+            var points = parent.Points;
             var lines = parent.Lines;
             var rectangles = parent.Rectangles;
             var ellipses = parent.Ellipses;
@@ -367,6 +373,14 @@ namespace Sheet
 
             var sheet = new BlockItem() { Backgroud = new ItemColor() };
             sheet.Init(id, x, y, width, height, dataId, name);
+
+            if (points != null)
+            {
+                foreach (var point in points)
+                {
+                    sheet.Points.Add(SerializePoint(point));
+                }
+            }
 
             if (lines != null)
             {
