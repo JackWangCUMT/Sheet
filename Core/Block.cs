@@ -1529,6 +1529,36 @@ namespace Sheet
 
         #region HitTest
 
+        public static bool HitTestPoints(IEnumerable<XPoint> points, XBlock selected, Rect rect, bool onlyFirst, bool select, object relativeTo)
+        {
+            foreach (var point in points)
+            {
+                var bounds = WpfVisualHelper.GetContentBounds(point, relativeTo);
+                if (rect.IntersectsWith(bounds))
+                {
+                    if (select)
+                    {
+                        if ((point.Element as Ellipse).Stroke != BlockFactory.SelectedBrush)
+                        {
+                            SelectPoint(point);
+                            selected.Points.Add(point);
+                        }
+                        else
+                        {
+                            DeselectPoint(point);
+                            selected.Points.Remove(point);
+                        }
+                    }
+
+                    if (onlyFirst)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
         public static bool HitTestLines(IEnumerable<XLine> lines, XBlock selected, Rect rect, bool onlyFirst, bool select)
         {
             foreach (var line in lines)
@@ -1727,6 +1757,12 @@ namespace Sheet
                 return true;
             }
 
+            result = HitTestPoints(parent.Points, selected, rect, onlyFirst, selectInsideBlock, relativeTo);
+            if (result && onlyFirst)
+            {
+                return true;
+            }
+
             result = HitTestLines(parent.Lines, selected, rect, onlyFirst, selectInsideBlock);
             if (result && onlyFirst)
             {
@@ -1780,6 +1816,16 @@ namespace Sheet
             if (parent.Images != null)
             {
                 bool result = HitTestImages(parent.Images, selected, rect, true, true, sheet.GetParent());
+                if (result)
+                {
+                    HitTestClean(selected);
+                    return true;
+                }
+            }
+
+            if (parent.Points != null)
+            {
+                bool result = HitTestPoints(parent.Points, selected, rect, true, true, sheet.GetParent());
                 if (result)
                 {
                     HitTestClean(selected);
@@ -1862,6 +1908,11 @@ namespace Sheet
                 selected.ReInit();
             }
 
+            if (parent.Points != null)
+            {
+                HitTestPoints(parent.Points, selected, rect, false, true, sheet.GetParent());
+            }
+
             if (parent.Lines != null)
             {
                 HitTestLines(parent.Lines, selected, rect, false, true);
@@ -1897,6 +1948,11 @@ namespace Sheet
 
         private static void HitTestClean(XBlock selected)
         {
+            if (selected.Points != null && selected.Points.Count == 0)
+            {
+                selected.Points = null;
+            }
+
             if (selected.Lines != null && selected.Lines.Count == 0)
             {
                 selected.Lines = null;
@@ -1942,6 +1998,11 @@ namespace Sheet
             (ellipse.Element as Ellipse).Fill = (ellipse.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.NormalBrush : BlockFactory.TransparentBrush;
         }
 
+        public static void ToggleFill(XPoint point)
+        {
+            (point.Element as Ellipse).Fill = (point.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.NormalBrush : BlockFactory.TransparentBrush;
+        }
+
         #endregion
 
         #region Copy
@@ -1949,6 +2010,11 @@ namespace Sheet
         public static XBlock ShallowCopy(XBlock original)
         {
             var copy = new XBlock(original.Id, original.X, original.Y, original.Width, original.Height, original.DataId, original.Name);
+
+            if (original.Points != null)
+            {
+                copy.Points = new List<XPoint>(original.Points);
+            }
 
             if (original.Lines != null)
             {
