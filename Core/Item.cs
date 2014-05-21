@@ -588,7 +588,9 @@ namespace Sheet
                 Green = byte.Parse(m[9]),
                 Blue = byte.Parse(m[10])
             };
+
             blockItem.DataId = int.Parse(m[11]);
+
             return blockItem;
         }
 
