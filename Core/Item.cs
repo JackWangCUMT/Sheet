@@ -443,6 +443,15 @@ namespace Sheet
 
         #region Deserialize
 
+        private static PointItem DeserializePoint(string[] m)
+        {
+            var pointItem = new PointItem();
+            pointItem.Id = int.Parse(m[1]);
+            pointItem.X = double.Parse(m[2]);
+            pointItem.Y = double.Parse(m[3]);
+            return pointItem;
+        }
+
         private static LineItem DeserializeLine(string[] m)
         {
             var lineItem = new LineItem();
