@@ -1431,12 +1431,25 @@ namespace Sheet
         {
             if (line != null && thumb != null)
             {
-                double x = ItemController.Snap((line.Element as Line).X1 + dx, options.SnapSize);
-                double y = ItemController.Snap((line.Element as Line).Y1 + dy, options.SnapSize);
-                (line.Element as Line).X1 = x;
-                (line.Element as Line).Y1 = y;
-                Canvas.SetLeft(thumb.Element as Thumb, x);
-                Canvas.SetTop(thumb.Element as Thumb, y);
+                if (line.Start != null)
+                {
+                    double x = ItemController.Snap(line.Start.X + dx, options.SnapSize);
+                    double y = ItemController.Snap(line.Start.Y + dy, options.SnapSize);
+                    double sdx = x - line.Start.X;
+                    double sdy = y - line.Start.Y;
+                    BlockController.Move(sdx, sdy, line.Start);
+                    Canvas.SetLeft(thumb.Element as Thumb, x);
+                    Canvas.SetTop(thumb.Element as Thumb, y);
+                }
+                else
+                {
+                    double x = ItemController.Snap((line.Element as Line).X1 + dx, options.SnapSize);
+                    double y = ItemController.Snap((line.Element as Line).Y1 + dy, options.SnapSize);
+                    (line.Element as Line).X1 = x;
+                    (line.Element as Line).Y1 = y;
+                    Canvas.SetLeft(thumb.Element as Thumb, x);
+                    Canvas.SetTop(thumb.Element as Thumb, y);
+                }
             }
         }
 
@@ -1444,12 +1457,25 @@ namespace Sheet
         {
             if (line != null && thumb != null)
             {
-                double x = ItemController.Snap((line.Element as Line).X2 + dx, options.SnapSize);
-                double y = ItemController.Snap((line.Element as Line).Y2 + dy, options.SnapSize);
-                (line.Element as Line).X2 = x;
-                (line.Element as Line).Y2 = y;
-                Canvas.SetLeft(thumb.Element as Thumb, x);
-                Canvas.SetTop(thumb.Element as Thumb, y);
+                if (line.End != null)
+                {
+                    double x = ItemController.Snap(line.End.X + dx, options.SnapSize);
+                    double y = ItemController.Snap(line.End.Y + dy, options.SnapSize);
+                    double sdx = x - line.End.X;
+                    double sdy = y - line.End.Y;
+                    BlockController.Move(sdx, sdy, line.End);
+                    Canvas.SetLeft(thumb.Element as Thumb, x);
+                    Canvas.SetTop(thumb.Element as Thumb, y);
+                }
+                else
+                {
+                    double x = ItemController.Snap((line.Element as Line).X2 + dx, options.SnapSize);
+                    double y = ItemController.Snap((line.Element as Line).Y2 + dy, options.SnapSize);
+                    (line.Element as Line).X2 = x;
+                    (line.Element as Line).Y2 = y;
+                    Canvas.SetLeft(thumb.Element as Thumb, x);
+                    Canvas.SetTop(thumb.Element as Thumb, y);
+                }
             }
         }
 
