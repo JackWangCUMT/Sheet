@@ -115,13 +115,13 @@ namespace Sheet
         public double Height { get; set; }
         public ItemColor Backgroud { get; set; }
         public int DataId { get; set; }
+        public List<PointItem> Points { get; set; }
         public List<LineItem> Lines { get; set; }
         public List<RectangleItem> Rectangles { get; set; }
         public List<EllipseItem> Ellipses { get; set; }
         public List<TextItem> Texts { get; set; }
         public List<ImageItem> Images { get; set; }
         public List<BlockItem> Blocks { get; set; }
-        public List<PointItem> Pins { get; set; }
         public void Init(int id, double x, double y, double widht, double height, int dataId, string name)
         {
             X = x;
@@ -132,13 +132,13 @@ namespace Sheet
             Width = widht;
             Height = height;
             Backgroud = new ItemColor() { Alpha = 0, Red = 0, Green = 0, Blue = 0 };
+            Points = new List<PointItem>();
             Lines = new List<LineItem>();
             Rectangles = new List<RectangleItem>();
             Ellipses = new List<EllipseItem>();
             Texts = new List<TextItem>();
             Images = new List<ImageItem>();
             Blocks = new List<BlockItem>();
-            Pins = new List<PointItem>();
         }
     }
 
@@ -350,6 +350,7 @@ namespace Sheet
             sb.Append(block.DataId);
             sb.Append(options.LineSeparator);
 
+            Serialize(sb, block.Points, indent + options.IndentWhiteSpace, options);
             Serialize(sb, block.Lines, indent + options.IndentWhiteSpace, options);
             Serialize(sb, block.Rectangles, indent + options.IndentWhiteSpace, options);
             Serialize(sb, block.Ellipses, indent + options.IndentWhiteSpace, options);
@@ -360,6 +361,14 @@ namespace Sheet
             sb.Append(indent);
             sb.Append("END");
             sb.Append(options.LineSeparator);
+        }
+
+        public static void Serialize(StringBuilder sb, IEnumerable<PointItem> points, string indent, ItemSerializeOptions options)
+        {
+            foreach (var point in points)
+            {
+                Serialize(sb, point, indent, options);
+            }
         }
 
         public static void Serialize(StringBuilder sb, IEnumerable<LineItem> lines, string indent, ItemSerializeOptions options)
@@ -414,6 +423,7 @@ namespace Sheet
         {
             var sb = new StringBuilder();
 
+            Serialize(sb, block.Points, "", options);
             Serialize(sb, block.Lines, "", options);
             Serialize(sb, block.Rectangles, "", options);
             Serialize(sb, block.Ellipses, "", options);
