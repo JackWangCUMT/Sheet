@@ -202,6 +202,19 @@ namespace Sheet
             sb.Append(color.Blue);
         }
 
+        public static void Serialize(StringBuilder sb, PointItem point, string indent, ItemSerializeOptions options)
+        {
+            sb.Append(indent);
+            sb.Append("POINT");
+            sb.Append(options.ModelSeparator);
+            sb.Append(point.Id);
+            sb.Append(options.ModelSeparator);
+            sb.Append(point.X);
+            sb.Append(options.ModelSeparator);
+            sb.Append(point.Y);
+            sb.Append(options.LineSeparator);
+        }
+
         public static void Serialize(StringBuilder sb, LineItem line, string indent, ItemSerializeOptions options)
         {
             sb.Append(indent);
