@@ -16,7 +16,8 @@ namespace Sheet
         Rectangle,
         Ellipse,
         Text,
-        Image
+        Image,
+        Point
     }
 
     public abstract class Item
