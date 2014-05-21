@@ -96,7 +96,7 @@ namespace Sheet
                  Math.Abs(diff.Y) > SystemParameters.MinimumVerticalDragDistance))
             {
                 var listBox = sender as ListBox;
-                var listBoxItem = WpfHelper.FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
+                var listBoxItem = WpfVisualHelper.FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
                 if (listBoxItem != null)
                 {
                     BlockItem block = (BlockItem)listBox.ItemContainerGenerator.ItemFromContainer(listBoxItem);

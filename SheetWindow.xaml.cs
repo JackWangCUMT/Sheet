@@ -248,14 +248,14 @@ namespace Sheet
         private void UpdateModeMenu()
         {
             var mode = GetSheet().GetMode();
-            ModeNone.IsChecked = mode == Mode.None ? true : false;
-            ModeSelection.IsChecked = mode == Mode.Selection ? true : false;
-            ModeInsert.IsChecked = mode == Mode.Insert ? true : false;
-            ModeLine.IsChecked = mode == Mode.Line ? true : false;
-            ModeRectangle.IsChecked = mode == Mode.Rectangle ? true : false;
-            ModeEllipse.IsChecked = mode == Mode.Ellipse ? true : false;
-            ModeText.IsChecked = mode == Mode.Text ? true : false;
-            ModeImage.IsChecked = mode == Mode.Image ? true : false;
+            ModeNone.IsChecked = mode == SheetMode.None ? true : false;
+            ModeSelection.IsChecked = mode == SheetMode.Selection ? true : false;
+            ModeInsert.IsChecked = mode == SheetMode.Insert ? true : false;
+            ModeLine.IsChecked = mode == SheetMode.Line ? true : false;
+            ModeRectangle.IsChecked = mode == SheetMode.Rectangle ? true : false;
+            ModeEllipse.IsChecked = mode == SheetMode.Ellipse ? true : false;
+            ModeText.IsChecked = mode == SheetMode.Text ? true : false;
+            ModeImage.IsChecked = mode == SheetMode.Image ? true : false;
         }
 
         #endregion
@@ -264,7 +264,7 @@ namespace Sheet
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (GetSheet().GetMode() == Mode.TextEditor)
+            if (GetSheet().GetMode() == SheetMode.TextEditor)
             {
                 return;
             }
