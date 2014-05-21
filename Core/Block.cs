@@ -1212,8 +1212,9 @@ namespace Sheet
 
         public static void Deselect(XPoint point)
         {
-            (point.Element as Ellipse).Stroke = BlockFactory.NormalBrush;
-            (point.Element as Ellipse).Fill = (point.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.NormalBrush;
+            //(point.Element as Ellipse).Stroke = BlockFactory.NormalBrush;
+            //(point.Element as Ellipse).Fill = (point.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.NormalBrush;
+            FrameworkElementProperties.SetIsSelected(point.Element as Ellipse, false);
             Panel.SetZIndex(point.Element as Ellipse, DeselectedZIndex);
         }
 
@@ -1310,8 +1311,9 @@ namespace Sheet
 
         public static void Select(XPoint point)
         {
-            (point.Element as Ellipse).Stroke = BlockFactory.SelectedBrush;
-            (point.Element as Ellipse).Fill = (point.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.SelectedBrush;
+            //(point.Element as Ellipse).Stroke = BlockFactory.SelectedBrush;
+            //(point.Element as Ellipse).Fill = (point.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.SelectedBrush;
+            FrameworkElementProperties.SetIsSelected(point.Element as Ellipse, true);
             Panel.SetZIndex(point.Element as Ellipse, SelectedZIndex);
         }
 
@@ -1701,7 +1703,8 @@ namespace Sheet
                 {
                     if (select)
                     {
-                        if ((point.Element as Ellipse).Stroke != BlockFactory.SelectedBrush)
+                        //if ((point.Element as Ellipse).Stroke != BlockFactory.SelectedBrush)
+                        if (!FrameworkElementProperties.GetIsSelected((point.Element as Ellipse)))
                         {
                             Select(point);
                             selected.Points.Add(point);
@@ -2230,7 +2233,33 @@ namespace Sheet
 
         public static SolidColorBrush NormalBrush = Brushes.Black;
         public static SolidColorBrush SelectedBrush = Brushes.Red;
+        public static SolidColorBrush HoverBrush = Brushes.Yellow;
         public static SolidColorBrush TransparentBrush = Brushes.Transparent;
+
+        #endregion
+
+        #region Styles
+
+        private static void SetStyle(Ellipse ellipse, bool isVisible)
+        {
+            var style = new Style(typeof(Ellipse));
+            style.Setters.Add(new Setter(Ellipse.FillProperty, isVisible ? NormalBrush : TransparentBrush));
+            style.Setters.Add(new Setter(Ellipse.StrokeProperty, isVisible ? NormalBrush : TransparentBrush));
+
+            var isSelectedTrigger = new Trigger() { Property = FrameworkElementProperties.IsSelectedProperty, Value = true };
+            isSelectedTrigger.Setters.Add(new Setter(Ellipse.FillProperty, SelectedBrush));
+            isSelectedTrigger.Setters.Add(new Setter(Ellipse.StrokeProperty, SelectedBrush));
+            style.Triggers.Add(isSelectedTrigger);
+
+            var isMouseOverTrigger = new Trigger() { Property = Ellipse.IsMouseOverProperty, Value = true };
+            isMouseOverTrigger.Setters.Add(new Setter(Ellipse.FillProperty, HoverBrush));
+            isMouseOverTrigger.Setters.Add(new Setter(Ellipse.StrokeProperty, HoverBrush));
+            style.Triggers.Add(isMouseOverTrigger);
+
+            ellipse.Style = style;
+
+            FrameworkElementProperties.SetIsSelected(ellipse, false);
+        }
 
         #endregion
 
@@ -2240,16 +2269,15 @@ namespace Sheet
         {
             var ellipse = new Ellipse()
             {
-                Fill = NormalBrush,
-                Stroke = NormalBrush,
                 StrokeThickness = thickness,
                 StrokeStartLineCap = PenLineCap.Round,
                 StrokeEndLineCap = PenLineCap.Round,
                 Width = 8.0,
                 Height = 8.0,
                 Margin = new Thickness(-4.0, -4.0, 0.0, 0.0),
-                Visibility = isVisible ? Visibility.Visible : Visibility.Hidden
             };
+
+            SetStyle(ellipse, isVisible);
 
             Canvas.SetLeft(ellipse, x);
             Canvas.SetTop(ellipse, y);
