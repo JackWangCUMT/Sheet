@@ -89,13 +89,13 @@ namespace Sheet
         public double Height { get; set; }
         public int DataId { get; set; }
         public Color Backgroud { get; set; }
+        public List<XPoint> Points { get; set; }
         public List<XLine> Lines { get; set; }
         public List<XRectangle> Rectangles { get; set; }
         public List<XEllipse> Ellipses { get; set; }
         public List<XText> Texts { get; set; }
         public List<XImage> Images { get; set; }
         public List<XBlock> Blocks { get; set; }
-        public List<XPoint> Pins { get; set; }
         public XBlock(int id, double x, double y, double width, double height, int dataId, string name)
         {
             Id = id;
@@ -108,16 +108,21 @@ namespace Sheet
         }
         public void Init()
         {
+            Points = new List<XPoint>();
             Lines = new List<XLine>();
             Rectangles = new List<XRectangle>();
             Ellipses = new List<XEllipse>();
             Texts = new List<XText>();
             Images = new List<XImage>();
             Blocks = new List<XBlock>();
-            Pins = new List<XPoint>();
         }
         public void ReInit()
         {
+            if (Points == null)
+            {
+                Points = new List<XPoint>();
+            }
+
             if (Lines == null)
             {
                 Lines = new List<XLine>();
@@ -147,11 +152,6 @@ namespace Sheet
             {
                 Blocks = new List<XBlock>();
             }
-
-            if (Pins == null)
-            {
-                Pins = new List<XPoint>();
-            }
         }
     }
 
@@ -173,6 +173,7 @@ namespace Sheet
         Pan,
         Move,
         Edit,
+        Point,
         Line,
         Rectangle,
         Ellipse,
@@ -1849,9 +1850,9 @@ namespace Sheet
                 copy.Blocks = new List<XBlock>(original.Blocks);
             }
 
-            if (original.Pins != null)
+            if (original.Points != null)
             {
-                copy.Pins = new List<XPoint>(original.Pins);
+                copy.Points = new List<XPoint>(original.Points);
             }
 
             return copy;
