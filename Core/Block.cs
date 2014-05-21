@@ -33,6 +33,7 @@ namespace Sheet
         public bool IsVisible { get; set; }
         public XPoint(object element, double x, double y, bool isVisible)
         {
+            Element = element;
             X = x;
             Y = y;
             IsVisible = isVisible;
@@ -45,6 +46,12 @@ namespace Sheet
         public XPoint End { get; set; }
         public XLine(object element)
         {
+            Element = element;
+        }
+        public XLine(object element, XPoint start, XPoint end)
+        {
+            Start = start;
+            End = end;
             Element = element;
         }
     }
@@ -2177,6 +2184,29 @@ namespace Sheet
             };
 
             var xline = new XLine(line);
+
+            return xline;
+        }
+
+        public static XLine CreateLine(double thickness, XPoint start, XPoint end, ItemColor stroke)
+        {
+            var strokeBrush = new SolidColorBrush(Color.FromArgb(stroke.Alpha, stroke.Red, stroke.Green, stroke.Blue));
+
+            strokeBrush.Freeze();
+
+            var line = new Line()
+            {
+                Stroke = strokeBrush,
+                StrokeThickness = thickness,
+                StrokeStartLineCap = PenLineCap.Round,
+                StrokeEndLineCap = PenLineCap.Round,
+                X1 = start.X,
+                Y1 = start.Y,
+                X2 = end.X,
+                Y2 = end.Y
+            };
+
+            var xline = new XLine(line, start, end);
 
             return xline;
         }
