@@ -1051,8 +1051,15 @@ namespace Sheet
         {
             foreach (var line in lines)
             {
-                MoveStart(x, y, line);
-                MoveEnd(x, y, line);
+                if (line.Start == null)
+                {
+                    MoveStart(x, y, line);
+                }
+
+                if (line.End == null)
+                {
+                    MoveEnd(x, y, line);
+                }
             }
         }
 
