@@ -120,6 +120,7 @@ namespace Sheet
         public List<TextItem> Texts { get; set; }
         public List<ImageItem> Images { get; set; }
         public List<BlockItem> Blocks { get; set; }
+        public List<PointItem> Pins { get; set; }
         public void Init(int id, double x, double y, double widht, double height, int dataId, string name)
         {
             X = x;
@@ -136,6 +137,7 @@ namespace Sheet
             Texts = new List<TextItem>();
             Images = new List<ImageItem>();
             Blocks = new List<BlockItem>();
+            Pins = new List<PointItem>();
         }
     }
 
