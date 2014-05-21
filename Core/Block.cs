@@ -637,6 +637,24 @@ namespace Sheet
     {
         #region Add
 
+        public static void AddPoints(ISheet sheet, IEnumerable<PointItem> pointItems, XBlock parent, XBlock selected, bool select, double thickness)
+        {
+            if (select)
+            {
+                selected.Points = new List<XPoint>();
+            }
+
+            foreach (var pointItem in pointItems)
+            {
+                var line = BlockSerializer.DeserializePointItem(sheet, parent, pointItem, thickness);
+
+                if (select)
+                {
+                    SelectPoint(line);
+                    selected.Points.Add(line);
+                }
+            }
+        }
 
         public static void AddLines(ISheet sheet, IEnumerable<LineItem> lineItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
@@ -757,10 +775,11 @@ namespace Sheet
             {
                 AddTexts(sheet, blockItem.Texts, content, selected, select, thickness);
                 AddImages(sheet, blockItem.Images, content, selected, select, thickness);
-                AddLines(sheet, blockItem.Lines, content, selected, select, thickness);
+                AddTexts(sheet, blockItem.Texts, content, selected, select, thickness);
                 AddRectangles(sheet, blockItem.Rectangles, content, selected, select, thickness);
                 AddEllipses(sheet, blockItem.Ellipses, content, selected, select, thickness);
                 AddBlocks(sheet, blockItem.Blocks, content, selected, select, thickness);
+                AddPoints(sheet, blockItem.Points, content, selected, select, thickness);
             }
         }
 
@@ -780,12 +799,26 @@ namespace Sheet
                 AddRectangles(sheet, block.Rectangles, content, selected, select, thickness);
                 AddEllipses(sheet, block.Ellipses, content, selected, select, thickness);
                 AddBlocks(sheet, block.Blocks, content, selected, select, thickness);
+                AddPoints(sheet, block.Points, content, selected, select, thickness);
             }
+
+            AddPoints(sheet, blockItem.Points, content, selected, select, thickness);
         }
 
         #endregion
 
         #region Remove
+
+        public static void RemovePoints(ISheet sheet, IEnumerable<XPoint> points)
+        {
+            if (points != null)
+            {
+                foreach (var point in points)
+                {
+                    sheet.Remove(point);
+                }
+            }
+        }
 
         public static void RemoveLines(ISheet sheet, IEnumerable<XLine> lines)
         {
@@ -855,6 +888,7 @@ namespace Sheet
 
         public static void RemoveBlock(ISheet sheet, XBlock block)
         {
+            RemovePoints(sheet, block.Points);
             RemoveLines(sheet, block.Lines);
             RemoveRectangles(sheet, block.Rectangles);
             RemoveEllipses(sheet, block.Ellipses);
@@ -865,6 +899,18 @@ namespace Sheet
 
         public static void RemoveSelectedFromBlock(ISheet sheet, XBlock parent, XBlock selected)
         {
+            if (selected.Points != null)
+            {
+                RemovePoints(sheet, selected.Points);
+
+                foreach (var point in selected.Points)
+                {
+                    parent.Points.Remove(point);
+                }
+
+                selected.Points = null;
+            }
+
             if (selected.Lines != null)
             {
                 RemoveLines(sheet, selected.Lines);
@@ -929,6 +975,7 @@ namespace Sheet
             {
                 foreach (var block in selected.Blocks)
                 {
+                    RemovePoints(sheet, block.Points);
                     RemoveLines(sheet, block.Lines);
                     RemoveRectangles(sheet, block.Rectangles);
                     RemoveEllipses(sheet, block.Ellipses);
@@ -946,6 +993,15 @@ namespace Sheet
         #endregion
 
         #region Move
+
+        public static void MovePoints(double x, double y, IEnumerable<XPoint> points)
+        {
+            foreach (var point in points)
+            {
+                Canvas.SetLeft(point.Element as Ellipse, Canvas.GetLeft(point.Element as Ellipse) + x);
+                Canvas.SetTop(point.Element as Ellipse, Canvas.GetTop(point.Element as Ellipse) + y);
+            }
+        }
 
         public static void MoveLines(double x, double y, IEnumerable<XLine> lines)
         {
@@ -998,6 +1054,7 @@ namespace Sheet
         {
             foreach (var block in blocks)
             {
+                MovePoints(x, y, block.Points);
                 MoveLines(x, y, block.Lines);
                 MoveRectangles(x, y, block.Rectangles);
                 MoveEllipses(x, y, block.Ellipses);
@@ -1009,6 +1066,11 @@ namespace Sheet
 
         public static void Move(double x, double y, XBlock block)
         {
+            if (block.Points != null)
+            {
+                MovePoints(x, y, block.Points);
+            }
+
             if (block.Lines != null)
             {
                 MoveLines(x, y, block.Lines);
