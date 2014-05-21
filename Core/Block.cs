@@ -18,6 +18,14 @@ namespace Sheet
         public object Element { get; set; }
     }
 
+    public class XThumb : XElement
+    {
+        public XThumb(object element)
+        {
+            Element = element;
+        }
+    }
+
     public class XPoint : XElement
     {
         public double X { get; set; }
@@ -28,14 +36,6 @@ namespace Sheet
             X = x;
             Y = y;
             IsVisible = isVisible;
-        }
-    }
-
-    public class XThumb : XElement
-    {
-        public XThumb(object element)
-        {
-            Element = element;
         }
     }
 
