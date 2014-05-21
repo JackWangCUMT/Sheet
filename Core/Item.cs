@@ -599,10 +599,8 @@ namespace Sheet
             ref int end,
             string name,
             int id,
-            double x,
-            double y,
-            double width,
-            double height,
+            double x, double y,
+            double width, double height,
             int dataId,
             ItemSerializeOptions options)
         {
@@ -720,6 +718,7 @@ namespace Sheet
                     throw new Exception(string.Format("Invalid item at line {0}", end + 1));
                 }
             }
+
             return root;
         }
 
