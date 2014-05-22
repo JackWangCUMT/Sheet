@@ -101,6 +101,9 @@
     <Compile Include="Core\Item.cs" />
     <Compile Include="Core\Page.cs" />
     <Compile Include="Core\Wpf.cs" />
+    <Compile Include="Controls\DatabasesControl.xaml.cs">
+      <DependentUpon>DatabasesControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dxf\Dxf.cs" />
     <Compile Include="Dxf\DxfInspect.cs" />
     <Compile Include="Dxf\BlockDxfWriter.cs" />
@@ -128,6 +131,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\SheetControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\DatabasesControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -129,7 +129,7 @@ namespace Sheet
 
         private void InitDatabases()
         {
-            Databases.ItemsSource = DatabaseControllers;
+            Databases.Tabs.ItemsSource = DatabaseControllers;
 
             CreateTestDatabase();
         }
