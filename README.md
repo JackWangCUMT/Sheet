@@ -1,4 +1,5 @@
 Sheet
+Sheet
 =====
 
 Diagram drawing application.
@@ -39,6 +40,7 @@ Keyboard  Shortcuts:
     N               Mode None
     S               Mode Selection
     I               Mode Insert
+    P               Mode Point
     L               Mode Line
     R               Mode Rectangle
     E               Mode Ellipse
