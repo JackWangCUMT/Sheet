@@ -655,21 +655,20 @@ namespace Sheet
             BlockController.AddContents(contentSheet, block, contentBlock, selectedBlock, select, options.LineThickness / Zoom);
         }
 
-        private static string SerializeBlockContents(int id, double x, double y, double width, double height, int dataId, string name, XBlock parent)
+        public static BlockItem CreateBlock(string name, XBlock block)
         {
-            var block = BlockSerializer.SerializerContents(parent, id, x, y, width, height, dataId, name);
-            var sb = new StringBuilder();
-            ItemSerializer.Serialize(sb, block, "", ItemSerializeOptions.Default);
-            return sb.ToString();
-        }
-
-        private async Task<BlockItem> CreateBlockItem(string name)
-        {
-            var text = SerializeBlockContents(0, 0.0, 0.0, 0.0, 0.0, -1, name, selectedBlock);
-            var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
-            Delete();
-            InsertContent(block, true);
-            return block.Blocks.FirstOrDefault();
+            try
+            {
+                var blockItem = BlockSerializer.Serialize(block);
+                blockItem.Name = name;
+                return blockItem;
+            }
+            catch(Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
+            return null;  
         }
 
         public void CreateBlock()
@@ -683,14 +682,14 @@ namespace Sheet
 
                 Action<string> ok = (name) =>
                 {
-                    History.Register("Create Block");
-                    CreateBlockItem(name).ContinueWith((block) =>
+                    var block = CreateBlock(name, selectedBlock);
+                    if (block != null)
                     {
-                        AddToLibrary(block.Result);
-                        EditorCanvas.Children.Remove(tc);
-                        Focus();
-                        RestoreTempMode();
-                    }, TaskScheduler.FromCurrentSynchronizationContext());
+                        AddToLibrary(block);
+                    }
+                    EditorCanvas.Children.Remove(tc);
+                    Focus();
+                    RestoreTempMode();
                 };
 
                 Action cancel = () =>
