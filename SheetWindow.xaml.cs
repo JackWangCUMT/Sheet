@@ -665,12 +665,18 @@ namespace Sheet
             CloseSolution();
         }
 
-        private void FileOpen_Click(object sender, RoutedEventArgs e)
+
+        private void FileNewPage_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().New();
+        }
+
+        private void FileOpenPage_Click(object sender, RoutedEventArgs e)
         {
             GetSheet().Open();
         }
 
-        private void FileSave_Click(object sender, RoutedEventArgs e)
+        private void FileSavePage_Click(object sender, RoutedEventArgs e)
         {
             GetSheet().Save();
         }

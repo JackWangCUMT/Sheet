@@ -249,8 +249,9 @@
                 <Separator/>
                 <MenuItem x:Name="FileCloseSolution" Header="_Close Solution" InputGestureText="Ctrl+Shift+C" Click="FileCloseSolution_Click"/>
                 <Separator/>
-                <MenuItem x:Name="FileOpen" Header="Op_en..." InputGestureText="Ctrl+O" Click="FileOpen_Click"/>
-                <MenuItem x:Name="FileSave" Header="S_ave..." InputGestureText="Ctrl+S" Click="FileSave_Click"/>
+                <MenuItem x:Name="FileNewPage" Header="New Pa_ge" InputGestureText="Ctrl+N" Click="FileNewPage_Click"/>
+                <MenuItem x:Name="FileOpenPage" Header="Op_en Page..." InputGestureText="Ctrl+O" Click="FileOpenPage_Click"/>
+                <MenuItem x:Name="FileSavePage" Header="S_ave Page..." InputGestureText="Ctrl+S" Click="FileSavePage_Click"/>
                 <Separator/>
                 <MenuItem x:Name="FileExport" Header="Expor_t..." InputGestureText="Ctrl+E" Click="FileExport_Click"/>
                 <Separator/>

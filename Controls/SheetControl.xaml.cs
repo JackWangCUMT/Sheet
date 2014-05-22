@@ -2210,6 +2210,15 @@ namespace Sheet
 
         #endregion
 
+        #region New
+
+        public void New()
+        {
+            // TODO:
+        }
+
+        #endregion
+
         #region Open
 
         public async Task OpenTextFile(string path)
