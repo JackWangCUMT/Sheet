@@ -1,5 +1,4 @@
 Sheet
-Sheet
 =====
 
 Diagram drawing application.
