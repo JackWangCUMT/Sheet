@@ -293,6 +293,7 @@
                 <MenuItem x:Name="ModeNone" Header="_None" InputGestureText="N" Click="ModeNone_Click"/>
                 <MenuItem x:Name="ModeSelection" Header="_Selection" InputGestureText="S" Click="ModeSelection_Click"/>
                 <MenuItem x:Name="ModeInsert" Header="_Insert" InputGestureText="I" Click="ModeInsert_Click"/>
+                <MenuItem x:Name="ModePoint" Header="_Point" InputGestureText="P" Click="ModePoint_Click"/>
                 <MenuItem x:Name="ModeLine" Header="_Line" InputGestureText="L" Click="ModeLine_Click"/>
                 <MenuItem x:Name="ModeRectangle" Header="_Rectangle" InputGestureText="R" Click="ModeRectangle_Click"/>
                 <MenuItem x:Name="ModeEllipse" Header="_Ellipse" InputGestureText="E" Click="ModeEllipse_Click"/>
