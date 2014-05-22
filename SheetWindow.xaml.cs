@@ -291,7 +291,25 @@ namespace Sheet
                         GetSheet().ActualSize();
                     }
                     break;
-                // Ctrl+O: Open
+                // N: Mode None
+                // Ctrl+N: New Page
+                // Ctrl+Shift+N: New Solution
+                case Key.N:
+                    if (!ctrl && !shift)
+                    {
+                        GetSheet().ModeNone();
+                        UpdateModeMenu();
+                    }
+                    if (ctrl && !shift)
+                    {
+                        GetSheet().New();
+                    }
+                    else if (ctrl && shift)
+                    {
+                        NewSolution();
+                    }
+                    break;
+                // Ctrl+O: Open Page
                 // Ctrl+Shift+O: Open Solution
                 case Key.O:
                     if (ctrl && !shift)
@@ -303,7 +321,7 @@ namespace Sheet
                         OpenSolution();
                     }
                     break;
-                // Ctrl+S: Save
+                // Ctrl+S: Save Page
                 // Ctrl+Shift+S: Save Solution
                 // S: Mode Selection
                 case Key.S:
@@ -485,19 +503,6 @@ namespace Sheet
                 // F: Toggle Fill
                 case Key.F:
                     GetSheet().ToggleFill();
-                    break;
-                // Ctrl+Shift+N: New Solution
-                // N: Mode None
-                case Key.N:
-                    if (ctrl && shift)
-                    {
-                        NewSolution();
-                    }
-                    else
-                    {
-                        GetSheet().ModeNone();
-                        UpdateModeMenu();
-                    }
                     break;
                 // I: Mode Insert
                 case Key.I:
