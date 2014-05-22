@@ -251,6 +251,7 @@ namespace Sheet
             ModeNone.IsChecked = mode == SheetMode.None ? true : false;
             ModeSelection.IsChecked = mode == SheetMode.Selection ? true : false;
             ModeInsert.IsChecked = mode == SheetMode.Insert ? true : false;
+            ModePoint.IsChecked = mode == SheetMode.Point ? true : false;
             ModeLine.IsChecked = mode == SheetMode.Line ? true : false;
             ModeRectangle.IsChecked = mode == SheetMode.Rectangle ? true : false;
             ModeEllipse.IsChecked = mode == SheetMode.Ellipse ? true : false;
@@ -501,6 +502,11 @@ namespace Sheet
                 // I: Mode Insert
                 case Key.I:
                     GetSheet().ModeInsert();
+                    UpdateModeMenu();
+                    break;
+                // P: Mode Point
+                case Key.P:
+                    GetSheet().ModePoint();
                     UpdateModeMenu();
                     break;
                 // R: Mode Rectangle
@@ -824,6 +830,12 @@ namespace Sheet
             UpdateModeMenu();
         }
 
+        private void ModePoint_Click(object sender, RoutedEventArgs e)
+        {
+            GetSheet().ModePoint();
+            UpdateModeMenu();
+        }
+        
         private void ModeLine_Click(object sender, RoutedEventArgs e)
         {
             GetSheet().ModeLine();
