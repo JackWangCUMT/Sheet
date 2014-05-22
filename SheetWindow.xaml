@@ -250,6 +250,7 @@
                 <MenuItem x:Name="FileCloseSolution" Header="_Close Solution" InputGestureText="Ctrl+Shift+C" Click="FileCloseSolution_Click"/>
                 <Separator/>
                 <MenuItem x:Name="FileNewPage" Header="New Pa_ge" InputGestureText="Ctrl+N" Click="FileNewPage_Click"/>
+                <Separator/>
                 <MenuItem x:Name="FileOpenPage" Header="Op_en Page..." InputGestureText="Ctrl+O" Click="FileOpenPage_Click"/>
                 <MenuItem x:Name="FileSavePage" Header="S_ave Page..." InputGestureText="Ctrl+S" Click="FileSavePage_Click"/>
                 <Separator/>
