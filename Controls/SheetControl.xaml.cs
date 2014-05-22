@@ -2214,7 +2214,10 @@ namespace Sheet
 
         public void New()
         {
-            // TODO:
+            History.Register("New");
+            ResetPage();
+            LoadStandardPage();
+            AutoFit();
         }
 
         #endregion
