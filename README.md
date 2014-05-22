@@ -10,8 +10,9 @@ Keyboard  Shortcuts:
     Ctrl+Shift+O    Open Solution
     Ctrl+Shift+S    Save Solution
     Ctrl+Shift+C    Close Solution
-    Ctrl+O          Open
-    Ctrl+S          Save
+    Ctrl+N          New Page
+    Ctrl+O          Open Page
+    Ctrl+S          Save Page
     Ctrl+E          Export
     Ctrl+L          Library
     Ctrl+D          Database
