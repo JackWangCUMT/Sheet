@@ -450,6 +450,11 @@ namespace Sheet
             SetMode(SheetMode.Edit);
         }
 
+         public void ModePoint()
+        {
+            SetMode(SheetMode.Point);
+        }
+        
         public void ModeLine()
         {
             SetMode(SheetMode.Line);
@@ -718,6 +723,29 @@ namespace Sheet
 
         #endregion
 
+        #region Point Mode
+        
+        public void InsertPoint(Point p)
+        {
+            double thickness = options.LineThickness / Zoom;
+            double x = ItemController.Snap(p.X, options.SnapSize);
+            double y = ItemController.Snap(p.Y, options.SnapSize);
+            
+            var point = BlockFactory.CreatePoint(thickness, x, y, false);
+            
+            BlockController.DeselectContent(selectedBlock);
+            History.Register("Insert Point");
+            contentBlock.Points.Add(point);
+            contentSheet.Add(point);
+
+            selectedBlock.Points = new List<XPoint>();
+            selectedBlock.Points.Add(point);
+
+            BlockController.Select(point);
+        }
+        
+        #endregion
+        
         #region Move Mode
 
         private void Move(double x, double y)
@@ -1893,6 +1921,10 @@ namespace Sheet
             else if (GetMode() == SheetMode.Insert && !overlaySheet.IsCaptured)
             {
                 Insert(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+            }
+            else if (GetMode() == SheetMode.Point && !overlaySheet.IsCaptured)
+            {
+                InsertPoint(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
             }
             else if (GetMode() == SheetMode.Line && !overlaySheet.IsCaptured)
             {
