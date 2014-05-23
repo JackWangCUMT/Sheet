@@ -989,7 +989,12 @@ namespace Sheet
                 }
 
                 // get all lines
-                var ls = GetAllLines(blocks);
+                var ls = GetAllLines(blocks).ToList();
+                
+                foreach(var line in lines)
+                {
+                	ls.Add(line);
+                }
 
                 // update point dependencies
                 foreach(var line in ls)
