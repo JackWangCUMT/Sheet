@@ -56,7 +56,26 @@ namespace Sheet
 
     #endregion
 
-    public partial class SheetControl : UserControl, IPageController
+    #region PointController
+    
+    public static class PointController
+    {
+         public static void ConnectStart(XPoint point, XLine line)
+        {
+            var dependecy = new XDependency(line, (element, p) => { (element.Element as Line).X1 = p.X; (element.Element as Line).Y1 = p.Y; });
+            point.Connected.Add(dependecy);
+        }
+
+        public static void ConnectEnd(XPoint point, XLine line)
+        {
+            var dependecy = new XDependency(line, (element, p) => { (element.Element as Line).X2 = p.X; (element.Element as Line).Y2 = p.Y; });
+            point.Connected.Add(dependecy);
+        }
+    }
+    
+    #endregion
+
+    public partial class SheetControl : UserControl, IPageController, IZoomController
     {
         #region Fields
 
@@ -96,6 +115,10 @@ namespace Sheet
         public IHistoryController History { get; private set; }
         public ILibraryController Library { get; set; }
 
+        #endregion
+        
+        #region IZoomController
+        
         private int zoomIndex = -1;
         public int ZoomIndex
         {
@@ -238,16 +261,6 @@ namespace Sheet
 
         #region Point Demo
 
-        public static void AddPointToLineStartDependency(XPoint point, XLine line)
-        {
-            point.Connected.Add(new XDependency(line, (element, p) => { (element.Element as Line).X1 = p.X; (element.Element as Line).Y1 = p.Y; }));
-        }
-
-        public static void AddPointToLineEndDependency(XPoint point, XLine line)
-        {
-            point.Connected.Add(new XDependency(line, (element, p) => { (element.Element as Line).X2 = p.X; (element.Element as Line).Y2 = p.Y; }));
-        }
-
         private void LoadPointDemo()
         {
             var p0 = BlockFactory.CreatePoint(options.LineThickness / Zoom, 450, 300, false);
@@ -259,14 +272,14 @@ namespace Sheet
             var l1 = BlockFactory.CreateLine(options.LineThickness / Zoom, p1, p2, ItemColors.Black);
             var l2 = BlockFactory.CreateLine(options.LineThickness / Zoom, p1, p3, ItemColors.Black);
 
-            AddPointToLineStartDependency(p0, l0);
-            AddPointToLineEndDependency(p1, l0);
+            PointController.ConnectStart(p0, l0);
+            PointController.ConnectEnd(p1, l0);
 
-            AddPointToLineStartDependency(p1, l1);
-            AddPointToLineEndDependency(p2, l1);
+            PointController.ConnectStart(p1, l1);
+            PointController.ConnectEnd(p2, l1);
 
-            AddPointToLineStartDependency(p1, l2);
-            AddPointToLineEndDependency(p3, l2);
+            PointController.ConnectStart(p1, l2);
+            PointController.ConnectEnd(p3, l2);
 
             History.Register("Point Demo");
 
@@ -725,7 +738,7 @@ namespace Sheet
 
         #region Point Mode
         
-        public void InsertPoint(Point p)
+        public XPoint InsertPoint(Point p, bool register, bool select)
         {
             double thickness = options.LineThickness / Zoom;
             double x = ItemController.Snap(p.X, options.SnapSize);
@@ -733,15 +746,24 @@ namespace Sheet
             
             var point = BlockFactory.CreatePoint(thickness, x, y, false);
             
-            BlockController.DeselectContent(selectedBlock);
-            History.Register("Insert Point");
+            if (register)
+            {
+                BlockController.DeselectContent(selectedBlock);
+                History.Register("Insert Point");
+            }
+            
             contentBlock.Points.Add(point);
             contentSheet.Add(point);
 
-            selectedBlock.Points = new List<XPoint>();
-            selectedBlock.Points.Add(point);
+            if (select)
+            {
+                selectedBlock.Points = new List<XPoint>();
+                selectedBlock.Points.Add(point);
 
-            BlockController.Select(point);
+                BlockController.Select(point);
+            }
+            
+            return point;
         }
         
         #endregion
@@ -1102,13 +1124,37 @@ namespace Sheet
 
         #region Line Mode
 
-        private void InitTempLine(Point p)
+        private XPoint TryToFindPoint(Point p)
+        {
+            var temp = new XBlock(-1, options.PageOriginX, options.PageOriginY, options.PageWidth, options.PageHeight, -1, "TEMP");
+            BlockController.HitTestClick(contentSheet, contentBlock, temp, p, options.HitTestSize, true, true);
+
+            if (BlockController.HaveOnePointSelected(temp))
+            {
+                var xpoint = temp.Points[0];
+                BlockController.Deselect(temp);
+                return xpoint;
+            }
+
+            BlockController.Deselect(temp);
+            return null;
+        }
+        
+        private void InitTempLine(Point p, XPoint start)
         {
             double x = ItemController.Snap(p.X, options.SnapSize);
             double y = ItemController.Snap(p.Y, options.SnapSize);
+            
             tempLine = BlockFactory.CreateLine(options.LineThickness / Zoom, x, y, x, y, ItemColors.Black);
+            
+            if (start != null)
+            {
+                tempLine.Start = start;
+            }
+
             tempStartEllipse = BlockFactory.CreateEllipse(options.LineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
             tempEndEllipse = BlockFactory.CreateEllipse(options.LineThickness / Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true);
+            
             overlaySheet.Add(tempLine);
             overlaySheet.Add(tempStartEllipse);
             overlaySheet.Add(tempEndEllipse);
@@ -1131,7 +1177,7 @@ namespace Sheet
             }
         }
 
-        private void FinishTempLine()
+        private void FinishTempLine(XPoint end)
         {
             var line = tempLine.Element as Line;
             if (Math.Round(line.X1, 1) == Math.Round(line.X2, 1) &&
@@ -1141,13 +1187,31 @@ namespace Sheet
             }
             else
             {
+                if (end != null)
+                {
+                    tempLine.End = end;
+                }
+            
                 overlaySheet.ReleaseCapture();
                 overlaySheet.Remove(tempLine);
                 overlaySheet.Remove(tempStartEllipse);
                 overlaySheet.Remove(tempEndEllipse);
+                
                 History.Register("Create Line");
+                
+                if (tempLine.Start != null)
+                {
+                    PointController.ConnectStart(tempLine.Start, tempLine);
+                }
+                
+                if (tempLine.End != null)
+                {
+                    PointController.ConnectEnd(tempLine.End, tempLine);
+                }
+                
                 contentBlock.Lines.Add(tempLine);
                 contentSheet.Add(tempLine);
+                
                 tempLine = null;
                 tempStartEllipse = null;
                 tempEndEllipse = null;
@@ -1924,15 +1988,35 @@ namespace Sheet
             }
             else if (GetMode() == SheetMode.Point && !overlaySheet.IsCaptured)
             {
-                InsertPoint(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                InsertPoint(e.GetPosition(overlaySheet.GetParent() as FrameworkElement), true, true);
             }
             else if (GetMode() == SheetMode.Line && !overlaySheet.IsCaptured)
             {
-                InitTempLine(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                // try to find point to connect line start
+                var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
+                XPoint start = TryToFindPoint(p);
+                
+                // create start if Control key is pressed and start point has not been found
+                if (ctrl && start == null)
+                {
+                    start = InsertPoint(p, true, false);
+                }
+                
+                InitTempLine(e.GetPosition(overlaySheet.GetParent() as FrameworkElement), start);
             }
             else if (GetMode() == SheetMode.Line && overlaySheet.IsCaptured)
             {
-                FinishTempLine();
+                // try to find point to connect line end
+                var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
+                XPoint end = TryToFindPoint(p);
+                
+                // create end point if Control key is pressed and end point has not been found
+                if (ctrl && end == null)
+                {
+                    end = InsertPoint(p, true, false);
+                }
+                
+                FinishTempLine(end);
             }
             else if (GetMode() == SheetMode.Rectangle && !overlaySheet.IsCaptured)
             {
