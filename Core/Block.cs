@@ -15,6 +15,7 @@ namespace Sheet
 
     public abstract class XElement
     {
+        public int Id { get; set; }
         public object Element { get; set; }
     }
 
@@ -55,10 +56,18 @@ namespace Sheet
 
     public class XLine : XElement
     {
+        public int StartId { get; set; }
+        public int EndId { get; set; }
         public XPoint Start { get; set; }
         public XPoint End { get; set; }
         public XLine(object element)
         {
+            Element = element;
+        }
+        public XLine(object element, int startId, int endId)
+        {
+            StartId = startId;
+            EndId = endId;
             Element = element;
         }
         public XLine(object element, XPoint start, XPoint end)
@@ -228,6 +237,72 @@ namespace Sheet
 
     public static class BlockSerializer
     {
+        #region Id
+        
+        public static int SetId(XBlock parent, int nextId)
+        {
+            if (parent.Points != null)
+            {
+                foreach (var point in parent.Points)
+                {
+                    point.Id = nextId++;
+                }
+            }
+
+            if (parent.Lines != null)
+            {
+                foreach (var line in parent.Lines)
+                {
+                    line.Id = nextId++;
+                }
+            }
+
+            if (parent.Rectangles != null)
+            {
+                foreach (var rectangle in parent.Rectangles)
+                {
+                    rectangle.Id = nextId++;
+                } 
+            }
+
+            if (parent.Ellipses != null)
+            {
+                foreach (var ellipse in parent.Ellipses)
+                {
+                    ellipse.Id = nextId++;
+                } 
+            }
+
+            if (parent.Texts != null)
+            {
+                foreach (var text in parent.Texts)
+                {
+                    text.Id = nextId++;
+                } 
+            }
+
+            if (parent.Images != null)
+            {
+                foreach (var image in parent.Images)
+                {
+                    image.Id = nextId++;
+                } 
+            }
+
+            if (parent.Blocks != null)
+            {
+                foreach (var block in parent.Blocks)
+                {
+                    block.Id = nextId++;
+                    nextId = SetId(block, nextId);
+                } 
+            }
+
+            return nextId;
+        }
+        
+        #endregion
+        
         #region Serialize
 
         private static ItemColor ToItemColor(Brush brush)
@@ -251,7 +326,7 @@ namespace Sheet
         {
             var pointItem = new PointItem();
 
-            pointItem.Id = 0;
+            pointItem.Id = point.Id;
             pointItem.X = Canvas.GetLeft(point.Element as FrameworkElement);
             pointItem.Y = Canvas.GetTop(point.Element as FrameworkElement);
 
@@ -262,12 +337,14 @@ namespace Sheet
         {
             var lineItem = new LineItem();
 
-            lineItem.Id = 0;
+            lineItem.Id = line.Id;
             lineItem.X1 = (line.Element as Line).X1;
             lineItem.Y1 = (line.Element as Line).Y1;
             lineItem.X2 = (line.Element as Line).X2;
             lineItem.Y2 = (line.Element as Line).Y2;
             lineItem.Stroke = ToItemColor((line.Element as Line).Stroke);
+            lineItem.StartId = line.Start == null ? -1 : line.Start.Id;
+            lineItem.EndId = line.End == null ? -1 : line.End.Id;
 
             return lineItem;
         }
@@ -276,7 +353,7 @@ namespace Sheet
         {
             var rectangleItem = new RectangleItem();
 
-            rectangleItem.Id = 0;
+            rectangleItem.Id = rectangle.Id;
             rectangleItem.X = Canvas.GetLeft(rectangle.Element as Rectangle);
             rectangleItem.Y = Canvas.GetTop(rectangle.Element as Rectangle);
             rectangleItem.Width = (rectangle.Element as Rectangle).Width;
@@ -292,7 +369,7 @@ namespace Sheet
         {
             var ellipseItem = new EllipseItem();
 
-            ellipseItem.Id = 0;
+            ellipseItem.Id = ellipse.Id;
             ellipseItem.X = Canvas.GetLeft(ellipse.Element as Ellipse);
             ellipseItem.Y = Canvas.GetTop(ellipse.Element as Ellipse);
             ellipseItem.Width = (ellipse.Element as Ellipse).Width;
@@ -308,7 +385,7 @@ namespace Sheet
         {
             var textItem = new TextItem();
 
-            textItem.Id = 0;
+            textItem.Id = text.Id;
             textItem.X = Canvas.GetLeft(text.Element as Grid);
             textItem.Y = Canvas.GetTop(text.Element as Grid);
             textItem.Width = (text.Element as Grid).Width;
@@ -329,7 +406,7 @@ namespace Sheet
         {
             var imageItem = new ImageItem();
 
-            imageItem.Id = 0;
+            imageItem.Id = image.Id;
             imageItem.X = Canvas.GetLeft(image.Element as Image);
             imageItem.Y = Canvas.GetTop(image.Element as Image);
             imageItem.Width = (image.Element as Image).Width;
@@ -342,7 +419,7 @@ namespace Sheet
         public static BlockItem Serialize(XBlock parent)
         {
             var blockItem = new BlockItem();
-            blockItem.Init(0, parent.X, parent.Y, parent.Width, parent.Height, parent.DataId, parent.Name);
+            blockItem.Init(parent.Id, parent.X, parent.Y, parent.Width, parent.Height, parent.DataId, parent.Name);
             blockItem.Backgroud = ToItemColor(parent.Backgroud);
 
             foreach (var point in parent.Points)
@@ -392,8 +469,10 @@ namespace Sheet
             var texts = parent.Texts;
             var images = parent.Images;
             var blocks = parent.Blocks;
+            
+            SetId(parent, id + 1);
 
-            var sheet = new BlockItem() { Backgroud = new ItemColor() };
+            var sheet = new BlockItem() { Backgroud = ToItemColor(parent.Backgroud) };
             sheet.Init(id, x, y, width, height, dataId, name);
 
             if (points != null)
@@ -462,6 +541,8 @@ namespace Sheet
         public static XPoint Deserialize(ISheet sheet, XBlock parent, PointItem pointItem, double thickness)
         {
             var point = BlockFactory.CreatePoint(thickness, pointItem.X, pointItem.Y, false);
+            
+            point.Id = pointItem.Id;
 
             if (parent != null)
             {
@@ -480,6 +561,10 @@ namespace Sheet
         {
             var line = BlockFactory.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2, lineItem.Stroke);
 
+            line.Id = lineItem.Id;
+            line.StartId = lineItem.StartId;
+            line.EndId = lineItem.EndId;
+            
             if (parent != null)
             {
                 parent.Lines.Add(line);
@@ -497,6 +582,8 @@ namespace Sheet
         {
             var rectangle = BlockFactory.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
 
+            rectangle.Id = rectangleItem.Id;
+            
             if (parent != null)
             {
                 parent.Rectangles.Add(rectangle);
@@ -514,6 +601,8 @@ namespace Sheet
         {
             var ellipse = BlockFactory.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
 
+            ellipse.Id = ellipseItem.Id;
+            
             if (parent != null)
             {
                 parent.Ellipses.Add(ellipse);
@@ -538,6 +627,8 @@ namespace Sheet
                 textItem.Backgroud,
                 textItem.Foreground);
 
+            text.Id = textItem.Id;
+                
             if (parent != null)
             {
                 parent.Texts.Add(text);
@@ -555,6 +646,8 @@ namespace Sheet
         {
             var image = BlockFactory.CreateImage(imageItem.X, imageItem.Y, imageItem.Width, imageItem.Height, imageItem.Data);
 
+            image.Id = imageItem.Id;
+            
             if (parent != null)
             {
                 parent.Images.Add(image);
@@ -657,8 +750,10 @@ namespace Sheet
     {
         #region Add
 
-        public static void Add(ISheet sheet, IEnumerable<PointItem> pointItems, XBlock parent, XBlock selected, bool select, double thickness)
+        public static List<XPoint> Add(ISheet sheet, IEnumerable<PointItem> pointItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
+            var points = new List<XPoint>();
+        
             if (select)
             {
                 selected.Points = new List<XPoint>();
@@ -668,16 +763,22 @@ namespace Sheet
             {
                 var point = BlockSerializer.Deserialize(sheet, parent, pointItem, thickness);
 
+                points.Add(point);
+                
                 if (select)
                 {
                     Select(point);
                     selected.Points.Add(point);
                 }
             }
+            
+            return points;
         }
 
-        public static void Add(ISheet sheet, IEnumerable<LineItem> lineItems, XBlock parent, XBlock selected, bool select, double thickness)
+        public static List<XLine> Add(ISheet sheet, IEnumerable<LineItem> lineItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
+            var lines = new List<XLine>();
+        
             if (select)
             {
                 selected.Lines = new List<XLine>();
@@ -687,16 +788,22 @@ namespace Sheet
             {
                 var line = BlockSerializer.Deserialize(sheet, parent, lineItem, thickness);
 
+                lines.Add(line);
+                
                 if (select)
                 {
                     Select(line);
                     selected.Lines.Add(line);
                 }
             }
+            
+            return lines;
         }
 
-        public static void Add(ISheet sheet, IEnumerable<RectangleItem> rectangleItems, XBlock parent, XBlock selected, bool select, double thickness)
+        public static List<XRectangle> Add(ISheet sheet, IEnumerable<RectangleItem> rectangleItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
+            var rectangles = new List<XRectangle>();
+        
             if (select)
             {
                 selected.Rectangles = new List<XRectangle>();
@@ -706,16 +813,22 @@ namespace Sheet
             {
                 var rectangle = BlockSerializer.Deserialize(sheet, parent, rectangleItem, thickness);
 
+                rectangles.Add(rectangle);
+                
                 if (select)
                 {
                     Select(rectangle);
                     selected.Rectangles.Add(rectangle);
                 }
             }
+            
+            return rectangles;
         }
 
-        public static void Add(ISheet sheet, IEnumerable<EllipseItem> ellipseItems, XBlock parent, XBlock selected, bool select, double thickness)
+        public static List<XEllipse> Add(ISheet sheet, IEnumerable<EllipseItem> ellipseItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
+            var ellipses = new List<XEllipse>();
+        
             if (select)
             {
                 selected.Ellipses = new List<XEllipse>();
@@ -725,16 +838,22 @@ namespace Sheet
             {
                 var ellipse = BlockSerializer.Deserialize(sheet, parent, ellipseItem, thickness);
 
+                ellipses.Add(ellipse);
+                
                 if (select)
                 {
                     Select(ellipse);
                     selected.Ellipses.Add(ellipse);
                 }
             }
+            
+            return ellipses;
         }
 
-        public static void Add(ISheet sheet, IEnumerable<TextItem> textItems, XBlock parent, XBlock selected, bool select, double thickness)
+        public static List<XText> Add(ISheet sheet, IEnumerable<TextItem> textItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
+            var texts = new List<XText>();
+        
             if (select)
             {
                 selected.Texts = new List<XText>();
@@ -744,16 +863,22 @@ namespace Sheet
             {
                 var text = BlockSerializer.Deserialize(sheet, parent, textItem);
 
+                texts.Add(text);
+                
                 if (select)
                 {
                     Select(text);
                     selected.Texts.Add(text);
                 }
             }
+            
+            return texts;
         }
 
-        public static void Add(ISheet sheet, IEnumerable<ImageItem> imageItems, XBlock parent, XBlock selected, bool select, double thickness)
+        public static List<XImage> Add(ISheet sheet, IEnumerable<ImageItem> imageItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
+            var images = new List<XImage>();
+        
             if (select)
             {
                 selected.Images = new List<XImage>();
@@ -763,16 +888,22 @@ namespace Sheet
             {
                 var image = BlockSerializer.Deserialize(sheet, parent, imageItem);
 
+                images.Add(image);
+                
                 if (select)
                 {
                     Select(image);
                     selected.Images.Add(image);
                 }
             }
+            
+            return images;
         }
 
-        public static void Add(ISheet sheet, IEnumerable<BlockItem> blockItems, XBlock parent, XBlock selected, bool select, double thickness)
+        public static List<XBlock> Add(ISheet sheet, IEnumerable<BlockItem> blockItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
+            var blocks = new List<XBlock>();
+        
             if (select)
             {
                 selected.Blocks = new List<XBlock>();
@@ -781,10 +912,58 @@ namespace Sheet
             foreach (var blockItem in blockItems)
             {
                 var block = BlockSerializer.Deserialize(sheet, parent, blockItem, select, thickness);
+                
+                blocks.Add(block);
 
                 if (select)
                 {
                     selected.Blocks.Add(block);
+                }
+            }
+            
+            return blocks;
+        }
+
+        public static IEnumerable<KeyValuePair<int, XPoint>> GetAllPoints(List<XBlock> blocks)
+        {
+            foreach(var block in blocks)
+            {
+                if (block.Points != null)
+                {
+                    foreach(var point in block.Points)
+                    {
+                        yield return new KeyValuePair<int, XPoint>(point.Id, point);
+                    }
+                }
+                
+                if (block.Blocks != null)
+                {
+                    foreach(var kvp in GetAllPoints(block.Blocks))
+                    {
+                        yield return kvp;
+                    }
+                }
+            }
+        }
+        
+        public static IEnumerable<XLine> GetAllLines(List<XBlock> blocks)
+        {
+            foreach(var block in blocks)
+            {
+                if (block.Lines != null)
+                {
+                    foreach(var line in block.Lines)
+                    {
+                        yield return line;
+                    }
+                }
+                
+                if (block.Blocks != null)
+                {
+                    foreach(var line in GetAllLines(block.Blocks))
+                    {
+                        yield return line;
+                    }
                 }
             }
         }
@@ -793,13 +972,42 @@ namespace Sheet
         {
             if (blockItem != null)
             {
-                Add(sheet, blockItem.Texts, content, selected, select, thickness);
-                Add(sheet, blockItem.Images, content, selected, select, thickness);
-                Add(sheet, blockItem.Lines, content, selected, select, thickness);
-                Add(sheet, blockItem.Rectangles, content, selected, select, thickness);
-                Add(sheet, blockItem.Ellipses, content, selected, select, thickness);
-                Add(sheet, blockItem.Blocks, content, selected, select, thickness);
-                Add(sheet, blockItem.Points, content, selected, select, thickness);
+                var texts = Add(sheet, blockItem.Texts, content, selected, select, thickness);
+                var images = Add(sheet, blockItem.Images, content, selected, select, thickness);
+                var lines = Add(sheet, blockItem.Lines, content, selected, select, thickness);
+                var rectangles = Add(sheet, blockItem.Rectangles, content, selected, select, thickness);
+                var ellipses = Add(sheet, blockItem.Ellipses, content, selected, select, thickness);
+                var blocks = Add(sheet, blockItem.Blocks, content, selected, select, thickness);
+                var points = Add(sheet, blockItem.Points, content, selected, select, thickness);
+                
+                // get all points
+                var ps = GetAllPoints(blocks).ToDictionary(x => x.Key, x => x.Value);
+                
+                foreach(var point in points)
+                {
+                    ps.Add(point.Id, point);
+                }
+
+                // get all lines
+                var ls = GetAllLines(blocks);
+
+                // update point dependencies
+                foreach(var line in ls)
+                {
+                    if (line.StartId >= 0)
+                    {
+                        var point = ps[line.StartId];
+                        line.Start = point;
+                        PointController.ConnectStart(line.Start, line);
+                    }
+                    
+                    if (line.EndId >= 0)
+                    {
+                        var point = ps[line.EndId];
+                        line.End = point;
+                        PointController.ConnectEnd(line.End, line);
+                    }
+                }
             }
         }
 
@@ -2439,5 +2647,24 @@ namespace Sheet
         #endregion
     }
 
+    #endregion
+    
+    #region PointController
+
+    public static class PointController
+    {
+         public static void ConnectStart(XPoint point, XLine line)
+        {
+            var dependecy = new XDependency(line, (element, p) => { (element.Element as Line).X1 = p.X; (element.Element as Line).Y1 = p.Y; });
+            point.Connected.Add(dependecy);
+        }
+
+        public static void ConnectEnd(XPoint point, XLine line)
+        {
+            var dependecy = new XDependency(line, (element, p) => { (element.Element as Line).X2 = p.X; (element.Element as Line).Y2 = p.Y; });
+            point.Connected.Add(dependecy);
+        }
+    }
+    
     #endregion
 }
