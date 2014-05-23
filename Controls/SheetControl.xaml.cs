@@ -56,25 +56,6 @@ namespace Sheet
 
     #endregion
 
-    #region PointController
-    
-    public static class PointController
-    {
-         public static void ConnectStart(XPoint point, XLine line)
-        {
-            var dependecy = new XDependency(line, (element, p) => { (element.Element as Line).X1 = p.X; (element.Element as Line).Y1 = p.Y; });
-            point.Connected.Add(dependecy);
-        }
-
-        public static void ConnectEnd(XPoint point, XLine line)
-        {
-            var dependecy = new XDependency(line, (element, p) => { (element.Element as Line).X2 = p.X; (element.Element as Line).Y2 = p.Y; });
-            point.Connected.Add(dependecy);
-        }
-    }
-    
-    #endregion
-
     public partial class SheetControl : UserControl, IPageController, IZoomController
     {
         #region Fields
