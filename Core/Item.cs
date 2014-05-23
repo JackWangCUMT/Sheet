@@ -57,6 +57,8 @@ namespace Sheet
         public double Y2 { get; set; }
         public ItemColor Stroke { get; set; }
         public double StrokeThickness { get; set; }
+        public int StartId { get; set; }
+        public int EndId { get; set; }
     }
 
     public class RectangleItem : Item
@@ -231,6 +233,10 @@ namespace Sheet
             sb.Append(line.Y2);
             sb.Append(options.ModelSeparator);
             Serialize(sb, line.Stroke, options);
+            sb.Append(options.ModelSeparator);
+            sb.Append(line.StartId);
+            sb.Append(options.ModelSeparator);
+            sb.Append(line.EndId);
             sb.Append(options.LineSeparator);
         }
 
@@ -467,6 +473,16 @@ namespace Sheet
                 Green = byte.Parse(m[8]),
                 Blue = byte.Parse(m[9])
             };
+            if (m.Length == 12)
+            {
+                lineItem.StartId = int.Parse(m[10]);
+                lineItem.EndId = int.Parse(m[11]);
+            }
+            else
+            {
+                lineItem.StartId = -1;
+                lineItem.EndId = -1;
+            }
             return lineItem;
         }
 
@@ -624,9 +640,9 @@ namespace Sheet
                         throw new Exception(string.Format("Invalid POINT item at line {0}", end + 1));
                     }
                 }
-                else if (m.Length == 10 && string.Compare(m[0], "LINE", true) == 0)
+                else if ((m.Length == 10 || m.Length == 12) && string.Compare(m[0], "LINE", true) == 0)
                 {
-                    if (m.Length == 10)
+                    if (m.Length == 10 || m.Length == 12)
                     {
                         var lineItem = DeserializeLine(m);
                         root.Lines.Add(lineItem);
