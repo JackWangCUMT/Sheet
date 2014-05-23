@@ -2659,10 +2659,12 @@ namespace Sheet
 
         private void AddInvertedLineEllipse(double x, double y, double width, double height)
         {
+            // create ellipse
             var ellipse = BlockFactory.CreateEllipse(options.LineThickness / Zoom, x, y, width, height, false);
             contentBlock.Ellipses.Add(ellipse);
             contentSheet.Add(ellipse);
 
+            // select ellipse
             BlockController.Select(ellipse);
             if (selectedBlock.Ellipses == null)
             {
@@ -2676,9 +2678,11 @@ namespace Sheet
             // add for horizontal or vertical line start ellipse and shorten line
             if (BlockController.HaveSelected(selectedBlock) && selectedBlock.Lines != null && selectedBlock.Lines.Count > 0)
             {
+                var block = BlockController.ShallowCopy(selectedBlock);
+                FinishEdit();
                 History.Register("Invert Line Start");
 
-                foreach (var line in selectedBlock.Lines)
+                foreach (var line in block.Lines)
                 {
                     bool sameX = Math.Round((line.Element as Line).X1, 1) == Math.Round((line.Element as Line).X2, 1);
                     bool sameY = Math.Round((line.Element as Line).Y1, 1) == Math.Round((line.Element as Line).Y2, 1);
@@ -2715,6 +2719,14 @@ namespace Sheet
                             (line.Element as Line).X2 += invertedEllipseWidth;
                         }
                     }
+                    
+                    // select line
+                    BlockController.Select(line);
+                    if (selectedBlock.Lines == null)
+                    {
+                        selectedBlock.Lines = new List<XLine>();
+                    }
+                    selectedBlock.Lines.Add(line);
                 }
             }
         }
@@ -2724,9 +2736,11 @@ namespace Sheet
             // add for horizontal or vertical line end ellipse and shorten line
             if (BlockController.HaveSelected(selectedBlock) && selectedBlock.Lines != null && selectedBlock.Lines.Count > 0)
             {
+                var block = BlockController.ShallowCopy(selectedBlock);
+                FinishEdit();
                 History.Register("Invert Line End");
-
-                foreach (var line in selectedBlock.Lines)
+                
+                foreach (var line in block.Lines)
                 {
                     bool sameX = Math.Round((line.Element as Line).X1, 1) == Math.Round((line.Element as Line).X2, 1);
                     bool sameY = Math.Round((line.Element as Line).Y1, 1) == Math.Round((line.Element as Line).Y2, 1);
@@ -2763,6 +2777,14 @@ namespace Sheet
                             (line.Element as Line).X1 -= invertedEllipseWidth;
                         }
                     }
+                    
+                    // select line
+                    BlockController.Select(line);
+                    if (selectedBlock.Lines == null)
+                    {
+                        selectedBlock.Lines = new List<XLine>();
+                    }
+                    selectedBlock.Lines.Add(line);
                 }
             }
         }
