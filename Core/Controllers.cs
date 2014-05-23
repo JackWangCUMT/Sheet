@@ -69,4 +69,16 @@ namespace Sheet
     }
 
     #endregion
+    
+    #region IZoomController
+    
+    public interface IZoomController
+    {
+        int ZoomIndex { get; set; }
+        double Zoom { get; set; }
+        double PanX { get; set; }
+        double PanY { get; set; }
+    }
+    
+    #endregion
 }
