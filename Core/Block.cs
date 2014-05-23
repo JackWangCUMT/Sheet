@@ -1207,15 +1207,15 @@ namespace Sheet
 
         #region Select
 
-        private static int DeselectedZIndex = 0;
-        private static int SelectedZIndex = 1;
+        public static int DeselectedZIndex = 0;
+        public static int SelectedZIndex = 1;
 
         public static void Deselect(XPoint point)
         {
             //(point.Element as Ellipse).Stroke = BlockFactory.NormalBrush;
             //(point.Element as Ellipse).Fill = (point.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.NormalBrush;
             FrameworkElementProperties.SetIsSelected(point.Element as Ellipse, false);
-            Panel.SetZIndex(point.Element as Ellipse, DeselectedZIndex);
+            //Panel.SetZIndex(point.Element as Ellipse, DeselectedZIndex);
         }
 
         public static void Deselect(XLine line)
@@ -1314,7 +1314,7 @@ namespace Sheet
             //(point.Element as Ellipse).Stroke = BlockFactory.SelectedBrush;
             //(point.Element as Ellipse).Fill = (point.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.SelectedBrush;
             FrameworkElementProperties.SetIsSelected(point.Element as Ellipse, true);
-            Panel.SetZIndex(point.Element as Ellipse, SelectedZIndex);
+            //Panel.SetZIndex(point.Element as Ellipse, SelectedZIndex);
         }
 
         public static void Select(XLine line)
@@ -1969,6 +1969,16 @@ namespace Sheet
 
             var rect = new Rect(p.X - size, p.Y - size, 2 * size, 2 * size);
 
+            if (parent.Points != null)
+            {
+                bool result = HitTest(parent.Points, selected, rect, true, true, sheet.GetParent());
+                if (result)
+                {
+                    HitTestClean(selected);
+                    return true;
+                }
+            }
+            
             if (parent.Texts != null)
             {
                 bool result = HitTest(parent.Texts, selected, rect, true, true, sheet.GetParent());
@@ -1982,16 +1992,6 @@ namespace Sheet
             if (parent.Images != null)
             {
                 bool result = HitTest(parent.Images, selected, rect, true, true, sheet.GetParent());
-                if (result)
-                {
-                    HitTestClean(selected);
-                    return true;
-                }
-            }
-
-            if (parent.Points != null)
-            {
-                bool result = HitTest(parent.Points, selected, rect, true, true, sheet.GetParent());
                 if (result)
                 {
                     HitTestClean(selected);
@@ -2278,6 +2278,7 @@ namespace Sheet
             };
 
             SetStyle(ellipse, isVisible);
+            Panel.SetZIndex(ellipse, BlockController.SelectedZIndex);
 
             Canvas.SetLeft(ellipse, x);
             Canvas.SetTop(ellipse, y);
@@ -2312,24 +2313,9 @@ namespace Sheet
 
         public static XLine CreateLine(double thickness, XPoint start, XPoint end, ItemColor stroke)
         {
-            var strokeBrush = new SolidColorBrush(Color.FromArgb(stroke.Alpha, stroke.Red, stroke.Green, stroke.Blue));
-
-            strokeBrush.Freeze();
-
-            var line = new Line()
-            {
-                Stroke = strokeBrush,
-                StrokeThickness = thickness,
-                StrokeStartLineCap = PenLineCap.Round,
-                StrokeEndLineCap = PenLineCap.Round,
-                X1 = start.X,
-                Y1 = start.Y,
-                X2 = end.X,
-                Y2 = end.Y
-            };
-
-            var xline = new XLine(line, start, end);
-
+            var xline = CreateLine(thickness, start.X, start.Y, end.X, end.Y, stroke);
+            xline.Start = start;
+            xline.End = end;
             return xline;
         }
 
