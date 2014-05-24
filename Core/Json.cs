@@ -23,7 +23,8 @@ namespace Sheet
     {
         public string Serialize(object value)
         {
-            return JsonConvert.SerializeObject(value, Formatting.Indented);
+            var settings = new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore };
+            return JsonConvert.SerializeObject(value, Formatting.Indented, settings);
         }
 
         public T Deerialize<T>(string value)
