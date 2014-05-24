@@ -403,7 +403,7 @@ namespace Sheet
                 case Key.X:
                     if (ctrl)
                     {
-                        GetSheet().Cut();
+                        GetSheet().CutAsText();
                     }
                     break;
                 // Ctrl+C: Copy
@@ -411,7 +411,7 @@ namespace Sheet
                 case Key.C:
                     if (ctrl && !shift)
                     {
-                        GetSheet().Copy();
+                        GetSheet().CopyAsText();
                     }
                     else if (ctrl && shift)
                     {
@@ -422,7 +422,7 @@ namespace Sheet
                 case Key.V:
                     if (ctrl)
                     {
-                        GetSheet().Paste();
+                        GetSheet().PasteText();
                     }
                     break;
                 // Del: Delete
@@ -729,17 +729,17 @@ namespace Sheet
 
         private void EditCut_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().Cut();
+            GetSheet().CutAsText();
         }
 
         private void EditCopy_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().Copy();
+            GetSheet().CopyAsText();
         }
 
         private void EditPaste_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().Paste();
+            GetSheet().PasteText();
         }
 
         private void EditDelete_Click(object sender, RoutedEventArgs e)

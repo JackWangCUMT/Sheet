@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -58,6 +58,12 @@ namespace Sheet
 
     public partial class SheetControl : UserControl, IPageController, IPanAndZoomController
     {
+        #region Properties
+
+        public IJsonSerializer JsonSerializer { get; set; }
+
+        #endregion
+
         #region Fields
 
         private SheetOptions options = null;
@@ -131,7 +137,7 @@ namespace Sheet
 
         #region ToSingle
 
-        private IEnumerable<T> ToSingle<T>(T item)
+        public static IEnumerable<T> ToSingle<T>(T item)
         {
             yield return item;
         } 
@@ -150,7 +156,10 @@ namespace Sheet
 
         private void InitInterfaces()
         {
+            JsonSerializer = new NewtonsoftJsonSerializer();
+
             History = new PageHistory(this);
+
             PanAndZoom = this;
         }
 
@@ -438,9 +447,9 @@ namespace Sheet
 
         #endregion
 
-        #region Clipboard
+        #region Clipboard Text
 
-        public void Cut()
+        public void CutAsText()
         {
             try
             {
@@ -448,7 +457,7 @@ namespace Sheet
                 {
                     var copy = BlockController.ShallowCopy(selectedBlock);
                     History.Register("Cut");
-                    Copy(copy);
+                    CopyAsText(copy);
                     Delete(copy);
                 }
             }
@@ -459,15 +468,13 @@ namespace Sheet
             }
         }
 
-        private void Copy(XBlock block)
+        private void CopyAsText(XBlock block)
         {
             try
             {
-                var selected = BlockSerializer.SerializerContents(block, 0, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED");
+                var selected = BlockSerializer.SerializerContents(block, -1, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED");
                 var text = ItemSerializer.SerializeContents(selected);
                 Clipboard.SetData(DataFormats.UnicodeText, text);
-                //string json = JsonConvert.SerializeObject(selected, Formatting.Indented);
-                //Clipboard.SetData(DataFormats.UnicodeText, json);
             }
             catch (Exception ex)
             {
@@ -476,15 +483,15 @@ namespace Sheet
             }
         }
 
-        public void Copy()
+        public void CopyAsText()
         {
             if (BlockController.HaveSelected(selectedBlock))
             {
-                Copy(selectedBlock);
+                CopyAsText(selectedBlock);
             }
         }
 
-        public async void Paste()
+        public async void PasteText()
         {
             try
             {
@@ -492,8 +499,68 @@ namespace Sheet
                 var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
                 History.Register("Paste");
                 InsertContent(block, true);
-                //var block = JsonConvert.DeserializeObject<BlockItem>(text);
-                //InsertBlock(block, true);
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
+        }
+
+        #endregion
+
+        #region Clipboard Json
+
+        public void CutAsJson()
+        {
+            try
+            {
+                if (BlockController.HaveSelected(selectedBlock))
+                {
+                    var copy = BlockController.ShallowCopy(selectedBlock);
+                    History.Register("Cut");
+                    CopyAsJson(copy);
+                    Delete(copy);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
+        }
+
+        private void CopyAsJson(XBlock block)
+        {
+            try
+            {
+                var selected = BlockSerializer.SerializerContents(block, -1, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED");
+                string json = JsonSerializer.Serialize(selected);
+                Clipboard.SetData(DataFormats.UnicodeText, json);
+            }
+            catch (Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
+        }
+
+        public void CopyAsJson()
+        {
+            if (BlockController.HaveSelected(selectedBlock))
+            {
+                CopyAsJson(selectedBlock);
+            }
+        }
+
+        public async void PasteJson()
+        {
+            try
+            {
+                var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
+                var block = await Task.Run(() => JsonSerializer.Deerialize<BlockItem>(text));
+                History.Register("Paste");
+                InsertContent(block, true);
             }
             catch (Exception ex)
             {
@@ -2307,7 +2374,7 @@ namespace Sheet
             var text = await ItemController.OpenText(path);
             if (text != null)
             {
-                var page = await Task.Run(() => JsonConvert.DeserializeObject<BlockItem>(text));
+                var page = await Task.Run(() => JsonSerializer.Deerialize<BlockItem>(text));
                 History.Register("Open Json");
                 ResetPage();
                 DeserializePage(page);
@@ -2378,7 +2445,7 @@ namespace Sheet
 
             Task.Run(() =>
             {
-                string text = JsonConvert.SerializeObject(page, Formatting.Indented);
+                string text = JsonSerializer.Serialize(page);
                 ItemController.SaveText(path, text);
             });
         }

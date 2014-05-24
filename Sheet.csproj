@@ -99,6 +99,7 @@
     <Compile Include="Core\Database.cs" />
     <Compile Include="Core\Entry.cs" />
     <Compile Include="Core\Item.cs" />
+    <Compile Include="Core\Json.cs" />
     <Compile Include="Core\Page.cs" />
     <Compile Include="Core\Wpf.cs" />
     <Compile Include="Controls\DatabasesControl.xaml.cs">
