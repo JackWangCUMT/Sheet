@@ -1,13 +1,8 @@
-﻿using Splat;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Shapes;
 
 namespace Sheet
 {
@@ -17,6 +12,46 @@ namespace Sheet
     {
         public int Id { get; set; }
         public object Element { get; set; }
+    }
+
+    public enum XHorizontalAlignment
+    {
+        Left = 0,
+        Center = 1,
+        Right = 2
+    }
+
+    public enum XVerticalAlignment
+    {
+        Top = 0,
+        Center = 1,
+        Bottom = 2
+    }
+
+    public class XBlockPoint
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public XBlockPoint(double x, double y)
+        {
+            X = x;
+            Y = y;
+        }
+    }
+
+    public class XBlockRect
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public XBlockRect(double x, double y, double width, double height)
+        {
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+        }
     }
 
     public class XThumb : XElement
@@ -110,6 +145,21 @@ namespace Sheet
         }
     }
 
+    public class XArgbColor
+    {
+        public byte Alpha { get; set; }
+        public byte Red { get; set; }
+        public byte Green { get; set; }
+        public byte Blue { get; set; }
+        public XArgbColor(byte alpha, byte red, byte green, byte blue)
+        {
+            Alpha = alpha;
+            Red = red;
+            Green = green;
+            Blue = blue;
+        }
+    }
+
     public class XBlock
     {
         public int Id { get; set; }
@@ -119,7 +169,7 @@ namespace Sheet
         public double Width { get; set; }
         public double Height { get; set; }
         public int DataId { get; set; }
-        public Color Backgroud { get; set; }
+        public XArgbColor Backgroud { get; set; }
         public List<XPoint> Points { get; set; }
         public List<XLine> Lines { get; set; }
         public List<XRectangle> Rectangles { get; set; }
@@ -139,6 +189,7 @@ namespace Sheet
         }
         public void Init()
         {
+            Backgroud = new XArgbColor(0, 0, 0, 0);
             Points = new List<XPoint>();
             Lines = new List<XLine>();
             Rectangles = new List<XRectangle>();
@@ -186,16 +237,6 @@ namespace Sheet
         }
     }
 
-    public interface ISheet
-    {
-        object GetParent();
-        void Add(XElement element);
-        void Remove(XElement element);
-        void Capture();
-        void ReleaseCapture();
-        bool IsCaptured { get; }
-    }
-
     public enum SheetMode
     {
         None,
@@ -235,11 +276,18 @@ namespace Sheet
 
     #region Block Serializer
 
-    public static class BlockSerializer
+    public class BlockSerializer
     {
-        #region Id
+        #region Fields
+
+        private static IBlockHelper blockHelper = new WpfBlockHelper();
+        private static IBlockFactory blockFactory = new WpfBlockFactory(); 
+
+        #endregion
+
+        #region Ids
         
-        public static int SetId(XBlock parent, int nextId)
+        private static int SetId(XBlock parent, int nextId)
         {
             if (parent.Points != null)
             {
@@ -305,20 +353,25 @@ namespace Sheet
         
         #region Serialize
 
-        private static ItemColor ToItemColor(Brush brush)
-        {
-            var color = (brush as SolidColorBrush).Color;
-            return ToItemColor(color);
-        }
-
-        private static ItemColor ToItemColor(Color color)
+        private static ItemColor ToItemColor(byte a, byte r, byte g, byte b)
         {
             return new ItemColor()
             {
-                Alpha = color.A,
-                Red = color.R,
-                Green = color.G,
-                Blue = color.B
+                Alpha = a,
+                Red = r,
+                Green = g,
+                Blue = b
+            };
+        }
+
+        private static ItemColor ToItemColor(XArgbColor color)
+        {
+            return new ItemColor()
+            {
+                Alpha = color.Alpha,
+                Red = color.Red,
+                Green = color.Green,
+                Blue = color.Blue
             };
         }
 
@@ -327,8 +380,8 @@ namespace Sheet
             var pointItem = new PointItem();
 
             pointItem.Id = point.Id;
-            pointItem.X = Canvas.GetLeft(point.Element as FrameworkElement);
-            pointItem.Y = Canvas.GetTop(point.Element as FrameworkElement);
+            pointItem.X = blockHelper.GetLeft(point);
+            pointItem.Y = blockHelper.GetTop(point);
 
             return pointItem;
         }
@@ -338,11 +391,11 @@ namespace Sheet
             var lineItem = new LineItem();
 
             lineItem.Id = line.Id;
-            lineItem.X1 = (line.Element as Line).X1;
-            lineItem.Y1 = (line.Element as Line).Y1;
-            lineItem.X2 = (line.Element as Line).X2;
-            lineItem.Y2 = (line.Element as Line).Y2;
-            lineItem.Stroke = ToItemColor((line.Element as Line).Stroke);
+            lineItem.X1 = blockHelper.GetX1(line);
+            lineItem.Y1 = blockHelper.GetY1(line);
+            lineItem.X2 = blockHelper.GetX2(line);
+            lineItem.Y2 = blockHelper.GetY2(line);
+            lineItem.Stroke = blockHelper.GetStroke(line);
             lineItem.StartId = line.Start == null ? -1 : line.Start.Id;
             lineItem.EndId = line.End == null ? -1 : line.End.Id;
 
@@ -354,13 +407,13 @@ namespace Sheet
             var rectangleItem = new RectangleItem();
 
             rectangleItem.Id = rectangle.Id;
-            rectangleItem.X = Canvas.GetLeft(rectangle.Element as Rectangle);
-            rectangleItem.Y = Canvas.GetTop(rectangle.Element as Rectangle);
-            rectangleItem.Width = (rectangle.Element as Rectangle).Width;
-            rectangleItem.Height = (rectangle.Element as Rectangle).Height;
-            rectangleItem.IsFilled = (rectangle.Element as Rectangle).Fill == BlockFactory.TransparentBrush ? false : true;
-            rectangleItem.Stroke = ToItemColor((rectangle.Element as Rectangle).Stroke);
-            rectangleItem.Fill = ToItemColor((rectangle.Element as Rectangle).Fill);
+            rectangleItem.X = blockHelper.GetLeft(rectangle);
+            rectangleItem.Y = blockHelper.GetTop(rectangle);
+            rectangleItem.Width = blockHelper.GetWidth(rectangle);
+            rectangleItem.Height = blockHelper.GetHeight(rectangle);
+            rectangleItem.IsFilled = blockHelper.IsTransparent(rectangle);
+            rectangleItem.Stroke = blockHelper.GetStroke(rectangle);
+            rectangleItem.Fill = blockHelper.GetFill(rectangle);
 
             return rectangleItem;
         }
@@ -370,13 +423,13 @@ namespace Sheet
             var ellipseItem = new EllipseItem();
 
             ellipseItem.Id = ellipse.Id;
-            ellipseItem.X = Canvas.GetLeft(ellipse.Element as Ellipse);
-            ellipseItem.Y = Canvas.GetTop(ellipse.Element as Ellipse);
-            ellipseItem.Width = (ellipse.Element as Ellipse).Width;
-            ellipseItem.Height = (ellipse.Element as Ellipse).Height;
-            ellipseItem.IsFilled = (ellipse.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? false : true;
-            ellipseItem.Stroke = ToItemColor((ellipse.Element as Ellipse).Stroke);
-            ellipseItem.Fill = ToItemColor((ellipse.Element as Ellipse).Fill);
+            ellipseItem.X = blockHelper.GetTop(ellipse);
+            ellipseItem.Y = blockHelper.GetLeft(ellipse);
+            ellipseItem.Width = blockHelper.GetWidth(ellipse);
+            ellipseItem.Height = blockHelper.GetHeight(ellipse);
+            ellipseItem.IsFilled = blockHelper.IsTransparent(ellipse);
+            ellipseItem.Stroke = blockHelper.GetStroke(ellipse);
+            ellipseItem.Fill = blockHelper.GetFill(ellipse);
 
             return ellipseItem;
         }
@@ -386,18 +439,16 @@ namespace Sheet
             var textItem = new TextItem();
 
             textItem.Id = text.Id;
-            textItem.X = Canvas.GetLeft(text.Element as Grid);
-            textItem.Y = Canvas.GetTop(text.Element as Grid);
-            textItem.Width = (text.Element as Grid).Width;
-            textItem.Height = (text.Element as Grid).Height;
-
-            var tb = BlockFactory.GetTextBlock(text);
-            textItem.Text = tb.Text;
-            textItem.HAlign = (int)tb.HorizontalAlignment;
-            textItem.VAlign = (int)tb.VerticalAlignment;
-            textItem.Size = tb.FontSize;
-            textItem.Foreground = ToItemColor(tb.Foreground);
-            textItem.Backgroud = ToItemColor(tb.Background);
+            textItem.X = blockHelper.GetLeft(text);
+            textItem.Y = blockHelper.GetTop(text);
+            textItem.Width = blockHelper.GetWidth(text);
+            textItem.Height = blockHelper.GetHeight(text);
+            textItem.Text = blockHelper.GetText(text);
+            textItem.HAlign = blockHelper.GetHAlign(text);
+            textItem.VAlign = blockHelper.GetVAlign(text);
+            textItem.Size = blockHelper.GetSize(text);
+            textItem.Backgroud = blockHelper.GetBackground(text);
+            textItem.Foreground = blockHelper.GetForeground(text);
 
             return textItem;
         }
@@ -407,11 +458,11 @@ namespace Sheet
             var imageItem = new ImageItem();
 
             imageItem.Id = image.Id;
-            imageItem.X = Canvas.GetLeft(image.Element as Image);
-            imageItem.Y = Canvas.GetTop(image.Element as Image);
-            imageItem.Width = (image.Element as Image).Width;
-            imageItem.Height = (image.Element as Image).Height;
-            imageItem.Data = (image.Element as Image).Tag as byte[];
+            imageItem.X = blockHelper.GetLeft(image);
+            imageItem.Y = blockHelper.GetTop(image);
+            imageItem.Width = blockHelper.GetWidth(image);
+            imageItem.Height = blockHelper.GetHeight(image);
+            imageItem.Data = blockHelper.GetData(image);
 
             return imageItem;
         }
@@ -540,7 +591,7 @@ namespace Sheet
 
         public static XPoint Deserialize(ISheet sheet, XBlock parent, PointItem pointItem, double thickness)
         {
-            var point = BlockFactory.CreatePoint(thickness, pointItem.X, pointItem.Y, false);
+            var point = blockFactory.CreatePoint(thickness, pointItem.X, pointItem.Y, false);
             
             point.Id = pointItem.Id;
 
@@ -559,7 +610,7 @@ namespace Sheet
 
         public static XLine Deserialize(ISheet sheet, XBlock parent, LineItem lineItem, double thickness)
         {
-            var line = BlockFactory.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2, lineItem.Stroke);
+            var line = blockFactory.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2, lineItem.Stroke);
 
             line.Id = lineItem.Id;
             line.StartId = lineItem.StartId;
@@ -580,7 +631,7 @@ namespace Sheet
 
         public static XRectangle Deserialize(ISheet sheet, XBlock parent, RectangleItem rectangleItem, double thickness)
         {
-            var rectangle = BlockFactory.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
+            var rectangle = blockFactory.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
 
             rectangle.Id = rectangleItem.Id;
             
@@ -599,7 +650,7 @@ namespace Sheet
 
         public static XEllipse Deserialize(ISheet sheet, XBlock parent, EllipseItem ellipseItem, double thickness)
         {
-            var ellipse = BlockFactory.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
+            var ellipse = blockFactory.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
 
             ellipse.Id = ellipseItem.Id;
             
@@ -618,11 +669,11 @@ namespace Sheet
 
         public static XText Deserialize(ISheet sheet, XBlock parent, TextItem textItem)
         {
-            var text = BlockFactory.CreateText(textItem.Text,
+            var text = blockFactory.CreateText(textItem.Text,
                 textItem.X, textItem.Y,
                 textItem.Width, textItem.Height,
-                (HorizontalAlignment)textItem.HAlign,
-                (VerticalAlignment)textItem.VAlign,
+                textItem.HAlign,
+                textItem.VAlign,
                 textItem.Size,
                 textItem.Backgroud,
                 textItem.Foreground);
@@ -644,7 +695,7 @@ namespace Sheet
 
         public static XImage Deserialize(ISheet sheet, XBlock parent, ImageItem imageItem)
         {
-            var image = BlockFactory.CreateImage(imageItem.X, imageItem.Y, imageItem.Width, imageItem.Height, imageItem.Data);
+            var image = blockFactory.CreateImage(imageItem.X, imageItem.Y, imageItem.Width, imageItem.Height, imageItem.Data);
 
             image.Id = imageItem.Id;
             
@@ -748,6 +799,12 @@ namespace Sheet
 
     public static class BlockController
     {
+        #region Fields
+
+        private static IBlockHelper blockHelper = new WpfBlockHelper();
+
+        #endregion
+
         #region Add
 
         public static List<XPoint> Add(ISheet sheet, IEnumerable<PointItem> pointItems, XBlock parent, XBlock selected, bool select, double thickness)
@@ -1155,10 +1212,11 @@ namespace Sheet
         {
             if (point.Element != null)
             {
-                point.X = Canvas.GetLeft(point.Element as Ellipse) + x;
-                point.Y = Canvas.GetTop(point.Element as Ellipse) + y;
-                Canvas.SetLeft(point.Element as Ellipse, point.X);
-                Canvas.SetTop(point.Element as Ellipse, point.Y);
+                point.X = blockHelper.GetLeft(point) + x;
+                point.Y = blockHelper.GetTop(point) + y;
+
+                blockHelper.SetLeft(point, point.X);
+                blockHelper.SeTop(point, point.Y);
             }
             else
             {
@@ -1202,14 +1260,18 @@ namespace Sheet
 
         public static void MoveStart(double x, double y, XLine line)
         {
-            (line.Element as Line).X1 += x;
-            (line.Element as Line).Y1 += y;
+            double oldx = blockHelper.GetX1(line);
+            double oldy = blockHelper.GetY1(line);
+            blockHelper.SetX1(line, oldx + x);
+            blockHelper.SetY1(line, oldy + y);
         }
 
         public static void MoveEnd(double x, double y, XLine line)
         {
-            (line.Element as Line).X2 += x;
-            (line.Element as Line).Y2 += y;
+            double oldx = blockHelper.GetX2(line);
+            double oldy = blockHelper.GetY2(line);
+            blockHelper.SetX2(line, oldx + x);
+            blockHelper.SetY2(line, oldy + y);
         } 
 
 	    #endregion
@@ -1218,8 +1280,10 @@ namespace Sheet
 
         public static void Move(double x, double y, XRectangle rectangle)
         {
-            Canvas.SetLeft(rectangle.Element as Rectangle, Canvas.GetLeft(rectangle.Element as Rectangle) + x);
-            Canvas.SetTop(rectangle.Element as Rectangle, Canvas.GetTop(rectangle.Element as Rectangle) + y);
+            double left = blockHelper.GetLeft(rectangle) + x;
+            double top = blockHelper.GetTop(rectangle) + y;
+            blockHelper.SetLeft(rectangle, left);
+            blockHelper.SeTop(rectangle, top);
         }
 
         public static void Move(double x, double y, IEnumerable<XRectangle> rectangles)
@@ -1236,8 +1300,10 @@ namespace Sheet
 
         public static void Move(double x, double y, XEllipse ellipse)
         {
-            Canvas.SetLeft(ellipse.Element as Ellipse, Canvas.GetLeft(ellipse.Element as Ellipse) + x);
-            Canvas.SetTop(ellipse.Element as Ellipse, Canvas.GetTop(ellipse.Element as Ellipse) + y);
+            double left = blockHelper.GetLeft(ellipse) + x;
+            double top = blockHelper.GetTop(ellipse) + y;
+            blockHelper.SetLeft(ellipse, left);
+            blockHelper.SeTop(ellipse, top);
         }
 
         public static void Move(double x, double y, IEnumerable<XEllipse> ellipses)
@@ -1254,8 +1320,10 @@ namespace Sheet
 
         public static void Move(double x, double y, XText text)
         {
-            Canvas.SetLeft(text.Element as Grid, Canvas.GetLeft(text.Element as Grid) + x);
-            Canvas.SetTop(text.Element as Grid, Canvas.GetTop(text.Element as Grid) + y);
+            double left = blockHelper.GetLeft(text) + x;
+            double top = blockHelper.GetTop(text) + y;
+            blockHelper.SetLeft(text, left);
+            blockHelper.SeTop(text, top);
         }
 
         public static void Move(double x, double y, IEnumerable<XText> texts)
@@ -1272,8 +1340,10 @@ namespace Sheet
 
         public static void Move(double x, double y, XImage image)
         {
-            Canvas.SetLeft(image.Element as Image, Canvas.GetLeft(image.Element as Image) + x);
-            Canvas.SetTop(image.Element as Image, Canvas.GetTop(image.Element as Image) + y);
+            double left = blockHelper.GetLeft(image) + x;
+            double top = blockHelper.GetTop(image) + y;
+            blockHelper.SetLeft(image, left);
+            blockHelper.SeTop(image, top);
         }
 
         public static void Move(double x, double y, IEnumerable<XImage> images)
@@ -1349,42 +1419,37 @@ namespace Sheet
 
         public static void Deselect(XPoint point)
         {
-            //(point.Element as Ellipse).Stroke = BlockFactory.NormalBrush;
-            //(point.Element as Ellipse).Fill = (point.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.NormalBrush;
-            FrameworkElementProperties.SetIsSelected(point.Element as Ellipse, false);
-            //Panel.SetZIndex(point.Element as Ellipse, DeselectedZIndex);
+            blockHelper.SetIsSelected(point, false);
         }
 
         public static void Deselect(XLine line)
         {
-            (line.Element as Line).Stroke = BlockFactory.NormalBrush;
-            Panel.SetZIndex((line.Element as Line), DeselectedZIndex);
+            blockHelper.Deselect(line);
+            blockHelper.SetZIndex(line, DeselectedZIndex);
         }
 
         public static void Deselect(XRectangle rectangle)
         {
-            (rectangle.Element as Rectangle).Stroke = BlockFactory.NormalBrush;
-            (rectangle.Element as Rectangle).Fill = (rectangle.Element as Rectangle).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.NormalBrush;
-            Panel.SetZIndex(rectangle.Element as Rectangle, DeselectedZIndex);
+            blockHelper.Deselect(rectangle);
+            blockHelper.SetZIndex(rectangle, DeselectedZIndex);
         }
 
         public static void Deselect(XEllipse ellipse)
         {
-            (ellipse.Element as Ellipse).Stroke = BlockFactory.NormalBrush;
-            (ellipse.Element as Ellipse).Fill = (ellipse.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.NormalBrush;
-            Panel.SetZIndex(ellipse.Element as Ellipse, DeselectedZIndex);
+            blockHelper.Deselect(ellipse);
+            blockHelper.SetZIndex(ellipse, DeselectedZIndex);
         }
 
         public static void Deselect(XText text)
         {
-            BlockFactory.GetTextBlock(text).Foreground = BlockFactory.NormalBrush;
-            Panel.SetZIndex(text.Element as Grid, DeselectedZIndex);
+            blockHelper.Deselect(text);
+            blockHelper.SetZIndex(text, DeselectedZIndex);
         }
 
         public static void Deselect(XImage image)
         {
-            (image.Element as Image).OpacityMask = BlockFactory.NormalBrush;
-            Panel.SetZIndex(image.Element as Image, DeselectedZIndex);
+            blockHelper.Deselect(image);
+            blockHelper.SetZIndex(image, DeselectedZIndex);
         }
 
         public static void Deselect(XBlock parent)
@@ -1448,42 +1513,37 @@ namespace Sheet
 
         public static void Select(XPoint point)
         {
-            //(point.Element as Ellipse).Stroke = BlockFactory.SelectedBrush;
-            //(point.Element as Ellipse).Fill = (point.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.SelectedBrush;
-            FrameworkElementProperties.SetIsSelected(point.Element as Ellipse, true);
-            //Panel.SetZIndex(point.Element as Ellipse, SelectedZIndex);
+            blockHelper.SetIsSelected(point, true);
         }
 
         public static void Select(XLine line)
         {
-            (line.Element as Line).Stroke = BlockFactory.SelectedBrush;
-            Panel.SetZIndex(line.Element as Line, SelectedZIndex);
+            blockHelper.Select(line);
+            blockHelper.SetZIndex(line, SelectedZIndex);
         }
 
         public static void Select(XRectangle rectangle)
         {
-            (rectangle.Element as Rectangle).Stroke = BlockFactory.SelectedBrush;
-            (rectangle.Element as Rectangle).Fill = (rectangle.Element as Rectangle).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.SelectedBrush;
-            Panel.SetZIndex(rectangle.Element as Rectangle, SelectedZIndex);
+            blockHelper.Select(rectangle);
+            blockHelper.SetZIndex(rectangle, SelectedZIndex);
         }
 
         public static void Select(XEllipse ellipse)
         {
-            (ellipse.Element as Ellipse).Stroke = BlockFactory.SelectedBrush;
-            (ellipse.Element as Ellipse).Fill = (ellipse.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.TransparentBrush : BlockFactory.SelectedBrush;
-            Panel.SetZIndex(ellipse.Element as Ellipse, SelectedZIndex);
+            blockHelper.Select(ellipse);
+            blockHelper.SetZIndex(ellipse, SelectedZIndex);
         }
 
         public static void Select(XText text)
         {
-            BlockFactory.GetTextBlock(text).Foreground = BlockFactory.SelectedBrush;
-            Panel.SetZIndex(text.Element as Grid, SelectedZIndex);
+            blockHelper.Select(text);
+            blockHelper.SetZIndex(text, SelectedZIndex);
         }
 
         public static void Select(XImage image)
         {
-            (image.Element as Image).OpacityMask = BlockFactory.SelectedBrush;
-            Panel.SetZIndex(image.Element as Image, SelectedZIndex);
+            blockHelper.Select(image);
+            blockHelper.SetZIndex(image, SelectedZIndex);
         }
 
         public static void Select(XBlock parent)
@@ -1831,17 +1891,53 @@ namespace Sheet
 
         #region HitTest
 
-        public static bool HitTest(IEnumerable<XPoint> points, XBlock selected, Rect rect, bool onlyFirst, bool select, object relativeTo)
+        private static void HitTestClean(XBlock selected)
+        {
+            if (selected.Points != null && selected.Points.Count == 0)
+            {
+                selected.Points = null;
+            }
+
+            if (selected.Lines != null && selected.Lines.Count == 0)
+            {
+                selected.Lines = null;
+            }
+
+            if (selected.Rectangles != null && selected.Rectangles.Count == 0)
+            {
+                selected.Rectangles = null;
+            }
+
+            if (selected.Ellipses != null && selected.Ellipses.Count == 0)
+            {
+                selected.Ellipses = null;
+            }
+
+            if (selected.Texts != null && selected.Texts.Count == 0)
+            {
+                selected.Texts = null;
+            }
+
+            if (selected.Images != null && selected.Images.Count == 0)
+            {
+                selected.Images = null;
+            }
+
+            if (selected.Blocks != null && selected.Blocks.Count == 0)
+            {
+                selected.Blocks = null;
+            }
+        }
+
+        public static bool HitTest(IEnumerable<XPoint> points, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var point in points)
             {
-                var bounds = WpfVisualHelper.GetContentBounds(point, relativeTo);
-                if (rect.IntersectsWith(bounds))
+                if (blockHelper.HitTest(point, rect, relativeTo))
                 {
                     if (select)
                     {
-                        //if ((point.Element as Ellipse).Stroke != BlockFactory.SelectedBrush)
-                        if (!FrameworkElementProperties.GetIsSelected((point.Element as Ellipse)))
+                        if (!blockHelper.GetIsSelected(point))
                         {
                             Select(point);
                             selected.Points.Add(point);
@@ -1862,16 +1958,15 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(IEnumerable<XLine> lines, XBlock selected, Rect rect, bool onlyFirst, bool select)
+        public static bool HitTest(IEnumerable<XLine> lines, XBlock selected, XBlockRect rect, bool onlyFirst, bool select)
         {
             foreach (var line in lines)
             {
-                var bounds = WpfVisualHelper.GetContentBounds(line);
-                if (rect.IntersectsWith(bounds))
+                if (blockHelper.HitTest(line, rect))
                 {
                     if (select)
                     {
-                        if ((line.Element as Line).Stroke != BlockFactory.SelectedBrush)
+                        if (blockHelper.IsSelected(line))
                         {
                             Select(line);
                             selected.Lines.Add(line);
@@ -1892,16 +1987,15 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(IEnumerable<XRectangle> rectangles, XBlock selected, Rect rect, bool onlyFirst, bool select, object relativeTo)
+        public static bool HitTest(IEnumerable<XRectangle> rectangles, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var rectangle in rectangles)
             {
-                var bounds = WpfVisualHelper.GetContentBounds(rectangle, relativeTo);
-                if (rect.IntersectsWith(bounds))
+                if (blockHelper.HitTest(rectangle, rect, relativeTo))
                 {
                     if (select)
                     {
-                        if ((rectangle.Element as Rectangle).Stroke != BlockFactory.SelectedBrush)
+                        if (blockHelper.IsSelected(rectangle))
                         {
                             Select(rectangle);
                             selected.Rectangles.Add(rectangle);
@@ -1922,16 +2016,15 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(IEnumerable<XEllipse> ellipses, XBlock selected, Rect rect, bool onlyFirst, bool select, object relativeTo)
+        public static bool HitTest(IEnumerable<XEllipse> ellipses, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var ellipse in ellipses)
             {
-                var bounds = WpfVisualHelper.GetContentBounds(ellipse, relativeTo);
-                if (rect.IntersectsWith(bounds))
+                if (blockHelper.HitTest(ellipse, rect, relativeTo))
                 {
                     if (select)
                     {
-                        if ((ellipse.Element as Ellipse).Stroke != BlockFactory.SelectedBrush)
+                        if (blockHelper.IsSelected(ellipse))
                         {
                             Select(ellipse);
                             selected.Ellipses.Add(ellipse);
@@ -1952,17 +2045,15 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(IEnumerable<XText> texts, XBlock selected, Rect rect, bool onlyFirst, bool select, object relativeTo)
+        public static bool HitTest(IEnumerable<XText> texts, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var text in texts)
             {
-                var bounds = WpfVisualHelper.GetContentBounds(text, relativeTo);
-                if (rect.IntersectsWith(bounds))
+                if (blockHelper.HitTest(text, rect, relativeTo))
                 {
                     if (select)
                     {
-                        var tb = BlockFactory.GetTextBlock(text);
-                        if (tb.Foreground != BlockFactory.SelectedBrush)
+                        if (blockHelper.IsSelected(text))
                         {
                             Select(text);
                             selected.Texts.Add(text);
@@ -1983,16 +2074,15 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(IEnumerable<XImage> images, XBlock selected, Rect rect, bool onlyFirst, bool select, object relativeTo)
+        public static bool HitTest(IEnumerable<XImage> images, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var image in images)
             {
-                var bounds = WpfVisualHelper.GetContentBounds(image, relativeTo);
-                if (rect.IntersectsWith(bounds))
+                if (blockHelper.HitTest(image, rect, relativeTo))
                 {
                     if (select)
                     {
-                        if ((image.Element as Image).OpacityMask != BlockFactory.SelectedBrush)
+                        if (blockHelper.IsSelected(image))
                         {
                             Select(image);
                             selected.Images.Add(image);
@@ -2013,7 +2103,7 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(IEnumerable<XBlock> blocks, XBlock selected, Rect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo)
+        public static bool HitTest(IEnumerable<XBlock> blocks, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo)
         {
             foreach (var block in blocks)
             {
@@ -2044,7 +2134,7 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(XBlock parent, XBlock selected, Rect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo)
+        public static bool HitTest(XBlock parent, XBlock selected, XBlockRect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo)
         {
             bool result = false;
 
@@ -2093,7 +2183,7 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestClick(ISheet sheet, XBlock parent, XBlock selected, Point p, double size, bool selectInsideBlock, bool resetSelected)
+        public static bool HitTestClick(ISheet sheet, XBlock parent, XBlock selected, XBlockPoint p, double size, bool selectInsideBlock, bool resetSelected)
         {
             if (resetSelected)
             {
@@ -2104,7 +2194,7 @@ namespace Sheet
                 selected.ReInit();
             }
 
-            var rect = new Rect(p.X - size, p.Y - size, 2 * size, 2 * size);
+            var rect = new XBlockRect(p.X - size, p.Y - size, 2 * size, 2 * size);
 
             if (parent.Points != null)
             {
@@ -2180,11 +2270,11 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestForBlocks(ISheet sheet, XBlock parent, XBlock selected, Point p, double size)
+        public static bool HitTestForBlocks(ISheet sheet, XBlock parent, XBlock selected, XBlockPoint p, double size)
         {
             selected.Init();
 
-            var rect = new Rect(p.X - size, p.Y - size, 2 * size, 2 * size);
+            var rect = new XBlockRect(p.X - size, p.Y - size, 2 * size, 2 * size);
 
             if (parent.Blocks != null)
             {
@@ -2200,7 +2290,7 @@ namespace Sheet
             return false;
         }
 
-        public static void HitTestSelectionRect(ISheet sheet, XBlock parent, XBlock selected, Rect rect, bool resetSelected)
+        public static void HitTestSelectionRect(ISheet sheet, XBlock parent, XBlock selected, XBlockRect rect, bool resetSelected)
         {
             if (resetSelected)
             {
@@ -2249,61 +2339,23 @@ namespace Sheet
             HitTestClean(selected);
         }
 
-        private static void HitTestClean(XBlock selected)
-        {
-            if (selected.Points != null && selected.Points.Count == 0)
-            {
-                selected.Points = null;
-            }
-
-            if (selected.Lines != null && selected.Lines.Count == 0)
-            {
-                selected.Lines = null;
-            }
-
-            if (selected.Rectangles != null && selected.Rectangles.Count == 0)
-            {
-                selected.Rectangles = null;
-            }
-
-            if (selected.Ellipses != null && selected.Ellipses.Count == 0)
-            {
-                selected.Ellipses = null;
-            }
-
-            if (selected.Texts != null && selected.Texts.Count == 0)
-            {
-                selected.Texts = null;
-            }
-
-            if (selected.Images != null && selected.Images.Count == 0)
-            {
-                selected.Images = null;
-            }
-
-            if (selected.Blocks != null && selected.Blocks.Count == 0)
-            {
-                selected.Blocks = null;
-            }
-        }
-
         #endregion
 
         #region Fill
 
         public static void ToggleFill(XRectangle rectangle)
         {
-            (rectangle.Element as Rectangle).Fill = (rectangle.Element as Rectangle).Fill == BlockFactory.TransparentBrush ? BlockFactory.NormalBrush : BlockFactory.TransparentBrush;
+            blockHelper.ToggleFill(rectangle);
         }
 
         public static void ToggleFill(XEllipse ellipse)
         {
-            (ellipse.Element as Ellipse).Fill = (ellipse.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.NormalBrush : BlockFactory.TransparentBrush;
+            blockHelper.ToggleFill(ellipse);
         }
 
         public static void ToggleFill(XPoint point)
         {
-            (point.Element as Ellipse).Fill = (point.Element as Ellipse).Fill == BlockFactory.TransparentBrush ? BlockFactory.NormalBrush : BlockFactory.TransparentBrush;
+            blockHelper.ToggleFill(point);
         }
 
         #endregion
@@ -2313,6 +2365,8 @@ namespace Sheet
         public static XBlock ShallowCopy(XBlock original)
         {
             var copy = new XBlock(original.Id, original.X, original.Y, original.Width, original.Height, original.DataId, original.Name);
+
+            copy.Backgroud = original.Backgroud;
 
             if (original.Points != null)
             {
@@ -2360,333 +2414,5 @@ namespace Sheet
         #endregion
     }
 
-    #endregion
-
-    #region Block Factory
-
-    public static class BlockFactory
-    {
-        #region Brushes
-
-        public static SolidColorBrush NormalBrush = Brushes.Black;
-        public static SolidColorBrush SelectedBrush = Brushes.Red;
-        public static SolidColorBrush HoverBrush = Brushes.Yellow;
-        public static SolidColorBrush TransparentBrush = Brushes.Transparent;
-
-        #endregion
-
-        #region Styles
-
-        private static void SetStyle(Ellipse ellipse, bool isVisible)
-        {
-            var style = new Style(typeof(Ellipse));
-            style.Setters.Add(new Setter(Ellipse.FillProperty, isVisible ? NormalBrush : TransparentBrush));
-            style.Setters.Add(new Setter(Ellipse.StrokeProperty, isVisible ? NormalBrush : TransparentBrush));
-
-            var isSelectedTrigger = new Trigger() { Property = FrameworkElementProperties.IsSelectedProperty, Value = true };
-            isSelectedTrigger.Setters.Add(new Setter(Ellipse.FillProperty, SelectedBrush));
-            isSelectedTrigger.Setters.Add(new Setter(Ellipse.StrokeProperty, SelectedBrush));
-            style.Triggers.Add(isSelectedTrigger);
-
-            var isMouseOverTrigger = new Trigger() { Property = Ellipse.IsMouseOverProperty, Value = true };
-            isMouseOverTrigger.Setters.Add(new Setter(Ellipse.FillProperty, HoverBrush));
-            isMouseOverTrigger.Setters.Add(new Setter(Ellipse.StrokeProperty, HoverBrush));
-            style.Triggers.Add(isMouseOverTrigger);
-
-            ellipse.Style = style;
-
-            FrameworkElementProperties.SetIsSelected(ellipse, false);
-        }
-
-        #endregion
-
-        #region Create
-
-        public static XPoint CreatePoint(double thickness, double x, double y, bool isVisible)
-        {
-            var ellipse = new Ellipse()
-            {
-                StrokeThickness = thickness,
-                StrokeStartLineCap = PenLineCap.Round,
-                StrokeEndLineCap = PenLineCap.Round,
-                Width = 8.0,
-                Height = 8.0,
-                Margin = new Thickness(-4.0, -4.0, 0.0, 0.0),
-            };
-
-            SetStyle(ellipse, isVisible);
-            Panel.SetZIndex(ellipse, BlockController.SelectedZIndex);
-
-            Canvas.SetLeft(ellipse, x);
-            Canvas.SetTop(ellipse, y);
-
-            var xpoint = new XPoint(ellipse, x, y, isVisible);
-
-            return xpoint;
-        }
-
-        public static XLine CreateLine(double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
-        {
-            var strokeBrush = new SolidColorBrush(Color.FromArgb(stroke.Alpha, stroke.Red, stroke.Green, stroke.Blue));
-
-            strokeBrush.Freeze();
-
-            var line = new Line()
-            {
-                Stroke = strokeBrush,
-                StrokeThickness = thickness,
-                StrokeStartLineCap = PenLineCap.Round,
-                StrokeEndLineCap = PenLineCap.Round,
-                X1 = x1,
-                Y1 = y1,
-                X2 = x2,
-                Y2 = y2
-            };
-
-            var xline = new XLine(line);
-
-            return xline;
-        }
-
-        public static XLine CreateLine(double thickness, XPoint start, XPoint end, ItemColor stroke)
-        {
-            var xline = CreateLine(thickness, start.X, start.Y, end.X, end.Y, stroke);
-            xline.Start = start;
-            xline.End = end;
-            return xline;
-        }
-
-        public static XRectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled)
-        {
-            var rectangle = new Rectangle()
-            {
-                Fill = isFilled ? NormalBrush : TransparentBrush,
-                Stroke = NormalBrush,
-                StrokeThickness = thickness,
-                StrokeStartLineCap = PenLineCap.Round,
-                StrokeEndLineCap = PenLineCap.Round,
-                Width = width,
-                Height = height
-            };
-
-            Canvas.SetLeft(rectangle, x);
-            Canvas.SetTop(rectangle, y);
-
-            var xrectangle = new XRectangle(rectangle);
-
-            return xrectangle;
-        }
-
-        public static XEllipse CreateEllipse(double thickness, double x, double y, double width, double height, bool isFilled)
-        {
-            var ellipse = new Ellipse()
-            {
-                Fill = isFilled ? NormalBrush : TransparentBrush,
-                Stroke = NormalBrush,
-                StrokeThickness = thickness,
-                StrokeStartLineCap = PenLineCap.Round,
-                StrokeEndLineCap = PenLineCap.Round,
-                Width = width,
-                Height = height
-            };
-
-            Canvas.SetLeft(ellipse, x);
-            Canvas.SetTop(ellipse, y);
-
-            var xellipse = new XEllipse(ellipse);
-
-            return xellipse;
-        }
-
-        public static TextBlock GetTextBlock(XText text)
-        {
-            return (text.Element as Grid).Children[0] as TextBlock;
-        }
-
-        public static XText CreateText(string text,
-            double x, double y, 
-            double width, double height,
-            HorizontalAlignment halign, VerticalAlignment valign,
-            double fontSize,
-            ItemColor backgroud, ItemColor foreground)
-        {
-            var backgroundBrush = new SolidColorBrush(Color.FromArgb(backgroud.Alpha, backgroud.Red, backgroud.Green, backgroud.Blue));
-            var foregroundBrush = new SolidColorBrush(Color.FromArgb(foreground.Alpha, foreground.Red, foreground.Green, foreground.Blue));
-
-            backgroundBrush.Freeze();
-            foregroundBrush.Freeze();
-
-            var grid = new Grid();
-            grid.Background = backgroundBrush;
-            grid.Width = width;
-            grid.Height = height;
-            Canvas.SetLeft(grid, x);
-            Canvas.SetTop(grid, y);
-
-            var tb = new TextBlock();
-            tb.HorizontalAlignment = halign;
-            tb.VerticalAlignment = valign;
-            tb.Background = backgroundBrush;
-            tb.Foreground = foregroundBrush;
-            tb.FontSize = fontSize;
-            tb.FontFamily = new FontFamily("Calibri");
-            tb.Text = text;
-
-            grid.Children.Add(tb);
-
-            var xtext = new XText(grid);
-
-            return xtext;
-        }
-
-        public static XImage CreateImage(double x, double y, double width, double height, byte[] data)
-        {
-            Image image = new Image();
-
-            // enable high quality image scaling
-            RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
-
-            // store original image data is Tag property
-            image.Tag = data;
-
-            // opacity mask is used for determining selection state
-            image.OpacityMask = NormalBrush;
-
-            //using(var ms = new System.IO.MemoryStream(data))
-            //{
-            //    image = Image.FromStream(ms);
-            //}
-            using (var ms = new System.IO.MemoryStream(data))
-            {
-                IBitmap profileImage = BitmapLoader.Current.Load(ms, null, null).Result;
-                image.Source = profileImage.ToNative();
-            }
-
-            image.Width = width;
-            image.Height = height;
-
-            Canvas.SetLeft(image, x);
-            Canvas.SetTop(image, y);
-
-            var ximage = new XImage(image);
-
-            return ximage;
-        }
-
-        #endregion
-    }
-
-    #endregion
-    
-    #region PointController
-
-    public static class PointController
-    {
-        #region Get
-
-        public static IEnumerable<KeyValuePair<int, XPoint>> GetAllPoints(List<XBlock> blocks)
-        {
-            foreach (var block in blocks)
-            {
-                if (block.Points != null)
-                {
-                    foreach (var point in block.Points)
-                    {
-                        yield return new KeyValuePair<int, XPoint>(point.Id, point);
-                    }
-                }
-
-                if (block.Blocks != null)
-                {
-                    foreach (var kvp in GetAllPoints(block.Blocks))
-                    {
-                        yield return kvp;
-                    }
-                }
-            }
-        }
-
-        public static IEnumerable<XLine> GetAllLines(List<XBlock> blocks)
-        {
-            foreach (var block in blocks)
-            {
-                if (block.Lines != null)
-                {
-                    foreach (var line in block.Lines)
-                    {
-                        yield return line;
-                    }
-                }
-
-                if (block.Blocks != null)
-                {
-                    foreach (var line in GetAllLines(block.Blocks))
-                    {
-                        yield return line;
-                    }
-                }
-            }
-        }
-
-        #endregion
-
-        #region Connect
-
-        public static void ConnectStart(XPoint point, XLine line)
-        {
-            var dependecy = new XDependency(line, (element, p) => { (element.Element as Line).X1 = p.X; (element.Element as Line).Y1 = p.Y; });
-            point.Connected.Add(dependecy);
-        }
-
-        public static void ConnectEnd(XPoint point, XLine line)
-        {
-            var dependecy = new XDependency(line, (element, p) => { (element.Element as Line).X2 = p.X; (element.Element as Line).Y2 = p.Y; });
-            point.Connected.Add(dependecy);
-        }
-
-        #endregion
-
-        #region Dependencies
-
-        public static void UpdateDependencies(List<XBlock> blocks, List<XPoint> points, List<XLine> lines)
-        {
-            // get all points
-            var ps = GetAllPoints(blocks).ToDictionary(x => x.Key, x => x.Value);
-
-            foreach (var point in points)
-            {
-                ps.Add(point.Id, point);
-            }
-
-            // get all lines
-            var ls = GetAllLines(blocks).ToList();
-
-            foreach (var line in lines)
-            {
-                ls.Add(line);
-            }
-
-            // update point dependencies
-            foreach (var line in ls)
-            {
-                if (line.StartId >= 0)
-                {
-                    var point = ps[line.StartId];
-                    line.Start = point;
-                    ConnectStart(line.Start, line);
-                }
-
-                if (line.EndId >= 0)
-                {
-                    var point = ps[line.EndId];
-                    line.End = point;
-                    ConnectEnd(line.End, line);
-                }
-            }
-        }
-
-        #endregion
-    }
-    
     #endregion
 }

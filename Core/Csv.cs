@@ -8,15 +8,6 @@ using System.Threading.Tasks;
 
 namespace Sheet
 {
-    #region IDataReader
-
-    public interface IDataReader
-    {
-        IEnumerable<string[]> Read(string path);
-    } 
-
-    #endregion
-
     #region CsvDataReader
 
     public class CsvDataReader : IDataReader

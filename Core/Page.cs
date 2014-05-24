@@ -1,14 +1,9 @@
-﻿using Splat;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Shapes;
 
 namespace Sheet
 {
@@ -118,13 +113,28 @@ namespace Sheet
 
     #region Page Factory
 
-    public static class PageFactory
+    public class LogicContentPageFactory : IPageFactory
     {
+        #region Fields
+
+        private IBlockFactory blockFactory;
+
+        #endregion
+
+        #region Constructor
+
+        public LogicContentPageFactory(IBlockFactory blockFactory)
+        {
+            this.blockFactory = blockFactory;
+        } 
+
+        #endregion
+
         #region Create
 
-        public static void CreateLine(ISheet sheet, List<XLine> lines, double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
+        public void CreateLine(ISheet sheet, List<XLine> lines, double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
         {
-            var line = BlockFactory.CreateLine(thickness, x1, y1, x2, y2, stroke);
+            var line = blockFactory.CreateLine(thickness, x1, y1, x2, y2, stroke);
 
             if (lines != null)
             {
@@ -137,9 +147,9 @@ namespace Sheet
             }
         }
 
-        public static void CreateText(ISheet sheet, List<XText> texts, string content, double x, double y, double width, double height, HorizontalAlignment halign, VerticalAlignment valign, double size, ItemColor foreground)
+        public void CreateText(ISheet sheet, List<XText> texts, string content, double x, double y, double width, double height, int halign, int valign, double size, ItemColor foreground)
         {
-            var text = BlockFactory.CreateText(content, x, y, width, height, halign, valign, size, ItemColors.Transparent, foreground);
+            var text = blockFactory.CreateText(content, x, y, width, height, halign, valign, size, ItemColors.Transparent, foreground);
 
             if (texts != null)
             {
@@ -152,7 +162,7 @@ namespace Sheet
             }
         }
 
-        public static void CreateFrame(ISheet sheet, XBlock block, double size, double thickness, ItemColor stroke)
+        public void CreateFrame(ISheet sheet, XBlock block, double size, double thickness, ItemColor stroke)
         {
             double padding = 6.0;
             double width = 1260.0;
@@ -188,7 +198,7 @@ namespace Sheet
                 for (double y = rowsStart; y < rowsEnd; y += size)
                 {
                     CreateLine(sheet, block.Lines, thickness, startX, y, 330.0, y, stroke);
-                    CreateText(sheet, block.Texts, leftRowNumber.ToString("00"), startX, y, 30.0 - padding, size, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0, stroke);
+                    CreateText(sheet, block.Texts, leftRowNumber.ToString("00"), startX, y, 30.0 - padding, size, (int)XHorizontalAlignment.Center, (int)XVerticalAlignment.Center, 14.0, stroke);
                     leftRowNumber++;
                 }
 
@@ -197,7 +207,7 @@ namespace Sheet
                 for (double y = rowsStart; y < rowsEnd; y += size)
                 {
                     CreateLine(sheet, block.Lines, thickness, 930.0, y, width - padding, y, stroke);
-                    CreateText(sheet, block.Texts, rightRowNumber.ToString("00"), width - 30.0, y, 30.0 - padding, size, HorizontalAlignment.Center, VerticalAlignment.Center, 14.0, stroke);
+                    CreateText(sheet, block.Texts, rightRowNumber.ToString("00"), width - 30.0, y, 30.0 - padding, size, (int)XHorizontalAlignment.Center, (int)XVerticalAlignment.Center, 14.0, stroke);
                     rightRowNumber++;
                 }
 
@@ -274,7 +284,7 @@ namespace Sheet
             }
         }
 
-        public static void CreateGrid(ISheet sheet, XBlock block, double startX, double startY, double width, double height, double size, double thickness, ItemColor stroke)
+        public void CreateGrid(ISheet sheet, XBlock block, double startX, double startY, double width, double height, double size, double thickness, ItemColor stroke)
         {
             for (double y = startY + size; y < height + startY; y += size)
             {
@@ -285,33 +295,6 @@ namespace Sheet
             {
                 CreateLine(sheet, block.Lines, thickness, x, startY, x, height + startY, stroke);
             }
-        }
-
-        public static XRectangle CreateSelectionRectangle(double thickness, double x, double y, double width, double height)
-        {
-            var fillBrush = new SolidColorBrush(Color.FromArgb(0x3A, 0x00, 0x00, 0xFF));
-            var strokeBrush = new SolidColorBrush(Color.FromArgb(0x7F, 0x00, 0x00, 0xFF));
-
-            fillBrush.Freeze();
-            strokeBrush.Freeze();
-
-            var rect = new Rectangle()
-            {
-                Fill = fillBrush,
-                Stroke = strokeBrush,
-                StrokeThickness = thickness,
-                StrokeStartLineCap = PenLineCap.Round,
-                StrokeEndLineCap = PenLineCap.Round,
-                Width = width,
-                Height = height
-            };
-
-            Canvas.SetLeft(rect, x);
-            Canvas.SetTop(rect, y);
-
-            var xrect = new XRectangle(rect);
-
-            return xrect;
         }
 
         #endregion

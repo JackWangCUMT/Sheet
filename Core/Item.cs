@@ -579,11 +579,7 @@ namespace Sheet
             return imageItem;
         }
 
-        private static BlockItem DeserializeBlockRecursive(string[] lines,
-            int length,
-            ref int end,
-            string[] m,
-            ItemSerializeOptions options)
+        private static BlockItem DeserializeBlockRecursive(string[] lines, int length, ref int end, string[] m, ItemSerializeOptions options)
         {
             var blockItem = DeserializeRootBlock(lines,
                 length,
@@ -610,15 +606,7 @@ namespace Sheet
             return blockItem;
         }
 
-        private static BlockItem DeserializeRootBlock(string[] lines,
-            int length,
-            ref int end,
-            string name,
-            int id,
-            double x, double y,
-            double width, double height,
-            int dataId,
-            ItemSerializeOptions options)
+        private static BlockItem DeserializeRootBlock(string[] lines, int length, ref int end, string name, int id, double x, double y, double width, double height, int dataId, ItemSerializeOptions options)
         {
             var root = new BlockItem();
             root.Init(id, x, y, width, height, dataId, name);

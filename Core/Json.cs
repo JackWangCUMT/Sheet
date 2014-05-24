@@ -7,16 +7,6 @@ using System.Threading.Tasks;
 
 namespace Sheet
 {
-    #region IJsonSerializer
-
-    public interface IJsonSerializer
-    {
-        string Serialize(object value);
-        T Deerialize<T>(string value);
-    }
-
-    #endregion
-
     #region Newtonsoft IJsonSerializer
 
     public class NewtonsoftJsonSerializer : IJsonSerializer
