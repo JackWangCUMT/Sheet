@@ -748,6 +748,54 @@ namespace Sheet
 
     public static class BlockController
     {
+        #region Get
+
+        public static IEnumerable<KeyValuePair<int, XPoint>> GetAllPoints(List<XBlock> blocks)
+        {
+            foreach (var block in blocks)
+            {
+                if (block.Points != null)
+                {
+                    foreach (var point in block.Points)
+                    {
+                        yield return new KeyValuePair<int, XPoint>(point.Id, point);
+                    }
+                }
+
+                if (block.Blocks != null)
+                {
+                    foreach (var kvp in GetAllPoints(block.Blocks))
+                    {
+                        yield return kvp;
+                    }
+                }
+            }
+        }
+
+        public static IEnumerable<XLine> GetAllLines(List<XBlock> blocks)
+        {
+            foreach (var block in blocks)
+            {
+                if (block.Lines != null)
+                {
+                    foreach (var line in block.Lines)
+                    {
+                        yield return line;
+                    }
+                }
+
+                if (block.Blocks != null)
+                {
+                    foreach (var line in GetAllLines(block.Blocks))
+                    {
+                        yield return line;
+                    }
+                }
+            }
+        }
+
+        #endregion
+
         #region Add
 
         public static List<XPoint> Add(ISheet sheet, IEnumerable<PointItem> pointItems, XBlock parent, XBlock selected, bool select, double thickness)
@@ -922,50 +970,6 @@ namespace Sheet
             }
             
             return blocks;
-        }
-
-        public static IEnumerable<KeyValuePair<int, XPoint>> GetAllPoints(List<XBlock> blocks)
-        {
-            foreach(var block in blocks)
-            {
-                if (block.Points != null)
-                {
-                    foreach(var point in block.Points)
-                    {
-                        yield return new KeyValuePair<int, XPoint>(point.Id, point);
-                    }
-                }
-                
-                if (block.Blocks != null)
-                {
-                    foreach(var kvp in GetAllPoints(block.Blocks))
-                    {
-                        yield return kvp;
-                    }
-                }
-            }
-        }
-        
-        public static IEnumerable<XLine> GetAllLines(List<XBlock> blocks)
-        {
-            foreach(var block in blocks)
-            {
-                if (block.Lines != null)
-                {
-                    foreach(var line in block.Lines)
-                    {
-                        yield return line;
-                    }
-                }
-                
-                if (block.Blocks != null)
-                {
-                    foreach(var line in GetAllLines(block.Blocks))
-                    {
-                        yield return line;
-                    }
-                }
-            }
         }
 
         public static void AddContents(ISheet sheet, BlockItem blockItem, XBlock content, XBlock selected, bool select, double thickness)
