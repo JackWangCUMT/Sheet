@@ -88,7 +88,7 @@ namespace Sheet
     {
         #region Fields
 
-        private Canvas canvas = null;
+        private Canvas _canvas;
 
         #endregion
 
@@ -96,7 +96,7 @@ namespace Sheet
 
         public WpfCanvasSheet(Canvas canvas)
         {
-            this.canvas = canvas;
+            this._canvas = canvas;
         }
 
         #endregion
@@ -105,14 +105,14 @@ namespace Sheet
 
         public object GetParent()
         {
-            return canvas;
+            return _canvas;
         }
 
         public void Add(XElement element)
         {
             if (element != null && element.Element != null)
             {
-                canvas.Children.Add(element.Element as FrameworkElement);
+                _canvas.Children.Add(element.Element as FrameworkElement);
             }
         }
 
@@ -120,23 +120,23 @@ namespace Sheet
         {
             if (element != null && element.Element != null)
             {
-                canvas.Children.Remove(element.Element as FrameworkElement);
+                _canvas.Children.Remove(element.Element as FrameworkElement);
             }
         }
 
         public void Capture()
         {
-            canvas.CaptureMouse();
+            _canvas.CaptureMouse();
         }
 
         public void ReleaseCapture()
         {
-            canvas.ReleaseMouseCapture();
+            _canvas.ReleaseMouseCapture();
         }
 
         public bool IsCaptured
         {
-            get { return canvas.IsMouseCaptured; }
+            get { return _canvas.IsMouseCaptured; }
         }
 
         #endregion
@@ -567,7 +567,7 @@ namespace Sheet
             };
 
             SetStyle(ellipse, isVisible);
-            Panel.SetZIndex(ellipse, BlockController.SelectedZIndex);
+            Panel.SetZIndex(ellipse, 1);
 
             Canvas.SetLeft(ellipse, x);
             Canvas.SetTop(ellipse, y);

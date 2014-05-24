@@ -276,18 +276,24 @@ namespace Sheet
 
     #region Block Serializer
 
-    public static class BlockSerializer
+    public class BlockSerializer : IBlockSerializer
     {
-        #region Fields
+        #region IoC
 
-        private static IBlockHelper blockHelper = new WpfBlockHelper();
-        private static IBlockFactory blockFactory = new WpfBlockFactory(); 
+        private IBlockHelper _blockHelper;
+        private IBlockFactory _blockFactory;
+
+        public BlockSerializer(IBlockHelper blockHelper, IBlockFactory blockFactory)
+        {
+            this._blockHelper = blockHelper;
+            this._blockFactory = blockFactory;
+        }
 
         #endregion
 
         #region Ids
         
-        private static int SetId(XBlock parent, int nextId)
+        private int SetId(XBlock parent, int nextId)
         {
             if (parent.Points != null)
             {
@@ -353,7 +359,7 @@ namespace Sheet
         
         #region Serialize
 
-        private static ItemColor ToItemColor(byte a, byte r, byte g, byte b)
+        private ItemColor ToItemColor(byte a, byte r, byte g, byte b)
         {
             return new ItemColor()
             {
@@ -364,7 +370,7 @@ namespace Sheet
             };
         }
 
-        private static ItemColor ToItemColor(XArgbColor color)
+        private ItemColor ToItemColor(XArgbColor color)
         {
             return new ItemColor()
             {
@@ -375,99 +381,99 @@ namespace Sheet
             };
         }
 
-        public static PointItem Serialize(XPoint point)
+        public PointItem Serialize(XPoint point)
         {
             var pointItem = new PointItem();
 
             pointItem.Id = point.Id;
-            pointItem.X = blockHelper.GetLeft(point);
-            pointItem.Y = blockHelper.GetTop(point);
+            pointItem.X = _blockHelper.GetLeft(point);
+            pointItem.Y = _blockHelper.GetTop(point);
 
             return pointItem;
         }
 
-        public static LineItem Serialize(XLine line)
+        public LineItem Serialize(XLine line)
         {
             var lineItem = new LineItem();
 
             lineItem.Id = line.Id;
-            lineItem.X1 = blockHelper.GetX1(line);
-            lineItem.Y1 = blockHelper.GetY1(line);
-            lineItem.X2 = blockHelper.GetX2(line);
-            lineItem.Y2 = blockHelper.GetY2(line);
-            lineItem.Stroke = blockHelper.GetStroke(line);
+            lineItem.X1 = _blockHelper.GetX1(line);
+            lineItem.Y1 = _blockHelper.GetY1(line);
+            lineItem.X2 = _blockHelper.GetX2(line);
+            lineItem.Y2 = _blockHelper.GetY2(line);
+            lineItem.Stroke = _blockHelper.GetStroke(line);
             lineItem.StartId = line.Start == null ? -1 : line.Start.Id;
             lineItem.EndId = line.End == null ? -1 : line.End.Id;
 
             return lineItem;
         }
 
-        public static RectangleItem Serialize(XRectangle rectangle)
+        public RectangleItem Serialize(XRectangle rectangle)
         {
             var rectangleItem = new RectangleItem();
 
             rectangleItem.Id = rectangle.Id;
-            rectangleItem.X = blockHelper.GetLeft(rectangle);
-            rectangleItem.Y = blockHelper.GetTop(rectangle);
-            rectangleItem.Width = blockHelper.GetWidth(rectangle);
-            rectangleItem.Height = blockHelper.GetHeight(rectangle);
-            rectangleItem.IsFilled = blockHelper.IsTransparent(rectangle);
-            rectangleItem.Stroke = blockHelper.GetStroke(rectangle);
-            rectangleItem.Fill = blockHelper.GetFill(rectangle);
+            rectangleItem.X = _blockHelper.GetLeft(rectangle);
+            rectangleItem.Y = _blockHelper.GetTop(rectangle);
+            rectangleItem.Width = _blockHelper.GetWidth(rectangle);
+            rectangleItem.Height = _blockHelper.GetHeight(rectangle);
+            rectangleItem.IsFilled = _blockHelper.IsTransparent(rectangle);
+            rectangleItem.Stroke = _blockHelper.GetStroke(rectangle);
+            rectangleItem.Fill = _blockHelper.GetFill(rectangle);
 
             return rectangleItem;
         }
 
-        public static EllipseItem Serialize(XEllipse ellipse)
+        public EllipseItem Serialize(XEllipse ellipse)
         {
             var ellipseItem = new EllipseItem();
 
             ellipseItem.Id = ellipse.Id;
-            ellipseItem.X = blockHelper.GetTop(ellipse);
-            ellipseItem.Y = blockHelper.GetLeft(ellipse);
-            ellipseItem.Width = blockHelper.GetWidth(ellipse);
-            ellipseItem.Height = blockHelper.GetHeight(ellipse);
-            ellipseItem.IsFilled = blockHelper.IsTransparent(ellipse);
-            ellipseItem.Stroke = blockHelper.GetStroke(ellipse);
-            ellipseItem.Fill = blockHelper.GetFill(ellipse);
+            ellipseItem.X = _blockHelper.GetLeft(ellipse);
+            ellipseItem.Y = _blockHelper.GetTop(ellipse);
+            ellipseItem.Width = _blockHelper.GetWidth(ellipse);
+            ellipseItem.Height = _blockHelper.GetHeight(ellipse);
+            ellipseItem.IsFilled = _blockHelper.IsTransparent(ellipse);
+            ellipseItem.Stroke = _blockHelper.GetStroke(ellipse);
+            ellipseItem.Fill = _blockHelper.GetFill(ellipse);
 
             return ellipseItem;
         }
 
-        public static TextItem Serialize(XText text)
+        public TextItem Serialize(XText text)
         {
             var textItem = new TextItem();
 
             textItem.Id = text.Id;
-            textItem.X = blockHelper.GetLeft(text);
-            textItem.Y = blockHelper.GetTop(text);
-            textItem.Width = blockHelper.GetWidth(text);
-            textItem.Height = blockHelper.GetHeight(text);
-            textItem.Text = blockHelper.GetText(text);
-            textItem.HAlign = blockHelper.GetHAlign(text);
-            textItem.VAlign = blockHelper.GetVAlign(text);
-            textItem.Size = blockHelper.GetSize(text);
-            textItem.Backgroud = blockHelper.GetBackground(text);
-            textItem.Foreground = blockHelper.GetForeground(text);
+            textItem.X = _blockHelper.GetLeft(text);
+            textItem.Y = _blockHelper.GetTop(text);
+            textItem.Width = _blockHelper.GetWidth(text);
+            textItem.Height = _blockHelper.GetHeight(text);
+            textItem.Text = _blockHelper.GetText(text);
+            textItem.HAlign = _blockHelper.GetHAlign(text);
+            textItem.VAlign = _blockHelper.GetVAlign(text);
+            textItem.Size = _blockHelper.GetSize(text);
+            textItem.Backgroud = _blockHelper.GetBackground(text);
+            textItem.Foreground = _blockHelper.GetForeground(text);
 
             return textItem;
         }
 
-        public static ImageItem Serialize(XImage image)
+        public ImageItem Serialize(XImage image)
         {
             var imageItem = new ImageItem();
 
             imageItem.Id = image.Id;
-            imageItem.X = blockHelper.GetLeft(image);
-            imageItem.Y = blockHelper.GetTop(image);
-            imageItem.Width = blockHelper.GetWidth(image);
-            imageItem.Height = blockHelper.GetHeight(image);
-            imageItem.Data = blockHelper.GetData(image);
+            imageItem.X = _blockHelper.GetLeft(image);
+            imageItem.Y = _blockHelper.GetTop(image);
+            imageItem.Width = _blockHelper.GetWidth(image);
+            imageItem.Height = _blockHelper.GetHeight(image);
+            imageItem.Data = _blockHelper.GetData(image);
 
             return imageItem;
         }
 
-        public static BlockItem Serialize(XBlock parent)
+        public BlockItem Serialize(XBlock parent)
         {
             var blockItem = new BlockItem();
             blockItem.Init(parent.Id, parent.X, parent.Y, parent.Width, parent.Height, parent.DataId, parent.Name);
@@ -511,7 +517,7 @@ namespace Sheet
             return blockItem;
         }
 
-        public static BlockItem SerializerContents(XBlock parent, int id, double x, double y, double width, double height, int dataId, string name)
+        public BlockItem SerializerContents(XBlock parent, int id, double x, double y, double width, double height, int dataId, string name)
         {
             var points = parent.Points;
             var lines = parent.Lines;
@@ -589,9 +595,9 @@ namespace Sheet
 
         #region Deserialize
 
-        public static XPoint Deserialize(ISheet sheet, XBlock parent, PointItem pointItem, double thickness)
+        public XPoint Deserialize(ISheet sheet, XBlock parent, PointItem pointItem, double thickness)
         {
-            var point = blockFactory.CreatePoint(thickness, pointItem.X, pointItem.Y, false);
+            var point = _blockFactory.CreatePoint(thickness, pointItem.X, pointItem.Y, false);
             
             point.Id = pointItem.Id;
 
@@ -608,9 +614,9 @@ namespace Sheet
             return point;
         }
 
-        public static XLine Deserialize(ISheet sheet, XBlock parent, LineItem lineItem, double thickness)
+        public XLine Deserialize(ISheet sheet, XBlock parent, LineItem lineItem, double thickness)
         {
-            var line = blockFactory.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2, lineItem.Stroke);
+            var line = _blockFactory.CreateLine(thickness, lineItem.X1, lineItem.Y1, lineItem.X2, lineItem.Y2, lineItem.Stroke);
 
             line.Id = lineItem.Id;
             line.StartId = lineItem.StartId;
@@ -629,9 +635,9 @@ namespace Sheet
             return line;
         }
 
-        public static XRectangle Deserialize(ISheet sheet, XBlock parent, RectangleItem rectangleItem, double thickness)
+        public XRectangle Deserialize(ISheet sheet, XBlock parent, RectangleItem rectangleItem, double thickness)
         {
-            var rectangle = blockFactory.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
+            var rectangle = _blockFactory.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
 
             rectangle.Id = rectangleItem.Id;
             
@@ -648,9 +654,9 @@ namespace Sheet
             return rectangle;
         }
 
-        public static XEllipse Deserialize(ISheet sheet, XBlock parent, EllipseItem ellipseItem, double thickness)
+        public XEllipse Deserialize(ISheet sheet, XBlock parent, EllipseItem ellipseItem, double thickness)
         {
-            var ellipse = blockFactory.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
+            var ellipse = _blockFactory.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
 
             ellipse.Id = ellipseItem.Id;
             
@@ -667,9 +673,9 @@ namespace Sheet
             return ellipse;
         }
 
-        public static XText Deserialize(ISheet sheet, XBlock parent, TextItem textItem)
+        public XText Deserialize(ISheet sheet, XBlock parent, TextItem textItem)
         {
-            var text = blockFactory.CreateText(textItem.Text,
+            var text = _blockFactory.CreateText(textItem.Text,
                 textItem.X, textItem.Y,
                 textItem.Width, textItem.Height,
                 textItem.HAlign,
@@ -693,9 +699,9 @@ namespace Sheet
             return text;
         }
 
-        public static XImage Deserialize(ISheet sheet, XBlock parent, ImageItem imageItem)
+        public XImage Deserialize(ISheet sheet, XBlock parent, ImageItem imageItem)
         {
-            var image = blockFactory.CreateImage(imageItem.X, imageItem.Y, imageItem.Width, imageItem.Height, imageItem.Data);
+            var image = _blockFactory.CreateImage(imageItem.X, imageItem.Y, imageItem.Width, imageItem.Height, imageItem.Data);
 
             image.Id = imageItem.Id;
             
@@ -712,74 +718,44 @@ namespace Sheet
             return image;
         }
 
-        public static XBlock Deserialize(ISheet sheet, XBlock parent, BlockItem blockItem, bool select, double thickness)
+        public XBlock Deserialize(ISheet sheet, XBlock parent, BlockItem blockItem, double thickness)
         {
             var block = new XBlock(blockItem.Id, blockItem.X, blockItem.Y, blockItem.Width, blockItem.Height, blockItem.DataId, blockItem.Name);
             block.Init();
 
             foreach (var textItem in blockItem.Texts)
             {
-                var text = Deserialize(sheet, block, textItem);
-
-                if (select)
-                {
-                    BlockController.Select(text);
-                }
+                Deserialize(sheet, block, textItem);
             }
 
             foreach (var imageItem in blockItem.Images)
             {
-                var image = Deserialize(sheet, block, imageItem);
-
-                if (select)
-                {
-                    BlockController.Select(image);
-                }
+                Deserialize(sheet, block, imageItem);
             }
 
             foreach (var lineItem in blockItem.Lines)
             {
-                var line = Deserialize(sheet, block, lineItem, thickness);
-
-                if (select)
-                {
-                    BlockController.Select(line);
-                }
+                Deserialize(sheet, block, lineItem, thickness);
             }
 
             foreach (var rectangleItem in blockItem.Rectangles)
             {
-                var rectangle = Deserialize(sheet, block, rectangleItem, thickness);
-
-                if (select)
-                {
-                    BlockController.Select(rectangle);
-                }
+                Deserialize(sheet, block, rectangleItem, thickness);
             }
 
             foreach (var ellipseItem in blockItem.Ellipses)
             {
-                var ellipse = Deserialize(sheet, block, ellipseItem, thickness);
-
-                if (select)
-                {
-                    BlockController.Select(ellipse);
-                }
+                Deserialize(sheet, block, ellipseItem, thickness);
             }
 
             foreach (var childBlockItem in blockItem.Blocks)
             {
-                Deserialize(sheet, block, childBlockItem, select, thickness);
+                Deserialize(sheet, block, childBlockItem, thickness);
             }
 
             foreach (var pointItem in blockItem.Points)
             {
-                var point = Deserialize(sheet, block, pointItem, thickness);
-
-                if (select)
-                {
-                    BlockController.Select(point);
-                }
+                Deserialize(sheet, block, pointItem, thickness);
             }
 
             if (parent != null)
@@ -797,17 +773,26 @@ namespace Sheet
 
     #region Block Controller
 
-    public static class BlockController
+    public class BlockController : IBlockController
     {
-        #region Fields
+        #region IoC
 
-        private static IBlockHelper blockHelper = new WpfBlockHelper();
+        private IBlockHelper _blockHelper;
+        private IBlockSerializer _blockSerializer;
+        private IPointController _pointController;
+
+        public BlockController(IBlockHelper blockHelper, IBlockSerializer blockSerializer, IPointController pointController)
+        {
+            this._blockHelper = blockHelper;
+            this._blockSerializer = blockSerializer;
+            this._pointController = pointController;
+        }
 
         #endregion
 
         #region Add
 
-        public static List<XPoint> Add(ISheet sheet, IEnumerable<PointItem> pointItems, XBlock parent, XBlock selected, bool select, double thickness)
+        public List<XPoint> Add(ISheet sheet, IEnumerable<PointItem> pointItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
             var points = new List<XPoint>();
         
@@ -818,7 +803,7 @@ namespace Sheet
 
             foreach (var pointItem in pointItems)
             {
-                var point = BlockSerializer.Deserialize(sheet, parent, pointItem, thickness);
+                var point = _blockSerializer.Deserialize(sheet, parent, pointItem, thickness);
 
                 points.Add(point);
                 
@@ -832,7 +817,7 @@ namespace Sheet
             return points;
         }
 
-        public static List<XLine> Add(ISheet sheet, IEnumerable<LineItem> lineItems, XBlock parent, XBlock selected, bool select, double thickness)
+        public List<XLine> Add(ISheet sheet, IEnumerable<LineItem> lineItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
             var lines = new List<XLine>();
         
@@ -843,7 +828,7 @@ namespace Sheet
 
             foreach (var lineItem in lineItems)
             {
-                var line = BlockSerializer.Deserialize(sheet, parent, lineItem, thickness);
+                var line = _blockSerializer.Deserialize(sheet, parent, lineItem, thickness);
 
                 lines.Add(line);
                 
@@ -857,7 +842,7 @@ namespace Sheet
             return lines;
         }
 
-        public static List<XRectangle> Add(ISheet sheet, IEnumerable<RectangleItem> rectangleItems, XBlock parent, XBlock selected, bool select, double thickness)
+        public List<XRectangle> Add(ISheet sheet, IEnumerable<RectangleItem> rectangleItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
             var rectangles = new List<XRectangle>();
         
@@ -868,7 +853,7 @@ namespace Sheet
 
             foreach (var rectangleItem in rectangleItems)
             {
-                var rectangle = BlockSerializer.Deserialize(sheet, parent, rectangleItem, thickness);
+                var rectangle = _blockSerializer.Deserialize(sheet, parent, rectangleItem, thickness);
 
                 rectangles.Add(rectangle);
                 
@@ -882,7 +867,7 @@ namespace Sheet
             return rectangles;
         }
 
-        public static List<XEllipse> Add(ISheet sheet, IEnumerable<EllipseItem> ellipseItems, XBlock parent, XBlock selected, bool select, double thickness)
+        public List<XEllipse> Add(ISheet sheet, IEnumerable<EllipseItem> ellipseItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
             var ellipses = new List<XEllipse>();
         
@@ -893,7 +878,7 @@ namespace Sheet
 
             foreach (var ellipseItem in ellipseItems)
             {
-                var ellipse = BlockSerializer.Deserialize(sheet, parent, ellipseItem, thickness);
+                var ellipse = _blockSerializer.Deserialize(sheet, parent, ellipseItem, thickness);
 
                 ellipses.Add(ellipse);
                 
@@ -907,7 +892,7 @@ namespace Sheet
             return ellipses;
         }
 
-        public static List<XText> Add(ISheet sheet, IEnumerable<TextItem> textItems, XBlock parent, XBlock selected, bool select, double thickness)
+        public List<XText> Add(ISheet sheet, IEnumerable<TextItem> textItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
             var texts = new List<XText>();
         
@@ -918,7 +903,7 @@ namespace Sheet
 
             foreach (var textItem in textItems)
             {
-                var text = BlockSerializer.Deserialize(sheet, parent, textItem);
+                var text = _blockSerializer.Deserialize(sheet, parent, textItem);
 
                 texts.Add(text);
                 
@@ -932,7 +917,7 @@ namespace Sheet
             return texts;
         }
 
-        public static List<XImage> Add(ISheet sheet, IEnumerable<ImageItem> imageItems, XBlock parent, XBlock selected, bool select, double thickness)
+        public List<XImage> Add(ISheet sheet, IEnumerable<ImageItem> imageItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
             var images = new List<XImage>();
         
@@ -943,7 +928,7 @@ namespace Sheet
 
             foreach (var imageItem in imageItems)
             {
-                var image = BlockSerializer.Deserialize(sheet, parent, imageItem);
+                var image = _blockSerializer.Deserialize(sheet, parent, imageItem);
 
                 images.Add(image);
                 
@@ -957,7 +942,7 @@ namespace Sheet
             return images;
         }
 
-        public static List<XBlock> Add(ISheet sheet, IEnumerable<BlockItem> blockItems, XBlock parent, XBlock selected, bool select, double thickness)
+        public List<XBlock> Add(ISheet sheet, IEnumerable<BlockItem> blockItems, XBlock parent, XBlock selected, bool select, double thickness)
         {
             var blocks = new List<XBlock>();
         
@@ -968,12 +953,14 @@ namespace Sheet
 
             foreach (var blockItem in blockItems)
             {
-                var block = BlockSerializer.Deserialize(sheet, parent, blockItem, select, thickness);
-                
+                var block = _blockSerializer.Deserialize(sheet, parent, blockItem, thickness);
+
                 blocks.Add(block);
 
                 if (select)
                 {
+                    Select(block);
+
                     selected.Blocks.Add(block);
                 }
             }
@@ -981,7 +968,7 @@ namespace Sheet
             return blocks;
         }
 
-        public static void AddContents(ISheet sheet, BlockItem blockItem, XBlock content, XBlock selected, bool select, double thickness)
+        public void AddContents(ISheet sheet, BlockItem blockItem, XBlock content, XBlock selected, bool select, double thickness)
         {
             if (blockItem != null)
             {
@@ -993,11 +980,11 @@ namespace Sheet
                 var blocks = Add(sheet, blockItem.Blocks, content, selected, select, thickness);
                 var points = Add(sheet, blockItem.Points, content, selected, select, thickness);
 
-                PointController.UpdateDependencies(blocks, points, lines);
+                _pointController.UpdateDependencies(blocks, points, lines);
             }
         }
 
-        public static void AddBroken(ISheet sheet, BlockItem blockItem, XBlock content, XBlock selected, bool select, double thickness)
+        public void AddBroken(ISheet sheet, BlockItem blockItem, XBlock content, XBlock selected, bool select, double thickness)
         {
             Add(sheet, blockItem.Texts, content, selected, select, thickness);
             Add(sheet, blockItem.Images, content, selected, select, thickness);
@@ -1023,7 +1010,7 @@ namespace Sheet
 
         #region Remove
 
-        public static void Remove(ISheet sheet, IEnumerable<XPoint> points)
+        public void Remove(ISheet sheet, IEnumerable<XPoint> points)
         {
             if (points != null)
             {
@@ -1034,7 +1021,7 @@ namespace Sheet
             }
         }
 
-        public static void Remove(ISheet sheet, IEnumerable<XLine> lines)
+        public void Remove(ISheet sheet, IEnumerable<XLine> lines)
         {
             if (lines != null)
             {
@@ -1045,7 +1032,7 @@ namespace Sheet
             }
         }
 
-        public static void Remove(ISheet sheet, IEnumerable<XRectangle> rectangles)
+        public void Remove(ISheet sheet, IEnumerable<XRectangle> rectangles)
         {
             if (rectangles != null)
             {
@@ -1056,7 +1043,7 @@ namespace Sheet
             }
         }
 
-        public static void Remove(ISheet sheet, IEnumerable<XEllipse> ellipses)
+        public void Remove(ISheet sheet, IEnumerable<XEllipse> ellipses)
         {
             if (ellipses != null)
             {
@@ -1067,7 +1054,7 @@ namespace Sheet
             }
         }
 
-        public static void Remove(ISheet sheet, IEnumerable<XText> texts)
+        public void Remove(ISheet sheet, IEnumerable<XText> texts)
         {
             if (texts != null)
             {
@@ -1078,7 +1065,7 @@ namespace Sheet
             }
         }
 
-        public static void Remove(ISheet sheet, IEnumerable<XImage> images)
+        public void Remove(ISheet sheet, IEnumerable<XImage> images)
         {
             if (images != null)
             {
@@ -1089,7 +1076,7 @@ namespace Sheet
             }
         }
 
-        public static void Remove(ISheet sheet, IEnumerable<XBlock> blocks)
+        public void Remove(ISheet sheet, IEnumerable<XBlock> blocks)
         {
             if (blocks != null)
             {
@@ -1100,7 +1087,7 @@ namespace Sheet
             }
         }
 
-        public static void Remove(ISheet sheet, XBlock block)
+        public void Remove(ISheet sheet, XBlock block)
         {
             Remove(sheet, block.Points);
             Remove(sheet, block.Lines);
@@ -1111,7 +1098,7 @@ namespace Sheet
             Remove(sheet, block.Blocks);
         }
 
-        public static void RemoveSelected(ISheet sheet, XBlock parent, XBlock selected)
+        public void RemoveSelected(ISheet sheet, XBlock parent, XBlock selected)
         {
             if (selected.Points != null)
             {
@@ -1206,17 +1193,17 @@ namespace Sheet
 
         #endregion
 
-        #region Move Points
+        #region Move
 
-        public static void Move(double x, double y, XPoint point)
+        public void Move(double x, double y, XPoint point)
         {
             if (point.Element != null)
             {
-                point.X = blockHelper.GetLeft(point) + x;
-                point.Y = blockHelper.GetTop(point) + y;
+                point.X = _blockHelper.GetLeft(point) + x;
+                point.Y = _blockHelper.GetTop(point) + y;
 
-                blockHelper.SetLeft(point, point.X);
-                blockHelper.SeTop(point, point.Y);
+                _blockHelper.SetLeft(point, point.X);
+                _blockHelper.SeTop(point, point.Y);
             }
             else
             {
@@ -1230,7 +1217,7 @@ namespace Sheet
             }
         }
 
-        public static void Move(double x, double y, IEnumerable<XPoint> points)
+        public void Move(double x, double y, IEnumerable<XPoint> points)
         {
             foreach (var point in points)
             {
@@ -1238,11 +1225,7 @@ namespace Sheet
             }
         }
 
-        #endregion
-
-        #region Move Lines
-		 
-        public static void Move(double x, double y, IEnumerable<XLine> lines)
+        public void Move(double x, double y, IEnumerable<XLine> lines)
         {
             foreach (var line in lines)
             {
@@ -1258,35 +1241,31 @@ namespace Sheet
             }
         }
 
-        public static void MoveStart(double x, double y, XLine line)
+        public void MoveStart(double x, double y, XLine line)
         {
-            double oldx = blockHelper.GetX1(line);
-            double oldy = blockHelper.GetY1(line);
-            blockHelper.SetX1(line, oldx + x);
-            blockHelper.SetY1(line, oldy + y);
+            double oldx = _blockHelper.GetX1(line);
+            double oldy = _blockHelper.GetY1(line);
+            _blockHelper.SetX1(line, oldx + x);
+            _blockHelper.SetY1(line, oldy + y);
         }
 
-        public static void MoveEnd(double x, double y, XLine line)
+        public void MoveEnd(double x, double y, XLine line)
         {
-            double oldx = blockHelper.GetX2(line);
-            double oldy = blockHelper.GetY2(line);
-            blockHelper.SetX2(line, oldx + x);
-            blockHelper.SetY2(line, oldy + y);
+            double oldx = _blockHelper.GetX2(line);
+            double oldy = _blockHelper.GetY2(line);
+            _blockHelper.SetX2(line, oldx + x);
+            _blockHelper.SetY2(line, oldy + y);
         } 
 
-	    #endregion
-
-        #region Move Rectangles
-
-        public static void Move(double x, double y, XRectangle rectangle)
+        public void Move(double x, double y, XRectangle rectangle)
         {
-            double left = blockHelper.GetLeft(rectangle) + x;
-            double top = blockHelper.GetTop(rectangle) + y;
-            blockHelper.SetLeft(rectangle, left);
-            blockHelper.SeTop(rectangle, top);
+            double left = _blockHelper.GetLeft(rectangle) + x;
+            double top = _blockHelper.GetTop(rectangle) + y;
+            _blockHelper.SetLeft(rectangle, left);
+            _blockHelper.SeTop(rectangle, top);
         }
 
-        public static void Move(double x, double y, IEnumerable<XRectangle> rectangles)
+        public void Move(double x, double y, IEnumerable<XRectangle> rectangles)
         {
             foreach (var rectangle in rectangles)
             {
@@ -1294,19 +1273,15 @@ namespace Sheet
             }
         } 
 
-        #endregion
-
-        #region Move Ellipses
-
-        public static void Move(double x, double y, XEllipse ellipse)
+        public void Move(double x, double y, XEllipse ellipse)
         {
-            double left = blockHelper.GetLeft(ellipse) + x;
-            double top = blockHelper.GetTop(ellipse) + y;
-            blockHelper.SetLeft(ellipse, left);
-            blockHelper.SeTop(ellipse, top);
+            double left = _blockHelper.GetLeft(ellipse) + x;
+            double top = _blockHelper.GetTop(ellipse) + y;
+            _blockHelper.SetLeft(ellipse, left);
+            _blockHelper.SeTop(ellipse, top);
         }
 
-        public static void Move(double x, double y, IEnumerable<XEllipse> ellipses)
+        public void Move(double x, double y, IEnumerable<XEllipse> ellipses)
         {
             foreach (var ellipse in ellipses)
             {
@@ -1314,19 +1289,15 @@ namespace Sheet
             }
         }
 
-        #endregion
-
-        #region Move Texts
-
-        public static void Move(double x, double y, XText text)
+        public void Move(double x, double y, XText text)
         {
-            double left = blockHelper.GetLeft(text) + x;
-            double top = blockHelper.GetTop(text) + y;
-            blockHelper.SetLeft(text, left);
-            blockHelper.SeTop(text, top);
+            double left = _blockHelper.GetLeft(text) + x;
+            double top = _blockHelper.GetTop(text) + y;
+            _blockHelper.SetLeft(text, left);
+            _blockHelper.SeTop(text, top);
         }
 
-        public static void Move(double x, double y, IEnumerable<XText> texts)
+        public void Move(double x, double y, IEnumerable<XText> texts)
         {
             foreach (var text in texts)
             {
@@ -1334,19 +1305,15 @@ namespace Sheet
             }
         }
 
-        #endregion
-
-        #region Move Images
-
-        public static void Move(double x, double y, XImage image)
+        public void Move(double x, double y, XImage image)
         {
-            double left = blockHelper.GetLeft(image) + x;
-            double top = blockHelper.GetTop(image) + y;
-            blockHelper.SetLeft(image, left);
-            blockHelper.SeTop(image, top);
+            double left = _blockHelper.GetLeft(image) + x;
+            double top = _blockHelper.GetTop(image) + y;
+            _blockHelper.SetLeft(image, left);
+            _blockHelper.SeTop(image, top);
         }
 
-        public static void Move(double x, double y, IEnumerable<XImage> images)
+        public void Move(double x, double y, IEnumerable<XImage> images)
         {
             foreach (var image in images)
             {
@@ -1354,11 +1321,7 @@ namespace Sheet
             }
         }
 
-        #endregion
-
-        #region Move Blocks
-
-        public static void Move(double x, double y, XBlock block)
+        public void Move(double x, double y, XBlock block)
         {
             if (block.Points != null)
             {
@@ -1396,7 +1359,7 @@ namespace Sheet
             }
         }
 
-        public static void Move(double x, double y, IEnumerable<XBlock> blocks)
+        public void Move(double x, double y, IEnumerable<XBlock> blocks)
         {
             foreach (var block in blocks)
             {
@@ -1414,45 +1377,45 @@ namespace Sheet
 
         #region Select
 
-        public static int DeselectedZIndex = 0;
-        public static int SelectedZIndex = 1;
+        private int DeselectedZIndex = 0;
+        private int SelectedZIndex = 1;
 
-        public static void Deselect(XPoint point)
+        public void Deselect(XPoint point)
         {
-            blockHelper.SetIsSelected(point, false);
+            _blockHelper.SetIsSelected(point, false);
         }
 
-        public static void Deselect(XLine line)
+        public void Deselect(XLine line)
         {
-            blockHelper.Deselect(line);
-            blockHelper.SetZIndex(line, DeselectedZIndex);
+            _blockHelper.Deselect(line);
+            _blockHelper.SetZIndex(line, DeselectedZIndex);
         }
 
-        public static void Deselect(XRectangle rectangle)
+        public void Deselect(XRectangle rectangle)
         {
-            blockHelper.Deselect(rectangle);
-            blockHelper.SetZIndex(rectangle, DeselectedZIndex);
+            _blockHelper.Deselect(rectangle);
+            _blockHelper.SetZIndex(rectangle, DeselectedZIndex);
         }
 
-        public static void Deselect(XEllipse ellipse)
+        public void Deselect(XEllipse ellipse)
         {
-            blockHelper.Deselect(ellipse);
-            blockHelper.SetZIndex(ellipse, DeselectedZIndex);
+            _blockHelper.Deselect(ellipse);
+            _blockHelper.SetZIndex(ellipse, DeselectedZIndex);
         }
 
-        public static void Deselect(XText text)
+        public void Deselect(XText text)
         {
-            blockHelper.Deselect(text);
-            blockHelper.SetZIndex(text, DeselectedZIndex);
+            _blockHelper.Deselect(text);
+            _blockHelper.SetZIndex(text, DeselectedZIndex);
         }
 
-        public static void Deselect(XImage image)
+        public void Deselect(XImage image)
         {
-            blockHelper.Deselect(image);
-            blockHelper.SetZIndex(image, DeselectedZIndex);
+            _blockHelper.Deselect(image);
+            _blockHelper.SetZIndex(image, DeselectedZIndex);
         }
 
-        public static void Deselect(XBlock parent)
+        public void Deselect(XBlock parent)
         {
             if (parent.Points != null)
             {
@@ -1511,42 +1474,42 @@ namespace Sheet
             }
         }
 
-        public static void Select(XPoint point)
+        public void Select(XPoint point)
         {
-            blockHelper.SetIsSelected(point, true);
+            _blockHelper.SetIsSelected(point, true);
         }
 
-        public static void Select(XLine line)
+        public void Select(XLine line)
         {
-            blockHelper.Select(line);
-            blockHelper.SetZIndex(line, SelectedZIndex);
+            _blockHelper.Select(line);
+            _blockHelper.SetZIndex(line, SelectedZIndex);
         }
 
-        public static void Select(XRectangle rectangle)
+        public void Select(XRectangle rectangle)
         {
-            blockHelper.Select(rectangle);
-            blockHelper.SetZIndex(rectangle, SelectedZIndex);
+            _blockHelper.Select(rectangle);
+            _blockHelper.SetZIndex(rectangle, SelectedZIndex);
         }
 
-        public static void Select(XEllipse ellipse)
+        public void Select(XEllipse ellipse)
         {
-            blockHelper.Select(ellipse);
-            blockHelper.SetZIndex(ellipse, SelectedZIndex);
+            _blockHelper.Select(ellipse);
+            _blockHelper.SetZIndex(ellipse, SelectedZIndex);
         }
 
-        public static void Select(XText text)
+        public void Select(XText text)
         {
-            blockHelper.Select(text);
-            blockHelper.SetZIndex(text, SelectedZIndex);
+            _blockHelper.Select(text);
+            _blockHelper.SetZIndex(text, SelectedZIndex);
         }
 
-        public static void Select(XImage image)
+        public void Select(XImage image)
         {
-            blockHelper.Select(image);
-            blockHelper.SetZIndex(image, SelectedZIndex);
+            _blockHelper.Select(image);
+            _blockHelper.SetZIndex(image, SelectedZIndex);
         }
 
-        public static void Select(XBlock parent)
+        public void Select(XBlock parent)
         {
             if (parent.Points != null)
             {
@@ -1605,7 +1568,7 @@ namespace Sheet
             }
         }
 
-        public static void SelectContent(XBlock selected, XBlock content)
+        public void SelectContent(XBlock selected, XBlock content)
         {
             selected.Init();
 
@@ -1686,7 +1649,7 @@ namespace Sheet
             }
         }
 
-        public static void DeselectContent(XBlock selected)
+        public void DeselectContent(XBlock selected)
         {
             if (selected.Points != null)
             {
@@ -1792,7 +1755,7 @@ namespace Sheet
             }
         }
 
-        public static bool HaveSelected(XBlock selected)
+        public bool HaveSelected(XBlock selected)
         {
             return (selected.Points != null
                 || selected.Lines != null
@@ -1803,7 +1766,7 @@ namespace Sheet
                 || selected.Blocks != null);
         }
 
-        public static bool HaveOnePointSelected(XBlock selected)
+        public bool HaveOnePointSelected(XBlock selected)
         {
             return (selected.Points != null
                 && selected.Points.Count == 1
@@ -1815,7 +1778,7 @@ namespace Sheet
                 && selected.Blocks == null);
         }
 
-        public static bool HaveOneLineSelected(XBlock selected)
+        public bool HaveOneLineSelected(XBlock selected)
         {
             return (selected.Points == null
                 && selected.Lines != null
@@ -1827,7 +1790,7 @@ namespace Sheet
                 && selected.Blocks == null);
         }
 
-        public static bool HaveOneRectangleSelected(XBlock selected)
+        public bool HaveOneRectangleSelected(XBlock selected)
         {
             return (selected.Points == null
                 && selected.Lines == null
@@ -1839,7 +1802,7 @@ namespace Sheet
                 && selected.Blocks == null);
         }
 
-        public static bool HaveOneEllipseSelected(XBlock selected)
+        public bool HaveOneEllipseSelected(XBlock selected)
         {
             return (selected.Points == null
                 && selected.Lines == null
@@ -1851,7 +1814,7 @@ namespace Sheet
                 && selected.Blocks == null);
         }
 
-        public static bool HaveOneTextSelected(XBlock selected)
+        public bool HaveOneTextSelected(XBlock selected)
         {
             return (selected.Points == null
                 && selected.Lines == null
@@ -1863,7 +1826,7 @@ namespace Sheet
                 && selected.Blocks == null);
         }
 
-        public static bool HaveOneImageSelected(XBlock selected)
+        public bool HaveOneImageSelected(XBlock selected)
         {
             return (selected.Points == null
                 && selected.Lines == null
@@ -1875,7 +1838,7 @@ namespace Sheet
                 && selected.Blocks == null);
         }
 
-        public static bool HaveOneBlockSelected(XBlock selected)
+        public bool HaveOneBlockSelected(XBlock selected)
         {
             return (selected.Points == null
                 && selected.Lines == null
@@ -1891,7 +1854,7 @@ namespace Sheet
 
         #region HitTest
 
-        private static void HitTestClean(XBlock selected)
+        private void HitTestClean(XBlock selected)
         {
             if (selected.Points != null && selected.Points.Count == 0)
             {
@@ -1929,15 +1892,15 @@ namespace Sheet
             }
         }
 
-        public static bool HitTest(IEnumerable<XPoint> points, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<XPoint> points, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var point in points)
             {
-                if (blockHelper.HitTest(point, rect, relativeTo))
+                if (_blockHelper.HitTest(point, rect, relativeTo))
                 {
                     if (select)
                     {
-                        if (!blockHelper.GetIsSelected(point))
+                        if (!_blockHelper.GetIsSelected(point))
                         {
                             Select(point);
                             selected.Points.Add(point);
@@ -1958,15 +1921,15 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(IEnumerable<XLine> lines, XBlock selected, XBlockRect rect, bool onlyFirst, bool select)
+        public bool HitTest(IEnumerable<XLine> lines, XBlock selected, XBlockRect rect, bool onlyFirst, bool select)
         {
             foreach (var line in lines)
             {
-                if (blockHelper.HitTest(line, rect))
+                if (_blockHelper.HitTest(line, rect))
                 {
                     if (select)
                     {
-                        if (blockHelper.IsSelected(line))
+                        if (_blockHelper.IsSelected(line))
                         {
                             Select(line);
                             selected.Lines.Add(line);
@@ -1987,15 +1950,15 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(IEnumerable<XRectangle> rectangles, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<XRectangle> rectangles, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var rectangle in rectangles)
             {
-                if (blockHelper.HitTest(rectangle, rect, relativeTo))
+                if (_blockHelper.HitTest(rectangle, rect, relativeTo))
                 {
                     if (select)
                     {
-                        if (blockHelper.IsSelected(rectangle))
+                        if (_blockHelper.IsSelected(rectangle))
                         {
                             Select(rectangle);
                             selected.Rectangles.Add(rectangle);
@@ -2016,15 +1979,15 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(IEnumerable<XEllipse> ellipses, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<XEllipse> ellipses, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var ellipse in ellipses)
             {
-                if (blockHelper.HitTest(ellipse, rect, relativeTo))
+                if (_blockHelper.HitTest(ellipse, rect, relativeTo))
                 {
                     if (select)
                     {
-                        if (blockHelper.IsSelected(ellipse))
+                        if (_blockHelper.IsSelected(ellipse))
                         {
                             Select(ellipse);
                             selected.Ellipses.Add(ellipse);
@@ -2045,15 +2008,15 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(IEnumerable<XText> texts, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<XText> texts, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var text in texts)
             {
-                if (blockHelper.HitTest(text, rect, relativeTo))
+                if (_blockHelper.HitTest(text, rect, relativeTo))
                 {
                     if (select)
                     {
-                        if (blockHelper.IsSelected(text))
+                        if (_blockHelper.IsSelected(text))
                         {
                             Select(text);
                             selected.Texts.Add(text);
@@ -2074,15 +2037,15 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(IEnumerable<XImage> images, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<XImage> images, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var image in images)
             {
-                if (blockHelper.HitTest(image, rect, relativeTo))
+                if (_blockHelper.HitTest(image, rect, relativeTo))
                 {
                     if (select)
                     {
-                        if (blockHelper.IsSelected(image))
+                        if (_blockHelper.IsSelected(image))
                         {
                             Select(image);
                             selected.Images.Add(image);
@@ -2103,7 +2066,7 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(IEnumerable<XBlock> blocks, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo)
+        public bool HitTest(IEnumerable<XBlock> blocks, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo)
         {
             foreach (var block in blocks)
             {
@@ -2134,7 +2097,7 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTest(XBlock parent, XBlock selected, XBlockRect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo)
+        public bool HitTest(XBlock parent, XBlock selected, XBlockRect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo)
         {
             bool result = false;
 
@@ -2183,7 +2146,7 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestClick(ISheet sheet, XBlock parent, XBlock selected, XBlockPoint p, double size, bool selectInsideBlock, bool resetSelected)
+        public bool HitTestClick(ISheet sheet, XBlock parent, XBlock selected, XBlockPoint p, double size, bool selectInsideBlock, bool resetSelected)
         {
             if (resetSelected)
             {
@@ -2270,7 +2233,7 @@ namespace Sheet
             return false;
         }
 
-        public static bool HitTestForBlocks(ISheet sheet, XBlock parent, XBlock selected, XBlockPoint p, double size)
+        public bool HitTestForBlocks(ISheet sheet, XBlock parent, XBlock selected, XBlockPoint p, double size)
         {
             selected.Init();
 
@@ -2290,7 +2253,7 @@ namespace Sheet
             return false;
         }
 
-        public static void HitTestSelectionRect(ISheet sheet, XBlock parent, XBlock selected, XBlockRect rect, bool resetSelected)
+        public void HitTestSelectionRect(ISheet sheet, XBlock parent, XBlock selected, XBlockRect rect, bool resetSelected)
         {
             if (resetSelected)
             {
@@ -2343,26 +2306,26 @@ namespace Sheet
 
         #region Fill
 
-        public static void ToggleFill(XRectangle rectangle)
+        public void ToggleFill(XRectangle rectangle)
         {
-            blockHelper.ToggleFill(rectangle);
+            _blockHelper.ToggleFill(rectangle);
         }
 
-        public static void ToggleFill(XEllipse ellipse)
+        public void ToggleFill(XEllipse ellipse)
         {
-            blockHelper.ToggleFill(ellipse);
+            _blockHelper.ToggleFill(ellipse);
         }
 
-        public static void ToggleFill(XPoint point)
+        public void ToggleFill(XPoint point)
         {
-            blockHelper.ToggleFill(point);
+            _blockHelper.ToggleFill(point);
         }
 
         #endregion
 
         #region Copy
 
-        public static XBlock ShallowCopy(XBlock original)
+        public XBlock ShallowCopy(XBlock original)
         {
             var copy = new XBlock(original.Id, original.X, original.Y, original.Width, original.Height, original.DataId, original.Name);
 

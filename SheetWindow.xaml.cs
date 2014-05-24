@@ -61,19 +61,39 @@ namespace Sheet
 
     public partial class SheetWindow : Window
     {
-        #region Fields
+        #region IoC
 
-        private ObservableCollection<IDatabaseController> DatabaseControllers = new ObservableCollection<IDatabaseController>();
+        private IBlockController _blockController;
+        private IBlockFactory _blockFactory;
+        private IBlockSerializer _blockSerializer;
+        private IPointController _pointController;
+        private IJsonSerializer _jsonSerializer;
+
+        public SheetWindow(IBlockController blockController,
+            IBlockFactory blockFactory,
+            IBlockSerializer blockSerializer,
+            IPointController pointController,
+            IJsonSerializer jsonSerializer)
+        {
+            InitializeComponent();
+
+            this._blockController = blockController;
+            this._blockFactory = blockFactory;
+            this._blockSerializer = blockSerializer;
+            this._pointController = pointController;
+            this._jsonSerializer = jsonSerializer;
+
+            GetSheet().Init(blockController, blockFactory, blockSerializer, pointController, jsonSerializer);
+            GetSheet().Library = Library;
+
+            Init();
+        } 
 
         #endregion
 
-        #region Constructor
+        #region Fields
 
-        public SheetWindow()
-        {
-            InitializeComponent();
-            Init();
-        }
+        private ObservableCollection<IDatabaseController> DatabaseControllers = new ObservableCollection<IDatabaseController>();
 
         #endregion
 
@@ -81,17 +101,11 @@ namespace Sheet
 
         private void Init()
         {
-            InitSheet();
             InitSizeBorder();
             InitSolution();
             InitDrop();
             UpdateModeMenu();
             InitDatabases();
-        }
-
-        private void InitSheet()
-        {
-            GetSheet().Library = Library;
         }
 
         private void InitSizeBorder()

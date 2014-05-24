@@ -11,9 +11,14 @@ namespace Sheet
 
     public class PageHistory : IHistoryController
     {
-        #region Properties
+        #region IoC
 
-        public IPageController Controller { get; private set; }
+        private IPageController _pageController;
+
+        public PageHistory(IPageController pageController)
+        {
+            this._pageController = pageController;
+        }
 
         #endregion
 
@@ -24,20 +29,11 @@ namespace Sheet
 
         #endregion
 
-        #region Constructor
-
-        public PageHistory(IPageController controller)
-        {
-            Controller = controller;
-        }
-
-        #endregion
-
         #region Factory
 
         private async Task<ChangeItem> CreateChange(string message)
         {
-            var block = Controller.SerializePage();
+            var block = _pageController.SerializePage();
             var text = await Task.Run(() => ItemSerializer.SerializeContents(block));
             var change = new ChangeItem()
             {
@@ -74,8 +70,8 @@ namespace Sheet
                     redos.Push(change);
                     var undo = undos.Pop();
                     var block = await Task.Run(() => ItemSerializer.DeserializeContents(undo.Model));
-                    Controller.ResetPage();
-                    Controller.DeserializePage(block);
+                    _pageController.ResetPage();
+                    _pageController.DeserializePage(block);
                 }
                 catch(Exception ex)
                 {
@@ -95,8 +91,8 @@ namespace Sheet
                     undos.Push(change);
                     var redo = redos.Pop();
                     var block = await Task.Run(() => ItemSerializer.DeserializeContents(redo.Model));
-                    Controller.ResetPage();
-                    Controller.DeserializePage(block);
+                    _pageController.ResetPage();
+                    _pageController.DeserializePage(block);
                 }
                 catch(Exception ex)
                 {
@@ -115,17 +111,13 @@ namespace Sheet
 
     public class LogicContentPageFactory : IPageFactory
     {
-        #region Fields
+        #region IoC
 
-        private IBlockFactory blockFactory;
-
-        #endregion
-
-        #region Constructor
+        private IBlockFactory _blockFactory;
 
         public LogicContentPageFactory(IBlockFactory blockFactory)
         {
-            this.blockFactory = blockFactory;
+            this._blockFactory = blockFactory;
         } 
 
         #endregion
@@ -134,7 +126,7 @@ namespace Sheet
 
         public void CreateLine(ISheet sheet, List<XLine> lines, double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
         {
-            var line = blockFactory.CreateLine(thickness, x1, y1, x2, y2, stroke);
+            var line = _blockFactory.CreateLine(thickness, x1, y1, x2, y2, stroke);
 
             if (lines != null)
             {
@@ -149,7 +141,7 @@ namespace Sheet
 
         public void CreateText(ISheet sheet, List<XText> texts, string content, double x, double y, double width, double height, int halign, int valign, double size, ItemColor foreground)
         {
-            var text = blockFactory.CreateText(content, x, y, width, height, halign, valign, size, ItemColors.Transparent, foreground);
+            var text = _blockFactory.CreateText(content, x, y, width, height, halign, valign, size, ItemColors.Transparent, foreground);
 
             if (texts != null)
             {

@@ -142,6 +142,119 @@ namespace Sheet
 
     #endregion
 
+    #region IBlockSerializer
+
+    public interface IBlockSerializer
+    {
+        PointItem Serialize(XPoint point);
+        LineItem Serialize(XLine line);
+        RectangleItem Serialize(XRectangle rectangle);
+        EllipseItem Serialize(XEllipse ellipse);
+        TextItem Serialize(XText text);
+        ImageItem Serialize(XImage image);
+        BlockItem Serialize(XBlock parent);
+        BlockItem SerializerContents(XBlock parent, int id, double x, double y, double width, double height, int dataId, string name);
+        XPoint Deserialize(ISheet sheet, XBlock parent, PointItem pointItem, double thickness);
+        XLine Deserialize(ISheet sheet, XBlock parent, LineItem lineItem, double thickness);
+        XRectangle Deserialize(ISheet sheet, XBlock parent, RectangleItem rectangleItem, double thickness);
+        XEllipse Deserialize(ISheet sheet, XBlock parent, EllipseItem ellipseItem, double thickness);
+        XText Deserialize(ISheet sheet, XBlock parent, TextItem textItem);
+        XImage Deserialize(ISheet sheet, XBlock parent, ImageItem imageItem);
+        XBlock Deserialize(ISheet sheet, XBlock parent, BlockItem blockItem, double thickness);
+    }
+
+    #endregion
+
+    #region IBlockController
+
+    public interface IBlockController
+    {
+        List<XPoint> Add(ISheet sheet, IEnumerable<PointItem> pointItems, XBlock parent, XBlock selected, bool select, double thickness);
+        List<XLine> Add(ISheet sheet, IEnumerable<LineItem> lineItems, XBlock parent, XBlock selected, bool select, double thickness);
+        List<XRectangle> Add(ISheet sheet, IEnumerable<RectangleItem> rectangleItems, XBlock parent, XBlock selected, bool select, double thickness);
+        List<XEllipse> Add(ISheet sheet, IEnumerable<EllipseItem> ellipseItems, XBlock parent, XBlock selected, bool select, double thickness);
+        List<XText> Add(ISheet sheet, IEnumerable<TextItem> textItems, XBlock parent, XBlock selected, bool select, double thickness);
+        List<XImage> Add(ISheet sheet, IEnumerable<ImageItem> imageItems, XBlock parent, XBlock selected, bool select, double thickness);
+        List<XBlock> Add(ISheet sheet, IEnumerable<BlockItem> blockItems, XBlock parent, XBlock selected, bool select, double thickness);
+        void AddContents(ISheet sheet, BlockItem blockItem, XBlock content, XBlock selected, bool select, double thickness);
+        void AddBroken(ISheet sheet, BlockItem blockItem, XBlock content, XBlock selected, bool select, double thickness);
+
+        void Remove(ISheet sheet, IEnumerable<XPoint> points);
+        void Remove(ISheet sheet, IEnumerable<XLine> lines);
+        void Remove(ISheet sheet, IEnumerable<XRectangle> rectangles);
+        void Remove(ISheet sheet, IEnumerable<XEllipse> ellipses);
+        void Remove(ISheet sheet, IEnumerable<XText> texts);
+        void Remove(ISheet sheet, IEnumerable<XImage> images);
+        void Remove(ISheet sheet, IEnumerable<XBlock> blocks);
+        void Remove(ISheet sheet, XBlock block);
+        void RemoveSelected(ISheet sheet, XBlock parent, XBlock selected);
+
+        void Move(double x, double y, XPoint point);
+        void Move(double x, double y, IEnumerable<XPoint> points);
+        void Move(double x, double y, IEnumerable<XLine> lines);
+        void MoveStart(double x, double y, XLine line);
+        void MoveEnd(double x, double y, XLine line);
+        void Move(double x, double y, XRectangle rectangle);
+        void Move(double x, double y, IEnumerable<XRectangle> rectangles);
+        void Move(double x, double y, XEllipse ellipse);
+        void Move(double x, double y, IEnumerable<XEllipse> ellipses);
+        void Move(double x, double y, XText text);
+        void Move(double x, double y, IEnumerable<XText> texts);
+        void Move(double x, double y, XImage image);
+        void Move(double x, double y, IEnumerable<XImage> images);
+        void Move(double x, double y, XBlock block);
+        void Move(double x, double y, IEnumerable<XBlock> blocks);
+
+        void Deselect(XPoint point);
+        void Deselect(XLine line);
+        void Deselect(XRectangle rectangle);
+        void Deselect(XEllipse ellipse);
+        void Deselect(XText text);
+        void Deselect(XImage image);
+        void Deselect(XBlock parent);
+
+        void Select(XPoint point);
+        void Select(XLine line);
+        void Select(XRectangle rectangle);
+        void Select(XEllipse ellipse);
+        void Select(XText text);
+        void Select(XImage image);
+        void Select(XBlock parent);
+
+        void SelectContent(XBlock selected, XBlock content);
+        void DeselectContent(XBlock selected);
+
+        bool HaveSelected(XBlock selected);
+        bool HaveOnePointSelected(XBlock selected);
+        bool HaveOneLineSelected(XBlock selected);
+        bool HaveOneRectangleSelected(XBlock selected);
+        bool HaveOneEllipseSelected(XBlock selected);
+        bool HaveOneTextSelected(XBlock selected);
+        bool HaveOneImageSelected(XBlock selected);
+        bool HaveOneBlockSelected(XBlock selected);
+
+        bool HitTest(IEnumerable<XPoint> points, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<XLine> lines, XBlock selected, XBlockRect rect, bool onlyFirst, bool select);
+        bool HitTest(IEnumerable<XRectangle> rectangles, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<XEllipse> ellipses, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<XText> texts, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<XImage> images, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<XBlock> blocks, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo);
+        bool HitTest(XBlock parent, XBlock selected, XBlockRect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo);
+
+        bool HitTestClick(ISheet sheet, XBlock parent, XBlock selected, XBlockPoint p, double size, bool selectInsideBlock, bool resetSelected);
+        bool HitTestForBlocks(ISheet sheet, XBlock parent, XBlock selected, XBlockPoint p, double size);
+        void HitTestSelectionRect(ISheet sheet, XBlock parent, XBlock selected, XBlockRect rect, bool resetSelected);
+
+        void ToggleFill(XRectangle rectangle);
+        void ToggleFill(XEllipse ellipse);
+        void ToggleFill(XPoint point);
+
+        XBlock ShallowCopy(XBlock original);
+    }
+
+    #endregion
+
     #region IHistoryController
 
     public interface IHistoryController
@@ -220,5 +333,16 @@ namespace Sheet
         void ActualSize();
     }
     
+    #endregion
+
+    #region IPointController
+
+    public interface IPointController
+    {
+        void ConnectStart(XPoint point, XLine line);
+        void ConnectEnd(XPoint point, XLine line);
+        void UpdateDependencies(List<XBlock> blocks, List<XPoint> points, List<XLine> lines);
+    }
+
     #endregion
 }

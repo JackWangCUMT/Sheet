@@ -8,17 +8,22 @@ namespace Sheet
 {
     #region PointController
 
-    public static class PointController
+    public class PointController : IPointController
     {
-        #region Fields
+        #region IoC
 
-        private static IBlockHelper blockHelper = new WpfBlockHelper();
+        private IBlockHelper _blockHelper;
+
+        public PointController(IBlockHelper blockHelper)
+        {
+            this._blockHelper = blockHelper;
+        }
 
         #endregion
 
         #region Get
 
-        public static IEnumerable<KeyValuePair<int, XPoint>> GetAllPoints(List<XBlock> blocks)
+        private IEnumerable<KeyValuePair<int, XPoint>> GetAllPoints(List<XBlock> blocks)
         {
             foreach (var block in blocks)
             {
@@ -40,7 +45,7 @@ namespace Sheet
             }
         }
 
-        public static IEnumerable<XLine> GetAllLines(List<XBlock> blocks)
+        private IEnumerable<XLine> GetAllLines(List<XBlock> blocks)
         {
             foreach (var block in blocks)
             {
@@ -66,23 +71,23 @@ namespace Sheet
 
         #region Connect
 
-        public static void ConnectStart(XPoint point, XLine line)
+        public void ConnectStart(XPoint point, XLine line)
         {
             Action<XElement, XPoint> update = (element, p) =>
             {
-                blockHelper.SetX1(element as XLine, p.X);
-                blockHelper.SetY1(element as XLine, p.Y);
+                _blockHelper.SetX1(element as XLine, p.X);
+                _blockHelper.SetY1(element as XLine, p.Y);
             };
             var dependecy = new XDependency(line, update);
             point.Connected.Add(dependecy);
         }
 
-        public static void ConnectEnd(XPoint point, XLine line)
+        public void ConnectEnd(XPoint point, XLine line)
         {
             Action<XElement, XPoint> update = (element, p) =>
             {
-                blockHelper.SetX2(element as XLine, p.X);
-                blockHelper.SetY2(element as XLine, p.Y);
+                _blockHelper.SetX2(element as XLine, p.X);
+                _blockHelper.SetY2(element as XLine, p.Y);
             };
             var dependecy = new XDependency(line, update);
             point.Connected.Add(dependecy);
@@ -92,7 +97,7 @@ namespace Sheet
 
         #region Dependencies
 
-        public static void UpdateDependencies(List<XBlock> blocks, List<XPoint> points, List<XLine> lines)
+        public void UpdateDependencies(List<XBlock> blocks, List<XPoint> points, List<XLine> lines)
         {
             // get all points
             var ps = GetAllPoints(blocks).ToDictionary(x => x.Key, x => x.Value);
