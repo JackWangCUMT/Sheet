@@ -42,7 +42,7 @@
                 <MenuItem x:Name="FileOpenSolution" Header="_Open Solution..." InputGestureText="Ctrl+Shift+O" Click="FileOpenSolution_Click"/>
                 <MenuItem x:Name="FileSaveSolution" Header="_Save Solution" InputGestureText="Ctrl+Shift+S" Click="FileSaveSolution_Click"/>
                 <Separator/>
-                <MenuItem x:Name="FileCloseSolution" Header="_Close Solution" InputGestureText="Ctrl+Shift+C" Click="FileCloseSolution_Click"/>
+                <MenuItem x:Name="FileCloseSolution" Header="_Close Solution" InputGestureText="" Click="FileCloseSolution_Click"/>
                 <Separator/>
                 <MenuItem x:Name="FileNewPage" Header="New Pa_ge" InputGestureText="Ctrl+N" Click="FileNewPage_Click"/>
                 <Separator/>
