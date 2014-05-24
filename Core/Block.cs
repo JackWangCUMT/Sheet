@@ -276,7 +276,7 @@ namespace Sheet
 
     #region Block Serializer
 
-    public class BlockSerializer
+    public static class BlockSerializer
     {
         #region Fields
 
