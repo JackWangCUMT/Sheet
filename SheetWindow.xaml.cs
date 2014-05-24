@@ -689,7 +689,6 @@ namespace Sheet
             CloseSolution();
         }
 
-
         private void FileNewPage_Click(object sender, RoutedEventArgs e)
         {
             GetSheet().NewPage();
