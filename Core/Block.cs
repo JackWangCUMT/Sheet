@@ -2671,7 +2671,7 @@ namespace Sheet
 
     public static class PointController
     {
-         public static void ConnectStart(XPoint point, XLine line)
+        public static void ConnectStart(XPoint point, XLine line)
         {
             var dependecy = new XDependency(line, (element, p) => { (element.Element as Line).X1 = p.X; (element.Element as Line).Y1 = p.Y; });
             point.Connected.Add(dependecy);
