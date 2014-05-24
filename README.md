@@ -9,7 +9,6 @@ Keyboard  Shortcuts:
     Ctrl+Shift+N    New Solution
     Ctrl+Shift+O    Open Solution
     Ctrl+Shift+S    Save Solution
-    Ctrl+Shift+C    Close Solution
     Ctrl+N          New Page
     Ctrl+O          Open Page
     Ctrl+S          Save Page
@@ -23,6 +22,9 @@ Keyboard  Shortcuts:
     Ctrl+X          Cut
     Ctrl+C          Copy
     Ctrl+V          Paste
+    Ctrl+Shift+X    Cut as Json
+    Ctrl+Shift+C    Copy as Json
+    Ctrl+Shift+V    Paste Json
     Del             Delete
     Ctrl+Del        Reset
     Ctrl+A          Select All
