@@ -216,11 +216,11 @@ namespace Sheet
             }
             else if (string.Compare(ext, FileDialogSettings.PageExtension, true) == 0)
             {
-                await GetSheet().OpenTextFile(path);
+                await GetSheet().OpenTextPage(path);
             }
             else if (string.Compare(ext, FileDialogSettings.JsonPageExtension, true) == 0)
             {
-                await GetSheet().OpenJsonFile(path);
+                await GetSheet().OpenJsonPage(path);
             }
             else if (string.Compare(ext, FileDialogSettings.LibraryExtension, true) == 0)
             {
@@ -302,7 +302,7 @@ namespace Sheet
                     }
                     if (ctrl && !shift)
                     {
-                        GetSheet().New();
+                        GetSheet().NewPage();
                     }
                     else if (ctrl && shift)
                     {
@@ -314,7 +314,7 @@ namespace Sheet
                 case Key.O:
                     if (ctrl && !shift)
                     {
-                        GetSheet().Open();
+                        GetSheet().OpenPage();
                     }
                     else if (ctrl && shift)
                     {
@@ -327,7 +327,7 @@ namespace Sheet
                 case Key.S:
                     if (ctrl && !shift)
                     {
-                        GetSheet().Save();
+                        GetSheet().SavePage();
                     }
                     else if (ctrl && shift)
                     {
@@ -350,7 +350,7 @@ namespace Sheet
                         }
                         else
                         {
-                            GetSheet().Export();
+                            GetSheet().ExportPage();
                         }
                     }
                     else
@@ -673,17 +673,17 @@ namespace Sheet
 
         private void FileNewPage_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().New();
+            GetSheet().NewPage();
         }
 
         private void FileOpenPage_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().Open();
+            GetSheet().OpenPage();
         }
 
         private void FileSavePage_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().Save();
+            GetSheet().SavePage();
         }
 
         private void FileExport_Click(object sender, RoutedEventArgs e)
@@ -694,7 +694,7 @@ namespace Sheet
             }
             else
             {
-                GetSheet().Export();
+                GetSheet().ExportPage();
             }
         }
 

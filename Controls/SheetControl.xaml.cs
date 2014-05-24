@@ -56,7 +56,7 @@ namespace Sheet
 
     #endregion
 
-    public partial class SheetControl : UserControl, IPageController, IZoomController
+    public partial class SheetControl : UserControl, IPageController, IPanAndZoomController
     {
         #region Fields
 
@@ -91,64 +91,11 @@ namespace Sheet
 
         #endregion
 
-        #region Properties
-
-        public IHistoryController History { get; private set; }
-        public ILibraryController Library { get; set; }
-
-        #endregion
-        
-        #region IZoomController
-        
-        private int zoomIndex = -1;
-        public int ZoomIndex
-        {
-            get { return zoomIndex; }
-            set
-            {
-                if (value >= 0 && value <= options.MaxZoomIndex)
-                {
-                    zoomIndex = value;
-                    Zoom = options.ZoomFactors[zoomIndex];
-                }
-            }
-        }
-
-        public double Zoom
-        {
-            get { return zoom.ScaleX; }
-            set
-            {
-                if (IsLoaded)
-                {
-                    AdjustPageThickness(value);
-                }
-                zoom.ScaleX = value;
-                zoom.ScaleY = value;
-            }
-        }
-
-        public double PanX
-        {
-            get { return pan.X; }
-            set { pan.X = value; }
-        }
-
-        public double PanY
-        {
-            get { return pan.Y; }
-            set { pan.Y = value; }
-        }
-
-        #endregion
-
         #region Constructor
 
         public SheetControl()
         {
             InitializeComponent();
-
-            History = new PageHistory(this);
 
             Init();
 
@@ -195,9 +142,16 @@ namespace Sheet
 
         private void Init()
         {
+            InitInterfaces();
             InitOptions();
             InitSheets();
             InitBlocks();
+        }
+
+        private void InitInterfaces()
+        {
+            History = new PageHistory(this);
+            PanAndZoom = this;
         }
 
         private void InitOptions()
@@ -287,6 +241,10 @@ namespace Sheet
 
         #region IPageController
 
+        public IHistoryController History { get; set; }
+        public ILibraryController Library { get; set; }
+        public IPanAndZoomController PanAndZoom { get; set; }
+
         public async void SetPage(string text)
         {
             try
@@ -328,7 +286,6 @@ namespace Sheet
         public void ExportPages(IEnumerable<string> texts)
         {
             var blocks = texts.Select(text => ItemSerializer.DeserializeContents(text));
-
             Export(blocks);
         }
 
@@ -843,6 +800,63 @@ namespace Sheet
 
         #endregion
 
+        #region IZoomController
+
+        private int zoomIndex = -1;
+        public int ZoomIndex
+        {
+            get { return zoomIndex; }
+            set
+            {
+                if (value >= 0 && value <= options.MaxZoomIndex)
+                {
+                    zoomIndex = value;
+                    Zoom = options.ZoomFactors[zoomIndex];
+                }
+            }
+        }
+
+        public double Zoom
+        {
+            get { return zoom.ScaleX; }
+            set
+            {
+                if (IsLoaded)
+                {
+                    AdjustPageThickness(value);
+                }
+                zoom.ScaleX = value;
+                zoom.ScaleY = value;
+            }
+        }
+
+        public double PanX
+        {
+            get { return pan.X; }
+            set { pan.X = value; }
+        }
+
+        public double PanY
+        {
+            get { return pan.Y; }
+            set { pan.Y = value; }
+        }
+
+        public void AutoFit()
+        {
+            AutoFit(lastFinalSize);
+        }
+
+        public void ActualSize()
+        {
+            zoomIndex = options.DefaultZoomIndex;
+            Zoom = options.ZoomFactors[zoomIndex];
+            PanX = 0.0;
+            PanY = 0.0;
+        }
+
+        #endregion
+
         #region Pan & Zoom Mode
 
         private int FindZoomIndex(double factor)
@@ -884,19 +898,6 @@ namespace Sheet
             // adjust pan
             PanX = panX - dx;
             PanY = panY - dy;
-        }
-
-        public void AutoFit()
-        {
-            AutoFit(lastFinalSize);
-        }
-
-        public void ActualSize()
-        {
-            zoomIndex = options.DefaultZoomIndex;
-            Zoom = options.ZoomFactors[zoomIndex];
-            PanX = 0.0;
-            PanY = 0.0;
         }
 
         private void ZoomTo(double x, double y, int oldZoomIndex)
@@ -2275,9 +2276,9 @@ namespace Sheet
 
         #endregion
 
-        #region New
+        #region New Page
 
-        public void New()
+        public void NewPage()
         {
             History.Register("New");
             ResetPage();
@@ -2287,9 +2288,9 @@ namespace Sheet
 
         #endregion
 
-        #region Open
+        #region Open Page
 
-        public async Task OpenTextFile(string path)
+        public async Task OpenTextPage(string path)
         {
             var text = await ItemController.OpenText(path);
             if (text != null)
@@ -2301,7 +2302,7 @@ namespace Sheet
             }
         }
 
-        public async Task OpenJsonFile(string path)
+        public async Task OpenJsonPage(string path)
         {
             var text = await ItemController.OpenText(path);
             if (text != null)
@@ -2313,7 +2314,7 @@ namespace Sheet
             }
         }
 
-        public async void Open()
+        public async void OpenPage()
         {
             var dlg = new Microsoft.Win32.OpenFileDialog()
             {
@@ -2329,7 +2330,7 @@ namespace Sheet
                         {
                             try
                             {
-                                await OpenTextFile(path);
+                                await OpenTextPage(path);
                             }
                             catch (Exception ex)
                             {
@@ -2343,7 +2344,7 @@ namespace Sheet
                         {
                             try
                             {
-                                await OpenJsonFile(path);
+                                await OpenJsonPage(path);
                             }
                             catch (Exception ex)
                             {
@@ -2358,9 +2359,31 @@ namespace Sheet
 
         #endregion
 
-        #region Save
+        #region Save Page
 
-        public void Save()
+        public void SaveTextPage(string path)
+        {
+            var page = SerializePage();
+
+            Task.Run(() =>
+            {
+                var text = ItemSerializer.SerializeContents(page);
+                ItemController.SaveText(path, text);
+            });
+        }
+
+        public void SaveJsonPage(string path)
+        {
+            var page = SerializePage();
+
+            Task.Run(() =>
+            {
+                string text = JsonConvert.SerializeObject(page, Formatting.Indented);
+                ItemController.SaveText(path, text);
+            });
+        }
+
+        public void SavePage()
         {
             var dlg = new Microsoft.Win32.SaveFileDialog()
             {
@@ -2370,19 +2393,14 @@ namespace Sheet
 
             if (dlg.ShowDialog() == true)
             {
-                var page = SerializePage();
-
+                string path = dlg.FileName;
                 switch (dlg.FilterIndex)
                 {
                     case 1:
                         {
                             try
                             {
-                                Task.Run(() =>
-                                {
-                                    var text = ItemSerializer.SerializeContents(page);
-                                    ItemController.SaveText(dlg.FileName, text);
-                                });
+                                SaveTextPage(path);
                             }
                             catch (Exception ex)
                             {
@@ -2396,11 +2414,7 @@ namespace Sheet
                         {
                             try
                             {
-                                Task.Run(() =>
-                                {
-                                    string text = JsonConvert.SerializeObject(page, Formatting.Indented);
-                                    ItemController.SaveText(dlg.FileName, text);
-                                });
+                                SaveJsonPage(path);
                             }
                             catch (Exception ex)
                             {
@@ -2462,12 +2476,6 @@ namespace Sheet
             });
         }
 
-        public void Export(SolutionEntry solution)
-        {
-            var texts = solution.Documents.SelectMany(document => document.Pages).Select(page => page.Content);
-            ExportPages(texts);
-        }
-
         public void Export(IEnumerable<BlockItem> blocks)
         {
             var dlg = new Microsoft.Win32.SaveFileDialog()
@@ -2478,6 +2486,7 @@ namespace Sheet
 
             if (dlg.ShowDialog() == true)
             {
+                string path = dlg.FileName;
                 switch (dlg.FilterIndex)
                 {
                     case 1:
@@ -2486,7 +2495,7 @@ namespace Sheet
                         {
                             try
                             {
-                                ExportToPdf(blocks, dlg.FileName);
+                                ExportToPdf(blocks, path);
                             }
                             catch (Exception ex)
                             {
@@ -2499,7 +2508,7 @@ namespace Sheet
                         {
                             try
                             {
-                                ExportToDxf(blocks, dlg.FileName);
+                                ExportToDxf(blocks, path);
                             }
                             catch (Exception ex)
                             {
@@ -2512,15 +2521,16 @@ namespace Sheet
             }
         }
 
-        public void Export()
+        public void Export(SolutionEntry solution)
         {
-            var block = BlockSerializer.SerializerContents(contentBlock, 0, 
-                contentBlock.X, contentBlock.Y, 
-                contentBlock.Width, contentBlock.Height,
-                contentBlock.DataId, "CONTENT");
+            var texts = solution.Documents.SelectMany(document => document.Pages).Select(page => page.Content);
+            ExportPages(texts);
+        }
 
+        public void ExportPage()
+        {
+            var block = BlockSerializer.SerializerContents(contentBlock, -1, contentBlock.X, contentBlock.Y, contentBlock.Width, contentBlock.Height, contentBlock.DataId, "CONTENT");
             var blocks = ToSingle(block);
-
             Export(blocks);
         }
 

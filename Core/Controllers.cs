@@ -58,6 +58,9 @@ namespace Sheet
 
     public interface IPageController
     {
+        IHistoryController History { get; set; }
+        ILibraryController Library { get; set; }
+        IPanAndZoomController PanAndZoom { get; set; }
         void SetPage(string text);
         string GetPage();
         void ExportPage(string text);
@@ -69,15 +72,17 @@ namespace Sheet
     }
 
     #endregion
-    
-    #region IZoomController
-    
-    public interface IZoomController
+
+    #region IPanAndZoomController
+
+    public interface IPanAndZoomController
     {
         int ZoomIndex { get; set; }
         double Zoom { get; set; }
         double PanX { get; set; }
         double PanY { get; set; }
+        void AutoFit();
+        void ActualSize();
     }
     
     #endregion
