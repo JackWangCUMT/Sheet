@@ -270,15 +270,17 @@ namespace Sheet
                 return;
             }
 
-            bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
-            bool shift = (Keyboard.Modifiers & ModifierKeys.Shift) > 0;
+            bool none = Keyboard.Modifiers == ModifierKeys.None;
+            bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
+            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
+            bool ctrlShift = Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift);
 
             switch (e.Key)
             {
                 // Ctrl+0: Zoom to Page Level
                 case Key.D0:
                 case Key.NumPad0:
-                    if (ctrl)
+                    if (onlyCtrl)
                     {
                         GetSheet().AutoFit();
                     }
@@ -286,7 +288,7 @@ namespace Sheet
                 // Ctrl+1: Actual Size
                 case Key.D1:
                 case Key.NumPad1:
-                    if (ctrl)
+                    if (onlyCtrl)
                     {
                         GetSheet().ActualSize();
                     }
@@ -295,16 +297,16 @@ namespace Sheet
                 // Ctrl+N: New Page
                 // Ctrl+Shift+N: New Solution
                 case Key.N:
-                    if (!ctrl && !shift)
+                    if (none)
                     {
                         GetSheet().ModeNone();
                         UpdateModeMenu();
                     }
-                    if (ctrl && !shift)
+                    if (onlyCtrl)
                     {
                         GetSheet().NewPage();
                     }
-                    else if (ctrl && shift)
+                    else if (ctrlShift)
                     {
                         NewSolution();
                     }
@@ -312,11 +314,11 @@ namespace Sheet
                 // Ctrl+O: Open Page
                 // Ctrl+Shift+O: Open Solution
                 case Key.O:
-                    if (ctrl && !shift)
+                    if (onlyCtrl)
                     {
                         GetSheet().OpenPage();
                     }
-                    else if (ctrl && shift)
+                    else if (ctrlShift)
                     {
                         OpenSolution();
                     }
@@ -325,15 +327,15 @@ namespace Sheet
                 // Ctrl+Shift+S: Save Solution
                 // S: Mode Selection
                 case Key.S:
-                    if (ctrl && !shift)
+                    if (onlyCtrl)
                     {
                         GetSheet().SavePage();
                     }
-                    else if (ctrl && shift)
+                    else if (ctrlShift)
                     {
                         SaveSolution();
                     }
-                    else
+                    else if (none)
                     {
                         GetSheet().ModeSelection();
                         UpdateModeMenu();
@@ -342,7 +344,7 @@ namespace Sheet
                 // Ctrl+E: Export
                 // E: Mode Ellipse
                 case Key.E:
-                    if (ctrl)
+                    if (onlyCtrl)
                     {
                         if (Solution.DataContext != null)
                         {
@@ -353,7 +355,7 @@ namespace Sheet
                             GetSheet().ExportPage();
                         }
                     }
-                    else
+                    else if (none)
                     {
                         GetSheet().ModeEllipse();
                         UpdateModeMenu();
@@ -362,11 +364,11 @@ namespace Sheet
                 // Ctrl+L: Library
                 // L: Mode Line
                 case Key.L:
-                    if (ctrl)
+                    if (onlyCtrl)
                     {
                         GetSheet().LoadLibrary();
                     }
-                    else
+                    else if (none)
                     {
                         GetSheet().ModeLine();
                         UpdateModeMenu();
@@ -375,11 +377,11 @@ namespace Sheet
                 // Ctrl+D: Database
                 // D: Mode Image
                 case Key.D:
-                    if (ctrl)
+                    if (onlyCtrl)
                     {
                         OpenDatabase();
                     }
-                    else
+                    else if (none)
                     {
                         GetSheet().ModeImage();
                         UpdateModeMenu();
@@ -387,40 +389,46 @@ namespace Sheet
                     break;
                 // Ctrl+Z: Undo
                 case Key.Z:
-                    if (ctrl)
+                    if (onlyCtrl)
                     {
                         GetSheet().History.Undo();
                     }
                     break;
                 // Ctrl+Y: Redo
                 case Key.Y:
-                    if (ctrl)
+                    if (onlyCtrl)
                     {
                         GetSheet().History.Redo();
                     }
                     break;
                 // Ctrl+X: Cut
+                // Ctrl+Shift+X: Cut as Json
                 case Key.X:
-                    if (ctrl)
+                    if (onlyCtrl)
                     {
                         GetSheet().CutAsText();
                     }
+                    else if (ctrlShift)
+                    {
+                        GetSheet().CutAsJson();
+                    }
                     break;
                 // Ctrl+C: Copy
-                // Ctrl+Shift+C: Close Solution
+                // Ctrl+Shift+C: Copy as Json
                 case Key.C:
-                    if (ctrl && !shift)
+                    if (onlyCtrl)
                     {
                         GetSheet().CopyAsText();
                     }
-                    else if (ctrl && shift)
+                    else if (ctrlShift)
                     {
-                        CloseSolution();
+                        GetSheet().CopyAsJson();
                     }
                     break;
                 // Ctrl+V: Paste
+                // Ctrl+Shift+V: Paste as Json
                 case Key.V:
-                    if (ctrl)
+                    if (onlyCtrl)
                     {
                         GetSheet().PasteText();
                     }
@@ -428,19 +436,19 @@ namespace Sheet
                 // Del: Delete
                 // Ctrl+Del: Reset
                 case Key.Delete:
-                    if (ctrl)
+                    if (onlyCtrl)
                     {
                         GetSheet().History.Register("Reset");
                         GetSheet().ResetPage();
                     }
-                    else
+                    else if (none)
                     {
                         GetSheet().Delete();
                     }
                     break;
                 // Ctrl+A: Select All
                 case Key.A:
-                    if (ctrl)
+                    if (onlyCtrl)
                     {
                         GetSheet().SelecteAll();
                     }
@@ -448,89 +456,100 @@ namespace Sheet
                 // B: Create Block
                 // Ctrl+B: Break Block
                 case Key.B:
+                    if (onlyCtrl)
                     {
-                        if (ctrl)
-                        {
-                            GetSheet().BreakBlock();
-                        }
-                        else
-                        {
-                            e.Handled = true;
-                            GetSheet().CreateBlock();
-                        }
+                        GetSheet().BreakBlock();
+                    }
+                    else if (none)
+                    {
+                        e.Handled = true;
+                        GetSheet().CreateBlock();
                     }
                     break;
                 // Up: Move Up
                 case Key.Up:
+                    if (none && GetSheet().IsFocused)
                     {
-                        if (GetSheet().IsFocused)
-                        {
-                            GetSheet().MoveUp();
-                            e.Handled = true;
-                        }
+                        GetSheet().MoveUp();
+                        e.Handled = true;
                     }
                     break;
                 // Down: Move Down
                 case Key.Down:
+                    if (none && GetSheet().IsFocused)
                     {
-                        if (GetSheet().IsFocused)
-                        {
-                            GetSheet().MoveDown();
-                            e.Handled = true;
-                        }
+                        GetSheet().MoveDown();
+                        e.Handled = true;
                     }
                     break;
                 // Left: Move Left
                 case Key.Left:
+                    if (none && GetSheet().IsFocused)
                     {
-                        if (GetSheet().IsFocused)
-                        {
-                            GetSheet().MoveLeft();
-                            e.Handled = true;
-                        }
+                        GetSheet().MoveLeft();
+                        e.Handled = true;
                     }
                     break;
                 // Right: Move Right
                 case Key.Right:
+                    if (none && GetSheet().IsFocused)
                     {
-                        if (GetSheet().IsFocused)
-                        {
-                            GetSheet().MoveRight();
-                            e.Handled = true;
-                        }
+                        GetSheet().MoveRight();
+                        e.Handled = true;
                     }
                     break;
                 // F: Toggle Fill
                 case Key.F:
-                    GetSheet().ToggleFill();
+                    if (none)
+                    {
+                        GetSheet().ToggleFill();
+                    }
                     break;
                 // I: Mode Insert
                 case Key.I:
-                    GetSheet().ModeInsert();
-                    UpdateModeMenu();
+                    if (none)
+                    {
+                        GetSheet().ModeInsert();
+                        UpdateModeMenu(); 
+                    }
                     break;
                 // P: Mode Point
                 case Key.P:
-                    GetSheet().ModePoint();
-                    UpdateModeMenu();
+                    if (none)
+                    {
+                        GetSheet().ModePoint();
+                        UpdateModeMenu(); 
+                    }
                     break;
                 // R: Mode Rectangle
                 case Key.R:
-                    GetSheet().ModeRectangle();
-                    UpdateModeMenu();
+                    if (none)
+                    {
+                        GetSheet().ModeRectangle();
+                        UpdateModeMenu(); 
+                    }
                     break;
                 // T: Mode Text
                 case Key.T:
-                    GetSheet().ModeText();
-                    UpdateModeMenu();
+                    if (none)
+                    {
+                        GetSheet().ModeText();
+                        UpdateModeMenu(); 
+                    }
                     break;
                 // Q: Invert Line Start
                 case Key.Q:
-                    GetSheet().InvertSelectedLineStart();
+                    if (none)
+                    {
+                        GetSheet().InvertSelectedLineStart(); 
+                    }
                     break;
                 // W: Invert Line End
                 case Key.W:
-                    GetSheet().InvertSelectedLineEnd();
+                    if (none)
+                    {
+                        GetSheet().InvertSelectedLineEnd(); 
+                    }
                     break;
             }
         }
