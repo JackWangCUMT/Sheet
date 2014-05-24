@@ -983,40 +983,8 @@ namespace Sheet
                 var ellipses = Add(sheet, blockItem.Ellipses, content, selected, select, thickness);
                 var blocks = Add(sheet, blockItem.Blocks, content, selected, select, thickness);
                 var points = Add(sheet, blockItem.Points, content, selected, select, thickness);
-                
-                // get all points
-                var ps = GetAllPoints(blocks).ToDictionary(x => x.Key, x => x.Value);
-                
-                foreach(var point in points)
-                {
-                    ps.Add(point.Id, point);
-                }
 
-                // get all lines
-                var ls = GetAllLines(blocks).ToList();
-                
-                foreach(var line in lines)
-                {
-                	ls.Add(line);
-                }
-
-                // update point dependencies
-                foreach(var line in ls)
-                {
-                    if (line.StartId >= 0)
-                    {
-                        var point = ps[line.StartId];
-                        line.Start = point;
-                        PointController.ConnectStart(line.Start, line);
-                    }
-                    
-                    if (line.EndId >= 0)
-                    {
-                        var point = ps[line.EndId];
-                        line.End = point;
-                        PointController.ConnectEnd(line.End, line);
-                    }
-                }
+                UpdateDependencies(blocks, points, lines);
             }
         }
 
@@ -1224,6 +1192,47 @@ namespace Sheet
                 }
 
                 selected.Blocks = null;
+            }
+        }
+
+        #endregion
+
+        #region Dependencies
+
+        private static void UpdateDependencies(List<XBlock> blocks, List<XPoint> points, List<XLine> lines)
+        {
+            // get all points
+            var ps = GetAllPoints(blocks).ToDictionary(x => x.Key, x => x.Value);
+
+            foreach (var point in points)
+            {
+                ps.Add(point.Id, point);
+            }
+
+            // get all lines
+            var ls = GetAllLines(blocks).ToList();
+
+            foreach (var line in lines)
+            {
+                ls.Add(line);
+            }
+
+            // update point dependencies
+            foreach (var line in ls)
+            {
+                if (line.StartId >= 0)
+                {
+                    var point = ps[line.StartId];
+                    line.Start = point;
+                    PointController.ConnectStart(line.Start, line);
+                }
+
+                if (line.EndId >= 0)
+                {
+                    var point = ps[line.EndId];
+                    line.End = point;
+                    PointController.ConnectEnd(line.End, line);
+                }
             }
         }
 
