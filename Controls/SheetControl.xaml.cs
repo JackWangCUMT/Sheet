@@ -59,6 +59,8 @@ namespace Sheet
     {
         #region IoC
 
+        private IInterfaceLocator _interfaceLocator;
+
         private IBlockController _blockController;
         private IBlockFactory _blockFactory;
         private IBlockSerializer _blockSerializer;
@@ -67,38 +69,26 @@ namespace Sheet
         private IItemController _itemController;
         private IItemSerializer _itemSerializer;
 
-        public SheetControl(IBlockController blockController,
-            IBlockFactory blockFactory,
-            IBlockSerializer blockSerializer,
-            IPointController pointController,
-            IJsonSerializer jsonSerializer,
-            IItemController itemController,
-            IItemSerializer itemSerializer)
+        public SheetControl(IInterfaceLocator interfaceLocator)
         {
             InitializeComponent();
 
-            Init(blockController, blockFactory, blockSerializer, pointController, jsonSerializer, itemController, itemSerializer);
-
+            Init(interfaceLocator);
             Init();
-
             Loaded += (s, e) => InitLoaded();
         }
 
-        public void Init(IBlockController blockController,
-            IBlockFactory blockFactory,
-            IBlockSerializer blockSerializer,
-            IPointController pointController,
-            IJsonSerializer jsonSerializer,
-            IItemController itemController,
-            IItemSerializer itemSerializer)
+        public void Init(IInterfaceLocator interfaceLocator)
         {
-            this._blockController = blockController;
-            this._blockFactory = blockFactory;
-            this._blockSerializer = blockSerializer;
-            this._pointController = pointController;
-            this._jsonSerializer = jsonSerializer;
-            this._itemController = itemController;
-            this._itemSerializer = itemSerializer;
+            this._interfaceLocator = interfaceLocator;
+
+            this._blockController = interfaceLocator.GetInterface<IBlockController>();
+            this._blockFactory = interfaceLocator.GetInterface<IBlockFactory>();
+            this._blockSerializer = interfaceLocator.GetInterface<IBlockSerializer>();
+            this._pointController = interfaceLocator.GetInterface<IPointController>();
+            this._jsonSerializer = interfaceLocator.GetInterface<IJsonSerializer>();
+            this._itemController = interfaceLocator.GetInterface<IItemController>();
+            this._itemSerializer = interfaceLocator.GetInterface<IItemSerializer>();
 
             History = new PageHistory(this, this._itemSerializer);
             PanAndZoom = this;

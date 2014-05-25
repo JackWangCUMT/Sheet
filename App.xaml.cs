@@ -9,6 +9,18 @@ using System.Windows;
 
 namespace Sheet
 {
+    #region AppInterfaceLocator
+
+    public class AppInterfaceLocator : IInterfaceLocator
+    {
+        public T GetInterface<T>()
+        {
+            return App.Container.Resolve<T>();
+        }
+    }
+
+    #endregion
+
     public partial class App : Application
     {
         #region Constructor
@@ -22,6 +34,8 @@ namespace Sheet
 
         #region IoC
 
+        public static IContainer Container { get; private set; }
+
         private void Init()
         {
             var builder = new ContainerBuilder();
@@ -32,22 +46,21 @@ namespace Sheet
             builder.RegisterInstance(new EntryFactory()).As<IEntryFactory>().SingleInstance();
 
             builder.RegisterType<BlockSerializer>().As<IBlockSerializer>().SingleInstance();
-            builder.RegisterType<PointController>().As<IPointController>().SingleInstance();
-            builder.RegisterType<BlockController>().As<IBlockController>().SingleInstance();
-
             builder.RegisterType<ItemSerializer>().As<IItemSerializer>().SingleInstance();
-            builder.RegisterType<ItemController>().As<IItemController>().SingleInstance();
-
             builder.RegisterType<EntrySerializer>().As<IEntrySerializer>().SingleInstance();
+            builder.RegisterType<BlockController>().As<IBlockController>().SingleInstance();
+            builder.RegisterType<ItemController>().As<IItemController>().SingleInstance();
             builder.RegisterType<EntryController>().As<IEntryController>().SingleInstance();
+            builder.RegisterType<PointController>().As<IPointController>().SingleInstance();
+
+            builder.RegisterType<AppInterfaceLocator>().As<IInterfaceLocator>().SingleInstance();
 
             builder.RegisterType<SheetWindow>();
 
-            using (var container = builder.Build())
-            {
-                var window = container.Resolve<SheetWindow>();
-                window.Show();
-            }
+            Container = builder.Build();
+
+            var window = Container.Resolve<SheetWindow>();
+            window.Show();
         } 
 
         #endregion

@@ -7,6 +7,15 @@ using System.Threading.Tasks;
 
 namespace Sheet
 {
+    #region IInterfaceLocator
+
+    public interface IInterfaceLocator
+    {
+        T GetInterface<T>();
+    }
+
+    #endregion
+
     #region IJsonSerializer
 
     public interface IJsonSerializer
