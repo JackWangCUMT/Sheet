@@ -1970,274 +1970,6 @@ namespace Sheet
 
         #endregion
 
-        #region Events
-
-        private void UserControl_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            Focus();
-
-            bool onlyControl = Keyboard.Modifiers == ModifierKeys.Control;
-
-            // edit mode
-            if (selectedType != ItemType.None)
-            {
-                var source = (e.OriginalSource as FrameworkElement).TemplatedParent;
-                if (!(source is Thumb))
-                {
-                    _blockController.DeselectContent(selectedBlock);
-                    FinishEdit();
-                }
-                else
-                {
-                    return;
-                }
-            }
-
-            // text editor
-            if (GetMode() == SheetMode.None || GetMode() == SheetMode.TextEditor)
-            {
-                return;
-            }
-
-            // move mode
-            if (!onlyControl)
-            {
-                if (_blockController.HaveSelected(selectedBlock) && CanInitMove(e.GetPosition(overlaySheet.GetParent() as FrameworkElement)))
-                {
-                    InitMove(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
-                    return;
-                }
-
-                _blockController.DeselectContent(selectedBlock);
-            }
-
-            bool resetSelected = onlyControl && _blockController.HaveSelected(selectedBlock) ? false : true;
-
-            if (GetMode() == SheetMode.Selection)
-            {
-                var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
-                bool result = _blockController.HitTestClick(contentSheet, contentBlock, selectedBlock, new XBlockPoint(p.X, p.Y), options.HitTestSize, false, resetSelected);
-                if ((onlyControl || !_blockController.HaveSelected(selectedBlock)) && !result)
-                {
-                    InitSelectionRect(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
-                }
-                else
-                {
-                    // TODO: If control key is pressed then switch to move mode instead to edit mode
-                    bool editModeEnabled = onlyControl == true ? false : TryToEditSelected();
-                    if (!editModeEnabled)
-                    {
-                        InitMove(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
-                    }
-                }
-            }
-            else if (GetMode() == SheetMode.Insert && !overlaySheet.IsCaptured)
-            {
-                Insert(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
-            }
-            else if (GetMode() == SheetMode.Point && !overlaySheet.IsCaptured)
-            {
-                InsertPoint(e.GetPosition(overlaySheet.GetParent() as FrameworkElement), true, true);
-            }
-            else if (GetMode() == SheetMode.Line && !overlaySheet.IsCaptured)
-            {
-                // try to find point to connect line start
-                var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
-                XPoint start = TryToFindPoint(p);
-                
-                // create start if Control key is pressed and start point has not been found
-                if (onlyControl && start == null)
-                {
-                    start = InsertPoint(p, true, false);
-                }
-                
-                InitTempLine(e.GetPosition(overlaySheet.GetParent() as FrameworkElement), start);
-            }
-            else if (GetMode() == SheetMode.Line && overlaySheet.IsCaptured)
-            {
-                // try to find point to connect line end
-                var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
-                XPoint end = TryToFindPoint(p);
-                
-                // create end point if Control key is pressed and end point has not been found
-                if (onlyControl && end == null)
-                {
-                    end = InsertPoint(p, true, false);
-                }
-                
-                FinishTempLine(end);
-            }
-            else if (GetMode() == SheetMode.Rectangle && !overlaySheet.IsCaptured)
-            {
-                InitTempRect(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
-            }
-            else if (GetMode() == SheetMode.Rectangle && overlaySheet.IsCaptured)
-            {
-                FinishTempRect();
-            }
-            else if (GetMode() == SheetMode.Ellipse && !overlaySheet.IsCaptured)
-            {
-                InitTempEllipse(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
-            }
-            else if (GetMode() == SheetMode.Ellipse && overlaySheet.IsCaptured)
-            {
-                FinishTempEllipse();
-            }
-            else if (GetMode() == SheetMode.Pan && overlaySheet.IsCaptured)
-            {
-                FinishPan();
-            }
-            else if (GetMode() == SheetMode.Text && !overlaySheet.IsCaptured)
-            {
-                CreateText(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
-            }
-            else if (GetMode() == SheetMode.Image && !overlaySheet.IsCaptured)
-            {
-                Image(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
-            }
-        }
-
-        private void UserControl_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            if (GetMode() == SheetMode.Selection && overlaySheet.IsCaptured)
-            {
-                FinishSelectionRect();
-            }
-            else if (GetMode() == SheetMode.Move && overlaySheet.IsCaptured)
-            {
-                FinishMove();
-            }
-        }
-
-        private void UserControl_PreviewMouseMove(object sender, MouseEventArgs e)
-        {
-            if (GetMode() == SheetMode.Edit)
-            {
-                return;
-            }
-
-            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
-
-            // mouse over selection when holding Shift key
-            if (onlyShift && tempSelectionRect == null && !overlaySheet.IsCaptured)
-            {
-                if (_blockController.HaveSelected(selectedBlock))
-                {
-                    _blockController.DeselectContent(selectedBlock);
-                }
-
-                var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
-                _blockController.HitTestClick(contentSheet, contentBlock, selectedBlock, new XBlockPoint(p.X, p.Y), options.HitTestSize, false, false);
-            }
-
-            if (GetMode() == SheetMode.Selection && overlaySheet.IsCaptured)
-            {
-                MoveSelectionRect(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
-            }
-            else if (GetMode() == SheetMode.Line && overlaySheet.IsCaptured)
-            {
-                MoveTempLine(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
-            }
-            else if (GetMode() == SheetMode.Rectangle && overlaySheet.IsCaptured)
-            {
-                MoveTempRect(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
-            }
-            else if (GetMode() == SheetMode.Ellipse && overlaySheet.IsCaptured)
-            {
-                MoveTempEllipse(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
-            }
-            else if (GetMode() == SheetMode.Pan && overlaySheet.IsCaptured)
-            {
-                Pan(e.GetPosition(this));
-            }
-            else if (GetMode() == SheetMode.Move && overlaySheet.IsCaptured)
-            {
-                Move(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
-            }
-        }
-
-        private void UserControl_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            Focus();
-
-            if (GetMode() == SheetMode.None || GetMode() == SheetMode.TextEditor)
-            {
-                return;
-            }
-
-            // edit mode
-            if (selectedType != ItemType.None)
-            {
-                _blockController.DeselectContent(selectedBlock);
-                FinishEdit();
-                return;
-            }
-
-            // text editor
-            if (TryToEditText(e.GetPosition(overlaySheet.GetParent() as FrameworkElement)))
-            {
-                e.Handled = true;
-                return;
-            }
-
-            _blockController.DeselectContent(selectedBlock);
-
-            if (GetMode() == SheetMode.Selection && overlaySheet.IsCaptured)
-            {
-                CancelSelectionRect();
-            }
-            else if (GetMode() == SheetMode.Line && overlaySheet.IsCaptured)
-            {
-                CancelTempLine();
-            }
-            else if (GetMode() == SheetMode.Rectangle && overlaySheet.IsCaptured)
-            {
-                CancelTempRect();
-            }
-            else if (GetMode() == SheetMode.Ellipse && overlaySheet.IsCaptured)
-            {
-                CancelTempEllipse();
-            }
-            else if (!overlaySheet.IsCaptured)
-            {
-                InitPan(e.GetPosition(this));
-            }
-        }
-
-        private void UserControl_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            if (GetMode() == SheetMode.Pan && overlaySheet.IsCaptured)
-            {
-                FinishPan();
-            }
-        }
-
-        private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            ZoomTo(e.Delta, e.GetPosition(Layout));
-        }
-
-        private void UserControl_PreviewMouseDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
-            {
-                bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
-
-                // Mouse Middle Double-Click + Control key pressed to reset Pan and Zoom
-                // Mouse Middle Double-Click to Auto Fit page to window size
-                if (onlyCtrl)
-                {
-                    ActualSize();
-                }
-                else
-                {
-                    AutoFit();
-                }
-            }
-        }
-
-        #endregion
-
         #region Data Binding
 
         private bool BindDataToBlock(Point p, DataItem dataItem)
@@ -2318,40 +2050,6 @@ namespace Sheet
                         selectedBlock.Blocks = new List<XBlock>();
                         selectedBlock.Blocks.Add(block);
                     }
-                }
-            }
-        }
-
-        #endregion
-
-        #region Drop
-
-        private void UserControl_DragEnter(object sender, DragEventArgs e)
-        {
-            if (!e.Data.GetDataPresent("Block") || !e.Data.GetDataPresent("Data") || sender == e.Source)
-            {
-                e.Effects = DragDropEffects.None;
-            }
-        }
-
-        private void UserControl_Drop(object sender, DragEventArgs e)
-        {
-            if (e.Data.GetDataPresent("Block"))
-            {
-                var blockItem = e.Data.GetData("Block") as BlockItem;
-                if (blockItem != null)
-                {
-                    Insert(blockItem, e.GetPosition(overlaySheet.GetParent() as FrameworkElement), true);
-                    e.Handled = true;
-                }
-            }
-            else if (e.Data.GetDataPresent("Data"))
-            {
-                var dataItem = e.Data.GetData("Data") as DataItem;
-                if (dataItem != null)
-                {
-                    TryToBindData(e.GetPosition(overlaySheet.GetParent() as FrameworkElement), dataItem);
-                    e.Handled = true;
                 }
             }
         }
@@ -2945,6 +2643,308 @@ namespace Sheet
                         selectedBlock.Lines = new List<XLine>();
                     }
                     selectedBlock.Lines.Add(line);
+                }
+            }
+        }
+
+        #endregion
+
+        #region Wpf: Events
+
+        private void UserControl_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            Focus();
+
+            bool onlyControl = Keyboard.Modifiers == ModifierKeys.Control;
+
+            // edit mode
+            if (selectedType != ItemType.None)
+            {
+                var source = (e.OriginalSource as FrameworkElement).TemplatedParent;
+                if (!(source is Thumb))
+                {
+                    _blockController.DeselectContent(selectedBlock);
+                    FinishEdit();
+                }
+                else
+                {
+                    return;
+                }
+            }
+
+            // text editor
+            if (GetMode() == SheetMode.None || GetMode() == SheetMode.TextEditor)
+            {
+                return;
+            }
+
+            // move mode
+            if (!onlyControl)
+            {
+                if (_blockController.HaveSelected(selectedBlock) && CanInitMove(e.GetPosition(overlaySheet.GetParent() as FrameworkElement)))
+                {
+                    InitMove(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                    return;
+                }
+
+                _blockController.DeselectContent(selectedBlock);
+            }
+
+            bool resetSelected = onlyControl && _blockController.HaveSelected(selectedBlock) ? false : true;
+
+            if (GetMode() == SheetMode.Selection)
+            {
+                var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
+                bool result = _blockController.HitTestClick(contentSheet, contentBlock, selectedBlock, new XBlockPoint(p.X, p.Y), options.HitTestSize, false, resetSelected);
+                if ((onlyControl || !_blockController.HaveSelected(selectedBlock)) && !result)
+                {
+                    InitSelectionRect(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                }
+                else
+                {
+                    // TODO: If control key is pressed then switch to move mode instead to edit mode
+                    bool editModeEnabled = onlyControl == true ? false : TryToEditSelected();
+                    if (!editModeEnabled)
+                    {
+                        InitMove(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                    }
+                }
+            }
+            else if (GetMode() == SheetMode.Insert && !overlaySheet.IsCaptured)
+            {
+                Insert(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+            }
+            else if (GetMode() == SheetMode.Point && !overlaySheet.IsCaptured)
+            {
+                InsertPoint(e.GetPosition(overlaySheet.GetParent() as FrameworkElement), true, true);
+            }
+            else if (GetMode() == SheetMode.Line && !overlaySheet.IsCaptured)
+            {
+                // try to find point to connect line start
+                var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
+                XPoint start = TryToFindPoint(p);
+
+                // create start if Control key is pressed and start point has not been found
+                if (onlyControl && start == null)
+                {
+                    start = InsertPoint(p, true, false);
+                }
+
+                InitTempLine(e.GetPosition(overlaySheet.GetParent() as FrameworkElement), start);
+            }
+            else if (GetMode() == SheetMode.Line && overlaySheet.IsCaptured)
+            {
+                // try to find point to connect line end
+                var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
+                XPoint end = TryToFindPoint(p);
+
+                // create end point if Control key is pressed and end point has not been found
+                if (onlyControl && end == null)
+                {
+                    end = InsertPoint(p, true, false);
+                }
+
+                FinishTempLine(end);
+            }
+            else if (GetMode() == SheetMode.Rectangle && !overlaySheet.IsCaptured)
+            {
+                InitTempRect(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+            }
+            else if (GetMode() == SheetMode.Rectangle && overlaySheet.IsCaptured)
+            {
+                FinishTempRect();
+            }
+            else if (GetMode() == SheetMode.Ellipse && !overlaySheet.IsCaptured)
+            {
+                InitTempEllipse(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+            }
+            else if (GetMode() == SheetMode.Ellipse && overlaySheet.IsCaptured)
+            {
+                FinishTempEllipse();
+            }
+            else if (GetMode() == SheetMode.Pan && overlaySheet.IsCaptured)
+            {
+                FinishPan();
+            }
+            else if (GetMode() == SheetMode.Text && !overlaySheet.IsCaptured)
+            {
+                CreateText(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+            }
+            else if (GetMode() == SheetMode.Image && !overlaySheet.IsCaptured)
+            {
+                Image(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+            }
+        }
+
+        private void UserControl_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (GetMode() == SheetMode.Selection && overlaySheet.IsCaptured)
+            {
+                FinishSelectionRect();
+            }
+            else if (GetMode() == SheetMode.Move && overlaySheet.IsCaptured)
+            {
+                FinishMove();
+            }
+        }
+
+        private void UserControl_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (GetMode() == SheetMode.Edit)
+            {
+                return;
+            }
+
+            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
+
+            // mouse over selection when holding Shift key
+            if (onlyShift && tempSelectionRect == null && !overlaySheet.IsCaptured)
+            {
+                if (_blockController.HaveSelected(selectedBlock))
+                {
+                    _blockController.DeselectContent(selectedBlock);
+                }
+
+                var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
+                _blockController.HitTestClick(contentSheet, contentBlock, selectedBlock, new XBlockPoint(p.X, p.Y), options.HitTestSize, false, false);
+            }
+
+            if (GetMode() == SheetMode.Selection && overlaySheet.IsCaptured)
+            {
+                MoveSelectionRect(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+            }
+            else if (GetMode() == SheetMode.Line && overlaySheet.IsCaptured)
+            {
+                MoveTempLine(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+            }
+            else if (GetMode() == SheetMode.Rectangle && overlaySheet.IsCaptured)
+            {
+                MoveTempRect(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+            }
+            else if (GetMode() == SheetMode.Ellipse && overlaySheet.IsCaptured)
+            {
+                MoveTempEllipse(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+            }
+            else if (GetMode() == SheetMode.Pan && overlaySheet.IsCaptured)
+            {
+                Pan(e.GetPosition(this));
+            }
+            else if (GetMode() == SheetMode.Move && overlaySheet.IsCaptured)
+            {
+                Move(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+            }
+        }
+
+        private void UserControl_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            Focus();
+
+            if (GetMode() == SheetMode.None || GetMode() == SheetMode.TextEditor)
+            {
+                return;
+            }
+
+            // edit mode
+            if (selectedType != ItemType.None)
+            {
+                _blockController.DeselectContent(selectedBlock);
+                FinishEdit();
+                return;
+            }
+
+            // text editor
+            if (TryToEditText(e.GetPosition(overlaySheet.GetParent() as FrameworkElement)))
+            {
+                e.Handled = true;
+                return;
+            }
+
+            _blockController.DeselectContent(selectedBlock);
+
+            if (GetMode() == SheetMode.Selection && overlaySheet.IsCaptured)
+            {
+                CancelSelectionRect();
+            }
+            else if (GetMode() == SheetMode.Line && overlaySheet.IsCaptured)
+            {
+                CancelTempLine();
+            }
+            else if (GetMode() == SheetMode.Rectangle && overlaySheet.IsCaptured)
+            {
+                CancelTempRect();
+            }
+            else if (GetMode() == SheetMode.Ellipse && overlaySheet.IsCaptured)
+            {
+                CancelTempEllipse();
+            }
+            else if (!overlaySheet.IsCaptured)
+            {
+                InitPan(e.GetPosition(this));
+            }
+        }
+
+        private void UserControl_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (GetMode() == SheetMode.Pan && overlaySheet.IsCaptured)
+            {
+                FinishPan();
+            }
+        }
+
+        private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            ZoomTo(e.Delta, e.GetPosition(Layout));
+        }
+
+        private void UserControl_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
+            {
+                bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
+
+                // Mouse Middle Double-Click + Control key pressed to reset Pan and Zoom
+                // Mouse Middle Double-Click to Auto Fit page to window size
+                if (onlyCtrl)
+                {
+                    ActualSize();
+                }
+                else
+                {
+                    AutoFit();
+                }
+            }
+        }
+
+        #endregion
+
+        #region Wpf: Drop
+
+        private void UserControl_DragEnter(object sender, DragEventArgs e)
+        {
+            if (!e.Data.GetDataPresent("Block") || !e.Data.GetDataPresent("Data") || sender == e.Source)
+            {
+                e.Effects = DragDropEffects.None;
+            }
+        }
+
+        private void UserControl_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent("Block"))
+            {
+                var blockItem = e.Data.GetData("Block") as BlockItem;
+                if (blockItem != null)
+                {
+                    Insert(blockItem, e.GetPosition(overlaySheet.GetParent() as FrameworkElement), true);
+                    e.Handled = true;
+                }
+            }
+            else if (e.Data.GetDataPresent("Data"))
+            {
+                var dataItem = e.Data.GetData("Data") as DataItem;
+                if (dataItem != null)
+                {
+                    TryToBindData(e.GetPosition(overlaySheet.GetParent() as FrameworkElement), dataItem);
+                    e.Handled = true;
                 }
             }
         }
