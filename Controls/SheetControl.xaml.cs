@@ -103,6 +103,7 @@ namespace Sheet
         private SheetMode mode = SheetMode.Selection;
         private SheetMode tempMode = SheetMode.None;
 
+        private ISheet editorSheet = null;
         private ISheet backSheet = null;
         private ISheet contentSheet = null;
         private ISheet overlaySheet = null;
@@ -190,6 +191,7 @@ namespace Sheet
 
         private void InitSheets()
         {
+            editorSheet = new WpfCanvasSheet(EditorCanvas);
             backSheet = new WpfCanvasSheet(Root.Back);
             contentSheet = new WpfCanvasSheet(Root.Sheet);
             overlaySheet = new WpfCanvasSheet(Root.Overlay);
@@ -673,7 +675,7 @@ namespace Sheet
                 StoreTempMode();
                 ModeTextEditor();
 
-                var tc = CreateTextEditor(new Point((EditorCanvas.Width / 2) - (330 / 2), EditorCanvas.Height / 2));
+                var tc = CreateTextEditor(new Point((editorSheet.Width / 2) - (330 / 2), editorSheet.Height / 2));
 
                 Action<string> ok = (name) =>
                 {
@@ -682,20 +684,20 @@ namespace Sheet
                     {
                         AddToLibrary(block);
                     }
-                    EditorCanvas.Children.Remove(tc);
+                    editorSheet.Remove(tc);
                     Focus();
                     RestoreTempMode();
                 };
 
                 Action cancel = () =>
                 {
-                    EditorCanvas.Children.Remove(tc);
+                    editorSheet.Remove(tc);
                     Focus();
                     RestoreTempMode();
                 };
 
                 tc.Set(ok, cancel, "Create Block", "Name:", "BLOCK0");
-                EditorCanvas.Children.Add(tc);
+                editorSheet.Add(tc);
             }
         }
 
@@ -1431,26 +1433,26 @@ namespace Sheet
                 StoreTempMode();
                 ModeTextEditor();
 
-                var tc = CreateTextEditor(new Point((EditorCanvas.Width / 2) - (330 / 2), EditorCanvas.Height / 2) /* p */);
+                var tc = CreateTextEditor(new Point((editorSheet.Width / 2) - (330 / 2), editorSheet.Height / 2) /* p */);
 
                 Action<string> ok = (text) =>
                 {
                     History.Register("Edit Text");
                     tb.Text = text;
-                    EditorCanvas.Children.Remove(tc);
+                    editorSheet.Remove(tc);
                     Focus();
                     RestoreTempMode();
                 };
 
                 Action cancel = () =>
                 {
-                    EditorCanvas.Children.Remove(tc);
+                    editorSheet.Remove(tc);
                     Focus();
                     RestoreTempMode();
                 };
 
                 tc.Set(ok, cancel, "Edit Text", "Text:", tb.Text);
-                EditorCanvas.Children.Add(tc);
+                editorSheet.Add(tc);
 
                 _blockController.Deselect(temp);
                 return true;
