@@ -485,39 +485,60 @@ namespace Sheet
             blockItem.Init(parent.Id, parent.X, parent.Y, parent.Width, parent.Height, parent.DataId, parent.Name);
             blockItem.Backgroud = ToItemColor(parent.Backgroud);
 
-            foreach (var point in parent.Points)
+            if (parent.Points != null)
             {
-                blockItem.Points.Add(Serialize(point));
+                foreach (var point in parent.Points)
+                {
+                    blockItem.Points.Add(Serialize(point));
+                }
             }
 
-            foreach (var line in parent.Lines)
+            if (parent.Lines != null)
             {
-                blockItem.Lines.Add(Serialize(line));
+                foreach (var line in parent.Lines)
+                {
+                    blockItem.Lines.Add(Serialize(line));
+                } 
             }
 
-            foreach (var rectangle in parent.Rectangles)
+            if (parent.Rectangles != null)
             {
-                blockItem.Rectangles.Add(Serialize(rectangle));
+                foreach (var rectangle in parent.Rectangles)
+                {
+                    blockItem.Rectangles.Add(Serialize(rectangle));
+                } 
             }
 
-            foreach (var ellipse in parent.Ellipses)
+            if (parent.Ellipses != null)
             {
-                blockItem.Ellipses.Add(Serialize(ellipse));
+                foreach (var ellipse in parent.Ellipses)
+                {
+                    blockItem.Ellipses.Add(Serialize(ellipse));
+                } 
             }
 
-            foreach (var text in parent.Texts)
+            if (parent.Texts != null)
             {
-                blockItem.Texts.Add(Serialize(text));
+                foreach (var text in parent.Texts)
+                {
+                    blockItem.Texts.Add(Serialize(text));
+                } 
             }
 
-            foreach (var image in parent.Images)
+            if (parent.Images != null)
             {
-                blockItem.Images.Add(Serialize(image));
+                foreach (var image in parent.Images)
+                {
+                    blockItem.Images.Add(Serialize(image));
+                } 
             }
 
-            foreach (var block in parent.Blocks)
+            if (parent.Blocks != null)
             {
-                blockItem.Blocks.Add(Serialize(block));
+                foreach (var block in parent.Blocks)
+                {
+                    blockItem.Blocks.Add(Serialize(block));
+                } 
             }
 
             return blockItem;
