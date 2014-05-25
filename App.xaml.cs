@@ -26,15 +26,20 @@ namespace Sheet
         {
             var builder = new ContainerBuilder();
 
-            builder.RegisterInstance(new WpfBlockHelper()).As<IBlockHelper>();
-            builder.RegisterInstance(new WpfBlockFactory()).As<IBlockFactory>();
-            builder.RegisterInstance(new NewtonsoftJsonSerializer()).As<IJsonSerializer>();
+            builder.RegisterInstance(new WpfBlockHelper()).As<IBlockHelper>().SingleInstance();
+            builder.RegisterInstance(new WpfBlockFactory()).As<IBlockFactory>().SingleInstance();
+            builder.RegisterInstance(new NewtonsoftJsonSerializer()).As<IJsonSerializer>().SingleInstance();
+            builder.RegisterInstance(new EntryFactory()).As<IEntryFactory>().SingleInstance();
 
             builder.RegisterType<BlockSerializer>().As<IBlockSerializer>().SingleInstance();
             builder.RegisterType<PointController>().As<IPointController>().SingleInstance();
             builder.RegisterType<BlockController>().As<IBlockController>().SingleInstance();
+
             builder.RegisterType<ItemSerializer>().As<IItemSerializer>().SingleInstance();
             builder.RegisterType<ItemController>().As<IItemController>().SingleInstance();
+
+            builder.RegisterType<EntrySerializer>().As<IEntrySerializer>().SingleInstance();
+            builder.RegisterType<EntryController>().As<IEntryController>().SingleInstance();
 
             builder.RegisterType<SheetWindow>();
 

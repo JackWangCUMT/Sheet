@@ -70,6 +70,9 @@ namespace Sheet
         private IJsonSerializer _jsonSerializer;
         private IItemController _itemController;
         private IItemSerializer _itemSerializer;
+        private IEntryController _entryController;
+        private IEntryFactory _entryFactory;
+        private IEntrySerializer _entrySerializer;
 
         public SheetWindow(IBlockController blockController,
             IBlockFactory blockFactory,
@@ -77,7 +80,10 @@ namespace Sheet
             IPointController pointController,
             IJsonSerializer jsonSerializer,
             IItemController itemController,
-            IItemSerializer itemSerializer)
+            IItemSerializer itemSerializer,
+            IEntryController entryController,
+            IEntryFactory entryFactory,
+            IEntrySerializer entrySerializer)
         {
             InitializeComponent();
 
@@ -88,8 +94,18 @@ namespace Sheet
             this._jsonSerializer = jsonSerializer;
             this._itemController = itemController;
             this._itemSerializer = itemSerializer;
+            this._entryController = entryController;
+            this._entryFactory = entryFactory;
+            this._entrySerializer = entrySerializer;
 
-            GetSheet().Init(blockController, blockFactory, blockSerializer, pointController, jsonSerializer, itemController, itemSerializer);
+            GetSheet().Init(blockController, 
+                blockFactory, 
+                blockSerializer, 
+                pointController, 
+                jsonSerializer, 
+                itemController, 
+                itemSerializer);
+
             GetSheet().Library = Library;
 
             Init();
@@ -122,7 +138,8 @@ namespace Sheet
 
         private void InitSolution()
         {
-            Solution.Controller = GetSheet();
+
+            Solution.Init(GetSheet(), _entryController);
         }
 
         private void InitDrop()
@@ -606,8 +623,8 @@ namespace Sheet
 
         private async Task NewSolution(string path)
         {
-            await Task.Run(() => EntryFactory.CreateEmpty(path));
-            var solution = await Task.Run(() => EntrySerializer.Deserialize(path));
+            await Task.Run(() => _entrySerializer.CreateEmpty(path));
+            var solution = await Task.Run(() => _entrySerializer.Deserialize(path));
 
             if (solution != null)
             {
@@ -643,7 +660,7 @@ namespace Sheet
 
         private async Task OpenSolution(string path)
         {
-            var solution = await Task.Run(() => EntrySerializer.Deserialize(path));
+            var solution = await Task.Run(() => _entrySerializer.Deserialize(path));
 
             if (solution != null)
             {
@@ -666,7 +683,7 @@ namespace Sheet
                     if (solution != null)
                     {
                         Solution.UpdateSelectedPage();
-                        EntrySerializer.Serialize(solution, path);
+                        _entrySerializer.Serialize(solution, path);
                     }
                 }
                 catch (Exception ex)

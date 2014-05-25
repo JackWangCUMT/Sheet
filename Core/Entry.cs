@@ -39,8 +39,19 @@ namespace Sheet
 
     #region Entry Serializer
 
-    public static class EntrySerializer
+    public class EntrySerializer : IEntrySerializer
     {
+        #region IoC
+
+        private IEntryFactory _entryFactory;
+
+        public EntrySerializer(IEntryFactory entryFactory)
+        {
+            this._entryFactory = entryFactory;
+        } 
+
+        #endregion
+
         #region Fields
 
         private static char[] entryNameSeparator = { '/' };
@@ -49,13 +60,13 @@ namespace Sheet
 
         #region Add
 
-        public static void AddDocumentEntry(ZipArchive zip, string document)
+        public void AddDocumentEntry(ZipArchive zip, string document)
         {
             var name = string.Concat(document, '/');
             var entry = zip.CreateEntry(name);
         }
 
-        public static void AddPageEntry(ZipArchive zip, string document, string page, string content)
+        public void AddPageEntry(ZipArchive zip, string document, string page, string content)
         {
             var name = string.Concat(document, '/', page);
             var entry = zip.CreateEntry(name);
@@ -67,9 +78,24 @@ namespace Sheet
 
         #endregion
 
+        #region Empty
+
+        public void CreateEmpty(string path)
+        {
+            using (FileStream fs = new FileStream(path, FileMode.Create))
+            {
+                using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Update))
+                {
+                    AddPageEntry(zip, "Document0", "Page", "");
+                }
+            }
+        }
+
+        #endregion
+
         #region Serialize
 
-        public static void Serialize(SolutionEntry solution, string path)
+        public void Serialize(SolutionEntry solution, string path)
         {
             using (FileStream fs = new FileStream(path, FileMode.Create))
             {
@@ -95,7 +121,7 @@ namespace Sheet
 
         #region Deserialize
 
-        public static SolutionEntry Deserialize(string path)
+        public SolutionEntry Deserialize(string path)
         {
             string solutionName = System.IO.Path.GetFileNameWithoutExtension(path);
 
@@ -139,11 +165,11 @@ namespace Sheet
 
             foreach (var item in dict)
             {
-                var document = EntryFactory.CreateDocument(solution, item.Key);
+                var document = _entryFactory.CreateDocument(solution, item.Key);
                 solution.Documents.Add(document);
                 foreach (var tuple in item.Value)
                 {
-                    var page = EntryFactory.CreatePage(document, tuple.Item2, tuple.Item1);
+                    var page = _entryFactory.CreatePage(document, tuple.Item2, tuple.Item1);
                     document.Pages.Add(page);
                 }
             }
@@ -158,34 +184,45 @@ namespace Sheet
 
     #region Entry Controller
 
-    public static class EntryController
+    public class EntryController : IEntryController
     {
+        #region IoC
+
+        private IEntryFactory _entryFactory;
+
+        public EntryController(IEntryFactory entryFactory)
+        {
+            this._entryFactory = entryFactory;
+        } 
+
+        #endregion
+
         #region Page
 
-        public static PageEntry AddPage(DocumentEntry document, string content)
+        public PageEntry AddPage(DocumentEntry document, string content)
         {
-            var page = EntryFactory.CreatePage(document, content);
+            var page = _entryFactory.CreatePage(document, content);
             document.Pages.Add(page);
             return page;
         }
 
-        public static PageEntry AddPageBefore(DocumentEntry document, PageEntry beofore, string content)
+        public PageEntry AddPageBefore(DocumentEntry document, PageEntry beofore, string content)
         {
-            var page = EntryFactory.CreatePage(document, content);
+            var page = _entryFactory.CreatePage(document, content);
             int index = document.Pages.IndexOf(beofore);
             document.Pages.Insert(index, page);
             return page;
         }
 
-        public static PageEntry AddPageAfter(DocumentEntry document, PageEntry after, string content)
+        public PageEntry AddPageAfter(DocumentEntry document, PageEntry after, string content)
         {
-            var page = EntryFactory.CreatePage(document, content);
+            var page = _entryFactory.CreatePage(document, content);
             int index = document.Pages.IndexOf(after);
             document.Pages.Insert(index + 1, page);
             return page;
         }
 
-        public static void AddPageAfter(object item)
+        public void AddPageAfter(object item)
         {
             if (item != null && item is PageEntry)
             {
@@ -198,7 +235,7 @@ namespace Sheet
             }
         }
 
-        public static void AddPageBefore(object item)
+        public void AddPageBefore(object item)
         {
             if (item != null && item is PageEntry)
             {
@@ -211,7 +248,7 @@ namespace Sheet
             }
         }
 
-        public static void DuplicatePage(object item)
+        public void DuplicatePage(object item)
         {
             if (item != null && item is PageEntry)
             {
@@ -224,7 +261,7 @@ namespace Sheet
             }
         }
 
-        public static void RemovePage(object item)
+        public void RemovePage(object item)
         {
             if (item != null && item is PageEntry)
             {
@@ -241,30 +278,30 @@ namespace Sheet
 
         #region Document
 
-        public static DocumentEntry AddDocumentBefore(SolutionEntry solution, DocumentEntry after)
+        public DocumentEntry AddDocumentBefore(SolutionEntry solution, DocumentEntry after)
         {
-            var document = EntryFactory.CreateDocument(solution);
+            var document = _entryFactory.CreateDocument(solution);
             int index = solution.Documents.IndexOf(after);
             solution.Documents.Insert(index, document);
             return document;
         }
 
-        public static DocumentEntry AddDocumentAfter(SolutionEntry solution, DocumentEntry after)
+        public DocumentEntry AddDocumentAfter(SolutionEntry solution, DocumentEntry after)
         {
-            var document = EntryFactory.CreateDocument(solution);
+            var document = _entryFactory.CreateDocument(solution);
             int index = solution.Documents.IndexOf(after);
             solution.Documents.Insert(index + 1, document);
             return document;
         }
 
-        public static DocumentEntry AddDocument(SolutionEntry solution)
+        public DocumentEntry AddDocument(SolutionEntry solution)
         {
-            var document = EntryFactory.CreateDocument(solution);
+            var document = _entryFactory.CreateDocument(solution);
             solution.Documents.Add(document);
             return document;
         }
 
-        public static void DocumentAddPage(object item)
+        public void DocumentAddPage(object item)
         {
             if (item != null && item is DocumentEntry)
             {
@@ -273,7 +310,7 @@ namespace Sheet
             }
         }
 
-        public static void AddDocumentAfter(object item)
+        public void AddDocumentAfter(object item)
         {
             if (item != null && item is DocumentEntry)
             {
@@ -286,7 +323,7 @@ namespace Sheet
             }
         }
 
-        public static void AddDocumentBefore(object item)
+        public void AddDocumentBefore(object item)
         {
             if (item != null && item is DocumentEntry)
             {
@@ -299,7 +336,7 @@ namespace Sheet
             }
         }
 
-        public static void DulicateDocument(object item)
+        public void DulicateDocument(object item)
         {
             if (item != null && item is DocumentEntry)
             {
@@ -316,7 +353,7 @@ namespace Sheet
             }
         }
 
-        public static void RemoveDocument(object item)
+        public void RemoveDocument(object item)
         {
             if (item != null && item is DocumentEntry)
             {
@@ -336,26 +373,11 @@ namespace Sheet
 
     #region Entry Factory
 
-    public static class EntryFactory
+    public class EntryFactory : IEntryFactory
     {
-        #region Empty
-
-        public static void CreateEmpty(string path)
-        {
-            using (FileStream fs = new FileStream(path, FileMode.Create))
-            {
-                using (ZipArchive zip = new ZipArchive(fs, ZipArchiveMode.Update))
-                {
-                    EntrySerializer.AddPageEntry(zip, "Document0", "Page", "");
-                }
-            }
-        }
-
-        #endregion
-
         #region Create
 
-        public static PageEntry CreatePage(DocumentEntry document, string content, string name = null)
+        public PageEntry CreatePage(DocumentEntry document, string content, string name = null)
         {
             var page = new PageEntry()
             {
@@ -366,7 +388,7 @@ namespace Sheet
             return page;
         }
 
-        public static DocumentEntry CreateDocument(SolutionEntry solution, string name = null)
+        public DocumentEntry CreateDocument(SolutionEntry solution, string name = null)
         {
             var document = new DocumentEntry()
             {

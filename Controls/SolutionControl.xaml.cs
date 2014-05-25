@@ -19,9 +19,23 @@ namespace Sheet
 {
     public partial class SolutionControl : UserControl
     {
-        #region Properties
+        #region IoC
 
-        public IPageController Controller { get; set; }
+        private IPageController _pageController;
+        private IEntryController _entryController;
+
+        public SolutionControl(IPageController pageController, IEntryController entryController)
+        {
+            InitializeComponent();
+
+            Init(pageController, entryController);
+        }
+
+        public void Init(IPageController pageController, IEntryController entryController)
+        {
+            this._pageController = pageController;
+            this._entryController = entryController;
+        }
 
         #endregion
 
@@ -40,7 +54,7 @@ namespace Sheet
         {
             if (newValue != null && newValue is DocumentEntry)
             {
-                if (Controller != null)
+                if (_pageController != null)
                 {
                     if (oldValue != null && oldValue is PageEntry)
                     {
@@ -52,7 +66,7 @@ namespace Sheet
             }
             else if (newValue != null && newValue is PageEntry)
             {
-                if (Controller != null)
+                if (_pageController != null)
                 {
                     if (oldValue != null && oldValue is PageEntry)
                     {
@@ -64,7 +78,7 @@ namespace Sheet
             }
             else
             {
-                if (Controller != null)
+                if (_pageController != null)
                 {
                     EmptyPage();
                 }
@@ -73,19 +87,19 @@ namespace Sheet
 
         private void EmptyPage()
         {
-            Controller.SetPage(null);
+            _pageController.SetPage(null);
         }
 
         private void SetPage(object newValue)
         {
             var newPage = newValue as PageEntry;
-            Controller.SetPage(newPage.Content);
+            _pageController.SetPage(newPage.Content);
         }
 
         private void UpdatePage(object oldValue)
         {
             var oldPage = oldValue as PageEntry;
-            var text = Controller.GetPage();
+            var text = _pageController.GetPage();
             oldPage.Content = text;
         }
 
@@ -95,7 +109,7 @@ namespace Sheet
             if (item != null && item is PageEntry)
             {
                 var page = item as PageEntry;
-                var text = Controller.GetPage();
+                var text = _pageController.GetPage();
                 page.Content = text;
             }
         }
@@ -106,25 +120,25 @@ namespace Sheet
 
         public void ExportPage(object item)
         {
-            if (Controller != null)
+            if (_pageController != null)
             {
                 if (item != null && item is PageEntry)
                 {
                     var page = item as PageEntry;
-                    Controller.ExportPage(page.Content);
+                    _pageController.ExportPage(page.Content);
                 }
             }
         }
 
         public void ExportDocument(object item)
         {
-            if (Controller != null)
+            if (_pageController != null)
             {
                 if (item != null && item is DocumentEntry)
                 {
                     var document = item as DocumentEntry;
                     var texts = document.Pages.Select(x => x.Content);
-                    Controller.ExportPages(texts);
+                    _pageController.ExportPages(texts);
                 }
             }
         }
@@ -155,22 +169,22 @@ namespace Sheet
 
         private void PageInsertBefore_Click(object sender, RoutedEventArgs e)
         {
-            EntryController.AddPageBefore(SolutionTree.SelectedItem);
+            _entryController.AddPageBefore(SolutionTree.SelectedItem);
         }
 
         private void PageInsertAfter_Click(object sender, RoutedEventArgs e)
         {
-            EntryController.AddPageAfter(SolutionTree.SelectedItem);
+            _entryController.AddPageAfter(SolutionTree.SelectedItem);
         }
 
         private void PageDuplicate_Click(object sender, RoutedEventArgs e)
         {
-            EntryController.DuplicatePage(SolutionTree.SelectedItem);
+            _entryController.DuplicatePage(SolutionTree.SelectedItem);
         }
 
         private void PageRemove_Click(object sender, RoutedEventArgs e)
         {
-            EntryController.RemovePage(SolutionTree.SelectedItem);
+            _entryController.RemovePage(SolutionTree.SelectedItem);
         }
 
         private void PageExport_Click(object sender, RoutedEventArgs e)
@@ -184,27 +198,27 @@ namespace Sheet
 
         private void DocumentAddPage_Click(object sender, RoutedEventArgs e)
         {
-            EntryController.DocumentAddPage(SolutionTree.SelectedItem);
+            _entryController.DocumentAddPage(SolutionTree.SelectedItem);
         }
 
         private void DocumentInsertBofre_Click(object sender, RoutedEventArgs e)
         {
-            EntryController.AddDocumentBefore(SolutionTree.SelectedItem);
+            _entryController.AddDocumentBefore(SolutionTree.SelectedItem);
         }
 
         private void DocumentInsertAfter_Click(object sender, RoutedEventArgs e)
         {
-            EntryController.AddDocumentAfter(SolutionTree.SelectedItem);
+            _entryController.AddDocumentAfter(SolutionTree.SelectedItem);
         }
 
         private void DocumentDuplicate_Click(object sender, RoutedEventArgs e)
         {
-            EntryController.DulicateDocument(SolutionTree.SelectedItem);
+            _entryController.DulicateDocument(SolutionTree.SelectedItem);
         }
 
         private void DocumentRemove_Click(object sender, RoutedEventArgs e)
         {
-            EntryController.RemoveDocument(SolutionTree.SelectedItem);
+            _entryController.RemoveDocument(SolutionTree.SelectedItem);
         }
 
         private void DocumentExport_Click(object sender, RoutedEventArgs e)
@@ -220,7 +234,7 @@ namespace Sheet
         {
             if (DataContext != null && DataContext is SolutionEntry)
             {
-                EntryController.AddDocument(DataContext as SolutionEntry);
+                _entryController.AddDocument(DataContext as SolutionEntry);
             }
         }
 

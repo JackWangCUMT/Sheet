@@ -75,7 +75,13 @@ namespace Sheet
             IItemController itemController,
             IItemSerializer itemSerializer)
         {
+            InitializeComponent();
+
             Init(blockController, blockFactory, blockSerializer, pointController, jsonSerializer, itemController, itemSerializer);
+
+            Init();
+
+            Loaded += (s, e) => InitLoaded();
         }
 
         public void Init(IBlockController blockController,
