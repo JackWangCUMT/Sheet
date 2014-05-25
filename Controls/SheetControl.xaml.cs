@@ -100,17 +100,17 @@ namespace Sheet
 
         private SheetOptions options = null;
 
+        private SheetMode mode = SheetMode.Selection;
+        private SheetMode tempMode = SheetMode.None;
+
         private ISheet backSheet = null;
         private ISheet contentSheet = null;
         private ISheet overlaySheet = null;
 
-        private SheetMode mode = SheetMode.Selection;
-        private SheetMode tempMode = SheetMode.None;
-
-        private bool isFirstMove = true;
-
-        private Point panStartPoint;
-        private Point selectionStartPoint;
+        private XBlock selectedBlock = null;
+        private XBlock contentBlock = null;
+        private XBlock frameBlock = null;
+        private XBlock gridBlock = null;
 
         private XLine tempLine = null;
         private XEllipse tempStartEllipse = null;
@@ -119,12 +119,9 @@ namespace Sheet
         private XEllipse tempEllipse = null;
         private XRectangle tempSelectionRect = null;
 
-        private XBlock contentBlock = null;
-        private XBlock frameBlock = null;
-        private XBlock gridBlock = null;
-
-        private XBlock selectedBlock = null;
-
+        private bool isFirstMove = true;
+        private Point panStartPoint;
+        private Point selectionStartPoint;
         private Size lastFinalSize = new Size();
 
         #endregion
