@@ -60,15 +60,15 @@ namespace Sheet
         #region IoC
 
         private IInterfaceLocator _interfaceLocator;
-
         private IBlockController _blockController;
         private IBlockFactory _blockFactory;
         private IBlockSerializer _blockSerializer;
-        private IPointController _pointController;
         private IItemController _itemController;
         private IItemSerializer _itemSerializer;
         private IJsonSerializer _jsonSerializer;
         private IBase64 _base64;
+        private IPointController _pointController;
+        private IPageFactory _pageFactory;
 
         public SheetControl(IInterfaceLocator interfaceLocator)
         {
@@ -82,17 +82,17 @@ namespace Sheet
         public void Init(IInterfaceLocator interfaceLocator)
         {
             this._interfaceLocator = interfaceLocator;
-
             this._blockController = interfaceLocator.GetInterface<IBlockController>();
             this._blockFactory = interfaceLocator.GetInterface<IBlockFactory>();
             this._blockSerializer = interfaceLocator.GetInterface<IBlockSerializer>();
-            this._pointController = interfaceLocator.GetInterface<IPointController>();
             this._itemController = interfaceLocator.GetInterface<IItemController>();
             this._itemSerializer = interfaceLocator.GetInterface<IItemSerializer>();
             this._jsonSerializer = interfaceLocator.GetInterface<IJsonSerializer>();
             this._base64 = interfaceLocator.GetInterface<IBase64>();
+            this._pointController = interfaceLocator.GetInterface<IPointController>();
+            this._pageFactory = interfaceLocator.GetInterface<IPageFactory>();
 
-            History = new PageHistory(this, this._itemSerializer);
+            History = new PageHistoryController(this, this._itemSerializer);
             PanAndZoom = this;
         }
 
@@ -2430,10 +2430,8 @@ namespace Sheet
 
         private void LoadStandardPage()
         {
-            var pageFactory = new LogicContentPageFactory(new WpfBlockFactory());
-
-            pageFactory.CreateGrid(backSheet, gridBlock, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, ItemColors.LightGray);
-            pageFactory.CreateFrame(backSheet, frameBlock, options.GridSize, options.GridThickness, ItemColors.DarkGray);
+            _pageFactory.CreateGrid(backSheet, gridBlock, 330.0, 30.0, 600.0, 750.0, options.GridSize, options.GridThickness, ItemColors.LightGray);
+            _pageFactory.CreateFrame(backSheet, frameBlock, options.GridSize, options.GridThickness, ItemColors.DarkGray);
 
             AdjustThickness(gridBlock, options.GridThickness / GetZoom(zoomIndex));
             AdjustThickness(frameBlock, options.FrameThickness / GetZoom(zoomIndex));

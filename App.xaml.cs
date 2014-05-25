@@ -53,6 +53,7 @@ namespace Sheet
             builder.RegisterType<ItemController>().As<IItemController>().SingleInstance();
             builder.RegisterType<EntryController>().As<IEntryController>().SingleInstance();
             builder.RegisterType<PointController>().As<IPointController>().SingleInstance();
+            builder.RegisterType<LogicContentPageFactory>().As<IPageFactory>().SingleInstance();
 
             builder.RegisterType<AppInterfaceLocator>().As<IInterfaceLocator>().SingleInstance();
 
