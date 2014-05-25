@@ -1976,7 +1976,7 @@ namespace Sheet
         {
             Focus();
 
-            bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
+            bool onlyControl = Keyboard.Modifiers == ModifierKeys.Control;
 
             // edit mode
             if (selectedType != ItemType.None)
@@ -2000,7 +2000,7 @@ namespace Sheet
             }
 
             // move mode
-            if (!ctrl)
+            if (!onlyControl)
             {
                 if (_blockController.HaveSelected(selectedBlock) && CanInitMove(e.GetPosition(overlaySheet.GetParent() as FrameworkElement)))
                 {
@@ -2011,20 +2011,20 @@ namespace Sheet
                 _blockController.DeselectContent(selectedBlock);
             }
 
-            bool resetSelected = ctrl && _blockController.HaveSelected(selectedBlock) ? false : true;
+            bool resetSelected = onlyControl && _blockController.HaveSelected(selectedBlock) ? false : true;
 
             if (GetMode() == SheetMode.Selection)
             {
                 var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
                 bool result = _blockController.HitTestClick(contentSheet, contentBlock, selectedBlock, new XBlockPoint(p.X, p.Y), options.HitTestSize, false, resetSelected);
-                if ((ctrl || !_blockController.HaveSelected(selectedBlock)) && !result)
+                if ((onlyControl || !_blockController.HaveSelected(selectedBlock)) && !result)
                 {
                     InitSelectionRect(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
                 }
                 else
                 {
                     // TODO: If control key is pressed then switch to move mode instead to edit mode
-                    bool editModeEnabled = ctrl == true ? false : TryToEditSelected();
+                    bool editModeEnabled = onlyControl == true ? false : TryToEditSelected();
                     if (!editModeEnabled)
                     {
                         InitMove(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
@@ -2046,7 +2046,7 @@ namespace Sheet
                 XPoint start = TryToFindPoint(p);
                 
                 // create start if Control key is pressed and start point has not been found
-                if (ctrl && start == null)
+                if (onlyControl && start == null)
                 {
                     start = InsertPoint(p, true, false);
                 }
@@ -2060,7 +2060,7 @@ namespace Sheet
                 XPoint end = TryToFindPoint(p);
                 
                 // create end point if Control key is pressed and end point has not been found
-                if (ctrl && end == null)
+                if (onlyControl && end == null)
                 {
                     end = InsertPoint(p, true, false);
                 }
@@ -2116,10 +2116,10 @@ namespace Sheet
                 return;
             }
 
-            bool shift = (Keyboard.Modifiers == ModifierKeys.Shift);
+            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
 
             // mouse over selection when holding Shift key
-            if (shift && tempSelectionRect == null && !overlaySheet.IsCaptured)
+            if (onlyShift && tempSelectionRect == null && !overlaySheet.IsCaptured)
             {
                 if (_blockController.HaveSelected(selectedBlock))
                 {
@@ -2221,11 +2221,11 @@ namespace Sheet
         {
             if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
             {
-                bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
+                bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
 
                 // Mouse Middle Double-Click + Control key pressed to reset Pan and Zoom
                 // Mouse Middle Double-Click to Auto Fit page to window size
-                if (ctrl)
+                if (onlyCtrl)
                 {
                     ActualSize();
                 }
