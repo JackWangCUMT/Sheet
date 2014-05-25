@@ -325,12 +325,16 @@ namespace Sheet
 
     public interface ISheet
     {
+        double Width { get; set; }
+        double Height { get; set; }
+        bool IsCaptured { get; }
         object GetParent();
         void Add(XElement element);
         void Remove(XElement element);
+        void Add(object element);
+        void Remove(object element);
         void Capture();
         void ReleaseCapture();
-        bool IsCaptured { get; }
     }
 
     #endregion

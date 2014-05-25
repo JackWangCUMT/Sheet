@@ -103,6 +103,29 @@ namespace Sheet
 
         #region ISheet
 
+        public double Width 
+        {
+            get { return _canvas.Width;  }
+            set
+            {
+                _canvas.Width = value;
+            }
+        }
+
+        public double Height
+        {
+            get { return _canvas.Height; }
+            set
+            {
+                _canvas.Height = value;
+            }
+        }
+
+        public bool IsCaptured
+        {
+            get { return _canvas.IsMouseCaptured; }
+        }
+
         public object GetParent()
         {
             return _canvas;
@@ -124,6 +147,22 @@ namespace Sheet
             }
         }
 
+        public void Add(object element)
+        {
+            if (element != null)
+            {
+                _canvas.Children.Add(element as FrameworkElement);
+            }
+        }
+
+        public void Remove(object element)
+        {
+            if (element != null)
+            {
+                _canvas.Children.Remove(element as FrameworkElement);
+            }
+        }
+
         public void Capture()
         {
             _canvas.CaptureMouse();
@@ -132,11 +171,6 @@ namespace Sheet
         public void ReleaseCapture()
         {
             _canvas.ReleaseMouseCapture();
-        }
-
-        public bool IsCaptured
-        {
-            get { return _canvas.IsMouseCaptured; }
         }
 
         #endregion
