@@ -12,11 +12,15 @@ namespace Sheet
     {
         #region IoC
 
+        private IInterfaceLocator _interfaceLocator;
+
         private IBlockHelper _blockHelper;
 
-        public PointController(IBlockHelper blockHelper)
+        public PointController(IInterfaceLocator interfaceLocator)
         {
-            this._blockHelper = blockHelper;
+            this._interfaceLocator = interfaceLocator;
+
+            this._blockHelper = _interfaceLocator.GetInterface<IBlockHelper>();
         }
 
         #endregion
