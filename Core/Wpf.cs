@@ -39,6 +39,8 @@ namespace Sheet
 
     public static class WpfVisualHelper
     {
+        #region Visual Parent
+
         public static T FindVisualParent<T>(DependencyObject child) where T : DependencyObject
         {
             DependencyObject parentObject = VisualTreeHelper.GetParent(child);
@@ -57,6 +59,10 @@ namespace Sheet
                 return FindVisualParent<T>(parentObject);
             }
         }
+
+        #endregion
+
+        #region Content Bounds
 
         public static Rect GetContentBounds(XElement reference)
         {
@@ -77,7 +83,9 @@ namespace Sheet
                 return bounds;
             }
             return Rect.Empty;
-        }
+        } 
+
+        #endregion
     }
 
     #endregion

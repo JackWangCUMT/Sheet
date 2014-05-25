@@ -14,16 +14,14 @@ namespace Sheet
         #region IoC
 
         private IInterfaceLocator _interfaceLocator;
-
         private IPageController _pageController;
         private IItemSerializer _itemSerializer;
 
         public PageHistoryController(IInterfaceLocator interfaceLocator)
         {
             this._interfaceLocator = interfaceLocator;
-
-            this._pageController = _interfaceLocator.GetInterface<IPageController>();
-            this._itemSerializer = _interfaceLocator.GetInterface<IItemSerializer>();
+            this._pageController = interfaceLocator.GetInterface<IPageController>();
+            this._itemSerializer = interfaceLocator.GetInterface<IItemSerializer>();
         }
 
         public PageHistoryController(IPageController pageController, IItemSerializer itemSerializer)
@@ -126,14 +124,12 @@ namespace Sheet
         #region IoC
 
         private IInterfaceLocator _interfaceLocator;
-
         private IBlockFactory _blockFactory;
 
         public LogicContentPageFactory(IInterfaceLocator interfaceLocator)
         {
             this._interfaceLocator = interfaceLocator;
-
-            this._blockFactory = _interfaceLocator.GetInterface<IBlockFactory>();
+            this._blockFactory = interfaceLocator.GetInterface<IBlockFactory>();
         } 
 
         #endregion

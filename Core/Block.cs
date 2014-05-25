@@ -281,16 +281,14 @@ namespace Sheet
         #region IoC
 
         private IInterfaceLocator _interfaceLocator;
-
         private IBlockHelper _blockHelper;
         private IBlockFactory _blockFactory;
 
         public BlockSerializer(IInterfaceLocator interfaceLocator)
         {
             this._interfaceLocator = interfaceLocator;
-
-            this._blockHelper = _interfaceLocator.GetInterface<IBlockHelper>();
-            this._blockFactory = _interfaceLocator.GetInterface<IBlockFactory>();
+            this._blockHelper = interfaceLocator.GetInterface<IBlockHelper>();
+            this._blockFactory = interfaceLocator.GetInterface<IBlockFactory>();
         }
 
         #endregion
@@ -786,7 +784,6 @@ namespace Sheet
         #region IoC
 
         private IInterfaceLocator _interfaceLocator;
-
         private IBlockHelper _blockHelper;
         private IBlockSerializer _blockSerializer;
         private IPointController _pointController;
@@ -794,10 +791,9 @@ namespace Sheet
         public BlockController(IInterfaceLocator interfaceLocator)
         {
             this._interfaceLocator = interfaceLocator;
-
-            this._blockHelper = _interfaceLocator.GetInterface<IBlockHelper>();
-            this._blockSerializer = _interfaceLocator.GetInterface<IBlockSerializer>();
-            this._pointController = _interfaceLocator.GetInterface<IPointController>();
+            this._blockHelper = interfaceLocator.GetInterface<IBlockHelper>();
+            this._blockSerializer = interfaceLocator.GetInterface<IBlockSerializer>();
+            this._pointController = interfaceLocator.GetInterface<IPointController>();
         }
 
         #endregion

@@ -64,7 +64,6 @@ namespace Sheet
         #region IoC
 
         private IInterfaceLocator _interfaceLocator;
-
         private IEntryController _entryController;
         private IEntryFactory _entryFactory;
         private IEntrySerializer _entrySerializer;
@@ -74,7 +73,6 @@ namespace Sheet
             InitializeComponent();
 
             this._interfaceLocator = interfaceLocator;
-
             this._entryController = interfaceLocator.GetInterface<IEntryController>();
             this._entryFactory = interfaceLocator.GetInterface<IEntryFactory>();
             this._entrySerializer = interfaceLocator.GetInterface<IEntrySerializer>();

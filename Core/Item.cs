@@ -199,8 +199,7 @@ namespace Sheet
         public ItemSerializer(IInterfaceLocator interfaceLocator)
         {
             this._interfaceLocator = interfaceLocator;
-
-            this._base64 = _interfaceLocator.GetInterface<IBase64>();
+            this._base64 = interfaceLocator.GetInterface<IBase64>();
         }
 
         #endregion
