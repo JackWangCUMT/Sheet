@@ -215,54 +215,7 @@ namespace Sheet
 
             LoadLibraryFromResource(string.Concat("Sheet.Libraries", '.', "Digital.library"));
 
-            //LoadPointDemo();
-
             Focus();
-        }
-
-        #endregion
-
-        #region Point Demo
-
-        private void LoadPointDemo()
-        {
-            var p0 = _blockFactory.CreatePoint(options.LineThickness / Zoom, 450, 300, false);
-            var p1 = _blockFactory.CreatePoint(options.LineThickness / Zoom, 600, 300, true);
-            var p2 = _blockFactory.CreatePoint(options.LineThickness / Zoom, 600, 450, true);
-            var p3 = _blockFactory.CreatePoint(options.LineThickness / Zoom, 600, 150, false);
-
-            var l0 = _blockFactory.CreateLine(options.LineThickness / Zoom, p0, p1, ItemColors.Black);
-            var l1 = _blockFactory.CreateLine(options.LineThickness / Zoom, p1, p2, ItemColors.Black);
-            var l2 = _blockFactory.CreateLine(options.LineThickness / Zoom, p1, p3, ItemColors.Black);
-
-            _pointController.ConnectStart(p0, l0);
-            _pointController.ConnectEnd(p1, l0);
-
-            _pointController.ConnectStart(p1, l1);
-            _pointController.ConnectEnd(p2, l1);
-
-            _pointController.ConnectStart(p1, l2);
-            _pointController.ConnectEnd(p3, l2);
-
-            History.Register("Point Demo");
-
-            contentBlock.Lines.Add(l0);
-            contentBlock.Lines.Add(l1);
-            contentBlock.Lines.Add(l2);
-
-            contentBlock.Points.Add(p0);
-            contentBlock.Points.Add(p1);
-            contentBlock.Points.Add(p2);
-            contentBlock.Points.Add(p3);
-
-            contentSheet.Add(l0);
-            contentSheet.Add(l1);
-            contentSheet.Add(l2);
-
-            contentSheet.Add(p0);
-            contentSheet.Add(p1);
-            contentSheet.Add(p2);
-            contentSheet.Add(p3);
         }
 
         #endregion
