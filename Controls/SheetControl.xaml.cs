@@ -1050,7 +1050,7 @@ namespace Sheet
             overlaySheet.ReleaseCapture();
         }
 
-        private static void AdjustThickness(IEnumerable<XLine> lines, double thickness)
+        private void AdjustThickness(IEnumerable<XLine> lines, double thickness)
         {
             foreach (var line in lines)
             {
@@ -1058,7 +1058,7 @@ namespace Sheet
             }
         }
 
-        private static void AdjustThickness(IEnumerable<XRectangle> rectangles, double thickness)
+        private void AdjustThickness(IEnumerable<XRectangle> rectangles, double thickness)
         {
             foreach (var rectangle in rectangles)
             {
@@ -1066,7 +1066,7 @@ namespace Sheet
             }
         }
 
-        private static void AdjustThickness(IEnumerable<XEllipse> ellipses, double thickness)
+        private void AdjustThickness(IEnumerable<XEllipse> ellipses, double thickness)
         {
             foreach (var ellipse in ellipses)
             {
@@ -1074,7 +1074,7 @@ namespace Sheet
             }
         }
 
-        private static void AdjustThickness(XBlock parent, double thickness)
+        private void AdjustThickness(XBlock parent, double thickness)
         {
             AdjustThickness(parent.Lines, thickness);
             AdjustThickness(parent.Rectangles, thickness);
