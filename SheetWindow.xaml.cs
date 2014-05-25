@@ -65,13 +65,6 @@ namespace Sheet
 
         private IInterfaceLocator _interfaceLocator;
 
-        private IBlockController _blockController;
-        private IBlockFactory _blockFactory;
-        private IBlockSerializer _blockSerializer;
-        private IPointController _pointController;
-        private IJsonSerializer _jsonSerializer;
-        private IItemController _itemController;
-        private IItemSerializer _itemSerializer;
         private IEntryController _entryController;
         private IEntryFactory _entryFactory;
         private IEntrySerializer _entrySerializer;
@@ -82,21 +75,12 @@ namespace Sheet
 
             this._interfaceLocator = interfaceLocator;
 
-            this._blockController = interfaceLocator.GetInterface<IBlockController>();
-            this._blockFactory = interfaceLocator.GetInterface<IBlockFactory>();
-            this._blockSerializer = interfaceLocator.GetInterface<IBlockSerializer>();
-            this._pointController = interfaceLocator.GetInterface<IPointController>();
-            this._jsonSerializer = interfaceLocator.GetInterface<IJsonSerializer>();
-            this._itemController = interfaceLocator.GetInterface<IItemController>();
-            this._itemSerializer = interfaceLocator.GetInterface<IItemSerializer>();
             this._entryController = interfaceLocator.GetInterface<IEntryController>();
             this._entryFactory = interfaceLocator.GetInterface<IEntryFactory>();
             this._entrySerializer = interfaceLocator.GetInterface<IEntrySerializer>();
 
             GetSheet().Init(interfaceLocator);
-
             GetSheet().Library = Library;
-
             Init();
         } 
 

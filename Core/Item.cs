@@ -191,6 +191,20 @@ namespace Sheet
 
     public class ItemSerializer : IItemSerializer
     {
+        #region IoC
+
+        private IInterfaceLocator _interfaceLocator;
+        private IBase64 _base64;
+
+        public ItemSerializer(IInterfaceLocator interfaceLocator)
+        {
+            this._interfaceLocator = interfaceLocator;
+
+            this._base64 = _interfaceLocator.GetInterface<IBase64>();
+        }
+
+        #endregion
+
         #region Serialize
 
         public void Serialize(StringBuilder sb, ItemColor color, ItemSerializeOptions options)
@@ -330,7 +344,7 @@ namespace Sheet
             sb.Append(options.ModelSeparator);
             sb.Append(image.Height);
             sb.Append(options.ModelSeparator);
-            sb.Append(Base64.ToBase64(image.Data));
+            sb.Append(_base64.ToBase64(image.Data));
             sb.Append(options.LineSeparator);
         }
 
@@ -575,7 +589,7 @@ namespace Sheet
             imageItem.Y = double.Parse(m[3]);
             imageItem.Width = double.Parse(m[4]);
             imageItem.Height = double.Parse(m[5]);
-            imageItem.Data = Base64.ToBytes(m[6]);
+            imageItem.Data = _base64.ToBytes(m[6]);
             return imageItem;
         }
 

@@ -65,9 +65,10 @@ namespace Sheet
         private IBlockFactory _blockFactory;
         private IBlockSerializer _blockSerializer;
         private IPointController _pointController;
-        private IJsonSerializer _jsonSerializer;
         private IItemController _itemController;
         private IItemSerializer _itemSerializer;
+        private IJsonSerializer _jsonSerializer;
+        private IBase64 _base64;
 
         public SheetControl(IInterfaceLocator interfaceLocator)
         {
@@ -86,9 +87,10 @@ namespace Sheet
             this._blockFactory = interfaceLocator.GetInterface<IBlockFactory>();
             this._blockSerializer = interfaceLocator.GetInterface<IBlockSerializer>();
             this._pointController = interfaceLocator.GetInterface<IPointController>();
-            this._jsonSerializer = interfaceLocator.GetInterface<IJsonSerializer>();
             this._itemController = interfaceLocator.GetInterface<IItemController>();
             this._itemSerializer = interfaceLocator.GetInterface<IItemSerializer>();
+            this._jsonSerializer = interfaceLocator.GetInterface<IJsonSerializer>();
+            this._base64 = interfaceLocator.GetInterface<IBase64>();
 
             History = new PageHistory(this, this._itemSerializer);
             PanAndZoom = this;
@@ -1489,7 +1491,7 @@ namespace Sheet
 
         private void InsertImage(Point p, string path)
         {
-            byte[] data = Base64.ReadAllBytes(path);
+            byte[] data = _base64.ReadAllBytes(path);
             double x = _itemController.Snap(p.X, options.SnapSize);
             double y = _itemController.Snap(p.Y, options.SnapSize);
             var image = _blockFactory.CreateImage(x, y, 120.0, 90.0, data);

@@ -9,9 +9,9 @@ namespace Sheet
 {
     #region Base64
 
-    public static class Base64
+    public class Base64 : IBase64
     {
-        public static string ToBase64(byte[] bytes)
+        public string ToBase64(byte[] bytes)
         {
             if (bytes != null)
             {
@@ -20,7 +20,7 @@ namespace Sheet
             return null;
         }
 
-        public static MemoryStream ToStream(byte[] bytes)
+        public MemoryStream ToStream(byte[] bytes)
         {
             if (bytes != null)
             {
@@ -29,7 +29,7 @@ namespace Sheet
             return null;
         }
 
-        public static byte[] ToBytes(string base64)
+        public byte[] ToBytes(string base64)
         {
             if (!string.IsNullOrEmpty(base64))
             {
@@ -38,7 +38,7 @@ namespace Sheet
             return null;
         }
 
-        public static MemoryStream ToStream(string base64)
+        public MemoryStream ToStream(string base64)
         {
             if (!string.IsNullOrEmpty(base64))
             {
@@ -52,7 +52,7 @@ namespace Sheet
             return null;
         }
 
-        public static byte[] ReadAllBytes(string path)
+        public byte[] ReadAllBytes(string path)
         {
             if (!string.IsNullOrEmpty(path))
             {
@@ -61,7 +61,7 @@ namespace Sheet
             return null;
         }
 
-        public static string FromFileToBase64(string path)
+        public string FromFileToBase64(string path)
         {
             if (!string.IsNullOrEmpty(path))
             {
@@ -75,7 +75,7 @@ namespace Sheet
             return null;
         }
 
-        public static MemoryStream FromFileToStream(string path)
+        public MemoryStream FromFileToStream(string path)
         {
             if (!string.IsNullOrEmpty(path))
             {
