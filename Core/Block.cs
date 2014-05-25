@@ -280,13 +280,17 @@ namespace Sheet
     {
         #region IoC
 
+        private IInterfaceLocator _interfaceLocator;
+
         private IBlockHelper _blockHelper;
         private IBlockFactory _blockFactory;
 
-        public BlockSerializer(IBlockHelper blockHelper, IBlockFactory blockFactory)
+        public BlockSerializer(IInterfaceLocator interfaceLocator)
         {
-            this._blockHelper = blockHelper;
-            this._blockFactory = blockFactory;
+            this._interfaceLocator = interfaceLocator;
+
+            this._blockHelper = _interfaceLocator.GetInterface<IBlockHelper>();
+            this._blockFactory = _interfaceLocator.GetInterface<IBlockFactory>();
         }
 
         #endregion
@@ -372,13 +376,17 @@ namespace Sheet
 
         private ItemColor ToItemColor(XArgbColor color)
         {
-            return new ItemColor()
+            if (color != null)
             {
-                Alpha = color.Alpha,
-                Red = color.Red,
-                Green = color.Green,
-                Blue = color.Blue
-            };
+                return new ItemColor()
+                {
+                    Alpha = color.Alpha,
+                    Red = color.Red,
+                    Green = color.Green,
+                    Blue = color.Blue
+                };
+            }
+            return null;
         }
 
         public PointItem Serialize(XPoint point)
@@ -777,15 +785,19 @@ namespace Sheet
     {
         #region IoC
 
+        private IInterfaceLocator _interfaceLocator;
+
         private IBlockHelper _blockHelper;
         private IBlockSerializer _blockSerializer;
         private IPointController _pointController;
 
-        public BlockController(IBlockHelper blockHelper, IBlockSerializer blockSerializer, IPointController pointController)
+        public BlockController(IInterfaceLocator interfaceLocator)
         {
-            this._blockHelper = blockHelper;
-            this._blockSerializer = blockSerializer;
-            this._pointController = pointController;
+            this._interfaceLocator = interfaceLocator;
+
+            this._blockHelper = _interfaceLocator.GetInterface<IBlockHelper>();
+            this._blockSerializer = _interfaceLocator.GetInterface<IBlockSerializer>();
+            this._pointController = _interfaceLocator.GetInterface<IPointController>();
         }
 
         #endregion
