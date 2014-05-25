@@ -142,6 +142,32 @@ namespace Sheet
 
     #endregion
 
+    #region IItemSerializer
+
+    public interface IItemSerializer
+    {
+        string SerializeContents(BlockItem block, ItemSerializeOptions options);
+        string SerializeContents(BlockItem block);
+        BlockItem DeserializeContents(string model, ItemSerializeOptions options);
+        BlockItem DeserializeContents(string model);
+    } 
+
+    #endregion
+
+    #region IItemController
+
+    public interface IItemController
+    {
+        Task<string> OpenText(string fileName);
+        void SaveText(string fileName, string text);
+
+        void ResetPosition(BlockItem block, double originX, double originY, double width, double height);
+
+        double Snap(double val, double snap);
+    } 
+
+    #endregion
+
     #region IBlockSerializer
 
     public interface IBlockSerializer

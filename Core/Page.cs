@@ -14,10 +14,12 @@ namespace Sheet
         #region IoC
 
         private IPageController _pageController;
+        private IItemSerializer _itemSerializer;
 
-        public PageHistory(IPageController pageController)
+        public PageHistory(IPageController pageController, IItemSerializer itemSerializer)
         {
             this._pageController = pageController;
+            this._itemSerializer = itemSerializer;
         }
 
         #endregion
@@ -34,7 +36,7 @@ namespace Sheet
         private async Task<ChangeItem> CreateChange(string message)
         {
             var block = _pageController.SerializePage();
-            var text = await Task.Run(() => ItemSerializer.SerializeContents(block));
+            var text = await Task.Run(() => _itemSerializer.SerializeContents(block));
             var change = new ChangeItem()
             {
                 Message = message,
@@ -69,7 +71,7 @@ namespace Sheet
                     var change = await CreateChange("Redo");
                     redos.Push(change);
                     var undo = undos.Pop();
-                    var block = await Task.Run(() => ItemSerializer.DeserializeContents(undo.Model));
+                    var block = await Task.Run(() => _itemSerializer.DeserializeContents(undo.Model));
                     _pageController.ResetPage();
                     _pageController.DeserializePage(block);
                 }
@@ -90,7 +92,7 @@ namespace Sheet
                     var change = await CreateChange("Undo");
                     undos.Push(change);
                     var redo = redos.Pop();
-                    var block = await Task.Run(() => ItemSerializer.DeserializeContents(redo.Model));
+                    var block = await Task.Run(() => _itemSerializer.DeserializeContents(redo.Model));
                     _pageController.ResetPage();
                     _pageController.DeserializePage(block);
                 }

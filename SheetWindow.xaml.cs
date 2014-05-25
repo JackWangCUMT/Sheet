@@ -68,12 +68,16 @@ namespace Sheet
         private IBlockSerializer _blockSerializer;
         private IPointController _pointController;
         private IJsonSerializer _jsonSerializer;
+        private IItemController _itemController;
+        private IItemSerializer _itemSerializer;
 
         public SheetWindow(IBlockController blockController,
             IBlockFactory blockFactory,
             IBlockSerializer blockSerializer,
             IPointController pointController,
-            IJsonSerializer jsonSerializer)
+            IJsonSerializer jsonSerializer,
+            IItemController itemController,
+            IItemSerializer itemSerializer)
         {
             InitializeComponent();
 
@@ -82,8 +86,10 @@ namespace Sheet
             this._blockSerializer = blockSerializer;
             this._pointController = pointController;
             this._jsonSerializer = jsonSerializer;
+            this._itemController = itemController;
+            this._itemSerializer = itemSerializer;
 
-            GetSheet().Init(blockController, blockFactory, blockSerializer, pointController, jsonSerializer);
+            GetSheet().Init(blockController, blockFactory, blockSerializer, pointController, jsonSerializer, itemController, itemSerializer);
             GetSheet().Library = Library;
 
             Init();

@@ -64,19 +64,39 @@ namespace Sheet
         private IBlockSerializer _blockSerializer;
         private IPointController _pointController;
         private IJsonSerializer _jsonSerializer;
+        private IItemController _itemController;
+        private IItemSerializer _itemSerializer;
 
         public SheetControl(IBlockController blockController,
             IBlockFactory blockFactory,
             IBlockSerializer blockSerializer,
             IPointController pointController,
-            IJsonSerializer jsonSerializer)
+            IJsonSerializer jsonSerializer,
+            IItemController itemController,
+            IItemSerializer itemSerializer)
+        {
+            Init(blockController, blockFactory, blockSerializer, pointController, jsonSerializer, itemController, itemSerializer);
+        }
+
+        public void Init(IBlockController blockController,
+            IBlockFactory blockFactory,
+            IBlockSerializer blockSerializer,
+            IPointController pointController,
+            IJsonSerializer jsonSerializer,
+            IItemController itemController,
+            IItemSerializer itemSerializer)
         {
             this._blockController = blockController;
             this._blockFactory = blockFactory;
             this._blockSerializer = blockSerializer;
             this._pointController = pointController;
             this._jsonSerializer = jsonSerializer;
-        } 
+            this._itemController = itemController;
+            this._itemSerializer = itemSerializer;
+
+            History = new PageHistory(this, this._itemSerializer);
+            PanAndZoom = this;
+        }
 
         #endregion
 
@@ -162,32 +182,11 @@ namespace Sheet
 
         #region Init
 
-        public void Init(IBlockController blockController,
-            IBlockFactory blockFactory,
-            IBlockSerializer blockSerializer,
-            IPointController pointController,
-            IJsonSerializer jsonSerializer)
-        {
-            this._blockController = blockController;
-            this._blockFactory = blockFactory;
-            this._blockSerializer = blockSerializer;
-            this._pointController = pointController;
-            this._jsonSerializer = jsonSerializer;
-        }
-
         private void Init()
         {
-            InitInterfaces();
             InitOptions();
             InitSheets();
             InitBlocks();
-        }
-
-        private void InitInterfaces()
-        {
-            History = new PageHistory(this);
-
-            PanAndZoom = this;
         }
 
         private void InitOptions()
@@ -292,7 +291,7 @@ namespace Sheet
                 }
                 else
                 {
-                    var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
+                    var block = await Task.Run(() => _itemSerializer.DeserializeContents(text));
                     History.Reset();
                     ResetPage();
                     DeserializePage(block);
@@ -308,20 +307,20 @@ namespace Sheet
         public string GetPage()
         {
             var block = SerializePage();
-            var text = ItemSerializer.SerializeContents(block);
+            var text = _itemSerializer.SerializeContents(block);
 
             return text;
         }
 
         public void ExportPage(string text)
         {
-            var block = ItemSerializer.DeserializeContents(text);
+            var block = _itemSerializer.DeserializeContents(text);
             Export(ToSingle(block));
         }
 
         public void ExportPages(IEnumerable<string> texts)
         {
-            var blocks = texts.Select(text => ItemSerializer.DeserializeContents(text));
+            var blocks = texts.Select(text => _itemSerializer.DeserializeContents(text));
             Export(blocks);
         }
 
@@ -500,7 +499,7 @@ namespace Sheet
             try
             {
                 var selected = _blockSerializer.SerializerContents(block, -1, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED");
-                var text = ItemSerializer.SerializeContents(selected);
+                var text = _itemSerializer.SerializeContents(selected);
                 Clipboard.SetData(DataFormats.UnicodeText, text);
             }
             catch (Exception ex)
@@ -523,7 +522,7 @@ namespace Sheet
             try
             {
                 var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
-                var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
+                var block = await Task.Run(() => _itemSerializer.DeserializeContents(text));
                 History.Register("Paste");
                 InsertContent(block, true);
             }
@@ -758,8 +757,8 @@ namespace Sheet
         {
             if (_blockController.HaveSelected(selectedBlock))
             {
-                var text = ItemSerializer.SerializeContents(_blockSerializer.SerializerContents(selectedBlock, 0, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED"));
-                var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
+                var text = _itemSerializer.SerializeContents(_blockSerializer.SerializerContents(selectedBlock, 0, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED"));
+                var block = await Task.Run(() => _itemSerializer.DeserializeContents(text));
                 History.Register("Break Block");
                 Delete();
                 _blockController.AddBroken(contentSheet, block, contentBlock, selectedBlock, true, options.LineThickness / Zoom);
@@ -773,8 +772,8 @@ namespace Sheet
         public XPoint InsertPoint(Point p, bool register, bool select)
         {
             double thickness = options.LineThickness / Zoom;
-            double x = ItemController.Snap(p.X, options.SnapSize);
-            double y = ItemController.Snap(p.Y, options.SnapSize);
+            double x = _itemController.Snap(p.X, options.SnapSize);
+            double y = _itemController.Snap(p.Y, options.SnapSize);
 
             var point = _blockFactory.CreatePoint(thickness, x, y, false);
             
@@ -853,8 +852,8 @@ namespace Sheet
             isFirstMove = true;
             StoreTempMode();
             ModeMove();
-            p.X = ItemController.Snap(p.X, options.SnapSize);
-            p.Y = ItemController.Snap(p.Y, options.SnapSize);
+            p.X = _itemController.Snap(p.X, options.SnapSize);
+            p.Y = _itemController.Snap(p.Y, options.SnapSize);
             panStartPoint = p;
             ResetOverlay();
             overlaySheet.Capture();
@@ -872,8 +871,8 @@ namespace Sheet
                 selectedBlock = moveBlock;
             }
 
-            p.X = ItemController.Snap(p.X, options.SnapSize);
-            p.Y = ItemController.Snap(p.Y, options.SnapSize);
+            p.X = _itemController.Snap(p.X, options.SnapSize);
+            p.Y = _itemController.Snap(p.Y, options.SnapSize);
 
             double dx = p.X - panStartPoint.X;
             double dy = p.Y - panStartPoint.Y;
@@ -1245,8 +1244,8 @@ namespace Sheet
         
         private void InitTempLine(Point p, XPoint start)
         {
-            double x = ItemController.Snap(p.X, options.SnapSize);
-            double y = ItemController.Snap(p.Y, options.SnapSize);
+            double x = _itemController.Snap(p.X, options.SnapSize);
+            double y = _itemController.Snap(p.Y, options.SnapSize);
             
             tempLine = _blockFactory.CreateLine(options.LineThickness / Zoom, x, y, x, y, ItemColors.Black);
             
@@ -1266,8 +1265,8 @@ namespace Sheet
 
         private void MoveTempLine(Point p)
         {
-            double x = ItemController.Snap(p.X, options.SnapSize);
-            double y = ItemController.Snap(p.Y, options.SnapSize);
+            double x = _itemController.Snap(p.X, options.SnapSize);
+            double y = _itemController.Snap(p.Y, options.SnapSize);
             var ellipse = tempEndEllipse.Element as Ellipse;
             var line = tempLine.Element as Line;
             if (Math.Round(x, 1) != Math.Round(line.X2, 1)
@@ -1338,8 +1337,8 @@ namespace Sheet
 
         private void InitTempRect(Point p)
         {
-            double x = ItemController.Snap(p.X, options.SnapSize);
-            double y = ItemController.Snap(p.Y, options.SnapSize);
+            double x = _itemController.Snap(p.X, options.SnapSize);
+            double y = _itemController.Snap(p.Y, options.SnapSize);
             selectionStartPoint = new Point(x, y);
             tempRectangle = _blockFactory.CreateRectangle(options.LineThickness / Zoom, x, y, 0.0, 0.0, true);
             overlaySheet.Add(tempRectangle);
@@ -1350,8 +1349,8 @@ namespace Sheet
         {
             double sx = selectionStartPoint.X;
             double sy = selectionStartPoint.Y;
-            double x = ItemController.Snap(p.X, options.SnapSize);
-            double y = ItemController.Snap(p.Y, options.SnapSize);
+            double x = _itemController.Snap(p.X, options.SnapSize);
+            double y = _itemController.Snap(p.Y, options.SnapSize);
             double width = Math.Abs(sx - x);
             double height = Math.Abs(sy - y);
             var rectangle = tempRectangle.Element as Rectangle;
@@ -1397,8 +1396,8 @@ namespace Sheet
 
         private void InitTempEllipse(Point p)
         {
-            double x = ItemController.Snap(p.X, options.SnapSize);
-            double y = ItemController.Snap(p.Y, options.SnapSize);
+            double x = _itemController.Snap(p.X, options.SnapSize);
+            double y = _itemController.Snap(p.Y, options.SnapSize);
             selectionStartPoint = new Point(x, y);
             tempEllipse = _blockFactory.CreateEllipse(options.LineThickness / Zoom, x, y, 0.0, 0.0, true);
             overlaySheet.Add(tempEllipse);
@@ -1409,8 +1408,8 @@ namespace Sheet
         {
             double sx = selectionStartPoint.X;
             double sy = selectionStartPoint.Y;
-            double x = ItemController.Snap(p.X, options.SnapSize);
-            double y = ItemController.Snap(p.Y, options.SnapSize);
+            double x = _itemController.Snap(p.X, options.SnapSize);
+            double y = _itemController.Snap(p.Y, options.SnapSize);
             double width = Math.Abs(sx - x);
             double height = Math.Abs(sy - y);
 
@@ -1466,8 +1465,8 @@ namespace Sheet
 
         private void CreateText(Point p)
         {
-            double x = ItemController.Snap(p.X, options.SnapSize);
-            double y = ItemController.Snap(p.Y, options.SnapSize);
+            double x = _itemController.Snap(p.X, options.SnapSize);
+            double y = _itemController.Snap(p.Y, options.SnapSize);
             History.Register("Create Text");
             var text = _blockFactory.CreateText("Text", x, y, 30.0, 15.0, (int)HorizontalAlignment.Center, (int)VerticalAlignment.Center, 11.0, ItemColors.Transparent, ItemColors.Black);
             contentBlock.Texts.Add(text);
@@ -1543,8 +1542,8 @@ namespace Sheet
         private void InsertImage(Point p, string path)
         {
             byte[] data = Base64.ReadAllBytes(path);
-            double x = ItemController.Snap(p.X, options.SnapSize);
-            double y = ItemController.Snap(p.Y, options.SnapSize);
+            double x = _itemController.Snap(p.X, options.SnapSize);
+            double y = _itemController.Snap(p.Y, options.SnapSize);
             var image = _blockFactory.CreateImage(x, y, 120.0, 90.0, data);
             contentBlock.Images.Add(image);
             contentSheet.Add(image);
@@ -1631,8 +1630,8 @@ namespace Sheet
             {
                 if (line.Start != null)
                 {
-                    double x = ItemController.Snap(line.Start.X + dx, options.SnapSize);
-                    double y = ItemController.Snap(line.Start.Y + dy, options.SnapSize);
+                    double x = _itemController.Snap(line.Start.X + dx, options.SnapSize);
+                    double y = _itemController.Snap(line.Start.Y + dy, options.SnapSize);
                     double sdx = x - line.Start.X;
                     double sdy = y - line.Start.Y;
                     _blockController.Move(sdx, sdy, line.Start);
@@ -1641,8 +1640,8 @@ namespace Sheet
                 }
                 else
                 {
-                    double x = ItemController.Snap((line.Element as Line).X1 + dx, options.SnapSize);
-                    double y = ItemController.Snap((line.Element as Line).Y1 + dy, options.SnapSize);
+                    double x = _itemController.Snap((line.Element as Line).X1 + dx, options.SnapSize);
+                    double y = _itemController.Snap((line.Element as Line).Y1 + dy, options.SnapSize);
                     (line.Element as Line).X1 = x;
                     (line.Element as Line).Y1 = y;
                     Canvas.SetLeft(thumb.Element as Thumb, x);
@@ -1657,8 +1656,8 @@ namespace Sheet
             {
                 if (line.End != null)
                 {
-                    double x = ItemController.Snap(line.End.X + dx, options.SnapSize);
-                    double y = ItemController.Snap(line.End.Y + dy, options.SnapSize);
+                    double x = _itemController.Snap(line.End.X + dx, options.SnapSize);
+                    double y = _itemController.Snap(line.End.Y + dy, options.SnapSize);
                     double sdx = x - line.End.X;
                     double sdy = y - line.End.Y;
                     _blockController.Move(sdx, sdy, line.End);
@@ -1667,8 +1666,8 @@ namespace Sheet
                 }
                 else
                 {
-                    double x = ItemController.Snap((line.Element as Line).X2 + dx, options.SnapSize);
-                    double y = ItemController.Snap((line.Element as Line).Y2 + dy, options.SnapSize);
+                    double x = _itemController.Snap((line.Element as Line).X2 + dx, options.SnapSize);
+                    double y = _itemController.Snap((line.Element as Line).Y2 + dy, options.SnapSize);
                     (line.Element as Line).X2 = x;
                     (line.Element as Line).Y2 = y;
                     Canvas.SetLeft(thumb.Element as Thumb, x);
@@ -1768,8 +1767,8 @@ namespace Sheet
 
                 var rect = new Rect(left, top, width, height);
 
-                rect.X = ItemController.Snap(rect.X + dx, options.SnapSize);
-                rect.Y = ItemController.Snap(rect.Y + dy, options.SnapSize);
+                rect.X = _itemController.Snap(rect.X + dx, options.SnapSize);
+                rect.Y = _itemController.Snap(rect.Y + dy, options.SnapSize);
 
                 rect.Width = Math.Max(0.0, rect.Width - (rect.X - left));
                 rect.Height = Math.Max(0.0, rect.Height - (rect.Y - top));
@@ -1794,8 +1793,8 @@ namespace Sheet
 
                 var rect = new Rect(left, top, width, height);
 
-                rect.Width = Math.Max(0.0, ItemController.Snap(rect.Width + dx, options.SnapSize));
-                rect.Y = ItemController.Snap(rect.Y + dy, options.SnapSize);
+                rect.Width = Math.Max(0.0, _itemController.Snap(rect.Width + dx, options.SnapSize));
+                rect.Y = _itemController.Snap(rect.Y + dy, options.SnapSize);
 
                 rect.Height = Math.Max(0.0, rect.Height - (rect.Y - top));
 
@@ -1819,8 +1818,8 @@ namespace Sheet
 
                 var rect = new Rect(left, top, width, height);
 
-                rect.X = ItemController.Snap(rect.X + dx, options.SnapSize);
-                rect.Height = Math.Max(0.0, ItemController.Snap(rect.Height + dy, options.SnapSize));
+                rect.X = _itemController.Snap(rect.X + dx, options.SnapSize);
+                rect.Height = Math.Max(0.0, _itemController.Snap(rect.Height + dy, options.SnapSize));
 
                 rect.Width = Math.Max(0.0, rect.Width - (rect.X - left));
 
@@ -1844,8 +1843,8 @@ namespace Sheet
 
                 var rect = new Rect(left, top, width, height);
 
-                rect.Width = Math.Max(0.0, ItemController.Snap(rect.Width + dx, options.SnapSize));
-                rect.Height = Math.Max(0.0, ItemController.Snap(rect.Height + dy, options.SnapSize));
+                rect.Width = Math.Max(0.0, _itemController.Snap(rect.Width + dx, options.SnapSize));
+                rect.Height = Math.Max(0.0, _itemController.Snap(rect.Height + dy, options.SnapSize));
 
                 Canvas.SetLeft(element.Element as FrameworkElement, rect.X);
                 Canvas.SetTop(element.Element as FrameworkElement, rect.Y);
@@ -2429,10 +2428,10 @@ namespace Sheet
 
         public async Task OpenTextPage(string path)
         {
-            var text = await ItemController.OpenText(path);
+            var text = await _itemController.OpenText(path);
             if (text != null)
             {
-                var page = await Task.Run(() => ItemSerializer.DeserializeContents(text));
+                var page = await Task.Run(() => _itemSerializer.DeserializeContents(text));
                 History.Register("Open Text");
                 ResetPage();
                 DeserializePage(page);
@@ -2441,7 +2440,7 @@ namespace Sheet
 
         public async Task OpenJsonPage(string path)
         {
-            var text = await ItemController.OpenText(path);
+            var text = await _itemController.OpenText(path);
             if (text != null)
             {
                 var page = await Task.Run(() => _jsonSerializer.Deerialize<BlockItem>(text));
@@ -2504,8 +2503,8 @@ namespace Sheet
 
             Task.Run(() =>
             {
-                var text = ItemSerializer.SerializeContents(page);
-                ItemController.SaveText(path, text);
+                var text = _itemSerializer.SerializeContents(page);
+                _itemController.SaveText(path, text);
             });
         }
 
@@ -2516,7 +2515,7 @@ namespace Sheet
             Task.Run(() =>
             {
                 string text = _jsonSerializer.Serialize(page);
-                ItemController.SaveText(path, text);
+                _itemController.SaveText(path, text);
             });
         }
 
@@ -2700,7 +2699,7 @@ namespace Sheet
                 selectedBlock.Blocks.Add(block);
             }
 
-            _blockController.Move(ItemController.Snap(p.X, options.SnapSize), ItemController.Snap(p.Y, options.SnapSize), block);
+            _blockController.Move(_itemController.Snap(p.X, options.SnapSize), _itemController.Snap(p.Y, options.SnapSize), block);
 
             return block;
         }
@@ -2728,7 +2727,7 @@ namespace Sheet
 
         public async Task LoadLibrary(string fileName)
         {
-            var text = await ItemController.OpenText(fileName);
+            var text = await _itemController.OpenText(fileName);
             if (text != null)
             {
                 InitLibrary(text);
@@ -2739,7 +2738,7 @@ namespace Sheet
         {
             if (Library != null && text != null)
             {
-                var block = await Task.Run(() => ItemSerializer.DeserializeContents(text));
+                var block = await Task.Run(() => _itemSerializer.DeserializeContents(text));
                 Library.SetSource(block.Blocks);
             }
         }
@@ -2750,7 +2749,7 @@ namespace Sheet
             {
                 var source = Library.GetSource() as IEnumerable<BlockItem>;
                 var items = new List<BlockItem>(source);
-                ItemController.ResetPosition(blockItem, options.PageOriginX, options.PageOriginY, options.PageWidth, options.PageHeight);
+                _itemController.ResetPosition(blockItem, options.PageOriginX, options.PageOriginY, options.PageWidth, options.PageHeight);
                 items.Add(blockItem);
                 Library.SetSource(items);
             }

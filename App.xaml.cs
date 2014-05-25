@@ -30,9 +30,11 @@ namespace Sheet
             builder.RegisterInstance(new WpfBlockFactory()).As<IBlockFactory>();
             builder.RegisterInstance(new NewtonsoftJsonSerializer()).As<IJsonSerializer>();
 
-            builder.RegisterType<BlockSerializer>().As<IBlockSerializer>();
-            builder.RegisterType<PointController>().As<IPointController>();
-            builder.RegisterType<BlockController>().As<IBlockController>();
+            builder.RegisterType<BlockSerializer>().As<IBlockSerializer>().SingleInstance();
+            builder.RegisterType<PointController>().As<IPointController>().SingleInstance();
+            builder.RegisterType<BlockController>().As<IBlockController>().SingleInstance();
+            builder.RegisterType<ItemSerializer>().As<IItemSerializer>().SingleInstance();
+            builder.RegisterType<ItemController>().As<IItemController>().SingleInstance();
 
             builder.RegisterType<SheetWindow>();
 

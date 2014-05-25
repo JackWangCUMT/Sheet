@@ -189,11 +189,11 @@ namespace Sheet
         #endregion
     }
 
-    public static class ItemSerializer
+    public class ItemSerializer : IItemSerializer
     {
         #region Serialize
 
-        public static void Serialize(StringBuilder sb, ItemColor color, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, ItemColor color, ItemSerializeOptions options)
         {
             sb.Append(color.Alpha);
             sb.Append(options.ModelSeparator);
@@ -204,7 +204,7 @@ namespace Sheet
             sb.Append(color.Blue);
         }
 
-        public static void Serialize(StringBuilder sb, PointItem point, string indent, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, PointItem point, string indent, ItemSerializeOptions options)
         {
             sb.Append(indent);
             sb.Append("POINT");
@@ -217,7 +217,7 @@ namespace Sheet
             sb.Append(options.LineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, LineItem line, string indent, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, LineItem line, string indent, ItemSerializeOptions options)
         {
             sb.Append(indent);
             sb.Append("LINE");
@@ -240,7 +240,7 @@ namespace Sheet
             sb.Append(options.LineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, RectangleItem rectangle, string indent, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, RectangleItem rectangle, string indent, ItemSerializeOptions options)
         {
             sb.Append(indent);
             sb.Append("RECTANGLE");
@@ -263,7 +263,7 @@ namespace Sheet
             sb.Append(options.LineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, EllipseItem ellipse, string indent, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, EllipseItem ellipse, string indent, ItemSerializeOptions options)
         {
             sb.Append(indent);
             sb.Append("ELLIPSE");
@@ -286,7 +286,7 @@ namespace Sheet
             sb.Append(options.LineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, TextItem text, string indent, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, TextItem text, string indent, ItemSerializeOptions options)
         {
             sb.Append(indent);
             sb.Append("TEXT");
@@ -315,7 +315,7 @@ namespace Sheet
             sb.Append(options.LineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, ImageItem image, string indent, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, ImageItem image, string indent, ItemSerializeOptions options)
         {
             sb.Append(indent);
             sb.Append("IMAGE");
@@ -334,7 +334,7 @@ namespace Sheet
             sb.Append(options.LineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, BlockItem block, string indent, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, BlockItem block, string indent, ItemSerializeOptions options)
         {
             sb.Append(indent);
             sb.Append("BLOCK");
@@ -369,7 +369,7 @@ namespace Sheet
             sb.Append(options.LineSeparator);
         }
 
-        public static void Serialize(StringBuilder sb, IEnumerable<PointItem> points, string indent, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, IEnumerable<PointItem> points, string indent, ItemSerializeOptions options)
         {
             foreach (var point in points)
             {
@@ -377,7 +377,7 @@ namespace Sheet
             }
         }
 
-        public static void Serialize(StringBuilder sb, IEnumerable<LineItem> lines, string indent, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, IEnumerable<LineItem> lines, string indent, ItemSerializeOptions options)
         {
             foreach (var line in lines)
             {
@@ -385,7 +385,7 @@ namespace Sheet
             }
         }
 
-        public static void Serialize(StringBuilder sb, IEnumerable<RectangleItem> rectangles, string indent, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, IEnumerable<RectangleItem> rectangles, string indent, ItemSerializeOptions options)
         {
             foreach (var rectangle in rectangles)
             {
@@ -393,7 +393,7 @@ namespace Sheet
             }
         }
 
-        public static void Serialize(StringBuilder sb, IEnumerable<EllipseItem> ellipses, string indent, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, IEnumerable<EllipseItem> ellipses, string indent, ItemSerializeOptions options)
         {
             foreach (var ellipse in ellipses)
             {
@@ -401,7 +401,7 @@ namespace Sheet
             }
         }
 
-        public static void Serialize(StringBuilder sb, IEnumerable<TextItem> texts, string indent, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, IEnumerable<TextItem> texts, string indent, ItemSerializeOptions options)
         {
             foreach (var text in texts)
             {
@@ -409,7 +409,7 @@ namespace Sheet
             }
         }
 
-        public static void Serialize(StringBuilder sb, IEnumerable<ImageItem> images, string indent, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, IEnumerable<ImageItem> images, string indent, ItemSerializeOptions options)
         {
             foreach (var image in images)
             {
@@ -417,7 +417,7 @@ namespace Sheet
             }
         }
 
-        public static void Serialize(StringBuilder sb, IEnumerable<BlockItem> blocks, string indent, ItemSerializeOptions options)
+        public void Serialize(StringBuilder sb, IEnumerable<BlockItem> blocks, string indent, ItemSerializeOptions options)
         {
             foreach (var block in blocks)
             {
@@ -425,7 +425,7 @@ namespace Sheet
             }
         }
 
-        public static string SerializeContents(BlockItem block, ItemSerializeOptions options)
+        public string SerializeContents(BlockItem block, ItemSerializeOptions options)
         {
             var sb = new StringBuilder();
 
@@ -440,7 +440,7 @@ namespace Sheet
             return sb.ToString();
         }
 
-        public static string SerializeContents(BlockItem block)
+        public string SerializeContents(BlockItem block)
         {
             return SerializeContents(block, ItemSerializeOptions.Default);
         }
@@ -449,7 +449,7 @@ namespace Sheet
 
         #region Deserialize
 
-        private static PointItem DeserializePoint(string[] m)
+        private PointItem DeserializePoint(string[] m)
         {
             var pointItem = new PointItem();
             pointItem.Id = int.Parse(m[1]);
@@ -458,7 +458,7 @@ namespace Sheet
             return pointItem;
         }
 
-        private static LineItem DeserializeLine(string[] m)
+        private LineItem DeserializeLine(string[] m)
         {
             var lineItem = new LineItem();
             lineItem.Id = int.Parse(m[1]);
@@ -486,7 +486,7 @@ namespace Sheet
             return lineItem;
         }
 
-        private static RectangleItem DeserializeRectangle(string[] m)
+        private RectangleItem DeserializeRectangle(string[] m)
         {
             var rectangleItem = new RectangleItem();
             rectangleItem.Id = int.Parse(m[1]);
@@ -512,7 +512,7 @@ namespace Sheet
             return rectangleItem;
         }
 
-        private static EllipseItem DeserializeEllipse(string[] m)
+        private EllipseItem DeserializeEllipse(string[] m)
         {
             var ellipseItem = new EllipseItem();
             ellipseItem.Id = int.Parse(m[1]);
@@ -538,7 +538,7 @@ namespace Sheet
             return ellipseItem;
         }
 
-        private static TextItem DeserializeText(string[] m)
+        private TextItem DeserializeText(string[] m)
         {
             var textItem = new TextItem();
             textItem.Id = int.Parse(m[1]);
@@ -567,7 +567,7 @@ namespace Sheet
             return textItem;
         }
 
-        private static ImageItem DeserializeImage(string[] m)
+        private ImageItem DeserializeImage(string[] m)
         {
             var imageItem = new ImageItem();
             imageItem.Id = int.Parse(m[1]);
@@ -579,7 +579,7 @@ namespace Sheet
             return imageItem;
         }
 
-        private static BlockItem DeserializeBlockRecursive(string[] lines, int length, ref int end, string[] m, ItemSerializeOptions options)
+        private BlockItem DeserializeBlockRecursive(string[] lines, int length, ref int end, string[] m, ItemSerializeOptions options)
         {
             var blockItem = DeserializeRootBlock(lines,
                 length,
@@ -606,7 +606,7 @@ namespace Sheet
             return blockItem;
         }
 
-        private static BlockItem DeserializeRootBlock(string[] lines, int length, ref int end, string name, int id, double x, double y, double width, double height, int dataId, ItemSerializeOptions options)
+        private BlockItem DeserializeRootBlock(string[] lines, int length, ref int end, string name, int id, double x, double y, double width, double height, int dataId, ItemSerializeOptions options)
         {
             var root = new BlockItem();
             root.Init(id, x, y, width, height, dataId, name);
@@ -726,7 +726,7 @@ namespace Sheet
             return root;
         }
 
-        public static BlockItem DeserializeContents(string model, ItemSerializeOptions options)
+        public BlockItem DeserializeContents(string model, ItemSerializeOptions options)
         {
             try
             {
@@ -743,7 +743,7 @@ namespace Sheet
             return null;
         }
 
-        public static BlockItem DeserializeContents(string model)
+        public BlockItem DeserializeContents(string model)
         {
             return DeserializeContents(model, ItemSerializeOptions.Default);
         }
@@ -755,11 +755,11 @@ namespace Sheet
 
     #region Item Controller
 
-    public static class ItemController
+    public class ItemController : IItemController
     {
         #region Text
 
-        public async static Task<string> OpenText(string fileName)
+        public async Task<string> OpenText(string fileName)
         {
             try
             {
@@ -776,7 +776,7 @@ namespace Sheet
             return null;
         }
 
-        public async static void SaveText(string fileName, string text)
+        public async void SaveText(string fileName, string text)
         {
             try
             {
@@ -799,7 +799,7 @@ namespace Sheet
 
         #region Position
 
-        public static void ResetPosition(BlockItem block, double originX, double originY, double width, double height)
+        public void ResetPosition(BlockItem block, double originX, double originY, double width, double height)
         {
             double minX = width;
             double minY = height;
@@ -815,7 +815,7 @@ namespace Sheet
 
         #region MinMax
 
-        public static void MinMax(BlockItem block, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        public void MinMax(BlockItem block, ref double minX, ref double minY, ref double maxX, ref double maxY)
         {
             MinMax(block.Points, ref minX, ref minY, ref maxX, ref maxY);
             MinMax(block.Lines, ref minX, ref minY, ref maxX, ref maxY);
@@ -826,7 +826,7 @@ namespace Sheet
             MinMax(block.Blocks, ref minX, ref minY, ref maxX, ref maxY);
         }
 
-        public static void MinMax(IEnumerable<BlockItem> blocks, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        public void MinMax(IEnumerable<BlockItem> blocks, ref double minX, ref double minY, ref double maxX, ref double maxY)
         {
             foreach (var block in blocks)
             {
@@ -834,7 +834,7 @@ namespace Sheet
             }
         }
 
-        public static void MinMax(IEnumerable<PointItem> points, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        public void MinMax(IEnumerable<PointItem> points, ref double minX, ref double minY, ref double maxX, ref double maxY)
         {
             foreach (var point in points)
             {
@@ -845,7 +845,7 @@ namespace Sheet
             }
         }
 
-        public static void MinMax(IEnumerable<LineItem> lines, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        public void MinMax(IEnumerable<LineItem> lines, ref double minX, ref double minY, ref double maxX, ref double maxY)
         {
             foreach (var line in lines)
             {
@@ -860,7 +860,7 @@ namespace Sheet
             }
         }
 
-        public static void MinMax(IEnumerable<RectangleItem> rectangles, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        public void MinMax(IEnumerable<RectangleItem> rectangles, ref double minX, ref double minY, ref double maxX, ref double maxY)
         {
             foreach (var rectangle in rectangles)
             {
@@ -871,7 +871,7 @@ namespace Sheet
             }
         }
 
-        public static void MinMax(IEnumerable<EllipseItem> ellipses, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        public void MinMax(IEnumerable<EllipseItem> ellipses, ref double minX, ref double minY, ref double maxX, ref double maxY)
         {
             foreach (var ellipse in ellipses)
             {
@@ -882,7 +882,7 @@ namespace Sheet
             }
         }
 
-        public static void MinMax(IEnumerable<TextItem> texts, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        public void MinMax(IEnumerable<TextItem> texts, ref double minX, ref double minY, ref double maxX, ref double maxY)
         {
             foreach (var text in texts)
             {
@@ -893,7 +893,7 @@ namespace Sheet
             }
         }
 
-        public static void MinMax(IEnumerable<ImageItem> images, ref double minX, ref double minY, ref double maxX, ref double maxY)
+        public void MinMax(IEnumerable<ImageItem> images, ref double minX, ref double minY, ref double maxX, ref double maxY)
         {
             foreach (var image in images)
             {
@@ -908,7 +908,7 @@ namespace Sheet
 
         #region Move
 
-        public static void Move(IEnumerable<BlockItem> blocks, double x, double y)
+        public void Move(IEnumerable<BlockItem> blocks, double x, double y)
         {
             foreach (var block in blocks)
             {
@@ -916,7 +916,7 @@ namespace Sheet
             }
         }
 
-        public static void Move(BlockItem block, double x, double y)
+        public void Move(BlockItem block, double x, double y)
         {
             Move(block.Points, x, y);
             Move(block.Lines, x, y);
@@ -927,7 +927,7 @@ namespace Sheet
             Move(block.Blocks, x, y);
         }
 
-        public static void Move(IEnumerable<PointItem> points, double x, double y)
+        public void Move(IEnumerable<PointItem> points, double x, double y)
         {
             foreach (var point in points)
             {
@@ -935,7 +935,7 @@ namespace Sheet
             }
         }
 
-        public static void Move(IEnumerable<LineItem> lines, double x, double y)
+        public void Move(IEnumerable<LineItem> lines, double x, double y)
         {
             foreach (var line in lines)
             {
@@ -943,7 +943,7 @@ namespace Sheet
             }
         }
 
-        public static void Move(IEnumerable<RectangleItem> rectangles, double x, double y)
+        public void Move(IEnumerable<RectangleItem> rectangles, double x, double y)
         {
             foreach (var rectangle in rectangles)
             {
@@ -951,7 +951,7 @@ namespace Sheet
             }
         }
 
-        public static void Move(IEnumerable<EllipseItem> ellipses, double x, double y)
+        public void Move(IEnumerable<EllipseItem> ellipses, double x, double y)
         {
             foreach (var ellipse in ellipses)
             {
@@ -959,7 +959,7 @@ namespace Sheet
             }
         }
 
-        public static void Move(IEnumerable<TextItem> texts, double x, double y)
+        public void Move(IEnumerable<TextItem> texts, double x, double y)
         {
             foreach (var text in texts)
             {
@@ -967,7 +967,7 @@ namespace Sheet
             }
         }
 
-        public static void Move(IEnumerable<ImageItem> images, double x, double y)
+        public void Move(IEnumerable<ImageItem> images, double x, double y)
         {
             foreach (var image in images)
             {
@@ -975,13 +975,13 @@ namespace Sheet
             }
         }
 
-        public static void Move(PointItem point, double x, double y)
+        public void Move(PointItem point, double x, double y)
         {
             point.X += x;
             point.Y += y;
         }
 
-        public static void Move(LineItem line, double x, double y)
+        public void Move(LineItem line, double x, double y)
         {
             line.X1 += x;
             line.Y1 += y;
@@ -989,25 +989,25 @@ namespace Sheet
             line.Y2 += y;
         }
 
-        public static void Move(RectangleItem rectangle, double x, double y)
+        public void Move(RectangleItem rectangle, double x, double y)
         {
             rectangle.X += x;
             rectangle.Y += y;
         }
 
-        public static void Move(EllipseItem ellipse, double x, double y)
+        public void Move(EllipseItem ellipse, double x, double y)
         {
             ellipse.X += x;
             ellipse.Y += y;
         }
 
-        public static void Move(TextItem text, double x, double y)
+        public void Move(TextItem text, double x, double y)
         {
             text.X += x;
             text.Y += y;
         }
 
-        public static void Move(ImageItem image, double x, double y)
+        public void Move(ImageItem image, double x, double y)
         {
             image.X += x;
             image.Y += y;
@@ -1017,7 +1017,7 @@ namespace Sheet
 
         #region Snap
 
-        public static double Snap(double val, double snap)
+        public double Snap(double val, double snap)
         {
             double r = val % snap;
             return r >= snap / 2.0 ? val + snap - r : val - r;
