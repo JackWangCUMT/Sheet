@@ -272,6 +272,9 @@ namespace Sheet
         public int DefaultZoomIndex { get; set; }
         public int MaxZoomIndex { get; set; }
         public double[] ZoomFactors { get; set; }
+        public double Zoom { get; set; }
+        public double PanX { get; set; }
+        public double PanY { get; set; }
     }
 
     #endregion
@@ -666,7 +669,14 @@ namespace Sheet
 
         public XRectangle Deserialize(ISheet sheet, XBlock parent, RectangleItem rectangleItem, double thickness)
         {
-            var rectangle = _blockFactory.CreateRectangle(thickness, rectangleItem.X, rectangleItem.Y, rectangleItem.Width, rectangleItem.Height, rectangleItem.IsFilled);
+            var rectangle = _blockFactory.CreateRectangle(thickness, 
+                rectangleItem.X, 
+                rectangleItem.Y, 
+                rectangleItem.Width, 
+                rectangleItem.Height, 
+                rectangleItem.IsFilled,
+                rectangleItem.Stroke,
+                rectangleItem.Fill);
 
             rectangle.Id = rectangleItem.Id;
             
@@ -685,7 +695,14 @@ namespace Sheet
 
         public XEllipse Deserialize(ISheet sheet, XBlock parent, EllipseItem ellipseItem, double thickness)
         {
-            var ellipse = _blockFactory.CreateEllipse(thickness, ellipseItem.X, ellipseItem.Y, ellipseItem.Width, ellipseItem.Height, ellipseItem.IsFilled);
+            var ellipse = _blockFactory.CreateEllipse(thickness, 
+                ellipseItem.X, 
+                ellipseItem.Y, 
+                ellipseItem.Width, 
+                ellipseItem.Height, 
+                ellipseItem.IsFilled,
+                ellipseItem.Stroke,
+                ellipseItem.Fill);
 
             ellipse.Id = ellipseItem.Id;
             
@@ -1226,20 +1243,20 @@ namespace Sheet
 
         #region Move
 
-        public void Move(double x, double y, XPoint point)
+        public void MoveDelta(double dx, double dy, XPoint point)
         {
             if (point.Element != null)
             {
-                point.X = _blockHelper.GetLeft(point) + x;
-                point.Y = _blockHelper.GetTop(point) + y;
+                point.X = _blockHelper.GetLeft(point) + dx;
+                point.Y = _blockHelper.GetTop(point) + dy;
 
                 _blockHelper.SetLeft(point, point.X);
-                _blockHelper.SeTop(point, point.Y);
+                _blockHelper.SetTop(point, point.Y);
             }
             else
             {
-                point.X += x;
-                point.Y += y;
+                point.X += dx;
+                point.Y += dy;
             }
 
             foreach (var dependency in point.Connected)
@@ -1248,159 +1265,159 @@ namespace Sheet
             }
         }
 
-        public void Move(double x, double y, IEnumerable<XPoint> points)
+        public void MoveDelta(double dx, double dy, IEnumerable<XPoint> points)
         {
             foreach (var point in points)
             {
-                Move(x, y, point);
+                MoveDelta(dx, dy, point);
             }
         }
 
-        public void Move(double x, double y, IEnumerable<XLine> lines)
+        public void MoveDelta(double dx, double dy, IEnumerable<XLine> lines)
         {
             foreach (var line in lines)
             {
                 if (line.Start == null)
                 {
-                    MoveStart(x, y, line);
+                    MoveDeltaStart(dx, dy, line);
                 }
 
                 if (line.End == null)
                 {
-                    MoveEnd(x, y, line);
+                    MoveDeltaEnd(dx, dy, line);
                 }
             }
         }
 
-        public void MoveStart(double x, double y, XLine line)
+        public void MoveDeltaStart(double dx, double dy, XLine line)
         {
             double oldx = _blockHelper.GetX1(line);
             double oldy = _blockHelper.GetY1(line);
-            _blockHelper.SetX1(line, oldx + x);
-            _blockHelper.SetY1(line, oldy + y);
+            _blockHelper.SetX1(line, oldx + dx);
+            _blockHelper.SetY1(line, oldy + dy);
         }
 
-        public void MoveEnd(double x, double y, XLine line)
+        public void MoveDeltaEnd(double dx, double dy, XLine line)
         {
             double oldx = _blockHelper.GetX2(line);
             double oldy = _blockHelper.GetY2(line);
-            _blockHelper.SetX2(line, oldx + x);
-            _blockHelper.SetY2(line, oldy + y);
+            _blockHelper.SetX2(line, oldx + dx);
+            _blockHelper.SetY2(line, oldy + dy);
         } 
 
-        public void Move(double x, double y, XRectangle rectangle)
+        public void MoveDelta(double dx, double dy, XRectangle rectangle)
         {
-            double left = _blockHelper.GetLeft(rectangle) + x;
-            double top = _blockHelper.GetTop(rectangle) + y;
+            double left = _blockHelper.GetLeft(rectangle) + dx;
+            double top = _blockHelper.GetTop(rectangle) + dy;
             _blockHelper.SetLeft(rectangle, left);
-            _blockHelper.SeTop(rectangle, top);
+            _blockHelper.SetTop(rectangle, top);
         }
 
-        public void Move(double x, double y, IEnumerable<XRectangle> rectangles)
+        public void MoveDelta(double dx, double dy, IEnumerable<XRectangle> rectangles)
         {
             foreach (var rectangle in rectangles)
             {
-                Move(x, y, rectangle);
+                MoveDelta(dx, dy, rectangle);
             }
         } 
 
-        public void Move(double x, double y, XEllipse ellipse)
+        public void MoveDelta(double dx, double dy, XEllipse ellipse)
         {
-            double left = _blockHelper.GetLeft(ellipse) + x;
-            double top = _blockHelper.GetTop(ellipse) + y;
+            double left = _blockHelper.GetLeft(ellipse) + dx;
+            double top = _blockHelper.GetTop(ellipse) + dy;
             _blockHelper.SetLeft(ellipse, left);
-            _blockHelper.SeTop(ellipse, top);
+            _blockHelper.SetTop(ellipse, top);
         }
 
-        public void Move(double x, double y, IEnumerable<XEllipse> ellipses)
+        public void MoveDelta(double dx, double dy, IEnumerable<XEllipse> ellipses)
         {
             foreach (var ellipse in ellipses)
             {
-                Move(x, y, ellipse);
+                MoveDelta(dx, dy, ellipse);
             }
         }
 
-        public void Move(double x, double y, XText text)
+        public void MoveDelta(double dx, double dy, XText text)
         {
-            double left = _blockHelper.GetLeft(text) + x;
-            double top = _blockHelper.GetTop(text) + y;
+            double left = _blockHelper.GetLeft(text) + dx;
+            double top = _blockHelper.GetTop(text) + dy;
             _blockHelper.SetLeft(text, left);
-            _blockHelper.SeTop(text, top);
+            _blockHelper.SetTop(text, top);
         }
 
-        public void Move(double x, double y, IEnumerable<XText> texts)
+        public void MoveDelta(double dx, double dy, IEnumerable<XText> texts)
         {
             foreach (var text in texts)
             {
-                Move(x, y, text);
+                MoveDelta(dx, dy, text);
             }
         }
 
-        public void Move(double x, double y, XImage image)
+        public void MoveDelta(double dx, double dy, XImage image)
         {
-            double left = _blockHelper.GetLeft(image) + x;
-            double top = _blockHelper.GetTop(image) + y;
+            double left = _blockHelper.GetLeft(image) + dx;
+            double top = _blockHelper.GetTop(image) + dy;
             _blockHelper.SetLeft(image, left);
-            _blockHelper.SeTop(image, top);
+            _blockHelper.SetTop(image, top);
         }
 
-        public void Move(double x, double y, IEnumerable<XImage> images)
+        public void MoveDelta(double dx, double dy, IEnumerable<XImage> images)
         {
             foreach (var image in images)
             {
-                Move(x, y, image);
+                MoveDelta(dx, dy, image);
             }
         }
 
-        public void Move(double x, double y, XBlock block)
+        public void MoveDelta(double dx, double dy, XBlock block)
         {
             if (block.Points != null)
             {
-                Move(x, y, block.Points);
+                MoveDelta(dx, dy, block.Points);
             }
 
             if (block.Lines != null)
             {
-                Move(x, y, block.Lines);
+                MoveDelta(dx, dy, block.Lines);
             }
 
             if (block.Rectangles != null)
             {
-                Move(x, y, block.Rectangles);
+                MoveDelta(dx, dy, block.Rectangles);
             }
 
             if (block.Ellipses != null)
             {
-                Move(x, y, block.Ellipses);
+                MoveDelta(dx, dy, block.Ellipses);
             }
 
             if (block.Texts != null)
             {
-                Move(x, y, block.Texts);
+                MoveDelta(dx, dy, block.Texts);
             }
 
             if (block.Images != null)
             {
-                Move(x, y, block.Images);
+                MoveDelta(dx, dy, block.Images);
             }
 
             if (block.Blocks != null)
             {
-                Move(x, y, block.Blocks);
+                MoveDelta(dx, dy, block.Blocks);
             }
         }
 
-        public void Move(double x, double y, IEnumerable<XBlock> blocks)
+        public void MoveDelta(double dx, double dy, IEnumerable<XBlock> blocks)
         {
             foreach (var block in blocks)
             {
-                Move(x, y, block.Points);
-                Move(x, y, block.Lines);
-                Move(x, y, block.Rectangles);
-                Move(x, y, block.Ellipses);
-                Move(x, y, block.Texts);
-                Move(x, y, block.Images);
-                Move(x, y, block.Blocks);
+                MoveDelta(dx, dy, block.Points);
+                MoveDelta(dx, dy, block.Lines);
+                MoveDelta(dx, dy, block.Rectangles);
+                MoveDelta(dx, dy, block.Ellipses);
+                MoveDelta(dx, dy, block.Texts);
+                MoveDelta(dx, dy, block.Images);
+                MoveDelta(dx, dy, block.Blocks);
             }
         }
 
