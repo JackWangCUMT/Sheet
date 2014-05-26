@@ -667,10 +667,13 @@ namespace Sheet
 
         private void CloseSolution()
         {
-            SolutionPath = null;
-            Solution.DataContext = null;
+            if (SolutionPath != null)
+            {
+                SolutionPath = null;
+                Solution.DataContext = null;
 
-            GetSheet().ResetPage();
+                GetSheet().ResetPage();
+            }
         }
 
         #endregion
