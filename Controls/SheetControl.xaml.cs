@@ -55,6 +55,36 @@ namespace Sheet
 
     #endregion
 
+    #region InputButton
+
+    //public enum InputButton
+    //{
+    //    None,
+    //    Left,
+    //    Right,
+    //    Middle
+    //} 
+
+    #endregion
+
+    #region InputArgs
+
+    //public class InputArgs
+    //{
+    //    // Mouse Generic
+    //    public bool OnlyControl { get; set; }
+    //    public bool OnlyShift { get; set; }
+    //    public ItemType SourceType { get; set; }
+    //    public XImmutablePoint Position { get; set; }
+    //    // Mouse Wheel
+    //    public int Delta { get; set; }
+    //    // Mouse Down
+    //    public InputButton Button { get; set; }
+    //    public int Clicks { get; set; }
+    //}
+
+    #endregion
+
     public partial class SheetControl : UserControl, IPageController, IPanAndZoomController
     {
         #region IoC
@@ -100,29 +130,29 @@ namespace Sheet
 
         #region Fields
 
-        private SheetOptions options = null;
+        private SheetOptions options;
 
-        private SheetMode mode = SheetMode.Selection;
-        private SheetMode tempMode = SheetMode.None;
+        private SheetMode mode;
+        private SheetMode tempMode;
 
-        private ISheet editorSheet = null;
-        private ISheet backSheet = null;
-        private ISheet contentSheet = null;
-        private ISheet overlaySheet = null;
+        private ISheet editorSheet;
+        private ISheet backSheet;
+        private ISheet contentSheet;
+        private ISheet overlaySheet;
 
-        private XBlock selectedBlock = null;
-        private XBlock contentBlock = null;
-        private XBlock frameBlock = null;
-        private XBlock gridBlock = null;
+        private XBlock selectedBlock;
+        private XBlock contentBlock;
+        private XBlock frameBlock;
+        private XBlock gridBlock;
 
-        private XLine tempLine = null;
-        private XEllipse tempStartEllipse = null;
-        private XEllipse tempEndEllipse = null;
-        private XRectangle tempRectangle = null;
-        private XEllipse tempEllipse = null;
-        private XRectangle tempSelectionRect = null;
+        private XLine tempLine;
+        private XEllipse tempStartEllipse;
+        private XEllipse tempEndEllipse;
+        private XRectangle tempRectangle;
+        private XEllipse tempEllipse;
+        private XRectangle tempSelectionRect;
 
-        private bool isFirstMove = true;
+        private bool isFirstMove;
         private XImmutablePoint panStartPoint;
         private XImmutablePoint selectionStartPoint;
         private double lastFinalWidth;
@@ -135,6 +165,10 @@ namespace Sheet
         public SheetControl()
         {
             InitializeComponent();
+
+            mode = SheetMode.Selection;
+            tempMode = SheetMode.None;
+            isFirstMove = true;
 
             Init();
 
@@ -2661,6 +2695,17 @@ namespace Sheet
             Point point = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
             XImmutablePoint position = new XImmutablePoint(point.X, point.Y);
 
+            //var args = new InputArgs()
+            //{
+            //    OnlyControl = onlyCtrl,
+            //    OnlyShift = onlyShift,
+            //    SourceType = sourceIsThumb ? ItemType.Thumb : ItemType.None,
+            //    Position = position,
+            //    Delta = 0,
+            //    Button = InputButton.Left,
+            //    Clicks = 1
+            //};
+
             // edit mode
             if (selectedType != ItemType.None)
             {
@@ -2778,7 +2823,7 @@ namespace Sheet
             }
         }
 
-        private void LeftUp()
+        private void LeftUp(MouseButtonEventArgs e)
         {
             if (GetMode() == SheetMode.Selection && overlaySheet.IsCaptured)
             {
@@ -2891,7 +2936,7 @@ namespace Sheet
             }
         }
 
-        private void RightUp()
+        private void RightUp(MouseButtonEventArgs e)
         {
             if (GetMode() == SheetMode.Pan && overlaySheet.IsCaptured)
             {
@@ -2933,7 +2978,7 @@ namespace Sheet
 
         private void UserControl_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            LeftUp();
+            LeftUp(e);
         }
 
         private void UserControl_PreviewMouseMove(object sender, MouseEventArgs e)
@@ -2949,7 +2994,7 @@ namespace Sheet
 
         private void UserControl_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
         {
-            RightUp();
+            RightUp(e);
         }
 
         private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
