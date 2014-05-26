@@ -213,7 +213,7 @@ namespace Sheet
 
         #region HitTest
 
-        public bool HitTest(XElement element, XBlockRect rect)
+        public bool HitTest(XElement element, XImmutableRect rect)
         {
             var r = new Rect(rect.X, rect.Y, rect.Width, rect.Height);
             var bounds = WpfVisualHelper.GetContentBounds(element);
@@ -224,7 +224,7 @@ namespace Sheet
             return false;
         }
 
-        public bool HitTest(XElement element, XBlockRect rect, object relativeTo)
+        public bool HitTest(XElement element, XImmutableRect rect, object relativeTo)
         {
             var r = new Rect(rect.X, rect.Y, rect.Width, rect.Height);
             var bounds = WpfVisualHelper.GetContentBounds(element, relativeTo);

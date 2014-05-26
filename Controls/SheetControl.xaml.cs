@@ -123,9 +123,10 @@ namespace Sheet
         private XRectangle tempSelectionRect = null;
 
         private bool isFirstMove = true;
-        private Point panStartPoint;
-        private Point selectionStartPoint;
-        private Size lastFinalSize = new Size();
+        private XImmutablePoint panStartPoint;
+        private XImmutablePoint selectionStartPoint;
+        private double lastFinalWidth;
+        private double lastFinalHeight;
 
         #endregion
 
@@ -677,7 +678,7 @@ namespace Sheet
                 StoreTempMode();
                 ModeTextEditor();
 
-                var tc = CreateTextEditor(new Point((editorSheet.Width / 2) - (330 / 2), editorSheet.Height / 2));
+                var tc = CreateTextEditor(new XImmutablePoint((editorSheet.Width / 2) - (330 / 2), editorSheet.Height / 2));
 
                 Action<string> ok = (name) =>
                 {
@@ -718,8 +719,8 @@ namespace Sheet
         #endregion
 
         #region Point Mode
-        
-        public XPoint InsertPoint(Point p, bool register, bool select)
+
+        public XPoint InsertPoint(XImmutablePoint p, bool register, bool select)
         {
             double thickness = options.LineThickness / Zoom;
             double x = _itemController.Snap(p.X, options.SnapSize);
@@ -784,32 +785,30 @@ namespace Sheet
             Move(options.SnapSize, 0.0);
         }
 
-        private bool CanInitMove(Point p)
+        private bool CanInitMove(XImmutablePoint p)
         {
             var temp = new XBlock(-1, options.PageOriginX, options.PageOriginY, options.PageWidth, options.PageHeight, -1, "TEMP");
-            _blockController.HitTestClick(contentSheet, selectedBlock, temp, new XBlockPoint(p.X, p.Y), options.HitTestSize, false, true);
-
+            _blockController.HitTestClick(contentSheet, selectedBlock, temp, p, options.HitTestSize, false, true);
             if (_blockController.HaveSelected(temp))
             {
                 return true;
             }
-
             return false;
         }
 
-        private void InitMove(Point p)
+        private void InitMove(XImmutablePoint p)
         {
             isFirstMove = true;
             StoreTempMode();
             ModeMove();
-            p.X = _itemController.Snap(p.X, options.SnapSize);
-            p.Y = _itemController.Snap(p.Y, options.SnapSize);
-            panStartPoint = p;
+            double x = _itemController.Snap(p.X, options.SnapSize);
+            double y = _itemController.Snap(p.Y, options.SnapSize);
+            panStartPoint = new XImmutablePoint(x, y);
             ResetOverlay();
             overlaySheet.Capture();
         }
 
-        private void Move(Point p)
+        private void Move(XImmutablePoint p)
         {
             if (isFirstMove)
             {
@@ -821,16 +820,16 @@ namespace Sheet
                 selectedBlock = moveBlock;
             }
 
-            p.X = _itemController.Snap(p.X, options.SnapSize);
-            p.Y = _itemController.Snap(p.Y, options.SnapSize);
+            double x = _itemController.Snap(p.X, options.SnapSize);
+            double y = _itemController.Snap(p.Y, options.SnapSize);
 
-            double dx = p.X - panStartPoint.X;
-            double dy = p.Y - panStartPoint.Y;
+            double dx = x - panStartPoint.X;
+            double dy = y - panStartPoint.Y;
 
             if (dx != 0.0 || dy != 0.0)
             {
                 _blockController.Move(dx, dy, selectedBlock);
-                panStartPoint = p;
+                panStartPoint = new XImmutablePoint(x, y);
             }
         }
 
@@ -887,7 +886,7 @@ namespace Sheet
 
         public void AutoFit()
         {
-            AutoFit(lastFinalSize);
+            AutoFit(lastFinalWidth, lastFinalHeight);
         }
 
         public void ActualSize()
@@ -918,21 +917,22 @@ namespace Sheet
             return index;
         }
 
-        public void SetAutoFitSize(Size finalSize)
+        public void SetAutoFitSize(double finalWidth, double finalHeight)
         {
-            lastFinalSize = finalSize;
+            lastFinalWidth = finalWidth;
+            lastFinalHeight = finalHeight;
         }
 
-        public void AutoFit(Size size)
+        public void AutoFit(double finalWidth, double finalHeight)
         {
             // calculate factor
-            double fwidth = size.Width / options.PageWidth;
-            double fheight = size.Height / options.PageHeight;
+            double fwidth = finalWidth / options.PageWidth;
+            double fheight = finalHeight / options.PageHeight;
             double factor = Math.Min(fwidth, fheight);
-            double panX = (size.Width - (options.PageWidth * factor)) / 2.0;
-            double panY = (size.Height - (options.PageHeight * factor)) / 2.0;
-            double dx = Math.Max(0, (size.Width - DesiredSize.Width) / 2.0);
-            double dy = Math.Max(0, (size.Height - DesiredSize.Height) / 2.0);
+            double panX = (finalWidth - (options.PageWidth * factor)) / 2.0;
+            double panY = (finalHeight - (options.PageHeight * factor)) / 2.0;
+            double dx = Math.Max(0, (finalWidth - DesiredSize.Width) / 2.0);
+            double dy = Math.Max(0, (finalHeight - DesiredSize.Height) / 2.0);
 
             // adjust zoom
             zoomIndex = FindZoomIndex(factor);
@@ -953,7 +953,7 @@ namespace Sheet
             PanY = (y * oldZoom + PanY) - y * newZoom;
         }
 
-        private void ZoomTo(int delta, Point p)
+        private void ZoomTo(int delta, XImmutablePoint p)
         {
             if (delta > 0)
             {
@@ -980,21 +980,21 @@ namespace Sheet
             return zoom.ScaleX;
         }
 
-        private void InitPan(Point p)
+        private void InitPan(XImmutablePoint p)
         {
             StoreTempMode();
             ModePan();
-            panStartPoint = p;
+            panStartPoint = new XImmutablePoint(p.X, p.Y);
             ResetOverlay();
             Cursor = Cursors.ScrollAll;
             overlaySheet.Capture();
         }
 
-        private void Pan(Point p)
+        private void Pan(XImmutablePoint p)
         {
             PanX = PanX + p.X - panStartPoint.X;
             PanY = PanY + p.Y - panStartPoint.Y;
-            panStartPoint = p;
+            panStartPoint = new XImmutablePoint(p.X, p.Y);
         }
 
         private void FinishPan()
@@ -1120,9 +1120,9 @@ namespace Sheet
             return xrect;
         }
 
-        private void InitSelectionRect(Point p)
+        private void InitSelectionRect(XImmutablePoint p)
         {
-            selectionStartPoint = p;
+            selectionStartPoint = new XImmutablePoint(p.X, p.Y);
             double x = p.X;
             double y = p.Y;
             tempSelectionRect = CreateSelectionRectangle(options.SelectionThickness / Zoom, x, y, 0.0, 0.0);
@@ -1130,7 +1130,7 @@ namespace Sheet
             overlaySheet.Capture();
         }
 
-        private void MoveSelectionRect(Point p)
+        private void MoveSelectionRect(XImmutablePoint p)
         {
             double sx = selectionStartPoint.X;
             double sy = selectionStartPoint.Y;
@@ -1159,7 +1159,7 @@ namespace Sheet
             // get selected items
             bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
             bool resetSelected = ctrl && _blockController.HaveSelected(selectedBlock) ? false : true;
-            _blockController.HitTestSelectionRect(contentSheet, contentBlock, selectedBlock, new XBlockRect(x, y, width, height), resetSelected);
+            _blockController.HitTestSelectionRect(contentSheet, contentBlock, selectedBlock, new XImmutableRect(x, y, width, height), resetSelected);
 
             // edit mode
             TryToEditSelected();
@@ -1176,10 +1176,10 @@ namespace Sheet
 
         #region Line Mode
 
-        private XPoint TryToFindPoint(Point p)
+        private XPoint TryToFindPoint(XImmutablePoint p)
         {
             var temp = new XBlock(-1, options.PageOriginX, options.PageOriginY, options.PageWidth, options.PageHeight, -1, "TEMP");
-            _blockController.HitTestClick(contentSheet, contentBlock, temp, new XBlockPoint(p.X, p.Y), options.HitTestSize, true, true);
+            _blockController.HitTestClick(contentSheet, contentBlock, temp, p, options.HitTestSize, true, true);
 
             if (_blockController.HaveOnePointSelected(temp))
             {
@@ -1191,8 +1191,8 @@ namespace Sheet
             _blockController.Deselect(temp);
             return null;
         }
-        
-        private void InitTempLine(Point p, XPoint start)
+
+        private void InitTempLine(XImmutablePoint p, XPoint start)
         {
             double x = _itemController.Snap(p.X, options.SnapSize);
             double y = _itemController.Snap(p.Y, options.SnapSize);
@@ -1213,7 +1213,7 @@ namespace Sheet
             overlaySheet.Capture();
         }
 
-        private void MoveTempLine(Point p)
+        private void MoveTempLine(XImmutablePoint p)
         {
             double x = _itemController.Snap(p.X, options.SnapSize);
             double y = _itemController.Snap(p.Y, options.SnapSize);
@@ -1285,17 +1285,17 @@ namespace Sheet
 
         #region Rectangle Mode
 
-        private void InitTempRect(Point p)
+        private void InitTempRect(XImmutablePoint p)
         {
             double x = _itemController.Snap(p.X, options.SnapSize);
             double y = _itemController.Snap(p.Y, options.SnapSize);
-            selectionStartPoint = new Point(x, y);
+            selectionStartPoint = new XImmutablePoint(x, y);
             tempRectangle = _blockFactory.CreateRectangle(options.LineThickness / Zoom, x, y, 0.0, 0.0, true);
             overlaySheet.Add(tempRectangle);
             overlaySheet.Capture();
         }
 
-        private void MoveTempRect(Point p)
+        private void MoveTempRect(XImmutablePoint p)
         {
             double sx = selectionStartPoint.X;
             double sy = selectionStartPoint.Y;
@@ -1344,17 +1344,17 @@ namespace Sheet
 
         #region Ellipse Mode
 
-        private void InitTempEllipse(Point p)
+        private void InitTempEllipse(XImmutablePoint p)
         {
             double x = _itemController.Snap(p.X, options.SnapSize);
             double y = _itemController.Snap(p.Y, options.SnapSize);
-            selectionStartPoint = new Point(x, y);
+            selectionStartPoint = new XImmutablePoint(x, y);
             tempEllipse = _blockFactory.CreateEllipse(options.LineThickness / Zoom, x, y, 0.0, 0.0, true);
             overlaySheet.Add(tempEllipse);
             overlaySheet.Capture();
         }
 
-        private void MoveTempEllipse(Point p)
+        private void MoveTempEllipse(XImmutablePoint p)
         {
             double sx = selectionStartPoint.X;
             double sy = selectionStartPoint.Y;
@@ -1404,7 +1404,7 @@ namespace Sheet
 
         #region Text Mode
 
-        private TextControl CreateTextEditor(Point p)
+        private TextControl CreateTextEditor(XImmutablePoint p)
         {
             var tc = new TextControl() { Width = 330.0, Background = Brushes.WhiteSmoke };
             tc.RenderTransform = null;
@@ -1413,7 +1413,7 @@ namespace Sheet
             return tc;
         }
 
-        private void CreateText(Point p)
+        private void CreateText(XImmutablePoint p)
         {
             double x = _itemController.Snap(p.X, options.SnapSize);
             double y = _itemController.Snap(p.Y, options.SnapSize);
@@ -1423,10 +1423,10 @@ namespace Sheet
             contentSheet.Add(text);
         }
 
-        private bool TryToEditText(Point p)
+        private bool TryToEditText(XImmutablePoint p)
         {
             var temp = new XBlock(-1, options.PageOriginX, options.PageOriginY, options.PageWidth, options.PageHeight, -1, "TEMP");
-            _blockController.HitTestClick(contentSheet, contentBlock, temp, new XBlockPoint(p.X, p.Y), options.HitTestSize, true, true);
+            _blockController.HitTestClick(contentSheet, contentBlock, temp, p, options.HitTestSize, true, true);
 
             if (_blockController.HaveOneTextSelected(temp))
             {
@@ -1435,7 +1435,7 @@ namespace Sheet
                 StoreTempMode();
                 ModeTextEditor();
 
-                var tc = CreateTextEditor(new Point((editorSheet.Width / 2) - (330 / 2), editorSheet.Height / 2) /* p */);
+                var tc = CreateTextEditor(new XImmutablePoint((editorSheet.Width / 2) - (330 / 2), editorSheet.Height / 2) /* p */);
 
                 Action<string> ok = (text) =>
                 {
@@ -1468,7 +1468,7 @@ namespace Sheet
 
         #region Image Mode
 
-        private void Image(Point p)
+        private void Image(XImmutablePoint p)
         {
             var dlg = new Microsoft.Win32.OpenFileDialog()
             {
@@ -1489,7 +1489,7 @@ namespace Sheet
             }
         }
 
-        private void InsertImage(Point p, string path)
+        private void InsertImage(XImmutablePoint p, string path)
         {
             byte[] data = _base64.ReadAllBytes(path);
             double x = _itemController.Snap(p.X, options.SnapSize);
@@ -1976,10 +1976,10 @@ namespace Sheet
 
         #region Data Binding
 
-        private bool BindDataToBlock(Point p, DataItem dataItem)
+        private bool BindDataToBlock(XImmutablePoint p, DataItem dataItem)
         {
             var temp = new XBlock(-1, options.PageOriginX, options.PageOriginY, options.PageWidth, options.PageHeight, -1, "TEMP");
-            _blockController.HitTestForBlocks(contentSheet, contentBlock, temp, new XBlockPoint(p.X, p.Y), options.HitTestSize);
+            _blockController.HitTestForBlocks(contentSheet, contentBlock, temp, p, options.HitTestSize);
 
             if (_blockController.HaveOneBlockSelected(temp))
             {
@@ -2027,7 +2027,7 @@ namespace Sheet
             return false;
         }
 
-        private void TryToBindData(Point p, DataItem dataItem)
+        private void TryToBindData(XImmutablePoint p, DataItem dataItem)
         {
             // first try binding to existing block
             bool firstTryResult = BindDataToBlock(p, dataItem);
@@ -2322,7 +2322,7 @@ namespace Sheet
 
         #region Library
 
-        private void Insert(Point p)
+        private void Insert(XImmutablePoint p)
         {
             if (Library != null)
             {
@@ -2331,7 +2331,7 @@ namespace Sheet
             }
         }
 
-        private XBlock Insert(BlockItem blockItem, Point p, bool select)
+        private XBlock Insert(BlockItem blockItem, XImmutablePoint p, bool select)
         {
             _blockController.DeselectContent(selectedBlock);
             double thickness = options.LineThickness / Zoom;
@@ -2653,17 +2653,18 @@ namespace Sheet
 
         #region Wpf: Events
 
-        private void UserControl_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void LeftDown(MouseButtonEventArgs e)
         {
-            Focus();
-
-            bool onlyControl = Keyboard.Modifiers == ModifierKeys.Control;
+            bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
+            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
+            bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
+            Point point = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
+            XImmutablePoint position = new XImmutablePoint(point.X, point.Y);
 
             // edit mode
             if (selectedType != ItemType.None)
             {
-                var source = (e.OriginalSource as FrameworkElement).TemplatedParent;
-                if (!(source is Thumb))
+                if (!sourceIsThumb)
                 {
                     _blockController.DeselectContent(selectedBlock);
                     FinishEdit();
@@ -2681,67 +2682,66 @@ namespace Sheet
             }
 
             // move mode
-            if (!onlyControl)
+            if (!onlyCtrl)
             {
-                if (_blockController.HaveSelected(selectedBlock) && CanInitMove(e.GetPosition(overlaySheet.GetParent() as FrameworkElement)))
+                if (_blockController.HaveSelected(selectedBlock) && CanInitMove(position))
                 {
-                    InitMove(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                    InitMove(position);
                     return;
                 }
 
                 _blockController.DeselectContent(selectedBlock);
             }
 
-            bool resetSelected = onlyControl && _blockController.HaveSelected(selectedBlock) ? false : true;
+            bool resetSelected = onlyCtrl && _blockController.HaveSelected(selectedBlock) ? false : true;
 
             if (GetMode() == SheetMode.Selection)
             {
-                var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
-                bool result = _blockController.HitTestClick(contentSheet, contentBlock, selectedBlock, new XBlockPoint(p.X, p.Y), options.HitTestSize, false, resetSelected);
-                if ((onlyControl || !_blockController.HaveSelected(selectedBlock)) && !result)
+                bool result = _blockController.HitTestClick(contentSheet, contentBlock, selectedBlock, new XImmutablePoint(position.X, position.Y), options.HitTestSize, false, resetSelected);
+                if ((onlyCtrl || !_blockController.HaveSelected(selectedBlock)) && !result)
                 {
-                    InitSelectionRect(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                    InitSelectionRect(position);
                 }
                 else
                 {
                     // TODO: If control key is pressed then switch to move mode instead to edit mode
-                    bool editModeEnabled = onlyControl == true ? false : TryToEditSelected();
+                    bool editModeEnabled = onlyCtrl == true ? false : TryToEditSelected();
                     if (!editModeEnabled)
                     {
-                        InitMove(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                        InitMove(position);
                     }
                 }
             }
             else if (GetMode() == SheetMode.Insert && !overlaySheet.IsCaptured)
             {
-                Insert(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                Insert(position);
             }
             else if (GetMode() == SheetMode.Point && !overlaySheet.IsCaptured)
             {
-                InsertPoint(e.GetPosition(overlaySheet.GetParent() as FrameworkElement), true, true);
+                InsertPoint(position, true, true);
             }
             else if (GetMode() == SheetMode.Line && !overlaySheet.IsCaptured)
             {
                 // try to find point to connect line start
-                var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
+                var p = position;
                 XPoint start = TryToFindPoint(p);
 
                 // create start if Control key is pressed and start point has not been found
-                if (onlyControl && start == null)
+                if (onlyCtrl && start == null)
                 {
                     start = InsertPoint(p, true, false);
                 }
 
-                InitTempLine(e.GetPosition(overlaySheet.GetParent() as FrameworkElement), start);
+                InitTempLine(position, start);
             }
             else if (GetMode() == SheetMode.Line && overlaySheet.IsCaptured)
             {
                 // try to find point to connect line end
-                var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
+                var p = position;
                 XPoint end = TryToFindPoint(p);
 
                 // create end point if Control key is pressed and end point has not been found
-                if (onlyControl && end == null)
+                if (onlyCtrl && end == null)
                 {
                     end = InsertPoint(p, true, false);
                 }
@@ -2750,7 +2750,7 @@ namespace Sheet
             }
             else if (GetMode() == SheetMode.Rectangle && !overlaySheet.IsCaptured)
             {
-                InitTempRect(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                InitTempRect(position);
             }
             else if (GetMode() == SheetMode.Rectangle && overlaySheet.IsCaptured)
             {
@@ -2758,7 +2758,7 @@ namespace Sheet
             }
             else if (GetMode() == SheetMode.Ellipse && !overlaySheet.IsCaptured)
             {
-                InitTempEllipse(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                InitTempEllipse(position);
             }
             else if (GetMode() == SheetMode.Ellipse && overlaySheet.IsCaptured)
             {
@@ -2770,15 +2770,15 @@ namespace Sheet
             }
             else if (GetMode() == SheetMode.Text && !overlaySheet.IsCaptured)
             {
-                CreateText(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                CreateText(position);
             }
             else if (GetMode() == SheetMode.Image && !overlaySheet.IsCaptured)
             {
-                Image(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                Image(position);
             }
         }
 
-        private void UserControl_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void LeftUp()
         {
             if (GetMode() == SheetMode.Selection && overlaySheet.IsCaptured)
             {
@@ -2790,14 +2790,16 @@ namespace Sheet
             }
         }
 
-        private void UserControl_PreviewMouseMove(object sender, MouseEventArgs e)
+        private void Move(MouseEventArgs e)
         {
+            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
+            Point point = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
+            XImmutablePoint position = new XImmutablePoint(point.X, point.Y);
+
             if (GetMode() == SheetMode.Edit)
             {
                 return;
             }
-
-            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
 
             // mouse over selection when holding Shift key
             if (onlyShift && tempSelectionRect == null && !overlaySheet.IsCaptured)
@@ -2807,39 +2809,40 @@ namespace Sheet
                     _blockController.DeselectContent(selectedBlock);
                 }
 
-                var p = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
-                _blockController.HitTestClick(contentSheet, contentBlock, selectedBlock, new XBlockPoint(p.X, p.Y), options.HitTestSize, false, false);
+                _blockController.HitTestClick(contentSheet, contentBlock, selectedBlock, position, options.HitTestSize, false, false);
             }
 
             if (GetMode() == SheetMode.Selection && overlaySheet.IsCaptured)
             {
-                MoveSelectionRect(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                MoveSelectionRect(position);
             }
             else if (GetMode() == SheetMode.Line && overlaySheet.IsCaptured)
             {
-                MoveTempLine(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                MoveTempLine(position);
             }
             else if (GetMode() == SheetMode.Rectangle && overlaySheet.IsCaptured)
             {
-                MoveTempRect(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                MoveTempRect(position);
             }
             else if (GetMode() == SheetMode.Ellipse && overlaySheet.IsCaptured)
             {
-                MoveTempEllipse(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                MoveTempEllipse(position);
             }
             else if (GetMode() == SheetMode.Pan && overlaySheet.IsCaptured)
             {
-                Pan(e.GetPosition(this));
+                var p = e.GetPosition(this);
+                Pan(new XImmutablePoint(p.X, p.Y));
             }
             else if (GetMode() == SheetMode.Move && overlaySheet.IsCaptured)
             {
-                Move(e.GetPosition(overlaySheet.GetParent() as FrameworkElement));
+                Move(position);
             }
         }
 
-        private void UserControl_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        private void RightDown(MouseButtonEventArgs e)
         {
-            Focus();
+            Point point = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
+            XImmutablePoint position = new XImmutablePoint(point.X, point.Y);
 
             if (GetMode() == SheetMode.None || GetMode() == SheetMode.TextEditor)
             {
@@ -2855,37 +2858,40 @@ namespace Sheet
             }
 
             // text editor
-            if (TryToEditText(e.GetPosition(overlaySheet.GetParent() as FrameworkElement)))
+            if (GetMode() == SheetMode.Text && TryToEditText(position))
             {
                 e.Handled = true;
                 return;
             }
+            else
+            {
+                _blockController.DeselectContent(selectedBlock);
 
-            _blockController.DeselectContent(selectedBlock);
-
-            if (GetMode() == SheetMode.Selection && overlaySheet.IsCaptured)
-            {
-                CancelSelectionRect();
-            }
-            else if (GetMode() == SheetMode.Line && overlaySheet.IsCaptured)
-            {
-                CancelTempLine();
-            }
-            else if (GetMode() == SheetMode.Rectangle && overlaySheet.IsCaptured)
-            {
-                CancelTempRect();
-            }
-            else if (GetMode() == SheetMode.Ellipse && overlaySheet.IsCaptured)
-            {
-                CancelTempEllipse();
-            }
-            else if (!overlaySheet.IsCaptured)
-            {
-                InitPan(e.GetPosition(this));
+                if (GetMode() == SheetMode.Selection && overlaySheet.IsCaptured)
+                {
+                    CancelSelectionRect();
+                }
+                else if (GetMode() == SheetMode.Line && overlaySheet.IsCaptured)
+                {
+                    CancelTempLine();
+                }
+                else if (GetMode() == SheetMode.Rectangle && overlaySheet.IsCaptured)
+                {
+                    CancelTempRect();
+                }
+                else if (GetMode() == SheetMode.Ellipse && overlaySheet.IsCaptured)
+                {
+                    CancelTempEllipse();
+                }
+                else if (!overlaySheet.IsCaptured)
+                {
+                    var p = e.GetPosition(this);
+                    InitPan(new XImmutablePoint(p.X, p.Y));
+                }
             }
         }
 
-        private void UserControl_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        private void RightUp()
         {
             if (GetMode() == SheetMode.Pan && overlaySheet.IsCaptured)
             {
@@ -2893,12 +2899,14 @@ namespace Sheet
             }
         }
 
-        private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        private void Wheel(MouseWheelEventArgs e)
         {
-            ZoomTo(e.Delta, e.GetPosition(Layout));
+            int d = e.Delta;
+            var p = e.GetPosition(Layout);
+            ZoomTo(d, new XImmutablePoint(p.X, p.Y));
         }
 
-        private void UserControl_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        private void Down(MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
             {
@@ -2917,6 +2925,43 @@ namespace Sheet
             }
         }
 
+        private void UserControl_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            Focus();
+            LeftDown(e);
+        }
+
+        private void UserControl_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            LeftUp();
+        }
+
+        private void UserControl_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            Move(e);
+        }
+
+        private void UserControl_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            Focus();
+            RightDown(e);
+        }
+
+        private void UserControl_PreviewMouseRightButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            RightUp();
+        }
+
+        private void UserControl_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            Wheel(e);
+        }
+
+        private void UserControl_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            Down(e);
+        }
+
         #endregion
 
         #region Wpf: Drop
@@ -2931,12 +2976,15 @@ namespace Sheet
 
         private void UserControl_Drop(object sender, DragEventArgs e)
         {
+            Point point = e.GetPosition(overlaySheet.GetParent() as FrameworkElement);
+            XImmutablePoint position = new XImmutablePoint(point.X, point.Y);
+
             if (e.Data.GetDataPresent("Block"))
             {
                 var blockItem = e.Data.GetData("Block") as BlockItem;
                 if (blockItem != null)
                 {
-                    Insert(blockItem, e.GetPosition(overlaySheet.GetParent() as FrameworkElement), true);
+                    Insert(blockItem, position, true);
                     e.Handled = true;
                 }
             }
@@ -2945,7 +2993,7 @@ namespace Sheet
                 var dataItem = e.Data.GetData("Data") as DataItem;
                 if (dataItem != null)
                 {
-                    TryToBindData(e.GetPosition(overlaySheet.GetParent() as FrameworkElement), dataItem);
+                    TryToBindData(position, dataItem);
                     e.Handled = true;
                 }
             }

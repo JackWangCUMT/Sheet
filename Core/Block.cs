@@ -8,12 +8,6 @@ namespace Sheet
 {
     #region Block Model
 
-    public abstract class XElement
-    {
-        public int Id { get; set; }
-        public object Element { get; set; }
-    }
-
     public enum XHorizontalAlignment
     {
         Left = 0,
@@ -28,30 +22,38 @@ namespace Sheet
         Bottom = 2
     }
 
-    public class XBlockPoint
+    public struct XImmutablePoint
     {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public XBlockPoint(double x, double y)
+        public double X { get; private set; }
+        public double Y { get; private set; }
+        public XImmutablePoint(double x, double y)
+            : this()
         {
             X = x;
             Y = y;
         }
     }
 
-    public class XBlockRect
+    public struct XImmutableRect
     {
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
-        public XBlockRect(double x, double y, double width, double height)
+        public double X { get; private set; }
+        public double Y { get; private set; }
+        public double Width { get; private set; }
+        public double Height { get; private set; }
+        public XImmutableRect(double x, double y, double width, double height)
+            : this()
         {
             X = x;
             Y = y;
             Width = width;
             Height = height;
         }
+    }
+
+    public abstract class XElement
+    {
+        public int Id { get; set; }
+        public object Element { get; set; }
     }
 
     public class XThumb : XElement
@@ -1921,7 +1923,7 @@ namespace Sheet
             }
         }
 
-        public bool HitTest(IEnumerable<XPoint> points, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<XPoint> points, XBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var point in points)
             {
@@ -1950,7 +1952,7 @@ namespace Sheet
             return false;
         }
 
-        public bool HitTest(IEnumerable<XLine> lines, XBlock selected, XBlockRect rect, bool onlyFirst, bool select)
+        public bool HitTest(IEnumerable<XLine> lines, XBlock selected, XImmutableRect rect, bool onlyFirst, bool select)
         {
             foreach (var line in lines)
             {
@@ -1979,7 +1981,7 @@ namespace Sheet
             return false;
         }
 
-        public bool HitTest(IEnumerable<XRectangle> rectangles, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<XRectangle> rectangles, XBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var rectangle in rectangles)
             {
@@ -2008,7 +2010,7 @@ namespace Sheet
             return false;
         }
 
-        public bool HitTest(IEnumerable<XEllipse> ellipses, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<XEllipse> ellipses, XBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var ellipse in ellipses)
             {
@@ -2037,7 +2039,7 @@ namespace Sheet
             return false;
         }
 
-        public bool HitTest(IEnumerable<XText> texts, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<XText> texts, XBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var text in texts)
             {
@@ -2066,7 +2068,7 @@ namespace Sheet
             return false;
         }
 
-        public bool HitTest(IEnumerable<XImage> images, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<XImage> images, XBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var image in images)
             {
@@ -2095,7 +2097,7 @@ namespace Sheet
             return false;
         }
 
-        public bool HitTest(IEnumerable<XBlock> blocks, XBlock selected, XBlockRect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo)
+        public bool HitTest(IEnumerable<XBlock> blocks, XBlock selected, XImmutableRect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo)
         {
             foreach (var block in blocks)
             {
@@ -2126,7 +2128,7 @@ namespace Sheet
             return false;
         }
 
-        public bool HitTest(XBlock parent, XBlock selected, XBlockRect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo)
+        public bool HitTest(XBlock parent, XBlock selected, XImmutableRect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo)
         {
             bool result = false;
 
@@ -2175,7 +2177,7 @@ namespace Sheet
             return false;
         }
 
-        public bool HitTestClick(ISheet sheet, XBlock parent, XBlock selected, XBlockPoint p, double size, bool selectInsideBlock, bool resetSelected)
+        public bool HitTestClick(ISheet sheet, XBlock parent, XBlock selected, XImmutablePoint p, double size, bool selectInsideBlock, bool resetSelected)
         {
             if (resetSelected)
             {
@@ -2186,7 +2188,7 @@ namespace Sheet
                 selected.ReInit();
             }
 
-            var rect = new XBlockRect(p.X - size, p.Y - size, 2 * size, 2 * size);
+            var rect = new XImmutableRect(p.X - size, p.Y - size, 2 * size, 2 * size);
 
             if (parent.Points != null)
             {
@@ -2262,11 +2264,11 @@ namespace Sheet
             return false;
         }
 
-        public bool HitTestForBlocks(ISheet sheet, XBlock parent, XBlock selected, XBlockPoint p, double size)
+        public bool HitTestForBlocks(ISheet sheet, XBlock parent, XBlock selected, XImmutablePoint p, double size)
         {
             selected.Init();
 
-            var rect = new XBlockRect(p.X - size, p.Y - size, 2 * size, 2 * size);
+            var rect = new XImmutableRect(p.X - size, p.Y - size, 2 * size, 2 * size);
 
             if (parent.Blocks != null)
             {
@@ -2282,7 +2284,7 @@ namespace Sheet
             return false;
         }
 
-        public void HitTestSelectionRect(ISheet sheet, XBlock parent, XBlock selected, XBlockRect rect, bool resetSelected)
+        public void HitTestSelectionRect(ISheet sheet, XBlock parent, XBlock selected, XImmutableRect rect, bool resetSelected)
         {
             if (resetSelected)
             {

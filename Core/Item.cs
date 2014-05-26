@@ -12,6 +12,7 @@ namespace Sheet
     public enum ItemType
     {
         None,
+        Thumb,
         Point,
         Line,
         Rectangle,

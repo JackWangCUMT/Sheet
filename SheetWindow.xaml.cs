@@ -103,7 +103,7 @@ namespace Sheet
 
         private void InitSizeBorder()
         {
-            SizeBorder.ExecuteUpdateSize = (size) => GetSheet().SetAutoFitSize(size);
+            SizeBorder.ExecuteUpdateSize = (size) => GetSheet().SetAutoFitSize(size.Width, size.Height);
             SizeBorder.ExecuteSizeChanged = () => GetSheet().AutoFit();
         }
 
