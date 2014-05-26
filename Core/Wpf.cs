@@ -409,9 +409,19 @@ namespace Sheet
             Canvas.SetLeft(element.Element as FrameworkElement, left);
         }
 
-        public void SeTop(XElement element, double top)
+        public void SetTop(XElement element, double top)
         {
             Canvas.SetTop(element.Element as FrameworkElement, top);
+        }
+
+        public void SetWidth(XElement element, double width)
+        {
+            (element.Element as FrameworkElement).Width = width;
+        }
+
+        public void SetHeight(XElement element, double height)
+        {
+            (element.Element as FrameworkElement).Height = height;
         }
 
         #endregion
@@ -463,6 +473,16 @@ namespace Sheet
             (line.Element as Line).Y2 = y2;
         }
 
+        public void SetStrokeThickness(XLine line, double thickness)
+        {
+            (line.Element as Line).StrokeThickness = thickness;
+        }
+
+        public double GetStrokeThickness(XLine line)
+        {
+            return (line.Element as Line).StrokeThickness;
+        }
+
         #endregion
 
         #region XRectangle
@@ -482,6 +502,16 @@ namespace Sheet
             return (rectangle.Element as Rectangle).Fill == WpfBlockFactory.TransparentBrush ? false : true;
         }
 
+        public void SetStrokeThickness(XRectangle rectangle, double thickness)
+        {
+            (rectangle.Element as Rectangle).StrokeThickness = thickness;
+        }
+
+        public double GetStrokeThickness(XRectangle rectangle)
+        {
+            return (rectangle.Element as Rectangle).StrokeThickness;
+        }
+
         #endregion
 
         #region XEllipse
@@ -499,6 +529,16 @@ namespace Sheet
         public bool IsTransparent(XEllipse ellipse)
         {
             return (ellipse.Element as Ellipse).Fill == WpfBlockFactory.TransparentBrush ? false : true;
+        }
+
+        public void SetStrokeThickness(XEllipse ellipse, double thickness)
+        {
+            (ellipse.Element as Ellipse).StrokeThickness = thickness;
+        }
+
+        public double GetStrokeThickness(XEllipse ellipse)
+        {
+            return (ellipse.Element as Ellipse).StrokeThickness;
         }
 
         #endregion
@@ -650,12 +690,18 @@ namespace Sheet
             return xline;
         }
 
-        public XRectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled)
+        public XRectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled, ItemColor stroke, ItemColor fill)
         {
+            var strokeBrush = new SolidColorBrush(Color.FromArgb(stroke.Alpha, stroke.Red, stroke.Green, stroke.Blue));
+            var fillBrush = new SolidColorBrush(Color.FromArgb(fill.Alpha, fill.Red, fill.Green, fill.Blue));
+
+            strokeBrush.Freeze();
+            fillBrush.Freeze();
+
             var rectangle = new Rectangle()
             {
-                Fill = isFilled ? NormalBrush : TransparentBrush,
-                Stroke = NormalBrush,
+                Fill = isFilled ? fillBrush : TransparentBrush,
+                Stroke = strokeBrush,
                 StrokeThickness = thickness,
                 StrokeStartLineCap = PenLineCap.Round,
                 StrokeEndLineCap = PenLineCap.Round,
@@ -671,12 +717,18 @@ namespace Sheet
             return xrectangle;
         }
 
-        public XEllipse CreateEllipse(double thickness, double x, double y, double width, double height, bool isFilled)
+        public XEllipse CreateEllipse(double thickness, double x, double y, double width, double height, bool isFilled, ItemColor stroke, ItemColor fill)
         {
+            var strokeBrush = new SolidColorBrush(Color.FromArgb(stroke.Alpha, stroke.Red, stroke.Green, stroke.Blue));
+            var fillBrush = new SolidColorBrush(Color.FromArgb(fill.Alpha, fill.Red, fill.Green, fill.Blue));
+
+            strokeBrush.Freeze();
+            fillBrush.Freeze();
+
             var ellipse = new Ellipse()
             {
-                Fill = isFilled ? NormalBrush : TransparentBrush,
-                Stroke = NormalBrush,
+                Fill = isFilled ? fillBrush : TransparentBrush,
+                Stroke = strokeBrush,
                 StrokeThickness = thickness,
                 StrokeStartLineCap = PenLineCap.Round,
                 StrokeEndLineCap = PenLineCap.Round,
