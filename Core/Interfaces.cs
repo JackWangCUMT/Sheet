@@ -42,108 +42,6 @@ namespace Sheet
 
     #endregion
 
-    #region IBlockHelper
-
-    public interface IBlockHelper
-    {
-        bool HitTest(XElement element, XImmutableRect rect);
-        bool HitTest(XElement element, XImmutableRect rect, object relativeTo);
-
-        void SetIsSelected(XElement element, bool value);
-        bool GetIsSelected(XElement element);
-
-        bool IsSelected(XPoint point);
-        bool IsSelected(XLine line);
-        bool IsSelected(XRectangle rectangle);
-        bool IsSelected(XEllipse ellipse);
-        bool IsSelected(XText text);
-        bool IsSelected(XImage image);
-
-        void Deselect(XPoint point);
-        void Deselect(XLine line);
-        void Deselect(XRectangle rectangle);
-        void Deselect(XEllipse ellipse);
-        void Deselect(XText text);
-        void Deselect(XImage image);
-
-        void Select(XPoint point);
-        void Select(XLine line);
-        void Select(XRectangle rectangle);
-        void Select(XEllipse ellipse);
-        void Select(XText text);
-        void Select(XImage image);
-
-        void SetZIndex(XElement element, int index);
-
-        void ToggleFill(XRectangle rectangle);
-        void ToggleFill(XEllipse ellipse);
-        void ToggleFill(XPoint point);
-
-        double GetLeft(XElement element);
-        double GetTop(XElement element);
-        double GetWidth(XElement element);
-        double GetHeight(XElement element);
-        void SetLeft(XElement element, double left);
-        void SeTop(XElement element, double top);
-
-        double GetX1(XLine line);
-        double GetY1(XLine line);
-        double GetX2(XLine line);
-        double GetY2(XLine line);
-        ItemColor GetStroke(XLine line);
-        void SetX1(XLine line, double x1);
-        void SetY1(XLine line, double y1);
-        void SetX2(XLine line, double x2);
-        void SetY2(XLine line, double y2);
-
-        ItemColor GetStroke(XRectangle rectangle);
-        ItemColor GetFill(XRectangle rectangle);
-        bool IsTransparent(XRectangle rectangle);
-
-        ItemColor GetStroke(XEllipse ellipse);
-        ItemColor GetFill(XEllipse ellipse);
-        bool IsTransparent(XEllipse ellipse);
-
-        ItemColor GetBackground(XText text);
-        ItemColor GetForeground(XText text);
-
-        string GetText(XText text);
-        int GetHAlign(XText text);
-        int GetVAlign(XText text);
-        double GetSize(XText text);
-
-        byte[] GetData(XImage image);
-    }
-
-    #endregion
-
-    #region IBlockFactory
-
-    public interface IBlockFactory
-    {
-        XPoint CreatePoint(double thickness, double x, double y, bool isVisible);
-        XLine CreateLine(double thickness, double x1, double y1, double x2, double y2, ItemColor stroke);
-        XLine CreateLine(double thickness, XPoint start, XPoint end, ItemColor stroke);
-        XRectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled);
-        XEllipse CreateEllipse(double thickness, double x, double y, double width, double height, bool isFilled);
-        XText CreateText(string text, double x, double y, double width, double height, int halign, int valign, double fontSize, ItemColor backgroud, ItemColor foreground);
-        XImage CreateImage(double x, double y, double width, double height, byte[] data);
-    }
-    
-    #endregion
-
-    #region IPageFactory
-
-    public interface IPageFactory
-    {
-        void CreateLine(ISheet sheet, List<XLine> lines, double thickness, double x1, double y1, double x2, double y2, ItemColor stroke);
-        void CreateText(ISheet sheet, List<XText> texts, string content, double x, double y, double width, double height, int halign, int valign, double size, ItemColor foreground);
-        void CreateFrame(ISheet sheet, XBlock block, double size, double thickness, ItemColor stroke);
-        void CreateGrid(ISheet sheet, XBlock block, double startX, double startY, double width, double height, double size, double thickness, ItemColor stroke);
-    }
-
-    #endregion
-
     #region IItemSerializer
 
     public interface IItemSerializer
@@ -152,7 +50,7 @@ namespace Sheet
         string SerializeContents(BlockItem block);
         BlockItem DeserializeContents(string model, ItemSerializeOptions options);
         BlockItem DeserializeContents(string model);
-    } 
+    }
 
     #endregion
 
@@ -166,7 +64,52 @@ namespace Sheet
         void ResetPosition(BlockItem block, double originX, double originY, double width, double height);
 
         double Snap(double val, double snap);
-    } 
+    }
+
+    #endregion
+
+    #region IEntrySerializer
+
+    public interface IEntrySerializer
+    {
+        void CreateEmpty(string path);
+        void Serialize(SolutionEntry solution, string path);
+        SolutionEntry Deserialize(string path);
+    }
+
+    #endregion
+
+    #region IEntryController
+
+    public interface IEntryController
+    {
+        PageEntry AddPage(DocumentEntry document, string content);
+        PageEntry AddPageBefore(DocumentEntry document, PageEntry beofore, string content);
+        PageEntry AddPageAfter(DocumentEntry document, PageEntry after, string content);
+        void AddPageAfter(object item);
+        void AddPageBefore(object item);
+        void DuplicatePage(object item);
+        void RemovePage(object item);
+
+        DocumentEntry AddDocumentBefore(SolutionEntry solution, DocumentEntry after);
+        DocumentEntry AddDocumentAfter(SolutionEntry solution, DocumentEntry after);
+        DocumentEntry AddDocument(SolutionEntry solution);
+        void DocumentAddPage(object item);
+        void AddDocumentAfter(object item);
+        void AddDocumentBefore(object item);
+        void DulicateDocument(object item);
+        void RemoveDocument(object item);
+    }
+
+    #endregion
+
+    #region IEntryFactory
+
+    public interface IEntryFactory
+    {
+        PageEntry CreatePage(DocumentEntry document, string content, string name = null);
+        DocumentEntry CreateDocument(SolutionEntry solution, string name = null);
+    }
 
     #endregion
 
@@ -217,21 +160,21 @@ namespace Sheet
         void Remove(ISheet sheet, XBlock block);
         void RemoveSelected(ISheet sheet, XBlock parent, XBlock selected);
 
-        void Move(double x, double y, XPoint point);
-        void Move(double x, double y, IEnumerable<XPoint> points);
-        void Move(double x, double y, IEnumerable<XLine> lines);
-        void MoveStart(double x, double y, XLine line);
-        void MoveEnd(double x, double y, XLine line);
-        void Move(double x, double y, XRectangle rectangle);
-        void Move(double x, double y, IEnumerable<XRectangle> rectangles);
-        void Move(double x, double y, XEllipse ellipse);
-        void Move(double x, double y, IEnumerable<XEllipse> ellipses);
-        void Move(double x, double y, XText text);
-        void Move(double x, double y, IEnumerable<XText> texts);
-        void Move(double x, double y, XImage image);
-        void Move(double x, double y, IEnumerable<XImage> images);
-        void Move(double x, double y, XBlock block);
-        void Move(double x, double y, IEnumerable<XBlock> blocks);
+        void MoveDelta(double dx, double dy, XPoint point);
+        void MoveDelta(double dx, double dy, IEnumerable<XPoint> points);
+        void MoveDelta(double dx, double dy, IEnumerable<XLine> lines);
+        void MoveDeltaStart(double dx, double dy, XLine line);
+        void MoveDeltaEnd(double dx, double dy, XLine line);
+        void MoveDelta(double dx, double dy, XRectangle rectangle);
+        void MoveDelta(double dx, double dy, IEnumerable<XRectangle> rectangles);
+        void MoveDelta(double dx, double dy, XEllipse ellipse);
+        void MoveDelta(double dx, double dy, IEnumerable<XEllipse> ellipses);
+        void MoveDelta(double dx, double dy, XText text);
+        void MoveDelta(double dx, double dy, IEnumerable<XText> texts);
+        void MoveDelta(double dx, double dy, XImage image);
+        void MoveDelta(double dx, double dy, IEnumerable<XImage> images);
+        void MoveDelta(double dx, double dy, XBlock block);
+        void MoveDelta(double dx, double dy, IEnumerable<XBlock> blocks);
 
         void Deselect(XPoint point);
         void Deselect(XLine line);
@@ -283,47 +226,158 @@ namespace Sheet
 
     #endregion
 
-    #region IEntrySerializer
+    #region IBlockFactory
 
-    public interface IEntrySerializer
+    public interface IBlockFactory
     {
-        void CreateEmpty(string path);
-        void Serialize(SolutionEntry solution, string path);
-        SolutionEntry Deserialize(string path);
+        XPoint CreatePoint(double thickness, double x, double y, bool isVisible);
+        XLine CreateLine(double thickness, double x1, double y1, double x2, double y2, ItemColor stroke);
+        XLine CreateLine(double thickness, XPoint start, XPoint end, ItemColor stroke);
+        XRectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled, ItemColor stroke, ItemColor fill);
+        XEllipse CreateEllipse(double thickness, double x, double y, double width, double height, bool isFilled, ItemColor stroke, ItemColor fill);
+        XText CreateText(string text, double x, double y, double width, double height, int halign, int valign, double fontSize, ItemColor backgroud, ItemColor foreground);
+        XImage CreateImage(double x, double y, double width, double height, byte[] data);
     }
 
     #endregion
 
-    #region IEntryController
+    #region IBlockHelper
 
-    public interface IEntryController
+    public interface IBlockHelper
     {
-        PageEntry AddPage(DocumentEntry document, string content);
-        PageEntry AddPageBefore(DocumentEntry document, PageEntry beofore, string content);
-        PageEntry AddPageAfter(DocumentEntry document, PageEntry after, string content);
-        void AddPageAfter(object item);
-        void AddPageBefore(object item);
-        void DuplicatePage(object item);
-        void RemovePage(object item);
+        bool HitTest(XElement element, XImmutableRect rect);
+        bool HitTest(XElement element, XImmutableRect rect, object relativeTo);
 
-        DocumentEntry AddDocumentBefore(SolutionEntry solution, DocumentEntry after);
-        DocumentEntry AddDocumentAfter(SolutionEntry solution, DocumentEntry after);
-        DocumentEntry AddDocument(SolutionEntry solution);
-        void DocumentAddPage(object item);
-        void AddDocumentAfter(object item);
-        void AddDocumentBefore(object item);
-        void DulicateDocument(object item);
-        void RemoveDocument(object item);
+        void SetIsSelected(XElement element, bool value);
+        bool GetIsSelected(XElement element);
+
+        bool IsSelected(XPoint point);
+        bool IsSelected(XLine line);
+        bool IsSelected(XRectangle rectangle);
+        bool IsSelected(XEllipse ellipse);
+        bool IsSelected(XText text);
+        bool IsSelected(XImage image);
+
+        void Deselect(XPoint point);
+        void Deselect(XLine line);
+        void Deselect(XRectangle rectangle);
+        void Deselect(XEllipse ellipse);
+        void Deselect(XText text);
+        void Deselect(XImage image);
+
+        void Select(XPoint point);
+        void Select(XLine line);
+        void Select(XRectangle rectangle);
+        void Select(XEllipse ellipse);
+        void Select(XText text);
+        void Select(XImage image);
+
+        void SetZIndex(XElement element, int index);
+
+        void ToggleFill(XRectangle rectangle);
+        void ToggleFill(XEllipse ellipse);
+        void ToggleFill(XPoint point);
+
+        double GetLeft(XElement element);
+        double GetTop(XElement element);
+        double GetWidth(XElement element);
+        double GetHeight(XElement element);
+        void SetLeft(XElement element, double left);
+        void SetTop(XElement element, double top);
+        void SetWidth(XElement element, double width);
+        void SetHeight(XElement element, double height);
+
+        double GetX1(XLine line);
+        double GetY1(XLine line);
+        double GetX2(XLine line);
+        double GetY2(XLine line);
+        ItemColor GetStroke(XLine line);
+        void SetX1(XLine line, double x1);
+        void SetY1(XLine line, double y1);
+        void SetX2(XLine line, double x2);
+        void SetY2(XLine line, double y2);
+        void SetStrokeThickness(XLine line, double thickness);
+        double GetStrokeThickness(XLine line);
+
+        ItemColor GetStroke(XRectangle rectangle);
+        ItemColor GetFill(XRectangle rectangle);
+        bool IsTransparent(XRectangle rectangle);
+        void SetStrokeThickness(XRectangle rectangle, double thickness);
+        double GetStrokeThickness(XRectangle rectangle);
+
+        ItemColor GetStroke(XEllipse ellipse);
+        ItemColor GetFill(XEllipse ellipse);
+        bool IsTransparent(XEllipse ellipse);
+        void SetStrokeThickness(XEllipse ellipse, double thickness);
+        double GetStrokeThickness(XEllipse ellipse);
+
+        ItemColor GetBackground(XText text);
+        ItemColor GetForeground(XText text);
+
+        string GetText(XText text);
+        int GetHAlign(XText text);
+        int GetVAlign(XText text);
+        double GetSize(XText text);
+
+        byte[] GetData(XImage image);
     }
 
     #endregion
 
-    #region IEntryFactory
+    #region IPointController
 
-    public interface IEntryFactory
+    public interface IPointController
     {
-        PageEntry CreatePage(DocumentEntry document, string content, string name = null);
-        DocumentEntry CreateDocument(SolutionEntry solution, string name = null);
+        void ConnectStart(XPoint point, XLine line);
+        void ConnectEnd(XPoint point, XLine line);
+        void UpdateDependencies(List<XBlock> blocks, List<XPoint> points, List<XLine> lines);
+    }
+
+    #endregion
+
+    #region IPageFactory
+
+    public interface IPageFactory
+    {
+        void CreateLine(ISheet sheet, List<XLine> lines, double thickness, double x1, double y1, double x2, double y2, ItemColor stroke);
+        void CreateText(ISheet sheet, List<XText> texts, string content, double x, double y, double width, double height, int halign, int valign, double size, ItemColor foreground);
+        void CreateFrame(ISheet sheet, XBlock block, double size, double thickness, ItemColor stroke);
+        void CreateGrid(ISheet sheet, XBlock block, double startX, double startY, double width, double height, double size, double thickness, ItemColor stroke);
+        
+        XRectangle CreateSelectionRectangle(double thickness, double x, double y, double width, double height);
+    }
+
+    #endregion
+
+    #region IPageController
+
+    public interface IPageController
+    {
+        IHistoryController History { get; set; }
+        ILibraryController Library { get; set; }
+        IPanAndZoomController PanAndZoom { get; set; }
+        void SetPage(string text);
+        string GetPage();
+        void ExportPage(string text);
+        void ExportPages(IEnumerable<string> texts);
+        BlockItem SerializePage();
+        void DeserializePage(BlockItem page);
+        void ResetPage();
+        void ResetPageContent();
+    }
+
+    #endregion
+
+    #region IPanAndZoomController
+
+    public interface IPanAndZoomController
+    {
+        int ZoomIndex { get; set; }
+        double Zoom { get; set; }
+        double PanX { get; set; }
+        double PanY { get; set; }
+        void AutoFit();
+        void ActualSize();
     }
 
     #endregion
@@ -398,50 +452,6 @@ namespace Sheet
     public interface ITextController
     {
         void Set(Action<string> ok, Action cancel, string title, string label, string text);
-    }
-
-    #endregion
-
-    #region IPageController
-
-    public interface IPageController
-    {
-        IHistoryController History { get; set; }
-        ILibraryController Library { get; set; }
-        IPanAndZoomController PanAndZoom { get; set; }
-        void SetPage(string text);
-        string GetPage();
-        void ExportPage(string text);
-        void ExportPages(IEnumerable<string> texts);
-        BlockItem SerializePage();
-        void DeserializePage(BlockItem page);
-        void ResetPage();
-        void ResetPageContent();
-    }
-
-    #endregion
-
-    #region IPanAndZoomController
-
-    public interface IPanAndZoomController
-    {
-        int ZoomIndex { get; set; }
-        double Zoom { get; set; }
-        double PanX { get; set; }
-        double PanY { get; set; }
-        void AutoFit();
-        void ActualSize();
-    }
-    
-    #endregion
-
-    #region IPointController
-
-    public interface IPointController
-    {
-        void ConnectStart(XPoint point, XLine line);
-        void ConnectEnd(XPoint point, XLine line);
-        void UpdateDependencies(List<XBlock> blocks, List<XPoint> points, List<XLine> lines);
     }
 
     #endregion
