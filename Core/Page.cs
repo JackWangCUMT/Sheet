@@ -301,6 +301,14 @@ namespace Sheet
             }
         }
 
+        public XRectangle CreateSelectionRectangle(double thickness, double x, double y, double width, double height)
+        {
+            var stroke = new ItemColor() { Alpha = 0x7A, Red = 0x00, Green = 0x00, Blue = 0xFF };
+            var fill = new ItemColor() { Alpha = 0x3A, Red = 0x00, Green = 0x00, Blue = 0xFF };
+            var xrect = _blockFactory.CreateRectangle(thickness, x, y, width, height, true, stroke, fill);
+            return xrect;
+        }
+
         #endregion
     }
 
