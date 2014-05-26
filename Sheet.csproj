@@ -104,6 +104,7 @@
     <Compile Include="Core\Item.cs" />
     <Compile Include="Core\Json.cs" />
     <Compile Include="Core\Page.cs" />
+    <Compile Include="Core\Plugins.cs" />
     <Compile Include="Core\Point.cs" />
     <Compile Include="Core\Wpf.cs" />
     <Compile Include="Controls\DatabasesControl.xaml.cs">
