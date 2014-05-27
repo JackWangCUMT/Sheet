@@ -11,6 +11,23 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
+    #region WpfClipboard
+
+    public class WpfClipboard : IClipboard
+    {
+        public void Set(string text)
+        {
+            Clipboard.SetData(DataFormats.UnicodeText, text);
+        }
+
+        public string Get()
+        {
+            return (string)Clipboard.GetData(DataFormats.UnicodeText);
+        }
+    } 
+
+    #endregion
+
     #region FrameworkElementProperties
 
     public static class FrameworkElementProperties
