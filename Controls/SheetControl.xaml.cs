@@ -173,6 +173,23 @@ namespace Sheet
 
         #endregion
 
+        #region Fields
+
+        private ItemType SelectedType = ItemType.None;
+        private string EditThumbTemplate = "<Thumb Cursor=\"SizeAll\" xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><Thumb.Template><ControlTemplate><Rectangle Fill=\"Transparent\" Stroke=\"Red\" StrokeThickness=\"2\" Width=\"8\" Height=\"8\" Margin=\"-4,-4,0,0\"/></ControlTemplate></Thumb.Template></Thumb>";
+
+        private XLine SelectedLine = null;
+        private XThumb LineThumbStart = null;
+        private XThumb LineThumbEnd = null;
+
+        private XElement SelectedElement = null;
+        private XThumb ThumbTopLeft = null;
+        private XThumb ThumbTopRight = null;
+        private XThumb ThumbBottomLeft = null;
+        private XThumb ThumbBottomRight = null;
+
+        #endregion
+
         #region Constructor
 
         public SheetControl()
@@ -634,14 +651,14 @@ namespace Sheet
                 TempSelectionRect = null;
             }
 
-            if (lineThumbStart != null)
+            if (LineThumbStart != null)
             {
-                OverlaySheet.Remove(lineThumbStart);
+                OverlaySheet.Remove(LineThumbStart);
             }
 
-            if (lineThumbEnd != null)
+            if (LineThumbEnd != null)
             {
-                OverlaySheet.Remove(lineThumbEnd);
+                OverlaySheet.Remove(LineThumbEnd);
             }
         }
 
@@ -1517,22 +1534,9 @@ namespace Sheet
 
         #region Edit Mode
 
-        private ItemType selectedType = ItemType.None;
-        private string editThumbTemplate = "<Thumb Cursor=\"SizeAll\" xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><Thumb.Template><ControlTemplate><Rectangle Fill=\"Transparent\" Stroke=\"Red\" StrokeThickness=\"2\" Width=\"8\" Height=\"8\" Margin=\"-4,-4,0,0\"/></ControlTemplate></Thumb.Template></Thumb>";
-
-        private XLine selectedLine = null;
-        private XThumb lineThumbStart = null;
-        private XThumb lineThumbEnd = null;
-
-        private XElement selectedElement = null;
-        private XThumb thumbTopLeft = null;
-        private XThumb thumbTopRight = null;
-        private XThumb thumbBottomLeft = null;
-        private XThumb thumbBottomRight = null;
-
         private XThumb CreateEditThumb()
         {
-            var stringReader = new System.IO.StringReader(editThumbTemplate);
+            var stringReader = new System.IO.StringReader(EditThumbTemplate);
             var xmlReader = System.Xml.XmlReader.Create(stringReader);
             var thumb = (Thumb)XamlReader.Load(xmlReader);
             return new XThumb(thumb);
@@ -1570,7 +1574,7 @@ namespace Sheet
 
         private void FinishEdit()
         {
-            switch (selectedType)
+            switch (SelectedType)
             {
                 case ItemType.Line:
                     FinishLineEditor();
@@ -1648,29 +1652,29 @@ namespace Sheet
             try
             {
                 var line = SelectedBlock.Lines.FirstOrDefault();
-                selectedType = ItemType.Line;
-                selectedLine = line;
+                SelectedType = ItemType.Line;
+                SelectedLine = line;
 
-                if (lineThumbStart == null)
+                if (LineThumbStart == null)
                 {
-                    lineThumbStart = CreateEditThumb();
-                    (lineThumbStart.Element as Thumb).DragDelta += (sender, e) => DragLineStart(selectedLine, lineThumbStart, e.HorizontalChange, e.VerticalChange);
+                    LineThumbStart = CreateEditThumb();
+                    (LineThumbStart.Element as Thumb).DragDelta += (sender, e) => DragLineStart(SelectedLine, LineThumbStart, e.HorizontalChange, e.VerticalChange);
                 }
 
-                if (lineThumbEnd == null)
+                if (LineThumbEnd == null)
                 {
-                    lineThumbEnd = CreateEditThumb();
-                    (lineThumbEnd.Element as Thumb).DragDelta += (sender, e) => DragLineEnd(selectedLine, lineThumbEnd, e.HorizontalChange, e.VerticalChange);
+                    LineThumbEnd = CreateEditThumb();
+                    (LineThumbEnd.Element as Thumb).DragDelta += (sender, e) => DragLineEnd(SelectedLine, LineThumbEnd, e.HorizontalChange, e.VerticalChange);
                 }
 
 
-                _blockHelper.SetLeft(lineThumbStart, _blockHelper.GetX1(line));
-                _blockHelper.SetTop(lineThumbStart, _blockHelper.GetY1(line));
-                _blockHelper.SetLeft(lineThumbEnd, _blockHelper.GetX2(line));
-                _blockHelper.SetTop(lineThumbEnd, _blockHelper.GetY2(line));
+                _blockHelper.SetLeft(LineThumbStart, _blockHelper.GetX1(line));
+                _blockHelper.SetTop(LineThumbStart, _blockHelper.GetY1(line));
+                _blockHelper.SetLeft(LineThumbEnd, _blockHelper.GetX2(line));
+                _blockHelper.SetTop(LineThumbEnd, _blockHelper.GetY2(line));
 
-                OverlaySheet.Add(lineThumbStart);
-                OverlaySheet.Add(lineThumbEnd);
+                OverlaySheet.Add(LineThumbStart);
+                OverlaySheet.Add(LineThumbEnd);
             }
             catch (Exception ex)
             {
@@ -1683,17 +1687,17 @@ namespace Sheet
         {
             RestoreTempMode();
 
-            selectedType = ItemType.None;
-            selectedLine = null;
+            SelectedType = ItemType.None;
+            SelectedLine = null;
 
-            if (lineThumbStart != null)
+            if (LineThumbStart != null)
             {
-                OverlaySheet.Remove(lineThumbStart);
+                OverlaySheet.Remove(LineThumbStart);
             }
 
-            if (lineThumbEnd != null)
+            if (LineThumbEnd != null)
             {
-                OverlaySheet.Remove(lineThumbEnd);
+                OverlaySheet.Remove(LineThumbEnd);
             }
         }
 
@@ -1708,14 +1712,14 @@ namespace Sheet
             var bl = rect.BottomLeft;
             var br = rect.BottomRight;
 
-            _blockHelper.SetLeft(thumbTopLeft, tl.X);
-            _blockHelper.SetTop(thumbTopLeft, tl.Y);
-            _blockHelper.SetLeft(thumbTopRight, tr.X);
-            _blockHelper.SetTop(thumbTopRight, tr.Y);
-            _blockHelper.SetLeft(thumbBottomLeft, bl.X);
-            _blockHelper.SetTop(thumbBottomLeft, bl.Y);
-            _blockHelper.SetLeft(thumbBottomRight, br.X);
-            _blockHelper.SetTop(thumbBottomRight, br.Y);
+            _blockHelper.SetLeft(ThumbTopLeft, tl.X);
+            _blockHelper.SetTop(ThumbTopLeft, tl.Y);
+            _blockHelper.SetLeft(ThumbTopRight, tr.X);
+            _blockHelper.SetTop(ThumbTopRight, tr.Y);
+            _blockHelper.SetLeft(ThumbBottomLeft, bl.X);
+            _blockHelper.SetTop(ThumbBottomLeft, bl.Y);
+            _blockHelper.SetLeft(ThumbBottomRight, br.X);
+            _blockHelper.SetTop(ThumbBottomRight, br.Y);
         }
 
         private void DragTopLeft(XElement element, XThumb thumb, double dx, double dy)
@@ -1812,75 +1816,75 @@ namespace Sheet
 
         private void InitFrameworkElementEditor()
         {
-            if (thumbTopLeft == null)
+            if (ThumbTopLeft == null)
             {
-                thumbTopLeft = CreateEditThumb();
-                (thumbTopLeft.Element as Thumb).DragDelta += (sender, e) => DragTopLeft(selectedElement, thumbTopLeft, e.HorizontalChange, e.VerticalChange);
+                ThumbTopLeft = CreateEditThumb();
+                (ThumbTopLeft.Element as Thumb).DragDelta += (sender, e) => DragTopLeft(SelectedElement, ThumbTopLeft, e.HorizontalChange, e.VerticalChange);
             }
 
-            if (thumbTopRight == null)
+            if (ThumbTopRight == null)
             {
-                thumbTopRight = CreateEditThumb();
-                (thumbTopRight.Element as Thumb).DragDelta += (sender, e) => DragTopRight(selectedElement, thumbTopRight, e.HorizontalChange, e.VerticalChange);
+                ThumbTopRight = CreateEditThumb();
+                (ThumbTopRight.Element as Thumb).DragDelta += (sender, e) => DragTopRight(SelectedElement, ThumbTopRight, e.HorizontalChange, e.VerticalChange);
             }
 
-            if (thumbBottomLeft == null)
+            if (ThumbBottomLeft == null)
             {
-                thumbBottomLeft = CreateEditThumb();
-                (thumbBottomLeft.Element as Thumb).DragDelta += (sender, e) => DragBottomLeft(selectedElement, thumbBottomLeft, e.HorizontalChange, e.VerticalChange);
+                ThumbBottomLeft = CreateEditThumb();
+                (ThumbBottomLeft.Element as Thumb).DragDelta += (sender, e) => DragBottomLeft(SelectedElement, ThumbBottomLeft, e.HorizontalChange, e.VerticalChange);
             }
 
-            if (thumbBottomRight == null)
+            if (ThumbBottomRight == null)
             {
-                thumbBottomRight = CreateEditThumb();
-                (thumbBottomRight.Element as Thumb).DragDelta += (sender, e) => DragBottomRight(selectedElement, thumbBottomRight, e.HorizontalChange, e.VerticalChange);
+                ThumbBottomRight = CreateEditThumb();
+                (ThumbBottomRight.Element as Thumb).DragDelta += (sender, e) => DragBottomRight(SelectedElement, ThumbBottomRight, e.HorizontalChange, e.VerticalChange);
             }
 
-            double left = _blockHelper.GetLeft(selectedElement);
-            double top = _blockHelper.GetTop(selectedElement);
-            double width = _blockHelper.GetWidth(selectedElement);
-            double height = _blockHelper.GetHeight(selectedElement);
+            double left = _blockHelper.GetLeft(SelectedElement);
+            double top = _blockHelper.GetTop(SelectedElement);
+            double width = _blockHelper.GetWidth(SelectedElement);
+            double height = _blockHelper.GetHeight(SelectedElement);
 
-            _blockHelper.SetLeft(thumbTopLeft, left);
-            _blockHelper.SetTop(thumbTopLeft, top);
-            _blockHelper.SetLeft(thumbTopRight, left + width);
-            _blockHelper.SetTop(thumbTopRight, top);
-            _blockHelper.SetLeft(thumbBottomLeft, left);
-            _blockHelper.SetTop(thumbBottomLeft, top + height);
-            _blockHelper.SetLeft(thumbBottomRight, left + width);
-            _blockHelper.SetTop(thumbBottomRight, top + height);
+            _blockHelper.SetLeft(ThumbTopLeft, left);
+            _blockHelper.SetTop(ThumbTopLeft, top);
+            _blockHelper.SetLeft(ThumbTopRight, left + width);
+            _blockHelper.SetTop(ThumbTopRight, top);
+            _blockHelper.SetLeft(ThumbBottomLeft, left);
+            _blockHelper.SetTop(ThumbBottomLeft, top + height);
+            _blockHelper.SetLeft(ThumbBottomRight, left + width);
+            _blockHelper.SetTop(ThumbBottomRight, top + height);
 
-            OverlaySheet.Add(thumbTopLeft);
-            OverlaySheet.Add(thumbTopRight);
-            OverlaySheet.Add(thumbBottomLeft);
-            OverlaySheet.Add(thumbBottomRight);
+            OverlaySheet.Add(ThumbTopLeft);
+            OverlaySheet.Add(ThumbTopRight);
+            OverlaySheet.Add(ThumbBottomLeft);
+            OverlaySheet.Add(ThumbBottomRight);
         }
 
         private void FinishFrameworkElementEditor()
         {
             RestoreTempMode();
 
-            selectedType = ItemType.None;
-            selectedElement = null;
+            SelectedType = ItemType.None;
+            SelectedElement = null;
 
-            if (thumbTopLeft != null)
+            if (ThumbTopLeft != null)
             {
-                OverlaySheet.Remove(thumbTopLeft);
+                OverlaySheet.Remove(ThumbTopLeft);
             }
 
-            if (thumbTopRight != null)
+            if (ThumbTopRight != null)
             {
-                OverlaySheet.Remove(thumbTopRight);
+                OverlaySheet.Remove(ThumbTopRight);
             }
 
-            if (thumbBottomLeft != null)
+            if (ThumbBottomLeft != null)
             {
-                OverlaySheet.Remove(thumbBottomLeft);
+                OverlaySheet.Remove(ThumbBottomLeft);
             }
 
-            if (thumbBottomRight != null)
+            if (ThumbBottomRight != null)
             {
-                OverlaySheet.Remove(thumbBottomRight);
+                OverlaySheet.Remove(ThumbBottomRight);
             }
         }
 
@@ -1896,8 +1900,8 @@ namespace Sheet
             try
             {
                 var rectangle = SelectedBlock.Rectangles.FirstOrDefault();
-                selectedType = ItemType.Rectangle;
-                selectedElement = rectangle;
+                SelectedType = ItemType.Rectangle;
+                SelectedElement = rectangle;
                 InitFrameworkElementEditor();
             }
             catch (Exception ex)
@@ -1919,8 +1923,8 @@ namespace Sheet
             try
             {
                 var ellipse = SelectedBlock.Ellipses.FirstOrDefault();
-                selectedType = ItemType.Ellipse;
-                selectedElement = ellipse;
+                SelectedType = ItemType.Ellipse;
+                SelectedElement = ellipse;
                 InitFrameworkElementEditor();
             }
             catch (Exception ex)
@@ -1942,8 +1946,8 @@ namespace Sheet
             try
             {
                 var text = SelectedBlock.Texts.FirstOrDefault();
-                selectedType = ItemType.Text;
-                selectedElement = text;
+                SelectedType = ItemType.Text;
+                SelectedElement = text;
                 InitFrameworkElementEditor();
             }
             catch (Exception ex)
@@ -1965,8 +1969,8 @@ namespace Sheet
             try
             {
                 var image = SelectedBlock.Images.FirstOrDefault();
-                selectedType = ItemType.Image;
-                selectedElement = image;
+                SelectedType = ItemType.Image;
+                SelectedElement = image;
                 InitFrameworkElementEditor();
             }
             catch (Exception ex)
@@ -2538,7 +2542,7 @@ namespace Sheet
             //};
 
             // edit mode
-            if (selectedType != ItemType.None)
+            if (SelectedType != ItemType.None)
             {
                 if (!sourceIsThumb)
                 {
@@ -2726,7 +2730,7 @@ namespace Sheet
             }
 
             // edit mode
-            if (selectedType != ItemType.None)
+            if (SelectedType != ItemType.None)
             {
                 _blockController.DeselectContent(SelectedBlock);
                 FinishEdit();
