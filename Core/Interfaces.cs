@@ -17,6 +17,16 @@ namespace Sheet
 
     #endregion
 
+    #region IClipboard
+
+    public interface IClipboard
+    {
+        void Set(string text);
+        string Get();
+    }
+
+    #endregion
+
     #region IBase64
 
     public interface IBase64
