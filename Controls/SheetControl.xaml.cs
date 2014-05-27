@@ -107,6 +107,7 @@ namespace Sheet
         private IItemController _itemController;
         private IItemSerializer _itemSerializer;
         private IJsonSerializer _jsonSerializer;
+        private IClipboard _clipboard;
         private IBase64 _base64;
         private IPointController _pointController;
         private IPageFactory _pageFactory;
@@ -130,6 +131,7 @@ namespace Sheet
             this._itemController = interfaceLocator.GetInterface<IItemController>();
             this._itemSerializer = interfaceLocator.GetInterface<IItemSerializer>();
             this._jsonSerializer = interfaceLocator.GetInterface<IJsonSerializer>();
+            this._clipboard = interfaceLocator.GetInterface<IClipboard>();
             this._base64 = interfaceLocator.GetInterface<IBase64>();
             this._pointController = interfaceLocator.GetInterface<IPointController>();
             this._pageFactory = interfaceLocator.GetInterface<IPageFactory>();
@@ -514,7 +516,7 @@ namespace Sheet
             {
                 var selected = _blockSerializer.SerializerContents(block, -1, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED");
                 var text = _itemSerializer.SerializeContents(selected);
-                Clipboard.SetData(DataFormats.UnicodeText, text);
+                _clipboard.Set(text);
             }
             catch (Exception ex)
             {
@@ -535,7 +537,7 @@ namespace Sheet
         {
             try
             {
-                var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
+                var text = _clipboard.Get();
                 var block = await Task.Run(() => _itemSerializer.DeserializeContents(text));
                 History.Register("Paste");
                 InsertContent(block, true);
@@ -576,7 +578,7 @@ namespace Sheet
             {
                 var selected = _blockSerializer.SerializerContents(block, -1, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED");
                 string json = _jsonSerializer.Serialize(selected);
-                Clipboard.SetData(DataFormats.UnicodeText, json);
+                _clipboard.Set(json);
             }
             catch (Exception ex)
             {
@@ -597,7 +599,7 @@ namespace Sheet
         {
             try
             {
-                var text = (string)Clipboard.GetData(DataFormats.UnicodeText);
+                var text = _clipboard.Get();
                 var block = await Task.Run(() => _jsonSerializer.Deerialize<BlockItem>(text));
                 History.Register("Paste");
                 InsertContent(block, true);
