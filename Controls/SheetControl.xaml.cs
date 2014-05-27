@@ -1179,8 +1179,8 @@ namespace Sheet
             CancelSelectionRect();
 
             // get selected items
-            bool ctrl = (Keyboard.Modifiers & ModifierKeys.Control) > 0;
-            bool resetSelected = ctrl && _blockController.HaveSelected(SelectedBlock) ? false : true;
+            bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
+            bool resetSelected = onlyCtrl && _blockController.HaveSelected(SelectedBlock) ? false : true;
             _blockController.HitTestSelectionRect(ContentSheet, ContentBlock, SelectedBlock, new XImmutableRect(x, y, width, height), resetSelected);
 
             // edit mode
@@ -1710,13 +1710,10 @@ namespace Sheet
 
             _blockHelper.SetLeft(thumbTopLeft, tl.X);
             _blockHelper.SetTop(thumbTopLeft, tl.Y);
-
             _blockHelper.SetLeft(thumbTopRight, tr.X);
             _blockHelper.SetTop(thumbTopRight, tr.Y);
-
             _blockHelper.SetLeft(thumbBottomLeft, bl.X);
             _blockHelper.SetTop(thumbBottomLeft, bl.Y);
-
             _blockHelper.SetLeft(thumbBottomRight, br.X);
             _blockHelper.SetTop(thumbBottomRight, br.Y);
         }
@@ -1839,19 +1836,19 @@ namespace Sheet
                 (thumbBottomRight.Element as Thumb).DragDelta += (sender, e) => DragBottomRight(selectedElement, thumbBottomRight, e.HorizontalChange, e.VerticalChange);
             }
 
-            double left = Canvas.GetLeft(selectedElement.Element as FrameworkElement);
-            double top = Canvas.GetTop(selectedElement.Element as FrameworkElement);
-            double width = (selectedElement.Element as FrameworkElement).Width;
-            double height = (selectedElement.Element as FrameworkElement).Height;
+            double left = _blockHelper.GetLeft(selectedElement);
+            double top = _blockHelper.GetTop(selectedElement);
+            double width = _blockHelper.GetWidth(selectedElement);
+            double height = _blockHelper.GetHeight(selectedElement);
 
-            Canvas.SetLeft(thumbTopLeft.Element as Thumb, left);
-            Canvas.SetTop(thumbTopLeft.Element as Thumb, top);
-            Canvas.SetLeft(thumbTopRight.Element as Thumb, left + width);
-            Canvas.SetTop(thumbTopRight.Element as Thumb, top);
-            Canvas.SetLeft(thumbBottomLeft.Element as Thumb, left);
-            Canvas.SetTop(thumbBottomLeft.Element as Thumb, top + height);
-            Canvas.SetLeft(thumbBottomRight.Element as Thumb, left + width);
-            Canvas.SetTop(thumbBottomRight.Element as Thumb, top + height);
+            _blockHelper.SetLeft(thumbTopLeft, left);
+            _blockHelper.SetTop(thumbTopLeft, top);
+            _blockHelper.SetLeft(thumbTopRight, left + width);
+            _blockHelper.SetTop(thumbTopRight, top);
+            _blockHelper.SetLeft(thumbBottomLeft, left);
+            _blockHelper.SetTop(thumbBottomLeft, top + height);
+            _blockHelper.SetLeft(thumbBottomRight, left + width);
+            _blockHelper.SetTop(thumbBottomRight, top + height);
 
             OverlaySheet.Add(thumbTopLeft);
             OverlaySheet.Add(thumbTopRight);
