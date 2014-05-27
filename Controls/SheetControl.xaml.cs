@@ -1312,7 +1312,7 @@ namespace Sheet
             double x = _itemController.Snap(p.X, Options.SnapSize);
             double y = _itemController.Snap(p.Y, Options.SnapSize);
             SelectionStartPoint = new XImmutablePoint(x, y);
-            TempRectangle = _blockFactory.CreateRectangle(Options.LineThickness / Zoom, x, y, 0.0, 0.0, true, ItemColors.Black, ItemColors.Transparent);
+            TempRectangle = _blockFactory.CreateRectangle(Options.LineThickness / Zoom, x, y, 0.0, 0.0, false, ItemColors.Black, ItemColors.Transparent);
             OverlaySheet.Add(TempRectangle);
             OverlaySheet.Capture();
         }
@@ -1371,7 +1371,7 @@ namespace Sheet
             double x = _itemController.Snap(p.X, Options.SnapSize);
             double y = _itemController.Snap(p.Y, Options.SnapSize);
             SelectionStartPoint = new XImmutablePoint(x, y);
-            TempEllipse = _blockFactory.CreateEllipse(Options.LineThickness / Zoom, x, y, 0.0, 0.0, true, ItemColors.Black, ItemColors.Transparent);
+            TempEllipse = _blockFactory.CreateEllipse(Options.LineThickness / Zoom, x, y, 0.0, 0.0, false, ItemColors.Black, ItemColors.Transparent);
             OverlaySheet.Add(TempEllipse);
             OverlaySheet.Capture();
         }
