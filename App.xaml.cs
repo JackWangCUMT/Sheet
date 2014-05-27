@@ -40,9 +40,10 @@ namespace Sheet
         {
             var builder = new ContainerBuilder();
 
-            builder.RegisterInstance(new Base64()).As<IBase64>().SingleInstance();
             builder.RegisterInstance(new WpfBlockHelper()).As<IBlockHelper>().SingleInstance();
             builder.RegisterInstance(new WpfBlockFactory()).As<IBlockFactory>().SingleInstance();
+            builder.RegisterInstance(new WpfClipboard()).As<IClipboard>().SingleInstance();
+            builder.RegisterInstance(new Base64()).As<IBase64>().SingleInstance();
             builder.RegisterInstance(new NewtonsoftJsonSerializer()).As<IJsonSerializer>().SingleInstance();
             builder.RegisterInstance(new EntryFactory()).As<IEntryFactory>().SingleInstance();
 
