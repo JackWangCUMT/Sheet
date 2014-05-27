@@ -1326,13 +1326,10 @@ namespace Sheet
             double sy = SelectionStartPoint.Y;
             double x = _itemController.Snap(p.X, Options.SnapSize);
             double y = _itemController.Snap(p.Y, Options.SnapSize);
-            double width = Math.Abs(sx - x);
-            double height = Math.Abs(sy - y);
-            var rectangle = TempRectangle.Element as Rectangle;
-            Canvas.SetLeft(rectangle, Math.Min(sx, x));
-            Canvas.SetTop(rectangle, Math.Min(sy, y));
-            rectangle.Width = width;
-            rectangle.Height = height;
+            _blockHelper.SetLeft(TempRectangle, Math.Min(sx, x));
+            _blockHelper.SetTop(TempRectangle, Math.Min(sy, y));
+            _blockHelper.SetWidth(TempRectangle, Math.Abs(sx - x));
+            _blockHelper.SetHeight(TempRectangle, Math.Abs(sy - y));
         }
 
         private void FinishTempRect()
@@ -1385,14 +1382,10 @@ namespace Sheet
             double sy = SelectionStartPoint.Y;
             double x = _itemController.Snap(p.X, Options.SnapSize);
             double y = _itemController.Snap(p.Y, Options.SnapSize);
-            double width = Math.Abs(sx - x);
-            double height = Math.Abs(sy - y);
-
-            var ellipse = TempEllipse.Element as Ellipse;
-            Canvas.SetLeft(ellipse, Math.Min(sx, x));
-            Canvas.SetTop(ellipse, Math.Min(sy, y));
-            ellipse.Width = width;
-            ellipse.Height = height;
+            _blockHelper.SetLeft(TempEllipse, Math.Min(sx, x));
+            _blockHelper.SetTop(TempEllipse, Math.Min(sy, y));
+            _blockHelper.SetWidth(TempEllipse, Math.Abs(sx - x));
+            _blockHelper.SetHeight(TempEllipse, Math.Abs(sy - y));
         }
 
         private void FinishTempEllipse()
