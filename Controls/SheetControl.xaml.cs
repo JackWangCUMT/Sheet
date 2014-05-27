@@ -1253,9 +1253,12 @@ namespace Sheet
 
         private void FinishTempLine(XPoint end)
         {
-            var line = TempLine.Element as Line;
-            if (Math.Round(line.X1, 1) == Math.Round(line.X2, 1) &&
-                Math.Round(line.Y1, 1) == Math.Round(line.Y2, 1))
+            double x1 = _blockHelper.GetX1(TempLine);
+            double y1 = _blockHelper.GetY1(TempLine);
+            double x2 = _blockHelper.GetX2(TempLine);
+            double y2 = _blockHelper.GetY2(TempLine);
+
+            if (Math.Round(x1, 1) == Math.Round(x2, 1) && Math.Round(y1, 1) == Math.Round(y2, 1))
             {
                 CancelTempLine();
             }
@@ -1607,17 +1610,17 @@ namespace Sheet
                     double sdx = x - line.Start.X;
                     double sdy = y - line.Start.Y;
                     _blockController.MoveDelta(sdx, sdy, line.Start);
-                    Canvas.SetLeft(thumb.Element as Thumb, x);
-                    Canvas.SetTop(thumb.Element as Thumb, y);
+                    _blockHelper.SetLeft(thumb, x);
+                    _blockHelper.SetTop(thumb, y);
                 }
                 else
                 {
-                    double x = _itemController.Snap((line.Element as Line).X1 + dx, Options.SnapSize);
-                    double y = _itemController.Snap((line.Element as Line).Y1 + dy, Options.SnapSize);
-                    (line.Element as Line).X1 = x;
-                    (line.Element as Line).Y1 = y;
-                    Canvas.SetLeft(thumb.Element as Thumb, x);
-                    Canvas.SetTop(thumb.Element as Thumb, y);
+                    double x = _itemController.Snap(_blockHelper.GetX1(line) + dx, Options.SnapSize);
+                    double y = _itemController.Snap(_blockHelper.GetY1(line) + dy, Options.SnapSize);
+                    _blockHelper.SetX1(line, x);
+                    _blockHelper.SetY1(line, y);
+                    _blockHelper.SetLeft(thumb, x);
+                    _blockHelper.SetTop(thumb, y);
                 }
             }
         }
@@ -1633,17 +1636,17 @@ namespace Sheet
                     double sdx = x - line.End.X;
                     double sdy = y - line.End.Y;
                     _blockController.MoveDelta(sdx, sdy, line.End);
-                    Canvas.SetLeft(thumb.Element as Thumb, x);
-                    Canvas.SetTop(thumb.Element as Thumb, y);
+                    _blockHelper.SetLeft(thumb, x);
+                    _blockHelper.SetTop(thumb, y);
                 }
                 else
                 {
-                    double x = _itemController.Snap((line.Element as Line).X2 + dx, Options.SnapSize);
-                    double y = _itemController.Snap((line.Element as Line).Y2 + dy, Options.SnapSize);
-                    (line.Element as Line).X2 = x;
-                    (line.Element as Line).Y2 = y;
-                    Canvas.SetLeft(thumb.Element as Thumb, x);
-                    Canvas.SetTop(thumb.Element as Thumb, y);
+                    double x = _itemController.Snap(_blockHelper.GetX2(line) + dx, Options.SnapSize);
+                    double y = _itemController.Snap(_blockHelper.GetY2(line) + dy, Options.SnapSize);
+                    _blockHelper.SetX2(line, x);
+                    _blockHelper.SetY2(line, y);
+                    _blockHelper.SetLeft(thumb, x);
+                    _blockHelper.SetTop(thumb, y);
                 }
             }
         }
