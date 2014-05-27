@@ -1334,12 +1334,10 @@ namespace Sheet
 
         private void FinishTempRect()
         {
-            var rectangle = TempRectangle.Element as Rectangle;
-            double x = Canvas.GetLeft(rectangle);
-            double y = Canvas.GetTop(rectangle);
-            double width = rectangle.Width;
-            double height = rectangle.Height;
-
+            double x = _blockHelper.GetLeft(TempRectangle);
+            double y = _blockHelper.GetTop(TempRectangle);
+            double width = _blockHelper.GetWidth(TempRectangle);
+            double height = _blockHelper.GetHeight(TempRectangle);
             if (width == 0.0 || height == 0.0)
             {
                 CancelTempRect();
@@ -1390,12 +1388,10 @@ namespace Sheet
 
         private void FinishTempEllipse()
         {
-            var ellipse = TempEllipse.Element as Ellipse;
-            double x = Canvas.GetLeft(ellipse);
-            double y = Canvas.GetTop(ellipse);
-            double width = ellipse.Width;
-            double height = ellipse.Height;
-
+            double x = _blockHelper.GetLeft(TempEllipse);
+            double y = _blockHelper.GetTop(TempEllipse);
+            double width = _blockHelper.GetWidth(TempEllipse);
+            double height = _blockHelper.GetHeight(TempEllipse);
             if (width == 0.0 || height == 0.0)
             {
                 CancelTempEllipse();
@@ -1667,10 +1663,11 @@ namespace Sheet
                     (lineThumbEnd.Element as Thumb).DragDelta += (sender, e) => DragLineEnd(selectedLine, lineThumbEnd, e.HorizontalChange, e.VerticalChange);
                 }
 
-                Canvas.SetLeft(lineThumbStart.Element as Thumb, (line.Element as Line).X1);
-                Canvas.SetTop(lineThumbStart.Element as Thumb, (line.Element as Line).Y1);
-                Canvas.SetLeft(lineThumbEnd.Element as Thumb, (line.Element as Line).X2);
-                Canvas.SetTop(lineThumbEnd.Element as Thumb, (line.Element as Line).Y2);
+
+                _blockHelper.SetLeft(lineThumbStart, _blockHelper.GetX1(line));
+                _blockHelper.SetTop(lineThumbStart, _blockHelper.GetY1(line));
+                _blockHelper.SetLeft(lineThumbEnd, _blockHelper.GetX2(line));
+                _blockHelper.SetTop(lineThumbEnd, _blockHelper.GetY2(line));
 
                 OverlaySheet.Add(lineThumbStart);
                 OverlaySheet.Add(lineThumbEnd);
@@ -1711,40 +1708,38 @@ namespace Sheet
             var bl = rect.BottomLeft;
             var br = rect.BottomRight;
 
-            Canvas.SetLeft(thumbTopLeft.Element as Thumb, tl.X);
-            Canvas.SetTop(thumbTopLeft.Element as Thumb, tl.Y);
+            _blockHelper.SetLeft(thumbTopLeft, tl.X);
+            _blockHelper.SetTop(thumbTopLeft, tl.Y);
 
-            Canvas.SetLeft(thumbTopRight.Element as Thumb, tr.X);
-            Canvas.SetTop(thumbTopRight.Element as Thumb, tr.Y);
+            _blockHelper.SetLeft(thumbTopRight, tr.X);
+            _blockHelper.SetTop(thumbTopRight, tr.Y);
 
-            Canvas.SetLeft(thumbBottomLeft.Element as Thumb, bl.X);
-            Canvas.SetTop(thumbBottomLeft.Element as Thumb, bl.Y);
+            _blockHelper.SetLeft(thumbBottomLeft, bl.X);
+            _blockHelper.SetTop(thumbBottomLeft, bl.Y);
 
-            Canvas.SetLeft(thumbBottomRight.Element as Thumb, br.X);
-            Canvas.SetTop(thumbBottomRight.Element as Thumb, br.Y);
+            _blockHelper.SetLeft(thumbBottomRight, br.X);
+            _blockHelper.SetTop(thumbBottomRight, br.Y);
         }
 
         private void DragTopLeft(XElement element, XThumb thumb, double dx, double dy)
         {
             if (element != null && thumb != null)
             {
-                double left = Canvas.GetLeft(element.Element as FrameworkElement);
-                double top = Canvas.GetTop(element.Element as FrameworkElement);
-                double width = (element.Element as FrameworkElement).Width;
-                double height = (element.Element as FrameworkElement).Height;
+                double left = _blockHelper.GetLeft(element);
+                double top = _blockHelper.GetTop(element);
+                double width = _blockHelper.GetWidth(element);
+                double height = _blockHelper.GetHeight(element);
 
                 var rect = new Rect(left, top, width, height);
-
                 rect.X = _itemController.Snap(rect.X + dx, Options.SnapSize);
                 rect.Y = _itemController.Snap(rect.Y + dy, Options.SnapSize);
-
                 rect.Width = Math.Max(0.0, rect.Width - (rect.X - left));
                 rect.Height = Math.Max(0.0, rect.Height - (rect.Y - top));
 
-                Canvas.SetLeft(element.Element as FrameworkElement, rect.X);
-                Canvas.SetTop(element.Element as FrameworkElement, rect.Y);
-                (element.Element as FrameworkElement).Width = rect.Width;
-                (element.Element as FrameworkElement).Height = rect.Height;
+                _blockHelper.SetLeft(element, rect.X);
+                _blockHelper.SetTop(element, rect.Y);
+                _blockHelper.SetWidth(element, rect.Width);
+                _blockHelper.SetHeight(element, rect.Height);
 
                 DragThumbs(rect);
             }
@@ -1754,22 +1749,20 @@ namespace Sheet
         {
             if (element != null && thumb != null)
             {
-                double left = Canvas.GetLeft(element.Element as FrameworkElement);
-                double top = Canvas.GetTop(element.Element as FrameworkElement);
-                double width = (element.Element as FrameworkElement).Width;
-                double height = (element.Element as FrameworkElement).Height;
+                double left = _blockHelper.GetLeft(element);
+                double top = _blockHelper.GetTop(element);
+                double width = _blockHelper.GetWidth(element);
+                double height = _blockHelper.GetHeight(element);
 
                 var rect = new Rect(left, top, width, height);
-
                 rect.Width = Math.Max(0.0, _itemController.Snap(rect.Width + dx, Options.SnapSize));
                 rect.Y = _itemController.Snap(rect.Y + dy, Options.SnapSize);
-
                 rect.Height = Math.Max(0.0, rect.Height - (rect.Y - top));
 
-                Canvas.SetLeft(element.Element as FrameworkElement, rect.X);
-                Canvas.SetTop(element.Element as FrameworkElement, rect.Y);
-                (element.Element as FrameworkElement).Width = rect.Width;
-                (element.Element as FrameworkElement).Height = rect.Height;
+                _blockHelper.SetLeft(element, rect.X);
+                _blockHelper.SetTop(element, rect.Y);
+                _blockHelper.SetWidth(element, rect.Width);
+                _blockHelper.SetHeight(element, rect.Height);
 
                 DragThumbs(rect);
             }
@@ -1779,22 +1772,20 @@ namespace Sheet
         {
             if (element != null && thumb != null)
             {
-                double left = Canvas.GetLeft(element.Element as FrameworkElement);
-                double top = Canvas.GetTop(element.Element as FrameworkElement);
-                double width = (element.Element as FrameworkElement).Width;
-                double height = (element.Element as FrameworkElement).Height;
+                double left = _blockHelper.GetLeft(element);
+                double top = _blockHelper.GetTop(element);
+                double width = _blockHelper.GetWidth(element);
+                double height = _blockHelper.GetHeight(element);
 
                 var rect = new Rect(left, top, width, height);
-
                 rect.X = _itemController.Snap(rect.X + dx, Options.SnapSize);
                 rect.Height = Math.Max(0.0, _itemController.Snap(rect.Height + dy, Options.SnapSize));
-
                 rect.Width = Math.Max(0.0, rect.Width - (rect.X - left));
 
-                Canvas.SetLeft(element.Element as FrameworkElement, rect.X);
-                Canvas.SetTop(element.Element as FrameworkElement, rect.Y);
-                (element.Element as FrameworkElement).Width = rect.Width;
-                (element.Element as FrameworkElement).Height = rect.Height;
+                _blockHelper.SetLeft(element, rect.X);
+                _blockHelper.SetTop(element, rect.Y);
+                _blockHelper.SetWidth(element, rect.Width);
+                _blockHelper.SetHeight(element, rect.Height);
 
                 DragThumbs(rect);
             }
@@ -1804,21 +1795,19 @@ namespace Sheet
         {
             if (element != null && thumb != null)
             {
-                double left = Canvas.GetLeft(element.Element as FrameworkElement);
-                double top = Canvas.GetTop(element.Element as FrameworkElement);
-                double width = (element.Element as FrameworkElement).Width;
-                double height = (element.Element as FrameworkElement).Height;
+                double left = _blockHelper.GetLeft(element);
+                double top = _blockHelper.GetTop(element);
+                double width = _blockHelper.GetWidth(element);
+                double height = _blockHelper.GetHeight(element);
 
                 var rect = new Rect(left, top, width, height);
-
                 rect.Width = Math.Max(0.0, _itemController.Snap(rect.Width + dx, Options.SnapSize));
                 rect.Height = Math.Max(0.0, _itemController.Snap(rect.Height + dy, Options.SnapSize));
 
-                Canvas.SetLeft(element.Element as FrameworkElement, rect.X);
-                Canvas.SetTop(element.Element as FrameworkElement, rect.Y);
-
-                (element.Element as FrameworkElement).Width = rect.Width;
-                (element.Element as FrameworkElement).Height = rect.Height;
+                _blockHelper.SetLeft(element, rect.X);
+                _blockHelper.SetTop(element, rect.Y);
+                _blockHelper.SetWidth(element, rect.Width);
+                _blockHelper.SetHeight(element, rect.Height);
 
                 DragThumbs(rect);
             }
