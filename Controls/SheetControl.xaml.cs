@@ -84,16 +84,24 @@ namespace Sheet
     //}
 
     #endregion
+    
+    #region ISheetController
 
     public interface ISheetController
     {
 
     }
 
+    #endregion
+
+    #region SheetController
+
     public class SheetController : ISheetController
     {
 
-    }
+    } 
+
+    #endregion
 
     public partial class SheetControl : UserControl, IPageController, IPanAndZoomController
     {
