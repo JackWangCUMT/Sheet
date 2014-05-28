@@ -81,18 +81,18 @@ namespace Sheet
 
         #region Content Bounds
 
-        public static Rect GetContentBounds(XElement reference)
+        public static Rect GetContentBounds(IElement reference)
         {
-            var bounds = VisualTreeHelper.GetContentBounds(reference.Element as UIElement);
+            var bounds = VisualTreeHelper.GetContentBounds(reference.Native as UIElement);
             return bounds;
         }
 
-        public static Rect GetContentBounds(XElement reference, object relativeTo)
+        public static Rect GetContentBounds(IElement reference, object relativeTo)
         {
-            if (reference.Element != null)
+            if (reference.Native != null)
             {
-                var bounds = VisualTreeHelper.GetContentBounds(reference.Element as UIElement);
-                var offset = (reference.Element as UIElement).TranslatePoint(new Point(0, 0), relativeTo as UIElement);
+                var bounds = VisualTreeHelper.GetContentBounds(reference.Native as UIElement);
+                var offset = (reference.Native as UIElement).TranslatePoint(new Point(0, 0), relativeTo as UIElement);
                 if (bounds != null && bounds.IsEmpty == false)
                 {
                     bounds.Offset(offset.X, offset.Y);
@@ -156,19 +156,19 @@ namespace Sheet
             return _canvas;
         }
 
-        public void Add(XElement element)
+        public void Add(IElement element)
         {
-            if (element != null && element.Element != null)
+            if (element != null && element.Native != null)
             {
-                _canvas.Children.Add(element.Element as FrameworkElement);
+                _canvas.Children.Add(element.Native as FrameworkElement);
             }
         }
 
-        public void Remove(XElement element)
+        public void Remove(IElement element)
         {
-            if (element != null && element.Element != null)
+            if (element != null && element.Native != null)
             {
-                _canvas.Children.Remove(element.Element as FrameworkElement);
+                _canvas.Children.Remove(element.Native as FrameworkElement);
             }
         }
 
@@ -221,16 +221,16 @@ namespace Sheet
             };
         }
 
-        public static TextBlock GetTextBlock(XText text)
+        public static TextBlock GetTextBlock(IText text)
         {
-            return (text.Element as Grid).Children[0] as TextBlock;
+            return (text.Native as Grid).Children[0] as TextBlock;
         }
 
         #endregion
 
         #region HitTest
 
-        public bool HitTest(XElement element, XImmutableRect rect)
+        public bool HitTest(IElement element, XImmutableRect rect)
         {
             var r = new Rect(rect.X, rect.Y, rect.Width, rect.Height);
             var bounds = WpfVisualHelper.GetContentBounds(element);
@@ -241,7 +241,7 @@ namespace Sheet
             return false;
         }
 
-        public bool HitTest(XElement element, XImmutableRect rect, object relativeTo)
+        public bool HitTest(IElement element, XImmutableRect rect, object relativeTo)
         {
             var r = new Rect(rect.X, rect.Y, rect.Width, rect.Height);
             var bounds = WpfVisualHelper.GetContentBounds(element, relativeTo);
@@ -256,344 +256,344 @@ namespace Sheet
 
         #region IsSelected
 
-        public void SetIsSelected(XElement element, bool value)
+        public void SetIsSelected(IElement element, bool value)
         {
-            FrameworkElementProperties.SetIsSelected(element.Element as FrameworkElement, value);
+            FrameworkElementProperties.SetIsSelected(element.Native as FrameworkElement, value);
         }
 
-        public bool GetIsSelected(XElement element)
+        public bool GetIsSelected(IElement element)
         {
-            return FrameworkElementProperties.GetIsSelected(element.Element as FrameworkElement);
+            return FrameworkElementProperties.GetIsSelected(element.Native as FrameworkElement);
         }
 
-        public bool IsSelected(XPoint point)
+        public bool IsSelected(IPoint point)
         {
             throw new NotImplementedException();
         }
 
-        public bool IsSelected(XLine line)
+        public bool IsSelected(ILine line)
         {
-            return (line.Element as Line).Stroke != WpfBlockFactory.SelectedBrush;
+            return (line.Native as Line).Stroke != WpfBlockFactory.SelectedBrush;
         }
 
-        public bool IsSelected(XRectangle rectangle)
+        public bool IsSelected(IRectangle rectangle)
         {
-            return (rectangle.Element as Rectangle).Stroke != WpfBlockFactory.SelectedBrush;
+            return (rectangle.Native as Rectangle).Stroke != WpfBlockFactory.SelectedBrush;
         }
 
-        public bool IsSelected(XEllipse ellipse)
+        public bool IsSelected(IEllipse ellipse)
         {
-            return (ellipse.Element as Ellipse).Stroke != WpfBlockFactory.SelectedBrush;
+            return (ellipse.Native as Ellipse).Stroke != WpfBlockFactory.SelectedBrush;
         }
 
-        public bool IsSelected(XText text)
+        public bool IsSelected(IText text)
         {
             var tb = WpfBlockHelper.GetTextBlock(text);
             return tb.Foreground != WpfBlockFactory.SelectedBrush;
         }
 
-        public bool IsSelected(XImage image)
+        public bool IsSelected(IImage image)
         {
-            return (image.Element as Image).OpacityMask != WpfBlockFactory.SelectedBrush;
+            return (image.Native as Image).OpacityMask != WpfBlockFactory.SelectedBrush;
         }
 
         #endregion
 
         #region Deselect
 
-        public void Deselect(XPoint point)
+        public void Deselect(IPoint point)
         {
             throw new NotImplementedException();
         }
 
-        public void Deselect(XLine line)
+        public void Deselect(ILine line)
         {
-            (line.Element as Line).Stroke = WpfBlockFactory.NormalBrush;
+            (line.Native as Line).Stroke = WpfBlockFactory.NormalBrush;
         }
 
-        public void Deselect(XRectangle rectangle)
+        public void Deselect(IRectangle rectangle)
         {
-            (rectangle.Element as Rectangle).Stroke = WpfBlockFactory.NormalBrush;
-            (rectangle.Element as Rectangle).Fill = (rectangle.Element as Rectangle).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.TransparentBrush : WpfBlockFactory.NormalBrush;
+            (rectangle.Native as Rectangle).Stroke = WpfBlockFactory.NormalBrush;
+            (rectangle.Native as Rectangle).Fill = (rectangle.Native as Rectangle).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.TransparentBrush : WpfBlockFactory.NormalBrush;
         }
 
-        public void Deselect(XEllipse ellipse)
+        public void Deselect(IEllipse ellipse)
         {
-            (ellipse.Element as Ellipse).Stroke = WpfBlockFactory.NormalBrush;
-            (ellipse.Element as Ellipse).Fill = (ellipse.Element as Ellipse).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.TransparentBrush : WpfBlockFactory.NormalBrush;
+            (ellipse.Native as Ellipse).Stroke = WpfBlockFactory.NormalBrush;
+            (ellipse.Native as Ellipse).Fill = (ellipse.Native as Ellipse).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.TransparentBrush : WpfBlockFactory.NormalBrush;
         }
 
-        public void Deselect(XText text)
+        public void Deselect(IText text)
         {
             WpfBlockHelper.GetTextBlock(text).Foreground = WpfBlockFactory.NormalBrush;
         }
 
-        public void Deselect(XImage image)
+        public void Deselect(IImage image)
         {
-            (image.Element as Image).OpacityMask = WpfBlockFactory.NormalBrush;
+            (image.Native as Image).OpacityMask = WpfBlockFactory.NormalBrush;
         }
 
         #endregion
 
         #region Select
 
-        public void Select(XPoint point)
+        public void Select(IPoint point)
         {
             throw new NotImplementedException();
         }
 
-        public void Select(XLine line)
+        public void Select(ILine line)
         {
-            (line.Element as Line).Stroke = WpfBlockFactory.SelectedBrush;
+            (line.Native as Line).Stroke = WpfBlockFactory.SelectedBrush;
         }
 
-        public void Select(XRectangle rectangle)
+        public void Select(IRectangle rectangle)
         {
-            (rectangle.Element as Rectangle).Stroke = WpfBlockFactory.SelectedBrush;
-            (rectangle.Element as Rectangle).Fill = (rectangle.Element as Rectangle).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.TransparentBrush : WpfBlockFactory.SelectedBrush;
+            (rectangle.Native as Rectangle).Stroke = WpfBlockFactory.SelectedBrush;
+            (rectangle.Native as Rectangle).Fill = (rectangle.Native as Rectangle).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.TransparentBrush : WpfBlockFactory.SelectedBrush;
         }
 
-        public void Select(XEllipse ellipse)
+        public void Select(IEllipse ellipse)
         {
-            (ellipse.Element as Ellipse).Stroke = WpfBlockFactory.SelectedBrush;
-            (ellipse.Element as Ellipse).Fill = (ellipse.Element as Ellipse).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.TransparentBrush : WpfBlockFactory.SelectedBrush;
+            (ellipse.Native as Ellipse).Stroke = WpfBlockFactory.SelectedBrush;
+            (ellipse.Native as Ellipse).Fill = (ellipse.Native as Ellipse).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.TransparentBrush : WpfBlockFactory.SelectedBrush;
         }
 
-        public void Select(XText text)
+        public void Select(IText text)
         {
             WpfBlockHelper.GetTextBlock(text).Foreground = WpfBlockFactory.SelectedBrush;
         }
 
-        public void Select(XImage image)
+        public void Select(IImage image)
         {
-            (image.Element as Image).OpacityMask = WpfBlockFactory.SelectedBrush;
+            (image.Native as Image).OpacityMask = WpfBlockFactory.SelectedBrush;
         }
 
         #endregion
 
         #region ZIndex
 
-        public void SetZIndex(XElement element, int index)
+        public void SetZIndex(IElement element, int index)
         {
-            Panel.SetZIndex(element.Element as FrameworkElement, index);
+            Panel.SetZIndex(element.Native as FrameworkElement, index);
         }
 
         #endregion
 
         #region Fill
 
-        public void ToggleFill(XRectangle rectangle)
+        public void ToggleFill(IRectangle rectangle)
         {
-            (rectangle.Element as Rectangle).Fill = (rectangle.Element as Rectangle).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.NormalBrush : WpfBlockFactory.TransparentBrush;
+            (rectangle.Native as Rectangle).Fill = (rectangle.Native as Rectangle).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.NormalBrush : WpfBlockFactory.TransparentBrush;
         }
 
-        public void ToggleFill(XEllipse ellipse)
+        public void ToggleFill(IEllipse ellipse)
         {
-            (ellipse.Element as Ellipse).Fill = (ellipse.Element as Ellipse).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.NormalBrush : WpfBlockFactory.TransparentBrush;
+            (ellipse.Native as Ellipse).Fill = (ellipse.Native as Ellipse).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.NormalBrush : WpfBlockFactory.TransparentBrush;
         }
 
-        public void ToggleFill(XPoint point)
+        public void ToggleFill(IPoint point)
         {
-            (point.Element as Ellipse).Fill = (point.Element as Ellipse).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.NormalBrush : WpfBlockFactory.TransparentBrush;
+            (point.Native as Ellipse).Fill = (point.Native as Ellipse).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.NormalBrush : WpfBlockFactory.TransparentBrush;
         }
 
         #endregion
 
         #region XElement
 
-        public double GetLeft(XElement element)
+        public double GetLeft(IElement element)
         {
-            return Canvas.GetLeft(element.Element as FrameworkElement);
+            return Canvas.GetLeft(element.Native as FrameworkElement);
         }
 
-        public double GetTop(XElement element)
+        public double GetTop(IElement element)
         {
-            return Canvas.GetTop(element.Element as FrameworkElement);
+            return Canvas.GetTop(element.Native as FrameworkElement);
         }
 
-        public double GetWidth(XElement element)
+        public double GetWidth(IElement element)
         {
-            return (element.Element as FrameworkElement).Width;
+            return (element.Native as FrameworkElement).Width;
         }
 
-        public double GetHeight(XElement element)
+        public double GetHeight(IElement element)
         {
-            return (element.Element as FrameworkElement).Height;
+            return (element.Native as FrameworkElement).Height;
         }
 
-        public void SetLeft(XElement element, double left)
+        public void SetLeft(IElement element, double left)
         {
-            Canvas.SetLeft(element.Element as FrameworkElement, left);
+            Canvas.SetLeft(element.Native as FrameworkElement, left);
         }
 
-        public void SetTop(XElement element, double top)
+        public void SetTop(IElement element, double top)
         {
-            Canvas.SetTop(element.Element as FrameworkElement, top);
+            Canvas.SetTop(element.Native as FrameworkElement, top);
         }
 
-        public void SetWidth(XElement element, double width)
+        public void SetWidth(IElement element, double width)
         {
-            (element.Element as FrameworkElement).Width = width;
+            (element.Native as FrameworkElement).Width = width;
         }
 
-        public void SetHeight(XElement element, double height)
+        public void SetHeight(IElement element, double height)
         {
-            (element.Element as FrameworkElement).Height = height;
-        }
-
-        #endregion
-
-        #region XLine
-
-        public double GetX1(XLine line)
-        {
-            return (line.Element as Line).X1;
-        }
-
-        public double GetY1(XLine line)
-        {
-            return (line.Element as Line).Y1;
-        }
-
-        public double GetX2(XLine line)
-        {
-            return (line.Element as Line).X2;
-        }
-
-        public double GetY2(XLine line)
-        {
-            return (line.Element as Line).Y2;
-        }
-
-        public ItemColor GetStroke(XLine line)
-        {
-            return GetItemColor((line.Element as Line).Stroke);
-        }
-
-        public void SetX1(XLine line, double x1)
-        {
-            (line.Element as Line).X1 = x1;
-        }
-
-        public void SetY1(XLine line, double y1)
-        {
-            (line.Element as Line).Y1 = y1;
-        }
-
-        public void SetX2(XLine line, double x2)
-        {
-            (line.Element as Line).X2 = x2;
-        }
-
-        public void SetY2(XLine line, double y2)
-        {
-            (line.Element as Line).Y2 = y2;
-        }
-
-        public void SetStrokeThickness(XLine line, double thickness)
-        {
-            (line.Element as Line).StrokeThickness = thickness;
-        }
-
-        public double GetStrokeThickness(XLine line)
-        {
-            return (line.Element as Line).StrokeThickness;
+            (element.Native as FrameworkElement).Height = height;
         }
 
         #endregion
 
-        #region XRectangle
+        #region ILine
 
-        public ItemColor GetStroke(XRectangle rectangle)
+        public double GetX1(ILine line)
         {
-            return GetItemColor((rectangle.Element as Rectangle).Stroke);
+            return (line.Native as Line).X1;
         }
 
-        public ItemColor GetFill(XRectangle rectangle)
+        public double GetY1(ILine line)
         {
-            return GetItemColor((rectangle.Element as Rectangle).Fill);
+            return (line.Native as Line).Y1;
         }
 
-        public bool IsTransparent(XRectangle rectangle)
+        public double GetX2(ILine line)
         {
-            return (rectangle.Element as Rectangle).Fill == WpfBlockFactory.TransparentBrush ? false : true;
+            return (line.Native as Line).X2;
         }
 
-        public void SetStrokeThickness(XRectangle rectangle, double thickness)
+        public double GetY2(ILine line)
         {
-            (rectangle.Element as Rectangle).StrokeThickness = thickness;
+            return (line.Native as Line).Y2;
         }
 
-        public double GetStrokeThickness(XRectangle rectangle)
+        public ItemColor GetStroke(ILine line)
         {
-            return (rectangle.Element as Rectangle).StrokeThickness;
+            return GetItemColor((line.Native as Line).Stroke);
+        }
+
+        public void SetX1(ILine line, double x1)
+        {
+            (line.Native as Line).X1 = x1;
+        }
+
+        public void SetY1(ILine line, double y1)
+        {
+            (line.Native as Line).Y1 = y1;
+        }
+
+        public void SetX2(ILine line, double x2)
+        {
+            (line.Native as Line).X2 = x2;
+        }
+
+        public void SetY2(ILine line, double y2)
+        {
+            (line.Native as Line).Y2 = y2;
+        }
+
+        public void SetStrokeThickness(ILine line, double thickness)
+        {
+            (line.Native as Line).StrokeThickness = thickness;
+        }
+
+        public double GetStrokeThickness(ILine line)
+        {
+            return (line.Native as Line).StrokeThickness;
         }
 
         #endregion
 
-        #region XEllipse
+        #region IRectangle
 
-        public ItemColor GetStroke(XEllipse ellipse)
+        public ItemColor GetStroke(IRectangle rectangle)
         {
-            return GetItemColor((ellipse.Element as Ellipse).Stroke);
+            return GetItemColor((rectangle.Native as Rectangle).Stroke);
         }
 
-        public ItemColor GetFill(XEllipse ellipse)
+        public ItemColor GetFill(IRectangle rectangle)
         {
-            return GetItemColor((ellipse.Element as Ellipse).Fill);
+            return GetItemColor((rectangle.Native as Rectangle).Fill);
         }
 
-        public bool IsTransparent(XEllipse ellipse)
+        public bool IsTransparent(IRectangle rectangle)
         {
-            return (ellipse.Element as Ellipse).Fill == WpfBlockFactory.TransparentBrush ? false : true;
+            return (rectangle.Native as Rectangle).Fill == WpfBlockFactory.TransparentBrush ? false : true;
         }
 
-        public void SetStrokeThickness(XEllipse ellipse, double thickness)
+        public void SetStrokeThickness(IRectangle rectangle, double thickness)
         {
-            (ellipse.Element as Ellipse).StrokeThickness = thickness;
+            (rectangle.Native as Rectangle).StrokeThickness = thickness;
         }
 
-        public double GetStrokeThickness(XEllipse ellipse)
+        public double GetStrokeThickness(IRectangle rectangle)
         {
-            return (ellipse.Element as Ellipse).StrokeThickness;
+            return (rectangle.Native as Rectangle).StrokeThickness;
         }
 
         #endregion
 
-        #region XText
+        #region IEllipse
 
-        public ItemColor GetBackground(XText text)
+        public ItemColor GetStroke(IEllipse ellipse)
+        {
+            return GetItemColor((ellipse.Native as Ellipse).Stroke);
+        }
+
+        public ItemColor GetFill(IEllipse ellipse)
+        {
+            return GetItemColor((ellipse.Native as Ellipse).Fill);
+        }
+
+        public bool IsTransparent(IEllipse ellipse)
+        {
+            return (ellipse.Native as Ellipse).Fill == WpfBlockFactory.TransparentBrush ? false : true;
+        }
+
+        public void SetStrokeThickness(IEllipse ellipse, double thickness)
+        {
+            (ellipse.Native as Ellipse).StrokeThickness = thickness;
+        }
+
+        public double GetStrokeThickness(IEllipse ellipse)
+        {
+            return (ellipse.Native as Ellipse).StrokeThickness;
+        }
+
+        #endregion
+
+        #region IText
+
+        public ItemColor GetBackground(IText text)
         {
             var tb = WpfBlockHelper.GetTextBlock(text);
             return GetItemColor(tb.Background);
 
         }
 
-        public ItemColor GetForeground(XText text)
+        public ItemColor GetForeground(IText text)
         {
             var tb = WpfBlockHelper.GetTextBlock(text);
             return GetItemColor(tb.Foreground);
         }
 
-        public string GetText(XText text)
+        public string GetText(IText text)
         {
             var tb = WpfBlockHelper.GetTextBlock(text);
             return tb.Text;
         }
 
-        public int GetHAlign(XText text)
+        public int GetHAlign(IText text)
         {
             var tb = WpfBlockHelper.GetTextBlock(text);
             return (int)tb.HorizontalAlignment;
         }
 
-        public int GetVAlign(XText text)
+        public int GetVAlign(IText text)
         {
             var tb = WpfBlockHelper.GetTextBlock(text);
             return (int)tb.VerticalAlignment;
         }
 
-        public double GetSize(XText text)
+        public double GetSize(IText text)
         {
             var tb = WpfBlockHelper.GetTextBlock(text);
             return tb.FontSize;
@@ -601,11 +601,11 @@ namespace Sheet
 
         #endregion
 
-        #region XImage
+        #region IImage
 
-        public byte[] GetData(XImage image)
+        public byte[] GetData(IImage image)
         {
-            return (image.Element as Image).Tag as byte[];
+            return (image.Native as Image).Tag as byte[];
         }
 
         #endregion
@@ -651,9 +651,22 @@ namespace Sheet
 
         #endregion
 
+        #region Color
+
+        private IArgbColor ToArgbColor(ItemColor color)
+        {
+            if (color != null)
+            {
+                return new XArgbColor(color.Alpha, color.Red, color.Green, color.Blue);
+            }
+            return null;
+        }
+
+        #endregion
+
         #region Create
 
-        public XPoint CreatePoint(double thickness, double x, double y, bool isVisible)
+        public IPoint CreatePoint(double thickness, double x, double y, bool isVisible)
         {
             var ellipse = new Ellipse()
             {
@@ -676,7 +689,7 @@ namespace Sheet
             return xpoint;
         }
 
-        public XLine CreateLine(double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
+        public ILine CreateLine(double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
         {
             var strokeBrush = new SolidColorBrush(Color.FromArgb(stroke.Alpha, stroke.Red, stroke.Green, stroke.Blue));
 
@@ -699,7 +712,7 @@ namespace Sheet
             return xline;
         }
 
-        public XLine CreateLine(double thickness, XPoint start, XPoint end, ItemColor stroke)
+        public ILine CreateLine(double thickness, IPoint start, IPoint end, ItemColor stroke)
         {
             var xline = CreateLine(thickness, start.X, start.Y, end.X, end.Y, stroke);
             xline.Start = start;
@@ -707,7 +720,7 @@ namespace Sheet
             return xline;
         }
 
-        public XRectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled, ItemColor stroke, ItemColor fill)
+        public IRectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled, ItemColor stroke, ItemColor fill)
         {
             var strokeBrush = new SolidColorBrush(Color.FromArgb(stroke.Alpha, stroke.Red, stroke.Green, stroke.Blue));
             var fillBrush = new SolidColorBrush(Color.FromArgb(fill.Alpha, fill.Red, fill.Green, fill.Blue));
@@ -734,7 +747,7 @@ namespace Sheet
             return xrectangle;
         }
 
-        public XEllipse CreateEllipse(double thickness, double x, double y, double width, double height, bool isFilled, ItemColor stroke, ItemColor fill)
+        public IEllipse CreateEllipse(double thickness, double x, double y, double width, double height, bool isFilled, ItemColor stroke, ItemColor fill)
         {
             var strokeBrush = new SolidColorBrush(Color.FromArgb(stroke.Alpha, stroke.Red, stroke.Green, stroke.Blue));
             var fillBrush = new SolidColorBrush(Color.FromArgb(fill.Alpha, fill.Red, fill.Green, fill.Blue));
@@ -761,7 +774,7 @@ namespace Sheet
             return xellipse;
         }
 
-        public XText CreateText(string text, double x, double y, double width, double height, int halign, int valign, double fontSize, ItemColor backgroud, ItemColor foreground)
+        public IText CreateText(string text, double x, double y, double width, double height, int halign, int valign, double fontSize, ItemColor backgroud, ItemColor foreground)
         {
             var backgroundBrush = new SolidColorBrush(Color.FromArgb(backgroud.Alpha, backgroud.Red, backgroud.Green, backgroud.Blue));
             var foregroundBrush = new SolidColorBrush(Color.FromArgb(foreground.Alpha, foreground.Red, foreground.Green, foreground.Blue));
@@ -792,7 +805,7 @@ namespace Sheet
             return xtext;
         }
 
-        public XImage CreateImage(double x, double y, double width, double height, byte[] data)
+        public IImage CreateImage(double x, double y, double width, double height, byte[] data)
         {
             Image image = new Image();
 
@@ -824,6 +837,15 @@ namespace Sheet
             var ximage = new XImage(image);
 
             return ximage;
+        }
+
+        public IBlock CreateBlock(int id, double x, double y, double width, double height, int dataId, string name, ItemColor backgroud)
+        {
+            var xblock = new XBlock(id, x, y, width, height, dataId, name) 
+            { 
+                Backgroud = ToArgbColor(backgroud)
+            };
+            return xblock;
         }
 
         #endregion

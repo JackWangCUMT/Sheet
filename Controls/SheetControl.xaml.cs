@@ -107,51 +107,48 @@ namespace Sheet
     {
         #region IoC
 
-        private IInterfaceLocator _interfaceLocator;
-        private IBlockController _blockController;
-        private IBlockFactory _blockFactory;
-        private IBlockSerializer _blockSerializer;
-        private IBlockHelper _blockHelper;
-        private IItemController _itemController;
-        private IItemSerializer _itemSerializer;
-        private IJsonSerializer _jsonSerializer;
-        private IClipboard _clipboard;
-        private IBase64 _base64;
-        private IPointController _pointController;
-        private IPageFactory _pageFactory;
+        private readonly IServiceLocator _serviceLocator;
+        private readonly IBlockController _blockController;
+        private readonly IBlockFactory _blockFactory;
+        private readonly IBlockSerializer _blockSerializer;
+        private readonly IBlockHelper _blockHelper;
+        private readonly IItemController _itemController;
+        private readonly IItemSerializer _itemSerializer;
+        private readonly IJsonSerializer _jsonSerializer;
+        private readonly IClipboard _clipboard;
+        private readonly IBase64 _base64;
+        private readonly IPointController _pointController;
+        private readonly IPageFactory _pageFactory;
 
-        public SheetControl(IInterfaceLocator interfaceLocator)
+        public SheetControl(IServiceLocator serviceLocator)
         {
             InitializeComponent();
 
-            Init(interfaceLocator);
-            Init();
-            Loaded += (s, e) => InitLoaded();
-        }
-
-        public void Init(IInterfaceLocator interfaceLocator)
-        {
-            this._interfaceLocator = interfaceLocator;
-            this._blockController = interfaceLocator.GetInterface<IBlockController>();
-            this._blockFactory = interfaceLocator.GetInterface<IBlockFactory>();
-            this._blockSerializer = interfaceLocator.GetInterface<IBlockSerializer>();
-            this._blockHelper = interfaceLocator.GetInterface<IBlockHelper>();
-            this._itemController = interfaceLocator.GetInterface<IItemController>();
-            this._itemSerializer = interfaceLocator.GetInterface<IItemSerializer>();
-            this._jsonSerializer = interfaceLocator.GetInterface<IJsonSerializer>();
-            this._clipboard = interfaceLocator.GetInterface<IClipboard>();
-            this._base64 = interfaceLocator.GetInterface<IBase64>();
-            this._pointController = interfaceLocator.GetInterface<IPointController>();
-            this._pageFactory = interfaceLocator.GetInterface<IPageFactory>();
+            this._serviceLocator = serviceLocator;
+            this._blockController = serviceLocator.GetInstance<IBlockController>();
+            this._blockFactory = serviceLocator.GetInstance<IBlockFactory>();
+            this._blockSerializer = serviceLocator.GetInstance<IBlockSerializer>();
+            this._blockHelper = serviceLocator.GetInstance<IBlockHelper>();
+            this._itemController = serviceLocator.GetInstance<IItemController>();
+            this._itemSerializer = serviceLocator.GetInstance<IItemSerializer>();
+            this._jsonSerializer = serviceLocator.GetInstance<IJsonSerializer>();
+            this._clipboard = serviceLocator.GetInstance<IClipboard>();
+            this._base64 = serviceLocator.GetInstance<IBase64>();
+            this._pointController = serviceLocator.GetInstance<IPointController>();
+            this._pageFactory = serviceLocator.GetInstance<IPageFactory>();
 
             // history
             History = new PageHistoryController(this, this._itemSerializer);
-            
+
             // pan & zoom
             PanAndZoom = this;
 
             // plugins
-            CreatePlugins(interfaceLocator);
+            CreatePlugins(serviceLocator);
+
+            Init();
+
+            Loaded += (s, e) => InitLoaded();
         }
 
         #endregion
@@ -165,16 +162,16 @@ namespace Sheet
         public ISheet BackSheet { get; set; }
         public ISheet ContentSheet { get; set; }
         public ISheet OverlaySheet { get; set; }
-        public XBlock SelectedBlock { get; set; }
-        public XBlock ContentBlock { get; set; }
-        public XBlock FrameBlock { get; set; }
-        public XBlock GridBlock { get; set; }
-        public XLine TempLine { get; set; }
-        public XEllipse TempStartEllipse { get; set; }
-        public XEllipse TempEndEllipse { get; set; }
-        public XRectangle TempRectangle { get; set; }
-        public XEllipse TempEllipse { get; set; }
-        public XRectangle TempSelectionRect { get; set; }
+        public IBlock SelectedBlock { get; set; }
+        public IBlock ContentBlock { get; set; }
+        public IBlock FrameBlock { get; set; }
+        public IBlock GridBlock { get; set; }
+        public ILine TempLine { get; set; }
+        public IEllipse TempStartEllipse { get; set; }
+        public IEllipse TempEndEllipse { get; set; }
+        public IRectangle TempRectangle { get; set; }
+        public IEllipse TempEllipse { get; set; }
+        public IRectangle TempSelectionRect { get; set; }
         public bool IsFirstMove { get; set; }
         public XImmutablePoint PanStartPoint { get; set; }
         public XImmutablePoint SelectionStartPoint { get; set; }
@@ -188,31 +185,15 @@ namespace Sheet
         private ItemType SelectedType = ItemType.None;
         private string EditThumbTemplate = "<Thumb Cursor=\"SizeAll\" xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><Thumb.Template><ControlTemplate><Rectangle Fill=\"Transparent\" Stroke=\"Red\" StrokeThickness=\"2\" Width=\"8\" Height=\"8\" Margin=\"-4,-4,0,0\"/></ControlTemplate></Thumb.Template></Thumb>";
 
-        private XLine SelectedLine = null;
-        private XThumb LineThumbStart = null;
-        private XThumb LineThumbEnd = null;
+        private ILine SelectedLine = null;
+        private IThumb LineThumbStart = null;
+        private IThumb LineThumbEnd = null;
 
-        private XElement SelectedElement = null;
-        private XThumb ThumbTopLeft = null;
-        private XThumb ThumbTopRight = null;
-        private XThumb ThumbBottomLeft = null;
-        private XThumb ThumbBottomRight = null;
-
-        #endregion
-
-        #region Constructor
-
-        public SheetControl()
-        {
-            InitializeComponent();
-
-            Mode = SheetMode.Selection;
-            TempMode = SheetMode.None;
-            IsFirstMove = true;
-
-            Init();
-            Loaded += (s, e) => InitLoaded();
-        }
+        private IElement SelectedElement = null;
+        private IThumb ThumbTopLeft = null;
+        private IThumb ThumbTopRight = null;
+        private IThumb ThumbBottomLeft = null;
+        private IThumb ThumbBottomRight = null;
 
         #endregion
 
@@ -254,13 +235,16 @@ namespace Sheet
 
         private void Init()
         {
-            InitOptions();
+            InitDefaults();
             InitSheets();
             InitBlocks();
         }
 
-        private void InitOptions()
+        private void InitDefaults()
         {
+            Mode = SheetMode.Selection;
+            TempMode = SheetMode.None;
+            IsFirstMove = true;
             Options = DefaultOptions();
             zoomIndex = Options.DefaultZoomIndex;
         }
@@ -275,16 +259,16 @@ namespace Sheet
 
         private void InitBlocks()
         {
-            ContentBlock = new XBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "CONTENT");
+            ContentBlock = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "CONTENT", null);
             ContentBlock.Init();
 
-            FrameBlock = new XBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "FRAME");
+            FrameBlock = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "FRAME", null);
             FrameBlock.Init();
 
-            GridBlock = new XBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "GRID");
+            GridBlock = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "GRID", null);
             GridBlock.Init();
 
-            SelectedBlock = new XBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "SELECTED");
+            SelectedBlock = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "SELECTED", null);
         }
 
         private void InitLoaded()
@@ -518,7 +502,7 @@ namespace Sheet
             }
         }
 
-        private void CopyAsText(XBlock block)
+        private void CopyAsText(IBlock block)
         {
             try
             {
@@ -580,7 +564,7 @@ namespace Sheet
             }
         }
 
-        private void CopyAsJson(XBlock block)
+        private void CopyAsJson(IBlock block)
         {
             try
             {
@@ -676,7 +660,7 @@ namespace Sheet
 
         #region Delete
 
-        public void Delete(XBlock block)
+        public void Delete(IBlock block)
         {
             FinishEdit();
             _blockController.RemoveSelected(ContentSheet, ContentBlock, block);
@@ -728,7 +712,7 @@ namespace Sheet
             _blockController.AddContents(ContentSheet, block, ContentBlock, SelectedBlock, select, Options.LineThickness / Zoom);
         }
 
-        public BlockItem CreateBlock(string name, XBlock block)
+        public BlockItem CreateBlock(string name, IBlock block)
         {
             try
             {
@@ -793,7 +777,7 @@ namespace Sheet
 
         #region Point Mode
 
-        public XPoint InsertPoint(XImmutablePoint p, bool register, bool select)
+        public IPoint InsertPoint(XImmutablePoint p, bool register, bool select)
         {
             double thickness = Options.LineThickness / Zoom;
             double x = _itemController.Snap(p.X, Options.SnapSize);
@@ -812,7 +796,7 @@ namespace Sheet
 
             if (select)
             {
-                SelectedBlock.Points = new List<XPoint>();
+                SelectedBlock.Points = new List<IPoint>();
                 SelectedBlock.Points.Add(point);
 
                 _blockController.Select(point);
@@ -829,7 +813,7 @@ namespace Sheet
         {
             if (_blockController.HaveSelected(SelectedBlock))
             {
-                XBlock moveBlock = _blockController.ShallowCopy(SelectedBlock);
+                IBlock moveBlock = _blockController.ShallowCopy(SelectedBlock);
                 FinishEdit();
                 History.Register("Move");
                 _blockController.Select(moveBlock);
@@ -860,7 +844,7 @@ namespace Sheet
 
         private bool CanInitMove(XImmutablePoint p)
         {
-            var temp = new XBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP");
+            var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
             _blockController.HitTestClick(ContentSheet, SelectedBlock, temp, p, Options.HitTestSize, false, true);
             if (_blockController.HaveSelected(temp))
             {
@@ -885,7 +869,7 @@ namespace Sheet
         {
             if (IsFirstMove)
             {
-                XBlock moveBlock = _blockController.ShallowCopy(SelectedBlock);
+                IBlock moveBlock = _blockController.ShallowCopy(SelectedBlock);
                 History.Register("Move");
                 IsFirstMove = false;
                 Cursor = Cursors.SizeAll;
@@ -1086,7 +1070,7 @@ namespace Sheet
             OverlaySheet.ReleaseCapture();
         }
 
-        private void AdjustThickness(IEnumerable<XLine> lines, double thickness)
+        private void AdjustThickness(IEnumerable<ILine> lines, double thickness)
         {
             foreach (var line in lines)
             {
@@ -1094,7 +1078,7 @@ namespace Sheet
             }
         }
 
-        private void AdjustThickness(IEnumerable<XRectangle> rectangles, double thickness)
+        private void AdjustThickness(IEnumerable<IRectangle> rectangles, double thickness)
         {
             foreach (var rectangle in rectangles)
             {
@@ -1102,7 +1086,7 @@ namespace Sheet
             }
         }
 
-        private void AdjustThickness(IEnumerable<XEllipse> ellipses, double thickness)
+        private void AdjustThickness(IEnumerable<IEllipse> ellipses, double thickness)
         {
             foreach (var ellipse in ellipses)
             {
@@ -1110,7 +1094,7 @@ namespace Sheet
             }
         }
 
-        private void AdjustThickness(XBlock parent, double thickness)
+        private void AdjustThickness(IBlock parent, double thickness)
         {
             AdjustThickness(parent.Lines, thickness);
             AdjustThickness(parent.Rectangles, thickness);
@@ -1225,9 +1209,9 @@ namespace Sheet
 
         #region Line Mode
 
-        private XPoint TryToFindPoint(XImmutablePoint p)
+        private IPoint TryToFindPoint(XImmutablePoint p)
         {
-            var temp = new XBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP");
+            var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
             _blockController.HitTestClick(ContentSheet, ContentBlock, temp, p, Options.HitTestSize, true, true);
 
             if (_blockController.HaveOnePointSelected(temp))
@@ -1241,7 +1225,7 @@ namespace Sheet
             return null;
         }
 
-        private void InitTempLine(XImmutablePoint p, XPoint start)
+        private void InitTempLine(XImmutablePoint p, IPoint start)
         {
             double x = _itemController.Snap(p.X, Options.SnapSize);
             double y = _itemController.Snap(p.Y, Options.SnapSize);
@@ -1278,7 +1262,7 @@ namespace Sheet
             }
         }
 
-        private void FinishTempLine(XPoint end)
+        private void FinishTempLine(IPoint end)
         {
             double x1 = _blockHelper.GetX1(TempLine);
             double y1 = _blockHelper.GetY1(TempLine);
@@ -1466,7 +1450,7 @@ namespace Sheet
 
         private bool TryToEditText(XImmutablePoint p)
         {
-            var temp = new XBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP");
+            var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
             _blockController.HitTestClick(ContentSheet, ContentBlock, temp, p, Options.HitTestSize, true, true);
 
             if (_blockController.HaveOneTextSelected(temp))
@@ -1544,7 +1528,7 @@ namespace Sheet
 
         #region Edit Mode
 
-        private XThumb CreateEditThumb()
+        private IThumb CreateEditThumb()
         {
             var stringReader = new System.IO.StringReader(EditThumbTemplate);
             var xmlReader = System.Xml.XmlReader.Create(stringReader);
@@ -1602,7 +1586,7 @@ namespace Sheet
 
         #region Edit Line
 
-        private void DragLineStart(XLine line, XThumb thumb, double dx, double dy)
+        private void DragLineStart(ILine line, IThumb thumb, double dx, double dy)
         {
             if (line != null && thumb != null)
             {
@@ -1628,7 +1612,7 @@ namespace Sheet
             }
         }
 
-        private void DragLineEnd(XLine line, XThumb thumb, double dx, double dy)
+        private void DragLineEnd(ILine line, IThumb thumb, double dx, double dy)
         {
             if (line != null && thumb != null)
             {
@@ -1668,13 +1652,13 @@ namespace Sheet
                 if (LineThumbStart == null)
                 {
                     LineThumbStart = CreateEditThumb();
-                    (LineThumbStart.Element as Thumb).DragDelta += (sender, e) => DragLineStart(SelectedLine, LineThumbStart, e.HorizontalChange, e.VerticalChange);
+                    (LineThumbStart.Native as Thumb).DragDelta += (sender, e) => DragLineStart(SelectedLine, LineThumbStart, e.HorizontalChange, e.VerticalChange);
                 }
 
                 if (LineThumbEnd == null)
                 {
                     LineThumbEnd = CreateEditThumb();
-                    (LineThumbEnd.Element as Thumb).DragDelta += (sender, e) => DragLineEnd(SelectedLine, LineThumbEnd, e.HorizontalChange, e.VerticalChange);
+                    (LineThumbEnd.Native as Thumb).DragDelta += (sender, e) => DragLineEnd(SelectedLine, LineThumbEnd, e.HorizontalChange, e.VerticalChange);
                 }
 
 
@@ -1732,7 +1716,7 @@ namespace Sheet
             _blockHelper.SetTop(ThumbBottomRight, br.Y);
         }
 
-        private void DragTopLeft(XElement element, XThumb thumb, double dx, double dy)
+        private void DragTopLeft(IElement element, IThumb thumb, double dx, double dy)
         {
             if (element != null && thumb != null)
             {
@@ -1756,7 +1740,7 @@ namespace Sheet
             }
         }
 
-        private void DragTopRight(XElement element, XThumb thumb, double dx, double dy)
+        private void DragTopRight(IElement element, IThumb thumb, double dx, double dy)
         {
             if (element != null && thumb != null)
             {
@@ -1779,7 +1763,7 @@ namespace Sheet
             }
         }
 
-        private void DragBottomLeft(XElement element, XThumb thumb, double dx, double dy)
+        private void DragBottomLeft(IElement element, IThumb thumb, double dx, double dy)
         {
             if (element != null && thumb != null)
             {
@@ -1802,7 +1786,7 @@ namespace Sheet
             }
         }
 
-        private void DragBottomRight(XElement element, XThumb thumb, double dx, double dy)
+        private void DragBottomRight(IElement element, IThumb thumb, double dx, double dy)
         {
             if (element != null && thumb != null)
             {
@@ -1829,25 +1813,25 @@ namespace Sheet
             if (ThumbTopLeft == null)
             {
                 ThumbTopLeft = CreateEditThumb();
-                (ThumbTopLeft.Element as Thumb).DragDelta += (sender, e) => DragTopLeft(SelectedElement, ThumbTopLeft, e.HorizontalChange, e.VerticalChange);
+                (ThumbTopLeft.Native as Thumb).DragDelta += (sender, e) => DragTopLeft(SelectedElement, ThumbTopLeft, e.HorizontalChange, e.VerticalChange);
             }
 
             if (ThumbTopRight == null)
             {
                 ThumbTopRight = CreateEditThumb();
-                (ThumbTopRight.Element as Thumb).DragDelta += (sender, e) => DragTopRight(SelectedElement, ThumbTopRight, e.HorizontalChange, e.VerticalChange);
+                (ThumbTopRight.Native as Thumb).DragDelta += (sender, e) => DragTopRight(SelectedElement, ThumbTopRight, e.HorizontalChange, e.VerticalChange);
             }
 
             if (ThumbBottomLeft == null)
             {
                 ThumbBottomLeft = CreateEditThumb();
-                (ThumbBottomLeft.Element as Thumb).DragDelta += (sender, e) => DragBottomLeft(SelectedElement, ThumbBottomLeft, e.HorizontalChange, e.VerticalChange);
+                (ThumbBottomLeft.Native as Thumb).DragDelta += (sender, e) => DragBottomLeft(SelectedElement, ThumbBottomLeft, e.HorizontalChange, e.VerticalChange);
             }
 
             if (ThumbBottomRight == null)
             {
                 ThumbBottomRight = CreateEditThumb();
-                (ThumbBottomRight.Element as Thumb).DragDelta += (sender, e) => DragBottomRight(SelectedElement, ThumbBottomRight, e.HorizontalChange, e.VerticalChange);
+                (ThumbBottomRight.Native as Thumb).DragDelta += (sender, e) => DragBottomRight(SelectedElement, ThumbBottomRight, e.HorizontalChange, e.VerticalChange);
             }
 
             double left = _blockHelper.GetLeft(SelectedElement);
@@ -1996,7 +1980,7 @@ namespace Sheet
 
         private bool BindDataToBlock(XImmutablePoint p, DataItem dataItem)
         {
-            var temp = new XBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP");
+            var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
             _blockController.HitTestForBlocks(ContentSheet, ContentBlock, temp, p, Options.HitTestSize);
 
             if (_blockController.HaveOneBlockSelected(temp))
@@ -2009,7 +1993,7 @@ namespace Sheet
                 if (result == true)
                 {
                     _blockController.Select(block);
-                    SelectedBlock.Blocks = new List<XBlock>();
+                    SelectedBlock.Blocks = new List<IBlock>();
                     SelectedBlock.Blocks.Add(block);
                 }
 
@@ -2020,7 +2004,7 @@ namespace Sheet
             return false;
         }
 
-        private bool BindDataToBlock(XBlock block, DataItem dataItem)
+        private bool BindDataToBlock(IBlock block, DataItem dataItem)
         {
             if (block != null && block.Texts != null
                 && dataItem != null && dataItem.Columns != null && dataItem.Data != null
@@ -2061,7 +2045,7 @@ namespace Sheet
                     if (!secondTryResult)
                     {
                         // remove block if failed to bind
-                        var temp = new XBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP");
+                        var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
                         temp.Init();
                         temp.Blocks.Add(block);
                         _blockController.RemoveSelected(ContentSheet, ContentBlock, temp);
@@ -2069,7 +2053,7 @@ namespace Sheet
                     else
                     {
                         _blockController.Select(block);
-                        SelectedBlock.Blocks = new List<XBlock>();
+                        SelectedBlock.Blocks = new List<IBlock>();
                         SelectedBlock.Blocks.Add(block);
                     }
                 }
@@ -2349,7 +2333,7 @@ namespace Sheet
             }
         }
 
-        private XBlock Insert(BlockItem blockItem, XImmutablePoint p, bool select)
+        private IBlock Insert(BlockItem blockItem, XImmutablePoint p, bool select)
         {
             _blockController.DeselectContent(SelectedBlock);
             double thickness = Options.LineThickness / Zoom;
@@ -2361,7 +2345,7 @@ namespace Sheet
             if (select)
             {
                 _blockController.Select(block);
-                SelectedBlock.Blocks = new List<XBlock>();
+                SelectedBlock.Blocks = new List<IBlock>();
                 SelectedBlock.Blocks.Add(block);
             }
 
@@ -2455,7 +2439,7 @@ namespace Sheet
             AdjustThickness(FrameBlock, Options.FrameThickness / GetZoom(zoomIndex));
         }
 
-        private BlockItem CreateGridBlock(XBlock gridBlock, bool adjustThickness, bool adjustColor)
+        private BlockItem CreateGridBlock(IBlock gridBlock, bool adjustThickness, bool adjustColor)
         {
             var grid = _blockSerializer.SerializerContents(gridBlock, -1, 0.0, 0.0, 0.0, 0.0, -1, "GRID");
 
@@ -2476,7 +2460,7 @@ namespace Sheet
             return grid;
         }
 
-        private BlockItem CreateFrameBlock(XBlock frameBlock, bool adjustThickness, bool adjustColor)
+        private BlockItem CreateFrameBlock(IBlock frameBlock, bool adjustThickness, bool adjustColor)
         {
             var frame = _blockSerializer.SerializerContents(frameBlock, -1, 0.0, 0.0, 0.0, 0.0, -1, "FRAME");
 
@@ -2614,7 +2598,7 @@ namespace Sheet
             {
                 // try to find point to connect line start
                 var p = position;
-                XPoint start = TryToFindPoint(p);
+                IPoint start = TryToFindPoint(p);
 
                 // create start if Control key is pressed and start point has not been found
                 if (onlyCtrl && start == null)
@@ -2628,7 +2612,7 @@ namespace Sheet
             {
                 // try to find point to connect line end
                 var p = position;
-                XPoint end = TryToFindPoint(p);
+                IPoint end = TryToFindPoint(p);
 
                 // create end point if Control key is pressed and end point has not been found
                 if (onlyCtrl && end == null)
@@ -2895,10 +2879,10 @@ namespace Sheet
         private ISelectedBlockPlugin invertLineStartPlugin;
         private ISelectedBlockPlugin invertLineEndPlugin;
 
-        private void CreatePlugins(IInterfaceLocator interfaceLocator)
+        private void CreatePlugins(IServiceLocator serviceLocator)
         {
-            invertLineStartPlugin = new InvertLineStartPlugin(interfaceLocator);
-            invertLineEndPlugin = new InvertLineEndPlugin(interfaceLocator);
+            invertLineStartPlugin = new InvertLineStartPlugin(serviceLocator);
+            invertLineEndPlugin = new InvertLineEndPlugin(serviceLocator);
         }
 
         private void ProcessPlugin(ISelectedBlockPlugin plugin)

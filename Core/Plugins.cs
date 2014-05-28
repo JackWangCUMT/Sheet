@@ -11,8 +11,8 @@ namespace Sheet
     public interface ISelectedBlockPlugin
     {
         string Name { get; }
-        bool CanProcess(ISheet contentSheet, XBlock contentBlock, XBlock selectedBlock, SheetOptions options);
-        void Process(ISheet contentSheet, XBlock contentBlock, XBlock selectedBlock, SheetOptions options);
+        bool CanProcess(ISheet contentSheet, IBlock contentBlock, IBlock selectedBlock, SheetOptions options);
+        void Process(ISheet contentSheet, IBlock contentBlock, IBlock selectedBlock, SheetOptions options);
     }
 
     #endregion
@@ -23,17 +23,17 @@ namespace Sheet
     {
         #region IoC
 
-        private IInterfaceLocator _interfaceLocator;
-        private IBlockController _blockController;
-        private IBlockFactory _blockFactory;
-        private IBlockHelper _blockHelper;
+        private readonly IServiceLocator _serviceLocator;
+        private readonly IBlockController _blockController;
+        private readonly IBlockFactory _blockFactory;
+        private readonly IBlockHelper _blockHelper;
 
-        public InvertLineStartPlugin(IInterfaceLocator interfaceLocator)
+        public InvertLineStartPlugin(IServiceLocator serviceLocator)
         {
-            _interfaceLocator = interfaceLocator;
-            _blockController = interfaceLocator.GetInterface<IBlockController>();
-            _blockFactory = interfaceLocator.GetInterface<IBlockFactory>();
-            _blockHelper = interfaceLocator.GetInterface<IBlockHelper>();
+            _serviceLocator = serviceLocator;
+            _blockController = serviceLocator.GetInstance<IBlockController>();
+            _blockFactory = serviceLocator.GetInstance<IBlockFactory>();
+            _blockHelper = serviceLocator.GetInstance<IBlockHelper>();
         }
 
         #endregion
@@ -45,12 +45,12 @@ namespace Sheet
             get { return "Invert Line Start"; }
         }
 
-        public bool CanProcess(ISheet contentSheet, XBlock contentBlock, XBlock selectedBlock, SheetOptions options)
+        public bool CanProcess(ISheet contentSheet, IBlock contentBlock, IBlock selectedBlock, SheetOptions options)
         {
             return _blockController.HaveSelected(selectedBlock) && selectedBlock.Lines != null && selectedBlock.Lines.Count > 0;
         }
 
-        public void Process(ISheet contentSheet, XBlock contentBlock, XBlock selectedBlock, SheetOptions options)
+        public void Process(ISheet contentSheet, IBlock contentBlock, IBlock selectedBlock, SheetOptions options)
         {
             InvertSelectedLineStart(contentSheet, contentBlock, selectedBlock, options);
         }
@@ -62,7 +62,7 @@ namespace Sheet
         private double invertedEllipseWidth = 10.0;
         private double invertedEllipseHeight = 10.0;
 
-        private void AddInvertedLineEllipse(ISheet contentSheet, XBlock contentBlock, XBlock selectedBlock, SheetOptions options, double x, double y, double width, double height)
+        private void AddInvertedLineEllipse(ISheet contentSheet, IBlock contentBlock, IBlock selectedBlock, SheetOptions options, double x, double y, double width, double height)
         {
             // create ellipse
             var ellipse = _blockFactory.CreateEllipse(options.LineThickness / options.Zoom, x, y, width, height, false, ItemColors.Black, ItemColors.Transparent);
@@ -73,12 +73,12 @@ namespace Sheet
             _blockController.Select(ellipse);
             if (selectedBlock.Ellipses == null)
             {
-                selectedBlock.Ellipses = new List<XEllipse>();
+                selectedBlock.Ellipses = new List<IEllipse>();
             }
             selectedBlock.Ellipses.Add(ellipse);
         }
 
-        private void InvertSelectedLineStart(ISheet contentSheet, XBlock contentBlock, XBlock selectedBlock, SheetOptions options)
+        private void InvertSelectedLineStart(ISheet contentSheet, IBlock contentBlock, IBlock selectedBlock, SheetOptions options)
         {
             // add for horizontal or vertical line start ellipse and shorten line
             if (_blockController.HaveSelected(selectedBlock) && selectedBlock.Lines != null && selectedBlock.Lines.Count > 0)
@@ -133,7 +133,7 @@ namespace Sheet
                     _blockController.Select(line);
                     if (selectedBlock.Lines == null)
                     {
-                        selectedBlock.Lines = new List<XLine>();
+                        selectedBlock.Lines = new List<ILine>();
                     }
                     selectedBlock.Lines.Add(line);
                 }
@@ -151,17 +151,17 @@ namespace Sheet
     {
         #region IoC
 
-        private IInterfaceLocator _interfaceLocator;
-        private IBlockController _blockController;
-        private IBlockFactory _blockFactory;
-        private IBlockHelper _blockHelper;
+        private readonly IServiceLocator _serviceLocator;
+        private readonly IBlockController _blockController;
+        private readonly IBlockFactory _blockFactory;
+        private readonly IBlockHelper _blockHelper;
 
-        public InvertLineEndPlugin(IInterfaceLocator interfaceLocator)
+        public InvertLineEndPlugin(IServiceLocator serviceLocator)
         {
-            _interfaceLocator = interfaceLocator;
-            _blockController = interfaceLocator.GetInterface<IBlockController>();
-            _blockFactory = interfaceLocator.GetInterface<IBlockFactory>();
-            _blockHelper = interfaceLocator.GetInterface<IBlockHelper>();
+            _serviceLocator = serviceLocator;
+            _blockController = serviceLocator.GetInstance<IBlockController>();
+            _blockFactory = serviceLocator.GetInstance<IBlockFactory>();
+            _blockHelper = serviceLocator.GetInstance<IBlockHelper>();
         }
 
         #endregion
@@ -173,12 +173,12 @@ namespace Sheet
             get { return "Invert Line End"; }
         }
 
-        public bool CanProcess(ISheet contentSheet, XBlock contentBlock, XBlock selectedBlock, SheetOptions options)
+        public bool CanProcess(ISheet contentSheet, IBlock contentBlock, IBlock selectedBlock, SheetOptions options)
         {
             return _blockController.HaveSelected(selectedBlock) && selectedBlock.Lines != null && selectedBlock.Lines.Count > 0;
         }
 
-        public void Process(ISheet contentSheet, XBlock contentBlock, XBlock selectedBlock, SheetOptions options)
+        public void Process(ISheet contentSheet, IBlock contentBlock, IBlock selectedBlock, SheetOptions options)
         {
             InvertSelectedLineEnd(contentSheet, contentBlock, selectedBlock, options);
         }
@@ -190,7 +190,7 @@ namespace Sheet
         private double invertedEllipseWidth = 10.0;
         private double invertedEllipseHeight = 10.0;
 
-        private void AddInvertedLineEllipse(ISheet contentSheet, XBlock contentBlock, XBlock selectedBlock, SheetOptions options, double x, double y, double width, double height)
+        private void AddInvertedLineEllipse(ISheet contentSheet, IBlock contentBlock, IBlock selectedBlock, SheetOptions options, double x, double y, double width, double height)
         {
             // create ellipse
             var ellipse = _blockFactory.CreateEllipse(options.LineThickness / options.Zoom, x, y, width, height, false, ItemColors.Black, ItemColors.Transparent);
@@ -201,12 +201,12 @@ namespace Sheet
             _blockController.Select(ellipse);
             if (selectedBlock.Ellipses == null)
             {
-                selectedBlock.Ellipses = new List<XEllipse>();
+                selectedBlock.Ellipses = new List<IEllipse>();
             }
             selectedBlock.Ellipses.Add(ellipse);
         }
 
-        private void InvertSelectedLineEnd(ISheet contentSheet, XBlock contentBlock, XBlock selectedBlock, SheetOptions options)
+        private void InvertSelectedLineEnd(ISheet contentSheet, IBlock contentBlock, IBlock selectedBlock, SheetOptions options)
         {
             // add for horizontal or vertical line end ellipse and shorten line
             if (_blockController.HaveSelected(selectedBlock) && selectedBlock.Lines != null && selectedBlock.Lines.Count > 0)
@@ -261,7 +261,7 @@ namespace Sheet
                     _blockController.Select(line);
                     if (selectedBlock.Lines == null)
                     {
-                        selectedBlock.Lines = new List<XLine>();
+                        selectedBlock.Lines = new List<ILine>();
                     }
                     selectedBlock.Lines.Add(line);
                 }

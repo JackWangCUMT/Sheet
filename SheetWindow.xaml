@@ -137,16 +137,7 @@
                               Grid.Row="0" 
                               VerticalAlignment="Stretch" 
                               HorizontalAlignment="Stretch">
-                <local:SheetControl x:Name="Sheet" 
-                                    Background="Transparent"
-                                    ClipToBounds="False"
-                                    Grid.Row="0"
-                                    ZoomIndex="9" 
-                                    PanX="0" 
-                                    PanY="0"
-                                    Margin="0"
-                                    VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
-                </local:SheetControl>
+                <ContentControl x:Name="SheetContent"/>
             </local:SizeBorder>
             <GridSplitter Grid.Row="1" 
                           FocusVisualStyle="{x:Null}"

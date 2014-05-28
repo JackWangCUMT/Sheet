@@ -63,24 +63,24 @@ namespace Sheet
     {
         #region IoC
 
-        private IInterfaceLocator _interfaceLocator;
-        private IEntryController _entryController;
-        private IEntryFactory _entryFactory;
-        private IEntrySerializer _entrySerializer;
+        private readonly IServiceLocator _serviceLocator;
+        private readonly IEntryController _entryController;
+        private readonly IEntryFactory _entryFactory;
+        private readonly IEntrySerializer _entrySerializer;
 
-        public SheetWindow(IInterfaceLocator interfaceLocator)
+        public SheetWindow(IServiceLocator serviceLocator)
         {
             InitializeComponent();
 
-            this._interfaceLocator = interfaceLocator;
-            this._entryController = interfaceLocator.GetInterface<IEntryController>();
-            this._entryFactory = interfaceLocator.GetInterface<IEntryFactory>();
-            this._entrySerializer = interfaceLocator.GetInterface<IEntrySerializer>();
+            this._serviceLocator = serviceLocator;
+            this._entryController = serviceLocator.GetInstance<IEntryController>();
+            this._entryFactory = serviceLocator.GetInstance<IEntryFactory>();
+            this._entrySerializer = serviceLocator.GetInstance<IEntrySerializer>();
 
-            GetSheet().Init(interfaceLocator);
-            GetSheet().Library = Library;
+            InitSheet(serviceLocator);
+
             Init();
-        } 
+        }
 
         #endregion
 
@@ -91,6 +91,24 @@ namespace Sheet
         #endregion
 
         #region Init
+
+        private void InitSheet(IServiceLocator serviceLocator)
+        {
+            Sheet = new SheetControl(serviceLocator)
+            {
+                Background = Brushes.Transparent,
+                ClipToBounds = false,
+                ZoomIndex = 9,
+                PanX = 0,
+                PanY = 0,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                HorizontalAlignment = HorizontalAlignment.Stretch
+            };
+
+            SheetContent.Content = Sheet;
+
+            GetSheet().Library = Library;
+        } 
 
         private void Init()
         {
@@ -243,6 +261,8 @@ namespace Sheet
         #endregion
 
         #region Sheet
+
+        private SheetControl Sheet;
 
         private SheetControl GetSheet()
         {

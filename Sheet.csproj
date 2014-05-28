@@ -106,6 +106,7 @@
     <Compile Include="Core\Page.cs" />
     <Compile Include="Core\Plugins.cs" />
     <Compile Include="Core\Point.cs" />
+    <Compile Include="Core\Sheet.cs" />
     <Compile Include="Core\Wpf.cs" />
     <Compile Include="Controls\DatabasesControl.xaml.cs">
       <DependentUpon>DatabasesControl.xaml</DependentUpon>

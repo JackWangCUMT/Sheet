@@ -13,15 +13,15 @@ namespace Sheet
     {
         #region IoC
 
-        private IInterfaceLocator _interfaceLocator;
-        private IPageController _pageController;
-        private IItemSerializer _itemSerializer;
+        private readonly IServiceLocator _serviceLocator;
+        private readonly IPageController _pageController;
+        private readonly IItemSerializer _itemSerializer;
 
-        public PageHistoryController(IInterfaceLocator interfaceLocator)
+        public PageHistoryController(IServiceLocator serviceLocator)
         {
-            this._interfaceLocator = interfaceLocator;
-            this._pageController = interfaceLocator.GetInterface<IPageController>();
-            this._itemSerializer = interfaceLocator.GetInterface<IItemSerializer>();
+            this._serviceLocator = serviceLocator;
+            this._pageController = serviceLocator.GetInstance<IPageController>();
+            this._itemSerializer = serviceLocator.GetInstance<IItemSerializer>();
         }
 
         public PageHistoryController(IPageController pageController, IItemSerializer itemSerializer)
@@ -123,20 +123,20 @@ namespace Sheet
     {
         #region IoC
 
-        private IInterfaceLocator _interfaceLocator;
-        private IBlockFactory _blockFactory;
+        private readonly IServiceLocator _serviceLocator;
+        private readonly IBlockFactory _blockFactory;
 
-        public LogicContentPageFactory(IInterfaceLocator interfaceLocator)
+        public LogicContentPageFactory(IServiceLocator serviceLocator)
         {
-            this._interfaceLocator = interfaceLocator;
-            this._blockFactory = interfaceLocator.GetInterface<IBlockFactory>();
+            this._serviceLocator = serviceLocator;
+            this._blockFactory = serviceLocator.GetInstance<IBlockFactory>();
         } 
 
         #endregion
 
         #region Create
 
-        public void CreateLine(ISheet sheet, List<XLine> lines, double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
+        public void CreateLine(ISheet sheet, IList<ILine> lines, double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
         {
             var line = _blockFactory.CreateLine(thickness, x1, y1, x2, y2, stroke);
 
@@ -151,7 +151,7 @@ namespace Sheet
             }
         }
 
-        public void CreateText(ISheet sheet, List<XText> texts, string content, double x, double y, double width, double height, int halign, int valign, double size, ItemColor foreground)
+        public void CreateText(ISheet sheet, IList<IText> texts, string content, double x, double y, double width, double height, int halign, int valign, double size, ItemColor foreground)
         {
             var text = _blockFactory.CreateText(content, x, y, width, height, halign, valign, size, ItemColors.Transparent, foreground);
 
@@ -166,7 +166,7 @@ namespace Sheet
             }
         }
 
-        public void CreateFrame(ISheet sheet, XBlock block, double size, double thickness, ItemColor stroke)
+        public void CreateFrame(ISheet sheet, IBlock block, double size, double thickness, ItemColor stroke)
         {
             double padding = 6.0;
             double width = 1260.0;
@@ -288,7 +288,7 @@ namespace Sheet
             }
         }
 
-        public void CreateGrid(ISheet sheet, XBlock block, double startX, double startY, double width, double height, double size, double thickness, ItemColor stroke)
+        public void CreateGrid(ISheet sheet, IBlock block, double startX, double startY, double width, double height, double size, double thickness, ItemColor stroke)
         {
             for (double y = startY + size; y < height + startY; y += size)
             {
@@ -301,7 +301,7 @@ namespace Sheet
             }
         }
 
-        public XRectangle CreateSelectionRectangle(double thickness, double x, double y, double width, double height)
+        public IRectangle CreateSelectionRectangle(double thickness, double x, double y, double width, double height)
         {
             var stroke = new ItemColor() { Alpha = 0x7A, Red = 0x00, Green = 0x00, Blue = 0xFF };
             var fill = new ItemColor() { Alpha = 0x3A, Red = 0x00, Green = 0x00, Blue = 0xFF };

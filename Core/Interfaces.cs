@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace Sheet
 {
-    #region IInterfaceLocator
+    #region IServiceLocator
 
-    public interface IInterfaceLocator
+    public interface IServiceLocator
     {
-        T GetInterface<T>();
+        T GetInstance<T>();
     }
 
     #endregion
@@ -127,21 +127,21 @@ namespace Sheet
 
     public interface IBlockSerializer
     {
-        PointItem Serialize(XPoint point);
-        LineItem Serialize(XLine line);
-        RectangleItem Serialize(XRectangle rectangle);
-        EllipseItem Serialize(XEllipse ellipse);
-        TextItem Serialize(XText text);
-        ImageItem Serialize(XImage image);
-        BlockItem Serialize(XBlock parent);
-        BlockItem SerializerContents(XBlock parent, int id, double x, double y, double width, double height, int dataId, string name);
-        XPoint Deserialize(ISheet sheet, XBlock parent, PointItem pointItem, double thickness);
-        XLine Deserialize(ISheet sheet, XBlock parent, LineItem lineItem, double thickness);
-        XRectangle Deserialize(ISheet sheet, XBlock parent, RectangleItem rectangleItem, double thickness);
-        XEllipse Deserialize(ISheet sheet, XBlock parent, EllipseItem ellipseItem, double thickness);
-        XText Deserialize(ISheet sheet, XBlock parent, TextItem textItem);
-        XImage Deserialize(ISheet sheet, XBlock parent, ImageItem imageItem);
-        XBlock Deserialize(ISheet sheet, XBlock parent, BlockItem blockItem, double thickness);
+        PointItem Serialize(IPoint point);
+        LineItem Serialize(ILine line);
+        RectangleItem Serialize(IRectangle rectangle);
+        EllipseItem Serialize(IEllipse ellipse);
+        TextItem Serialize(IText text);
+        ImageItem Serialize(IImage image);
+        BlockItem Serialize(IBlock parent);
+        BlockItem SerializerContents(IBlock parent, int id, double x, double y, double width, double height, int dataId, string name);
+        IPoint Deserialize(ISheet sheet, IBlock parent, PointItem pointItem, double thickness);
+        ILine Deserialize(ISheet sheet, IBlock parent, LineItem lineItem, double thickness);
+        IRectangle Deserialize(ISheet sheet, IBlock parent, RectangleItem rectangleItem, double thickness);
+        IEllipse Deserialize(ISheet sheet, IBlock parent, EllipseItem ellipseItem, double thickness);
+        IText Deserialize(ISheet sheet, IBlock parent, TextItem textItem);
+        IImage Deserialize(ISheet sheet, IBlock parent, ImageItem imageItem);
+        IBlock Deserialize(ISheet sheet, IBlock parent, BlockItem blockItem, double thickness);
     }
 
     #endregion
@@ -150,88 +150,88 @@ namespace Sheet
 
     public interface IBlockController
     {
-        List<XPoint> Add(ISheet sheet, IEnumerable<PointItem> pointItems, XBlock parent, XBlock selected, bool select, double thickness);
-        List<XLine> Add(ISheet sheet, IEnumerable<LineItem> lineItems, XBlock parent, XBlock selected, bool select, double thickness);
-        List<XRectangle> Add(ISheet sheet, IEnumerable<RectangleItem> rectangleItems, XBlock parent, XBlock selected, bool select, double thickness);
-        List<XEllipse> Add(ISheet sheet, IEnumerable<EllipseItem> ellipseItems, XBlock parent, XBlock selected, bool select, double thickness);
-        List<XText> Add(ISheet sheet, IEnumerable<TextItem> textItems, XBlock parent, XBlock selected, bool select, double thickness);
-        List<XImage> Add(ISheet sheet, IEnumerable<ImageItem> imageItems, XBlock parent, XBlock selected, bool select, double thickness);
-        List<XBlock> Add(ISheet sheet, IEnumerable<BlockItem> blockItems, XBlock parent, XBlock selected, bool select, double thickness);
-        void AddContents(ISheet sheet, BlockItem blockItem, XBlock content, XBlock selected, bool select, double thickness);
-        void AddBroken(ISheet sheet, BlockItem blockItem, XBlock content, XBlock selected, bool select, double thickness);
+        List<IPoint> Add(ISheet sheet, IEnumerable<PointItem> pointItems, IBlock parent, IBlock selected, bool select, double thickness);
+        List<ILine> Add(ISheet sheet, IEnumerable<LineItem> lineItems, IBlock parent, IBlock selected, bool select, double thickness);
+        List<IRectangle> Add(ISheet sheet, IEnumerable<RectangleItem> rectangleItems, IBlock parent, IBlock selected, bool select, double thickness);
+        List<IEllipse> Add(ISheet sheet, IEnumerable<EllipseItem> ellipseItems, IBlock parent, IBlock selected, bool select, double thickness);
+        List<IText> Add(ISheet sheet, IEnumerable<TextItem> textItems, IBlock parent, IBlock selected, bool select, double thickness);
+        List<IImage> Add(ISheet sheet, IEnumerable<ImageItem> imageItems, IBlock parent, IBlock selected, bool select, double thickness);
+        List<IBlock> Add(ISheet sheet, IEnumerable<BlockItem> blockItems, IBlock parent, IBlock selected, bool select, double thickness);
+        void AddContents(ISheet sheet, BlockItem blockItem, IBlock content, IBlock selected, bool select, double thickness);
+        void AddBroken(ISheet sheet, BlockItem blockItem, IBlock content, IBlock selected, bool select, double thickness);
 
-        void Remove(ISheet sheet, IEnumerable<XPoint> points);
-        void Remove(ISheet sheet, IEnumerable<XLine> lines);
-        void Remove(ISheet sheet, IEnumerable<XRectangle> rectangles);
-        void Remove(ISheet sheet, IEnumerable<XEllipse> ellipses);
-        void Remove(ISheet sheet, IEnumerable<XText> texts);
-        void Remove(ISheet sheet, IEnumerable<XImage> images);
-        void Remove(ISheet sheet, IEnumerable<XBlock> blocks);
-        void Remove(ISheet sheet, XBlock block);
-        void RemoveSelected(ISheet sheet, XBlock parent, XBlock selected);
+        void Remove(ISheet sheet, IEnumerable<IPoint> points);
+        void Remove(ISheet sheet, IEnumerable<ILine> lines);
+        void Remove(ISheet sheet, IEnumerable<IRectangle> rectangles);
+        void Remove(ISheet sheet, IEnumerable<IEllipse> ellipses);
+        void Remove(ISheet sheet, IEnumerable<IText> texts);
+        void Remove(ISheet sheet, IEnumerable<IImage> images);
+        void Remove(ISheet sheet, IEnumerable<IBlock> blocks);
+        void Remove(ISheet sheet, IBlock block);
+        void RemoveSelected(ISheet sheet, IBlock parent, IBlock selected);
 
-        void MoveDelta(double dx, double dy, XPoint point);
-        void MoveDelta(double dx, double dy, IEnumerable<XPoint> points);
-        void MoveDelta(double dx, double dy, IEnumerable<XLine> lines);
-        void MoveDeltaStart(double dx, double dy, XLine line);
-        void MoveDeltaEnd(double dx, double dy, XLine line);
-        void MoveDelta(double dx, double dy, XRectangle rectangle);
-        void MoveDelta(double dx, double dy, IEnumerable<XRectangle> rectangles);
-        void MoveDelta(double dx, double dy, XEllipse ellipse);
-        void MoveDelta(double dx, double dy, IEnumerable<XEllipse> ellipses);
-        void MoveDelta(double dx, double dy, XText text);
-        void MoveDelta(double dx, double dy, IEnumerable<XText> texts);
-        void MoveDelta(double dx, double dy, XImage image);
-        void MoveDelta(double dx, double dy, IEnumerable<XImage> images);
-        void MoveDelta(double dx, double dy, XBlock block);
-        void MoveDelta(double dx, double dy, IEnumerable<XBlock> blocks);
+        void MoveDelta(double dx, double dy, IPoint point);
+        void MoveDelta(double dx, double dy, IEnumerable<IPoint> points);
+        void MoveDelta(double dx, double dy, IEnumerable<ILine> lines);
+        void MoveDeltaStart(double dx, double dy, ILine line);
+        void MoveDeltaEnd(double dx, double dy, ILine line);
+        void MoveDelta(double dx, double dy, IRectangle rectangle);
+        void MoveDelta(double dx, double dy, IEnumerable<IRectangle> rectangles);
+        void MoveDelta(double dx, double dy, IEllipse ellipse);
+        void MoveDelta(double dx, double dy, IEnumerable<IEllipse> ellipses);
+        void MoveDelta(double dx, double dy, IText text);
+        void MoveDelta(double dx, double dy, IEnumerable<IText> texts);
+        void MoveDelta(double dx, double dy, IImage image);
+        void MoveDelta(double dx, double dy, IEnumerable<IImage> images);
+        void MoveDelta(double dx, double dy, IBlock block);
+        void MoveDelta(double dx, double dy, IEnumerable<IBlock> blocks);
 
-        void Deselect(XPoint point);
-        void Deselect(XLine line);
-        void Deselect(XRectangle rectangle);
-        void Deselect(XEllipse ellipse);
-        void Deselect(XText text);
-        void Deselect(XImage image);
-        void Deselect(XBlock parent);
+        void Deselect(IPoint point);
+        void Deselect(ILine line);
+        void Deselect(IRectangle rectangle);
+        void Deselect(IEllipse ellipse);
+        void Deselect(IText text);
+        void Deselect(IImage image);
+        void Deselect(IBlock parent);
 
-        void Select(XPoint point);
-        void Select(XLine line);
-        void Select(XRectangle rectangle);
-        void Select(XEllipse ellipse);
-        void Select(XText text);
-        void Select(XImage image);
-        void Select(XBlock parent);
+        void Select(IPoint point);
+        void Select(ILine line);
+        void Select(IRectangle rectangle);
+        void Select(IEllipse ellipse);
+        void Select(IText text);
+        void Select(IImage image);
+        void Select(IBlock parent);
 
-        void SelectContent(XBlock selected, XBlock content);
-        void DeselectContent(XBlock selected);
+        void SelectContent(IBlock selected, IBlock content);
+        void DeselectContent(IBlock selected);
 
-        bool HaveSelected(XBlock selected);
-        bool HaveOnePointSelected(XBlock selected);
-        bool HaveOneLineSelected(XBlock selected);
-        bool HaveOneRectangleSelected(XBlock selected);
-        bool HaveOneEllipseSelected(XBlock selected);
-        bool HaveOneTextSelected(XBlock selected);
-        bool HaveOneImageSelected(XBlock selected);
-        bool HaveOneBlockSelected(XBlock selected);
+        bool HaveSelected(IBlock selected);
+        bool HaveOnePointSelected(IBlock selected);
+        bool HaveOneLineSelected(IBlock selected);
+        bool HaveOneRectangleSelected(IBlock selected);
+        bool HaveOneEllipseSelected(IBlock selected);
+        bool HaveOneTextSelected(IBlock selected);
+        bool HaveOneImageSelected(IBlock selected);
+        bool HaveOneBlockSelected(IBlock selected);
 
-        bool HitTest(IEnumerable<XPoint> points, XBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<XLine> lines, XBlock selected, XImmutableRect rect, bool onlyFirst, bool select);
-        bool HitTest(IEnumerable<XRectangle> rectangles, XBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<XEllipse> ellipses, XBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<XText> texts, XBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<XImage> images, XBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<XBlock> blocks, XBlock selected, XImmutableRect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo);
-        bool HitTest(XBlock parent, XBlock selected, XImmutableRect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo);
+        bool HitTest(IEnumerable<IPoint> points, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<ILine> lines, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select);
+        bool HitTest(IEnumerable<IRectangle> rectangles, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<IEllipse> ellipses, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<IText> texts, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<IImage> images, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<IBlock> blocks, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo);
+        bool HitTest(IBlock parent, IBlock selected, XImmutableRect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo);
 
-        bool HitTestClick(ISheet sheet, XBlock parent, XBlock selected, XImmutablePoint p, double size, bool selectInsideBlock, bool resetSelected);
-        bool HitTestForBlocks(ISheet sheet, XBlock parent, XBlock selected, XImmutablePoint p, double size);
-        void HitTestSelectionRect(ISheet sheet, XBlock parent, XBlock selected, XImmutableRect rect, bool resetSelected);
+        bool HitTestClick(ISheet sheet, IBlock parent, IBlock selected, XImmutablePoint p, double size, bool selectInsideBlock, bool resetSelected);
+        bool HitTestForBlocks(ISheet sheet, IBlock parent, IBlock selected, XImmutablePoint p, double size);
+        void HitTestSelectionRect(ISheet sheet, IBlock parent, IBlock selected, XImmutableRect rect, bool resetSelected);
 
-        void ToggleFill(XRectangle rectangle);
-        void ToggleFill(XEllipse ellipse);
-        void ToggleFill(XPoint point);
+        void ToggleFill(IRectangle rectangle);
+        void ToggleFill(IEllipse ellipse);
+        void ToggleFill(IPoint point);
 
-        XBlock ShallowCopy(XBlock original);
+        IBlock ShallowCopy(IBlock original);
     }
 
     #endregion
@@ -240,13 +240,14 @@ namespace Sheet
 
     public interface IBlockFactory
     {
-        XPoint CreatePoint(double thickness, double x, double y, bool isVisible);
-        XLine CreateLine(double thickness, double x1, double y1, double x2, double y2, ItemColor stroke);
-        XLine CreateLine(double thickness, XPoint start, XPoint end, ItemColor stroke);
-        XRectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled, ItemColor stroke, ItemColor fill);
-        XEllipse CreateEllipse(double thickness, double x, double y, double width, double height, bool isFilled, ItemColor stroke, ItemColor fill);
-        XText CreateText(string text, double x, double y, double width, double height, int halign, int valign, double fontSize, ItemColor backgroud, ItemColor foreground);
-        XImage CreateImage(double x, double y, double width, double height, byte[] data);
+        IPoint CreatePoint(double thickness, double x, double y, bool isVisible);
+        ILine CreateLine(double thickness, double x1, double y1, double x2, double y2, ItemColor stroke);
+        ILine CreateLine(double thickness, IPoint start, IPoint end, ItemColor stroke);
+        IRectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled, ItemColor stroke, ItemColor fill);
+        IEllipse CreateEllipse(double thickness, double x, double y, double width, double height, bool isFilled, ItemColor stroke, ItemColor fill);
+        IText CreateText(string text, double x, double y, double width, double height, int halign, int valign, double fontSize, ItemColor backgroud, ItemColor foreground);
+        IImage CreateImage(double x, double y, double width, double height, byte[] data);
+        IBlock CreateBlock(int id, double x, double y, double width, double height, int dataId, string name, ItemColor backgroud);
     }
 
     #endregion
@@ -255,81 +256,81 @@ namespace Sheet
 
     public interface IBlockHelper
     {
-        bool HitTest(XElement element, XImmutableRect rect);
-        bool HitTest(XElement element, XImmutableRect rect, object relativeTo);
+        bool HitTest(IElement element, XImmutableRect rect);
+        bool HitTest(IElement element, XImmutableRect rect, object relativeTo);
 
-        void SetIsSelected(XElement element, bool value);
-        bool GetIsSelected(XElement element);
+        void SetIsSelected(IElement element, bool value);
+        bool GetIsSelected(IElement element);
 
-        bool IsSelected(XPoint point);
-        bool IsSelected(XLine line);
-        bool IsSelected(XRectangle rectangle);
-        bool IsSelected(XEllipse ellipse);
-        bool IsSelected(XText text);
-        bool IsSelected(XImage image);
+        bool IsSelected(IPoint point);
+        bool IsSelected(ILine line);
+        bool IsSelected(IRectangle rectangle);
+        bool IsSelected(IEllipse ellipse);
+        bool IsSelected(IText text);
+        bool IsSelected(IImage image);
 
-        void Deselect(XPoint point);
-        void Deselect(XLine line);
-        void Deselect(XRectangle rectangle);
-        void Deselect(XEllipse ellipse);
-        void Deselect(XText text);
-        void Deselect(XImage image);
+        void Deselect(IPoint point);
+        void Deselect(ILine line);
+        void Deselect(IRectangle rectangle);
+        void Deselect(IEllipse ellipse);
+        void Deselect(IText text);
+        void Deselect(IImage image);
 
-        void Select(XPoint point);
-        void Select(XLine line);
-        void Select(XRectangle rectangle);
-        void Select(XEllipse ellipse);
-        void Select(XText text);
-        void Select(XImage image);
+        void Select(IPoint point);
+        void Select(ILine line);
+        void Select(IRectangle rectangle);
+        void Select(IEllipse ellipse);
+        void Select(IText text);
+        void Select(IImage image);
 
-        void SetZIndex(XElement element, int index);
+        void SetZIndex(IElement element, int index);
 
-        void ToggleFill(XRectangle rectangle);
-        void ToggleFill(XEllipse ellipse);
-        void ToggleFill(XPoint point);
+        void ToggleFill(IRectangle rectangle);
+        void ToggleFill(IEllipse ellipse);
+        void ToggleFill(IPoint point);
 
-        double GetLeft(XElement element);
-        double GetTop(XElement element);
-        double GetWidth(XElement element);
-        double GetHeight(XElement element);
-        void SetLeft(XElement element, double left);
-        void SetTop(XElement element, double top);
-        void SetWidth(XElement element, double width);
-        void SetHeight(XElement element, double height);
+        double GetLeft(IElement element);
+        double GetTop(IElement element);
+        double GetWidth(IElement element);
+        double GetHeight(IElement element);
+        void SetLeft(IElement element, double left);
+        void SetTop(IElement element, double top);
+        void SetWidth(IElement element, double width);
+        void SetHeight(IElement element, double height);
 
-        double GetX1(XLine line);
-        double GetY1(XLine line);
-        double GetX2(XLine line);
-        double GetY2(XLine line);
-        ItemColor GetStroke(XLine line);
-        void SetX1(XLine line, double x1);
-        void SetY1(XLine line, double y1);
-        void SetX2(XLine line, double x2);
-        void SetY2(XLine line, double y2);
-        void SetStrokeThickness(XLine line, double thickness);
-        double GetStrokeThickness(XLine line);
+        double GetX1(ILine line);
+        double GetY1(ILine line);
+        double GetX2(ILine line);
+        double GetY2(ILine line);
+        ItemColor GetStroke(ILine line);
+        void SetX1(ILine line, double x1);
+        void SetY1(ILine line, double y1);
+        void SetX2(ILine line, double x2);
+        void SetY2(ILine line, double y2);
+        void SetStrokeThickness(ILine line, double thickness);
+        double GetStrokeThickness(ILine line);
 
-        ItemColor GetStroke(XRectangle rectangle);
-        ItemColor GetFill(XRectangle rectangle);
-        bool IsTransparent(XRectangle rectangle);
-        void SetStrokeThickness(XRectangle rectangle, double thickness);
-        double GetStrokeThickness(XRectangle rectangle);
+        ItemColor GetStroke(IRectangle rectangle);
+        ItemColor GetFill(IRectangle rectangle);
+        bool IsTransparent(IRectangle rectangle);
+        void SetStrokeThickness(IRectangle rectangle, double thickness);
+        double GetStrokeThickness(IRectangle rectangle);
 
-        ItemColor GetStroke(XEllipse ellipse);
-        ItemColor GetFill(XEllipse ellipse);
-        bool IsTransparent(XEllipse ellipse);
-        void SetStrokeThickness(XEllipse ellipse, double thickness);
-        double GetStrokeThickness(XEllipse ellipse);
+        ItemColor GetStroke(IEllipse ellipse);
+        ItemColor GetFill(IEllipse ellipse);
+        bool IsTransparent(IEllipse ellipse);
+        void SetStrokeThickness(IEllipse ellipse, double thickness);
+        double GetStrokeThickness(IEllipse ellipse);
 
-        ItemColor GetBackground(XText text);
-        ItemColor GetForeground(XText text);
+        ItemColor GetBackground(IText text);
+        ItemColor GetForeground(IText text);
 
-        string GetText(XText text);
-        int GetHAlign(XText text);
-        int GetVAlign(XText text);
-        double GetSize(XText text);
+        string GetText(IText text);
+        int GetHAlign(IText text);
+        int GetVAlign(IText text);
+        double GetSize(IText text);
 
-        byte[] GetData(XImage image);
+        byte[] GetData(IImage image);
     }
 
     #endregion
@@ -338,9 +339,9 @@ namespace Sheet
 
     public interface IPointController
     {
-        void ConnectStart(XPoint point, XLine line);
-        void ConnectEnd(XPoint point, XLine line);
-        void UpdateDependencies(List<XBlock> blocks, List<XPoint> points, List<XLine> lines);
+        void ConnectStart(IPoint point, ILine line);
+        void ConnectEnd(IPoint point, ILine line);
+        void UpdateDependencies(List<IBlock> blocks, List<IPoint> points, List<ILine> lines);
     }
 
     #endregion
@@ -349,12 +350,12 @@ namespace Sheet
 
     public interface IPageFactory
     {
-        void CreateLine(ISheet sheet, List<XLine> lines, double thickness, double x1, double y1, double x2, double y2, ItemColor stroke);
-        void CreateText(ISheet sheet, List<XText> texts, string content, double x, double y, double width, double height, int halign, int valign, double size, ItemColor foreground);
-        void CreateFrame(ISheet sheet, XBlock block, double size, double thickness, ItemColor stroke);
-        void CreateGrid(ISheet sheet, XBlock block, double startX, double startY, double width, double height, double size, double thickness, ItemColor stroke);
+        void CreateLine(ISheet sheet, IList<ILine> lines, double thickness, double x1, double y1, double x2, double y2, ItemColor stroke);
+        void CreateText(ISheet sheet, IList<IText> texts, string content, double x, double y, double width, double height, int halign, int valign, double size, ItemColor foreground);
+        void CreateFrame(ISheet sheet, IBlock block, double size, double thickness, ItemColor stroke);
+        void CreateGrid(ISheet sheet, IBlock block, double startX, double startY, double width, double height, double size, double thickness, ItemColor stroke);
         
-        XRectangle CreateSelectionRectangle(double thickness, double x, double y, double width, double height);
+        IRectangle CreateSelectionRectangle(double thickness, double x, double y, double width, double height);
     }
 
     #endregion
@@ -409,8 +410,8 @@ namespace Sheet
         double Height { get; set; }
         bool IsCaptured { get; }
         object GetParent();
-        void Add(XElement element);
-        void Remove(XElement element);
+        void Add(IElement element);
+        void Remove(IElement element);
         void Add(object element);
         void Remove(object element);
         void Capture();

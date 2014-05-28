@@ -194,13 +194,13 @@ namespace Sheet
     {
         #region IoC
 
-        private IInterfaceLocator _interfaceLocator;
-        private IBase64 _base64;
+        private readonly IServiceLocator _serviceLocator;
+        private readonly IBase64 _base64;
 
-        public ItemSerializer(IInterfaceLocator interfaceLocator)
+        public ItemSerializer(IServiceLocator serviceLocator)
         {
-            this._interfaceLocator = interfaceLocator;
-            this._base64 = interfaceLocator.GetInterface<IBase64>();
+            this._serviceLocator = serviceLocator;
+            this._base64 = serviceLocator.GetInstance<IBase64>();
         }
 
         #endregion

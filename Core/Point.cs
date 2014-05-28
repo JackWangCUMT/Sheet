@@ -12,20 +12,20 @@ namespace Sheet
     {
         #region IoC
 
-        private IInterfaceLocator _interfaceLocator;
-        private IBlockHelper _blockHelper;
+        private readonly IServiceLocator _serviceLocator;
+        private readonly IBlockHelper _blockHelper;
 
-        public PointController(IInterfaceLocator interfaceLocator)
+        public PointController(IServiceLocator serviceLocator)
         {
-            this._interfaceLocator = interfaceLocator;
-            this._blockHelper = _interfaceLocator.GetInterface<IBlockHelper>();
+            this._serviceLocator = serviceLocator;
+            this._blockHelper = _serviceLocator.GetInstance<IBlockHelper>();
         }
 
         #endregion
 
         #region Get
 
-        private IEnumerable<KeyValuePair<int, XPoint>> GetAllPoints(List<XBlock> blocks)
+        private IEnumerable<KeyValuePair<int, IPoint>> GetAllPoints(IList<IBlock> blocks)
         {
             foreach (var block in blocks)
             {
@@ -33,7 +33,7 @@ namespace Sheet
                 {
                     foreach (var point in block.Points)
                     {
-                        yield return new KeyValuePair<int, XPoint>(point.Id, point);
+                        yield return new KeyValuePair<int, IPoint>(point.Id, point);
                     }
                 }
 
@@ -47,7 +47,7 @@ namespace Sheet
             }
         }
 
-        private IEnumerable<XLine> GetAllLines(List<XBlock> blocks)
+        private IEnumerable<ILine> GetAllLines(IList<IBlock> blocks)
         {
             foreach (var block in blocks)
             {
@@ -73,23 +73,23 @@ namespace Sheet
 
         #region Connect
 
-        public void ConnectStart(XPoint point, XLine line)
+        public void ConnectStart(IPoint point, ILine line)
         {
-            Action<XElement, XPoint> update = (element, p) =>
+            Action<IElement, IPoint> update = (element, p) =>
             {
-                _blockHelper.SetX1(element as XLine, p.X);
-                _blockHelper.SetY1(element as XLine, p.Y);
+                _blockHelper.SetX1(element as ILine, p.X);
+                _blockHelper.SetY1(element as ILine, p.Y);
             };
             var dependecy = new XDependency(line, update);
             point.Connected.Add(dependecy);
         }
 
-        public void ConnectEnd(XPoint point, XLine line)
+        public void ConnectEnd(IPoint point, ILine line)
         {
-            Action<XElement, XPoint> update = (element, p) =>
+            Action<IElement, IPoint> update = (element, p) =>
             {
-                _blockHelper.SetX2(element as XLine, p.X);
-                _blockHelper.SetY2(element as XLine, p.Y);
+                _blockHelper.SetX2(element as ILine, p.X);
+                _blockHelper.SetY2(element as ILine, p.Y);
             };
             var dependecy = new XDependency(line, update);
             point.Connected.Add(dependecy);
@@ -99,7 +99,7 @@ namespace Sheet
 
         #region Dependencies
 
-        public void UpdateDependencies(List<XBlock> blocks, List<XPoint> points, List<XLine> lines)
+        public void UpdateDependencies(List<IBlock> blocks, List<IPoint> points, List<ILine> lines)
         {
             // get all points
             var ps = GetAllPoints(blocks).ToDictionary(x => x.Key, x => x.Value);

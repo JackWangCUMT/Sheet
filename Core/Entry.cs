@@ -43,7 +43,7 @@ namespace Sheet
     {
         #region IoC
 
-        private IEntryFactory _entryFactory;
+        private readonly IEntryFactory _entryFactory;
 
         public EntrySerializer(IEntryFactory entryFactory)
         {
@@ -188,7 +188,7 @@ namespace Sheet
     {
         #region IoC
 
-        private IEntryFactory _entryFactory;
+        private readonly IEntryFactory _entryFactory;
 
         public EntryController(IEntryFactory entryFactory)
         {

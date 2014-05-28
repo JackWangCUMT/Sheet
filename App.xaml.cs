@@ -9,11 +9,11 @@ using System.Windows;
 
 namespace Sheet
 {
-    #region AppInterfaceLocator
+    #region AppServiceLocator
 
-    public class AppInterfaceLocator : IInterfaceLocator
+    public class AppServiceLocator : IServiceLocator
     {
-        public T GetInterface<T>()
+        public T GetInstance<T>()
         {
             return App.Container.Resolve<T>();
         }
@@ -56,7 +56,7 @@ namespace Sheet
             builder.RegisterType<PointController>().As<IPointController>().SingleInstance();
             builder.RegisterType<LogicContentPageFactory>().As<IPageFactory>().SingleInstance();
 
-            builder.RegisterType<AppInterfaceLocator>().As<IInterfaceLocator>().SingleInstance();
+            builder.RegisterType<AppServiceLocator>().As<IServiceLocator>().SingleInstance();
 
             builder.RegisterType<SheetWindow>();
 
