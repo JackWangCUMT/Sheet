@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
@@ -651,6 +653,22 @@ namespace Sheet
 
         #endregion
 
+        #region Thumb
+
+        private string ThumbTemplate = "<Thumb Cursor=\"SizeAll\" xmlns=\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\"><Thumb.Template><ControlTemplate><Rectangle Fill=\"Transparent\" Stroke=\"Red\" StrokeThickness=\"2\" Width=\"8\" Height=\"8\" Margin=\"-4,-4,0,0\"/></ControlTemplate></Thumb.Template></Thumb>";
+
+        private void SetLineDragDeltaHandler(ILine line, IThumb thumb, Action<ILine, IThumb, double, double> drag)
+        {
+            (thumb.Native as Thumb).DragDelta += (sender, e) => drag(line, thumb, e.HorizontalChange, e.VerticalChange);
+        }
+
+        private void SetElementDragDeltaHandler(IElement element, IThumb thumb, Action<IElement, IThumb, double, double> drag)
+        {
+            (thumb.Native as Thumb).DragDelta += (sender, e) => drag(element, thumb, e.HorizontalChange, e.VerticalChange);
+        }
+
+        #endregion
+
         #region Color
 
         private IArgbColor ToArgbColor(ItemColor color)
@@ -665,6 +683,34 @@ namespace Sheet
         #endregion
 
         #region Create
+
+        public IThumb CreateThumb(double x, double y)
+        {
+            using (var stringReader = new System.IO.StringReader(ThumbTemplate))
+            {
+                using (var xmlReader = System.Xml.XmlReader.Create(stringReader))
+                {
+                    var thumb = XamlReader.Load(xmlReader) as Thumb;
+                    Canvas.SetLeft(thumb, x);
+                    Canvas.SetTop(thumb, y);
+                    return new XThumb(thumb);
+                }
+            }
+        }
+
+        public IThumb CreateThumb(double x, double y, ILine line, Action<ILine, IThumb, double, double> drag)
+        {
+            var thumb = CreateThumb(x, y);
+            SetLineDragDeltaHandler(line, thumb, drag);
+            return thumb;
+        }
+
+        public IThumb CreateThumb(double x, double y, IElement element, Action<IElement, IThumb, double, double> drag)
+        {
+            var thumb = CreateThumb(x, y);
+            SetElementDragDeltaHandler(element, thumb, drag);
+            return thumb;
+        }
 
         public IPoint CreatePoint(double thickness, double x, double y, bool isVisible)
         {

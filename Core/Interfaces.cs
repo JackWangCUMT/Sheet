@@ -240,6 +240,9 @@ namespace Sheet
 
     public interface IBlockFactory
     {
+        IThumb CreateThumb(double x, double y);
+        IThumb CreateThumb(double x, double y, ILine line, Action<ILine, IThumb, double, double> drag);
+        IThumb CreateThumb(double x, double y, IElement element, Action<IElement, IThumb, double, double> drag);
         IPoint CreatePoint(double thickness, double x, double y, bool isVisible);
         ILine CreateLine(double thickness, double x1, double y1, double x2, double y2, ItemColor stroke);
         ILine CreateLine(double thickness, IPoint start, IPoint end, ItemColor stroke);
