@@ -1443,7 +1443,8 @@ namespace Sheet
             double x = _itemController.Snap(p.X, Options.SnapSize);
             double y = _itemController.Snap(p.Y, Options.SnapSize);
             History.Register("Create Text");
-            var text = _blockFactory.CreateText("Text", x, y, 30.0, 15.0, (int)HorizontalAlignment.Center, (int)VerticalAlignment.Center, 11.0, ItemColors.Transparent, ItemColors.Black);
+
+            var text = _blockFactory.CreateText("Text", x, y, 30.0, 15.0, (int)XHorizontalAlignment.Center, (int)XVerticalAlignment.Center, 11.0, ItemColors.Transparent, ItemColors.Black);
             ContentBlock.Texts.Add(text);
             ContentSheet.Add(text);
         }
