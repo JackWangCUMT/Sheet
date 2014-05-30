@@ -2398,7 +2398,7 @@ namespace Sheet
         {
             if (Library != null && blockItem != null)
             {
-                var source = Library.GetSource() as IEnumerable<BlockItem>;
+                var source = Library.GetSource();
                 var items = new List<BlockItem>(source);
                 _itemController.ResetPosition(blockItem, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight);
                 items.Add(blockItem);
