@@ -107,7 +107,7 @@ namespace Sheet
 
             SheetContent.Content = Sheet;
 
-            GetSheet().Library = Library;
+            GetSheetController().LibraryController = Library;
         } 
 
         private void Init()
@@ -121,14 +121,13 @@ namespace Sheet
 
         private void InitSizeBorder()
         {
-            SizeBorder.ExecuteUpdateSize = (size) => GetSheet().SetAutoFitSize(size.Width, size.Height);
-            SizeBorder.ExecuteSizeChanged = () => GetSheet().AutoFit();
+            SizeBorder.ExecuteUpdateSize = (size) => GetSheetController().SetAutoFitSize(size.Width, size.Height);
+            SizeBorder.ExecuteSizeChanged = () => GetSheetController().PanAndZoomController.AutoFit();
         }
 
         private void InitSolution()
         {
-
-            Solution.Init(GetSheet(), _entryController);
+            Solution.Init(GetSheetController(), _entryController);
         }
 
         private void InitDrop()
@@ -242,15 +241,15 @@ namespace Sheet
             }
             else if (string.Compare(ext, FileDialogSettings.PageExtension, true) == 0)
             {
-                await GetSheet().OpenTextPage(path);
+                await GetSheetController().OpenTextPage(path);
             }
             else if (string.Compare(ext, FileDialogSettings.JsonPageExtension, true) == 0)
             {
-                await GetSheet().OpenJsonPage(path);
+                await GetSheetController().OpenJsonPage(path);
             }
             else if (string.Compare(ext, FileDialogSettings.LibraryExtension, true) == 0)
             {
-                await GetSheet().LoadLibrary(path);
+                await GetSheetController().LoadLibrary(path);
             }
             else if (string.Compare(ext, FileDialogSettings.DatabaseExtension, true) == 0)
             {
@@ -260,13 +259,13 @@ namespace Sheet
 
         #endregion
 
-        #region Sheet
+        #region Sheet Controller
 
         private SheetControl Sheet;
 
-        private SheetControl GetSheet()
+        private ISheetController GetSheetController()
         {
-            return Sheet;
+            return Sheet.SheetController;
         }
 
         #endregion
@@ -275,7 +274,7 @@ namespace Sheet
 
         private void UpdateModeMenu()
         {
-            var mode = GetSheet().GetMode();
+            var mode = GetSheetController().GetMode();
             ModeNone.IsChecked = mode == SheetMode.None ? true : false;
             ModeSelection.IsChecked = mode == SheetMode.Selection ? true : false;
             ModeInsert.IsChecked = mode == SheetMode.Insert ? true : false;
@@ -293,7 +292,7 @@ namespace Sheet
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (GetSheet().GetMode() == SheetMode.TextEditor)
+            if (GetSheetController().GetMode() == SheetMode.TextEditor)
             {
                 return;
             }
@@ -310,7 +309,7 @@ namespace Sheet
                 case Key.NumPad0:
                     if (onlyCtrl)
                     {
-                        GetSheet().AutoFit();
+                        GetSheetController().PanAndZoomController.AutoFit();
                     }
                     break;
                 // Ctrl+1: Actual Size
@@ -318,7 +317,7 @@ namespace Sheet
                 case Key.NumPad1:
                     if (onlyCtrl)
                     {
-                        GetSheet().ActualSize();
+                        GetSheetController().PanAndZoomController.ActualSize();
                     }
                     break;
                 // N: Mode None
@@ -327,12 +326,12 @@ namespace Sheet
                 case Key.N:
                     if (none)
                     {
-                        GetSheet().ModeNone();
+                        GetSheetController().SetMode(SheetMode.None);
                         UpdateModeMenu();
                     }
                     if (onlyCtrl)
                     {
-                        GetSheet().NewPage();
+                        GetSheetController().NewPage();
                     }
                     else if (ctrlShift)
                     {
@@ -344,7 +343,7 @@ namespace Sheet
                 case Key.O:
                     if (onlyCtrl)
                     {
-                        GetSheet().OpenPage();
+                        GetSheetController().OpenPage();
                     }
                     else if (ctrlShift)
                     {
@@ -357,7 +356,7 @@ namespace Sheet
                 case Key.S:
                     if (onlyCtrl)
                     {
-                        GetSheet().SavePage();
+                        GetSheetController().SavePage();
                     }
                     else if (ctrlShift)
                     {
@@ -365,7 +364,7 @@ namespace Sheet
                     }
                     else if (none)
                     {
-                        GetSheet().ModeSelection();
+                        GetSheetController().SetMode(SheetMode.Selection);
                         UpdateModeMenu();
                     }
                     break;
@@ -376,16 +375,16 @@ namespace Sheet
                     {
                         if (Solution.DataContext != null)
                         {
-                            GetSheet().Export(Solution.DataContext as SolutionEntry);
+                            GetSheetController().Export(Solution.DataContext as SolutionEntry);
                         }
                         else
                         {
-                            GetSheet().ExportPage();
+                            GetSheetController().ExportPage();
                         }
                     }
                     else if (none)
                     {
-                        GetSheet().ModeEllipse();
+                        GetSheetController().SetMode(SheetMode.Ellipse);
                         UpdateModeMenu();
                     }
                     break;
@@ -394,11 +393,11 @@ namespace Sheet
                 case Key.L:
                     if (onlyCtrl)
                     {
-                        GetSheet().LoadLibrary();
+                        GetSheetController().LoadLibrary();
                     }
                     else if (none)
                     {
-                        GetSheet().ModeLine();
+                        GetSheetController().SetMode(SheetMode.Line);
                         UpdateModeMenu();
                     }
                     break;
@@ -411,7 +410,7 @@ namespace Sheet
                     }
                     else if (none)
                     {
-                        GetSheet().ModeImage();
+                        GetSheetController().SetMode(SheetMode.Image);
                         UpdateModeMenu();
                     }
                     break;
@@ -419,14 +418,14 @@ namespace Sheet
                 case Key.Z:
                     if (onlyCtrl)
                     {
-                        GetSheet().History.Undo();
+                        GetSheetController().HistoryController.Undo();
                     }
                     break;
                 // Ctrl+Y: Redo
                 case Key.Y:
                     if (onlyCtrl)
                     {
-                        GetSheet().History.Redo();
+                        GetSheetController().HistoryController.Redo();
                     }
                     break;
                 // Ctrl+X: Cut
@@ -434,11 +433,11 @@ namespace Sheet
                 case Key.X:
                     if (onlyCtrl)
                     {
-                        GetSheet().CutAsText();
+                        GetSheetController().CutAsText();
                     }
                     else if (ctrlShift)
                     {
-                        GetSheet().CutAsJson();
+                        GetSheetController().CutAsJson();
                     }
                     break;
                 // Ctrl+C: Copy
@@ -446,11 +445,11 @@ namespace Sheet
                 case Key.C:
                     if (onlyCtrl)
                     {
-                        GetSheet().CopyAsText();
+                        GetSheetController().CopyAsText();
                     }
                     else if (ctrlShift)
                     {
-                        GetSheet().CopyAsJson();
+                        GetSheetController().CopyAsJson();
                     }
                     break;
                 // Ctrl+V: Paste
@@ -458,7 +457,7 @@ namespace Sheet
                 case Key.V:
                     if (onlyCtrl)
                     {
-                        GetSheet().PasteText();
+                        GetSheetController().PasteText();
                     }
                     break;
                 // Del: Delete
@@ -466,19 +465,19 @@ namespace Sheet
                 case Key.Delete:
                     if (onlyCtrl)
                     {
-                        GetSheet().History.Register("Reset");
-                        GetSheet().ResetPage();
+                        GetSheetController().HistoryController.Register("Reset");
+                        GetSheetController().ResetPage();
                     }
                     else if (none)
                     {
-                        GetSheet().Delete();
+                        GetSheetController().Delete();
                     }
                     break;
                 // Ctrl+A: Select All
                 case Key.A:
                     if (onlyCtrl)
                     {
-                        GetSheet().SelecteAll();
+                        GetSheetController().SelecteAll();
                     }
                     break;
                 // B: Create Block
@@ -486,43 +485,43 @@ namespace Sheet
                 case Key.B:
                     if (onlyCtrl)
                     {
-                        GetSheet().BreakBlock();
+                        GetSheetController().BreakBlock();
                     }
                     else if (none)
                     {
                         e.Handled = true;
-                        GetSheet().CreateBlock();
+                        GetSheetController().CreateBlock();
                     }
                     break;
                 // Up: Move Up
                 case Key.Up:
-                    if (none && GetSheet().IsFocused)
+                    if (none && GetSheetController().IsSheetFocused())
                     {
-                        GetSheet().MoveUp();
+                        GetSheetController().MoveUp();
                         e.Handled = true;
                     }
                     break;
                 // Down: Move Down
                 case Key.Down:
-                    if (none && GetSheet().IsFocused)
+                    if (none && GetSheetController().IsSheetFocused())
                     {
-                        GetSheet().MoveDown();
+                        GetSheetController().MoveDown();
                         e.Handled = true;
                     }
                     break;
                 // Left: Move Left
                 case Key.Left:
-                    if (none && GetSheet().IsFocused)
+                    if (none && GetSheetController().IsSheetFocused())
                     {
-                        GetSheet().MoveLeft();
+                        GetSheetController().MoveLeft();
                         e.Handled = true;
                     }
                     break;
                 // Right: Move Right
                 case Key.Right:
-                    if (none && GetSheet().IsFocused)
+                    if (none && GetSheetController().IsSheetFocused())
                     {
-                        GetSheet().MoveRight();
+                        GetSheetController().MoveRight();
                         e.Handled = true;
                     }
                     break;
@@ -530,14 +529,14 @@ namespace Sheet
                 case Key.F:
                     if (none)
                     {
-                        GetSheet().ToggleFill();
+                        GetSheetController().ToggleFill();
                     }
                     break;
                 // I: Mode Insert
                 case Key.I:
                     if (none)
                     {
-                        GetSheet().ModeInsert();
+                        GetSheetController().SetMode(SheetMode.Insert);
                         UpdateModeMenu(); 
                     }
                     break;
@@ -545,7 +544,7 @@ namespace Sheet
                 case Key.P:
                     if (none)
                     {
-                        GetSheet().ModePoint();
+                        GetSheetController().SetMode(SheetMode.Point);
                         UpdateModeMenu(); 
                     }
                     break;
@@ -553,7 +552,7 @@ namespace Sheet
                 case Key.R:
                     if (none)
                     {
-                        GetSheet().ModeRectangle();
+                        GetSheetController().SetMode(SheetMode.Rectangle);
                         UpdateModeMenu(); 
                     }
                     break;
@@ -561,7 +560,7 @@ namespace Sheet
                 case Key.T:
                     if (none)
                     {
-                        GetSheet().ModeText();
+                        GetSheetController().SetMode(SheetMode.Text);
                         UpdateModeMenu(); 
                     }
                     break;
@@ -569,14 +568,14 @@ namespace Sheet
                 case Key.Q:
                     if (none)
                     {
-                        GetSheet().InvertSelectedLineStart(); 
+                        GetSheetController().InvertSelectedLineStart(); 
                     }
                     break;
                 // W: Invert Line End
                 case Key.W:
                     if (none)
                     {
-                        GetSheet().InvertSelectedLineEnd(); 
+                        GetSheetController().InvertSelectedLineEnd(); 
                     }
                     break;
             }
@@ -600,7 +599,7 @@ namespace Sheet
             {
                 try
                 {
-                    GetSheet().ResetPage();
+                    GetSheetController().ResetPage();
 
                     await NewSolution(dlg.FileName);
                 }
@@ -637,7 +636,7 @@ namespace Sheet
             {
                 try
                 {
-                    GetSheet().ResetPage();
+                    GetSheetController().ResetPage();
 
                     await OpenSolution(dlg.FileName);
                 }
@@ -692,7 +691,7 @@ namespace Sheet
                 SolutionPath = null;
                 Solution.DataContext = null;
 
-                GetSheet().ResetPage();
+                GetSheetController().ResetPage();
             }
         }
 
@@ -722,34 +721,34 @@ namespace Sheet
 
         private void FileNewPage_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().NewPage();
+            GetSheetController().NewPage();
         }
 
         private void FileOpenPage_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().OpenPage();
+            GetSheetController().OpenPage();
         }
 
         private void FileSavePage_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().SavePage();
+            GetSheetController().SavePage();
         }
 
         private void FileExport_Click(object sender, RoutedEventArgs e)
         {
             if (Solution.DataContext != null)
             {
-                GetSheet().Export(Solution.DataContext as SolutionEntry);
+                GetSheetController().Export(Solution.DataContext as SolutionEntry);
             }
             else
             {
-                GetSheet().ExportPage();
+                GetSheetController().ExportPage();
             }
         }
 
         private void FileLibrary_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().LoadLibrary();
+            GetSheetController().LoadLibrary();
         }
 
         private void FileDatabase_Click(object sender, RoutedEventArgs e)
@@ -768,90 +767,90 @@ namespace Sheet
 
         private void EditUndo_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().History.Undo();
+            GetSheetController().HistoryController.Undo();
         }
 
         private void EditRedo_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().History.Redo();
+            GetSheetController().HistoryController.Redo();
         }
 
         private void EditCut_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().CutAsText();
+            GetSheetController().CutAsText();
         }
 
         private void EditCopy_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().CopyAsText();
+            GetSheetController().CopyAsText();
         }
 
         private void EditPaste_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().PasteText();
+            GetSheetController().PasteText();
         }
 
         private void EditDelete_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().Delete();
+            GetSheetController().Delete();
         }
 
         private void EditReset_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().History.Register("Reset");
-            GetSheet().ResetPage();
+            GetSheetController().HistoryController.Register("Reset");
+            GetSheetController().ResetPage();
         }
 
         private void EditSelectAll_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().SelecteAll();
+            GetSheetController().SelecteAll();
         }
 
         private void EditCreateBlock_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().CreateBlock();
+            GetSheetController().CreateBlock();
         }
 
         private void EditBreakBlock_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().BreakBlock();
+            GetSheetController().BreakBlock();
         }
 
         private void EditMoveUp_Click(object sender, RoutedEventArgs e)
         {
-            if (GetSheet().IsFocused)
+            if (GetSheetController().IsSheetFocused())
             {
-                GetSheet().MoveUp();
+                GetSheetController().MoveUp();
             }
         }
 
         private void EditMoveDown_Click(object sender, RoutedEventArgs e)
         {
-            if (GetSheet().IsFocused)
+            if (GetSheetController().IsSheetFocused())
             {
-                GetSheet().MoveDown();
+                GetSheetController().MoveDown();
             }
         }
 
         private void EditMoveLeft_Click(object sender, RoutedEventArgs e)
         {
-            if (GetSheet().IsFocused)
+            if (GetSheetController().IsSheetFocused())
             {
-                GetSheet().MoveLeft();
+                GetSheetController().MoveLeft();
             }
         }
 
         private void EditMoveRight_Click(object sender, RoutedEventArgs e)
         {
-            if (GetSheet().IsFocused)
+            if (GetSheetController().IsSheetFocused())
             {
-                GetSheet().MoveRight();
+                GetSheetController().MoveRight();
             }
         }
 
         private void EditToggleFill_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().ToggleFill();
+            GetSheetController().ToggleFill();
         }
 
         #endregion
@@ -860,12 +859,12 @@ namespace Sheet
 
         private void ViewZoomToPageLevel_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().AutoFit();
+            GetSheetController().PanAndZoomController.AutoFit();
         }
 
         private void ViewZoomActualSize_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().ActualSize();
+            GetSheetController().PanAndZoomController.ActualSize();
         }
 
         #endregion
@@ -874,55 +873,55 @@ namespace Sheet
 
         private void ModeNone_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().ModeNone();
+            GetSheetController().SetMode(SheetMode.None);
             UpdateModeMenu();
         }
 
         private void ModeSelection_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().ModeSelection();
+            GetSheetController().SetMode(SheetMode.Selection);
             UpdateModeMenu();
         }
 
         private void ModeInsert_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().ModeInsert();
+            GetSheetController().SetMode(SheetMode.Insert);
             UpdateModeMenu();
         }
 
         private void ModePoint_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().ModePoint();
+            GetSheetController().SetMode(SheetMode.Point);
             UpdateModeMenu();
         }
         
         private void ModeLine_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().ModeLine();
+            GetSheetController().SetMode(SheetMode.Line);
             UpdateModeMenu();
         }
 
         private void ModeRectangle_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().ModeRectangle();
+            GetSheetController().SetMode(SheetMode.Rectangle);
             UpdateModeMenu();
         }
 
         private void ModeEllipse_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().ModeEllipse();
+            GetSheetController().SetMode(SheetMode.Ellipse);
             UpdateModeMenu();
         }
 
         private void ModeText_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().ModeText();
+            GetSheetController().SetMode(SheetMode.Text);
             UpdateModeMenu();
         }
         
         private void ModeImage_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().ModeImage();
+            GetSheetController().SetMode(SheetMode.Image);
             UpdateModeMenu();
         }
 
@@ -932,12 +931,12 @@ namespace Sheet
 
         private void LogicInvertLineStart_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().InvertSelectedLineStart();
+            GetSheetController().InvertSelectedLineStart();
         }
 
         private void LogicInvertLineEnd_Click(object sender, RoutedEventArgs e)
         {
-            GetSheet().InvertSelectedLineEnd();
+            GetSheetController().InvertSelectedLineEnd();
         } 
 
         #endregion
