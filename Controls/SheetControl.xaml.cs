@@ -57,31 +57,33 @@ namespace Sheet
 
     #region InputButton
 
-    //public enum InputButton
-    //{
-    //    None,
-    //    Left,
-    //    Right,
-    //    Middle
-    //} 
+    public enum InputButton
+    {
+        None,
+        Left,
+        Right,
+        Middle
+    } 
 
     #endregion
 
     #region InputArgs
 
-    //public class InputArgs
-    //{
-    //    // Mouse Generic
-    //    public bool OnlyControl { get; set; }
-    //    public bool OnlyShift { get; set; }
-    //    public ItemType SourceType { get; set; }
-    //    public XImmutablePoint Position { get; set; }
-    //    // Mouse Wheel
-    //    public int Delta { get; set; }
-    //    // Mouse Down
-    //    public InputButton Button { get; set; }
-    //    public int Clicks { get; set; }
-    //}
+    public class InputArgs
+    {
+        // Mouse Generic
+        public bool OnlyControl { get; set; }
+        public bool OnlyShift { get; set; }
+        public ItemType SourceType { get; set; }
+        public XImmutablePoint SheetPosition { get; set; }
+        public XImmutablePoint RootPosition { get; set; }
+        public Action<bool> Handled { get; set; }
+        // Mouse Wheel
+        public int Delta { get; set; }
+        // Mouse Down
+        public InputButton Button { get; set; }
+        public int Clicks { get; set; }
+    }
 
     #endregion
     
@@ -2480,31 +2482,14 @@ namespace Sheet
 
         #endregion
 
-        #region Wpf: Events
+        #region Input
 
-        private void LeftDown(MouseButtonEventArgs e)
+        public void LeftDown(InputArgs args)
         {
-            bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
-            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
-            bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
-            Point point = e.GetPosition(OverlaySheet.GetParent() as FrameworkElement);
-            XImmutablePoint position = new XImmutablePoint(point.X, point.Y);
-
-            //var args = new InputArgs()
-            //{
-            //    OnlyControl = onlyCtrl,
-            //    OnlyShift = onlyShift,
-            //    SourceType = sourceIsThumb ? ItemType.Thumb : ItemType.None,
-            //    Position = position,
-            //    Delta = 0,
-            //    Button = InputButton.Left,
-            //    Clicks = 1
-            //};
-
             // edit mode
             if (SelectedType != ItemType.None)
             {
-                if (!sourceIsThumb)
+                if (args.SourceType != ItemType.Thumb)
                 {
                     _blockController.DeselectContent(SelectedBlock);
                     FinishEdit();
@@ -2522,75 +2507,73 @@ namespace Sheet
             }
 
             // move mode
-            if (!onlyCtrl)
+            if (!args.OnlyControl)
             {
-                if (_blockController.HaveSelected(SelectedBlock) && CanInitMove(position))
+                if (_blockController.HaveSelected(SelectedBlock) && CanInitMove(args.SheetPosition))
                 {
-                    InitMove(position);
+                    InitMove(args.SheetPosition);
                     return;
                 }
 
                 _blockController.DeselectContent(SelectedBlock);
             }
 
-            bool resetSelected = onlyCtrl && _blockController.HaveSelected(SelectedBlock) ? false : true;
+            bool resetSelected = args.OnlyControl && _blockController.HaveSelected(SelectedBlock) ? false : true;
 
             if (GetMode() == SheetMode.Selection)
             {
-                bool result = _blockController.HitTestClick(ContentSheet, ContentBlock, SelectedBlock, new XImmutablePoint(position.X, position.Y), Options.HitTestSize, false, resetSelected);
-                if ((onlyCtrl || !_blockController.HaveSelected(SelectedBlock)) && !result)
+                bool result = _blockController.HitTestClick(ContentSheet, ContentBlock, SelectedBlock, new XImmutablePoint(args.SheetPosition.X, args.SheetPosition.Y), Options.HitTestSize, false, resetSelected);
+                if ((args.OnlyControl || !_blockController.HaveSelected(SelectedBlock)) && !result)
                 {
-                    InitSelectionRect(position);
+                    InitSelectionRect(args.SheetPosition);
                 }
                 else
                 {
                     // TODO: If control key is pressed then switch to move mode instead to edit mode
-                    bool editModeEnabled = onlyCtrl == true ? false : TryToEditSelected();
+                    bool editModeEnabled = args.OnlyControl == true ? false : TryToEditSelected();
                     if (!editModeEnabled)
                     {
-                        InitMove(position);
+                        InitMove(args.SheetPosition);
                     }
                 }
             }
             else if (GetMode() == SheetMode.Insert && !OverlaySheet.IsCaptured)
             {
-                Insert(position);
+                Insert(args.SheetPosition);
             }
             else if (GetMode() == SheetMode.Point && !OverlaySheet.IsCaptured)
             {
-                InsertPoint(position, true, true);
+                InsertPoint(args.SheetPosition, true, true);
             }
             else if (GetMode() == SheetMode.Line && !OverlaySheet.IsCaptured)
             {
                 // try to find point to connect line start
-                var p = position;
-                IPoint start = TryToFindPoint(p);
+                IPoint start = TryToFindPoint(args.SheetPosition);
 
                 // create start if Control key is pressed and start point has not been found
-                if (onlyCtrl && start == null)
+                if (args.OnlyControl && start == null)
                 {
-                    start = InsertPoint(p, true, false);
+                    start = InsertPoint(args.SheetPosition, true, false);
                 }
 
-                InitTempLine(position, start);
+                InitTempLine(args.SheetPosition, start);
             }
             else if (GetMode() == SheetMode.Line && OverlaySheet.IsCaptured)
             {
                 // try to find point to connect line end
-                var p = position;
-                IPoint end = TryToFindPoint(p);
+                IPoint end = TryToFindPoint(args.SheetPosition);
 
                 // create end point if Control key is pressed and end point has not been found
-                if (onlyCtrl && end == null)
+                if (args.OnlyControl && end == null)
                 {
-                    end = InsertPoint(p, true, false);
+                    end = InsertPoint(args.SheetPosition, true, false);
                 }
 
                 FinishTempLine(end);
             }
             else if (GetMode() == SheetMode.Rectangle && !OverlaySheet.IsCaptured)
             {
-                InitTempRect(position);
+                InitTempRect(args.SheetPosition);
             }
             else if (GetMode() == SheetMode.Rectangle && OverlaySheet.IsCaptured)
             {
@@ -2598,7 +2581,7 @@ namespace Sheet
             }
             else if (GetMode() == SheetMode.Ellipse && !OverlaySheet.IsCaptured)
             {
-                InitTempEllipse(position);
+                InitTempEllipse(args.SheetPosition);
             }
             else if (GetMode() == SheetMode.Ellipse && OverlaySheet.IsCaptured)
             {
@@ -2610,15 +2593,15 @@ namespace Sheet
             }
             else if (GetMode() == SheetMode.Text && !OverlaySheet.IsCaptured)
             {
-                CreateText(position);
+                CreateText(args.SheetPosition);
             }
             else if (GetMode() == SheetMode.Image && !OverlaySheet.IsCaptured)
             {
-                Image(position);
+                Image(args.SheetPosition);
             }
         }
 
-        private void LeftUp(MouseButtonEventArgs e)
+        public void LeftUp(InputArgs args)
         {
             if (GetMode() == SheetMode.Selection && OverlaySheet.IsCaptured)
             {
@@ -2630,60 +2613,52 @@ namespace Sheet
             }
         }
 
-        private void Move(MouseEventArgs e)
+        public void Move(InputArgs args)
         {
-            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
-            Point point = e.GetPosition(OverlaySheet.GetParent() as FrameworkElement);
-            XImmutablePoint position = new XImmutablePoint(point.X, point.Y);
-
             if (GetMode() == SheetMode.Edit)
             {
                 return;
             }
 
             // mouse over selection when holding Shift key
-            if (onlyShift && TempSelectionRect == null && !OverlaySheet.IsCaptured)
+            if (args.OnlyShift && TempSelectionRect == null && !OverlaySheet.IsCaptured)
             {
                 if (_blockController.HaveSelected(SelectedBlock))
                 {
                     _blockController.DeselectContent(SelectedBlock);
                 }
 
-                _blockController.HitTestClick(ContentSheet, ContentBlock, SelectedBlock, position, Options.HitTestSize, false, false);
+                _blockController.HitTestClick(ContentSheet, ContentBlock, SelectedBlock, args.SheetPosition, Options.HitTestSize, false, false);
             }
 
             if (GetMode() == SheetMode.Selection && OverlaySheet.IsCaptured)
             {
-                MoveSelectionRect(position);
+                MoveSelectionRect(args.SheetPosition);
             }
             else if (GetMode() == SheetMode.Line && OverlaySheet.IsCaptured)
             {
-                MoveTempLine(position);
+                MoveTempLine(args.SheetPosition);
             }
             else if (GetMode() == SheetMode.Rectangle && OverlaySheet.IsCaptured)
             {
-                MoveTempRect(position);
+                MoveTempRect(args.SheetPosition);
             }
             else if (GetMode() == SheetMode.Ellipse && OverlaySheet.IsCaptured)
             {
-                MoveTempEllipse(position);
+                MoveTempEllipse(args.SheetPosition);
             }
             else if (GetMode() == SheetMode.Pan && OverlaySheet.IsCaptured)
             {
-                var p = e.GetPosition(this);
-                Pan(new XImmutablePoint(p.X, p.Y));
+                Pan(args.RootPosition);
             }
             else if (GetMode() == SheetMode.Move && OverlaySheet.IsCaptured)
             {
-                Move(position);
+                Move(args.SheetPosition);
             }
         }
 
-        private void RightDown(MouseButtonEventArgs e)
+        public void RightDown(InputArgs args)
         {
-            Point point = e.GetPosition(OverlaySheet.GetParent() as FrameworkElement);
-            XImmutablePoint position = new XImmutablePoint(point.X, point.Y);
-
             if (GetMode() == SheetMode.None || GetMode() == SheetMode.TextEditor)
             {
                 return;
@@ -2698,9 +2673,9 @@ namespace Sheet
             }
 
             // text editor
-            if (GetMode() == SheetMode.Text && TryToEditText(position))
+            if (GetMode() == SheetMode.Text && TryToEditText(args.SheetPosition))
             {
-                e.Handled = true;
+                args.Handled(true);
                 return;
             }
             else
@@ -2725,13 +2700,12 @@ namespace Sheet
                 }
                 else if (!OverlaySheet.IsCaptured)
                 {
-                    var p = e.GetPosition(this);
-                    InitPan(new XImmutablePoint(p.X, p.Y));
+                    InitPan(args.RootPosition);
                 }
             }
         }
 
-        private void RightUp(MouseButtonEventArgs e)
+        public void RightUp(InputArgs args)
         {
             if (GetMode() == SheetMode.Pan && OverlaySheet.IsCaptured)
             {
@@ -2739,21 +2713,18 @@ namespace Sheet
             }
         }
 
-        private void Wheel(MouseWheelEventArgs e)
+        public void Wheel(int delta, XImmutablePoint position)
         {
-            int d = e.Delta;
-            var p = e.GetPosition(Layout);
-            ZoomTo(d, new XImmutablePoint(p.X, p.Y));
+            ZoomTo(delta, position);
         }
 
-        private void Down(MouseButtonEventArgs e)
+        public void Down(InputArgs args)
         {
-            if (e.ChangedButton == MouseButton.Middle && e.ClickCount == 2)
+            if (args.Button == InputButton.Middle && args.Clicks == 2)
             {
-                bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
                 // Mouse Middle Double-Click + Control key pressed to reset Pan and Zoom
                 // Mouse Middle Double-Click to Auto Fit page to window size
-                if (onlyCtrl)
+                if (args.OnlyControl)
                 {
                     ActualSize();
                 }
@@ -2762,6 +2733,180 @@ namespace Sheet
                     AutoFit();
                 }
             }
+        }
+
+        #endregion
+
+        #region Wpf: Events
+
+        private void LeftDown(MouseButtonEventArgs e)
+        {
+            bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
+            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
+            bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
+            Point sheetPoint = e.GetPosition(OverlaySheet.GetParent() as FrameworkElement);
+            XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
+            Point rootPoint = e.GetPosition(this);
+            XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
+
+            var args = new InputArgs()
+            {
+                OnlyControl = onlyCtrl,
+                OnlyShift = onlyShift,
+                SourceType = sourceIsThumb ? ItemType.Thumb : ItemType.None,
+                SheetPosition = sheetPosition,
+                RootPosition = rootPosition,
+                Handled = (handled) => e.Handled = handled,
+                Delta = 0,
+                Button = InputButton.Left,
+                Clicks = 1
+            };
+
+            LeftDown(args);
+        }
+
+        private void LeftUp(MouseButtonEventArgs e)
+        {
+            bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
+            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
+            bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
+            Point sheetPoint = e.GetPosition(OverlaySheet.GetParent() as FrameworkElement);
+            XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
+            Point rootPoint = e.GetPosition(this);
+            XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
+
+            var args = new InputArgs()
+            {
+                OnlyControl = onlyCtrl,
+                OnlyShift = onlyShift,
+                SourceType = sourceIsThumb ? ItemType.Thumb : ItemType.None,
+                SheetPosition = sheetPosition,
+                RootPosition = rootPosition,
+                Handled = (handled) => e.Handled = handled,
+                Delta = 0,
+                Button = InputButton.Left,
+                Clicks = 1
+            };
+
+            LeftUp(args);
+        }
+
+        private void Move(MouseEventArgs e)
+        {
+            bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
+            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
+            bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
+            Point sheetPoint = e.GetPosition(OverlaySheet.GetParent() as FrameworkElement);
+            XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
+            Point rootPoint = e.GetPosition(this);
+            XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
+
+            var args = new InputArgs()
+            {
+                OnlyControl = onlyCtrl,
+                OnlyShift = onlyShift,
+                SourceType = sourceIsThumb ? ItemType.Thumb : ItemType.None,
+                SheetPosition = sheetPosition,
+                RootPosition = rootPosition,
+                Handled = (handled) => e.Handled = handled,
+                Delta = 0,
+                Button = InputButton.Left,
+                Clicks = 1
+            };
+
+            Move(args);
+        }
+
+        private void RightDown(MouseButtonEventArgs e)
+        {
+            bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
+            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
+            bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
+            Point sheetPoint = e.GetPosition(OverlaySheet.GetParent() as FrameworkElement);
+            XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
+            Point rootPoint = e.GetPosition(this);
+            XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
+
+            var args = new InputArgs()
+            {
+                OnlyControl = onlyCtrl,
+                OnlyShift = onlyShift,
+                SourceType = sourceIsThumb ? ItemType.Thumb : ItemType.None,
+                SheetPosition = sheetPosition,
+                RootPosition = rootPosition,
+                Handled = (handled) => e.Handled = handled,
+                Delta = 0,
+                Button = InputButton.Left,
+                Clicks = 1
+            };
+
+            RightDown(args);
+        }
+
+        private void RightUp(MouseButtonEventArgs e)
+        {
+            bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
+            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
+            bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
+            Point sheetPoint = e.GetPosition(OverlaySheet.GetParent() as FrameworkElement);
+            XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
+            Point rootPoint = e.GetPosition(this);
+            XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
+
+            var args = new InputArgs()
+            {
+                OnlyControl = onlyCtrl,
+                OnlyShift = onlyShift,
+                SourceType = sourceIsThumb ? ItemType.Thumb : ItemType.None,
+                SheetPosition = sheetPosition,
+                RootPosition = rootPosition,
+                Handled = (handled) => e.Handled = handled,
+                Delta = 0,
+                Button = InputButton.Left,
+                Clicks = 1
+            };
+
+            RightUp(args);
+        }
+
+        private void Wheel(MouseWheelEventArgs e)
+        {
+            int d = e.Delta;
+            var p = e.GetPosition(Layout);
+            Wheel(d, new XImmutablePoint(p.X, p.Y));
+        }
+
+        private void Down(MouseButtonEventArgs e)
+        {
+            bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
+            bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
+            bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
+            Point sheetPoint = e.GetPosition(OverlaySheet.GetParent() as FrameworkElement);
+            XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
+            Point rootPoint = e.GetPosition(this);
+            XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
+
+            var args = new InputArgs()
+            {
+                OnlyControl = onlyCtrl,
+                OnlyShift = onlyShift,
+                SourceType = sourceIsThumb ? ItemType.Thumb : ItemType.None,
+                SheetPosition = sheetPosition,
+                RootPosition = rootPosition,
+                Handled = (handled) => e.Handled = handled,
+                Delta = 0,
+                Clicks = e.ClickCount
+            };
+
+            switch(e.ChangedButton)
+            {
+                case MouseButton.Left: args.Button = InputButton.Left; break;
+                case MouseButton.Middle: args.Button = InputButton.Middle; break;
+                case MouseButton.Right: args.Button = InputButton.Right; break;
+                default: args.Button = InputButton.None; break;
+            }
+
+            Down(args);
         }
 
         private void UserControl_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -2805,9 +2950,12 @@ namespace Sheet
 
         #region Wpf: Drop
 
+        public const string BlockDropFormat = "Block";
+        public const string DataDropFormat = "Data";
+
         private void UserControl_DragEnter(object sender, DragEventArgs e)
         {
-            if (!e.Data.GetDataPresent("Block") || !e.Data.GetDataPresent("Data") || sender == e.Source)
+            if (!e.Data.GetDataPresent(BlockDropFormat) || !e.Data.GetDataPresent(DataDropFormat) || sender == e.Source)
             {
                 e.Effects = DragDropEffects.None;
             }
@@ -2818,18 +2966,18 @@ namespace Sheet
             Point point = e.GetPosition(OverlaySheet.GetParent() as FrameworkElement);
             XImmutablePoint position = new XImmutablePoint(point.X, point.Y);
 
-            if (e.Data.GetDataPresent("Block"))
+            if (e.Data.GetDataPresent(BlockDropFormat))
             {
-                var blockItem = e.Data.GetData("Block") as BlockItem;
+                var blockItem = e.Data.GetData(BlockDropFormat) as BlockItem;
                 if (blockItem != null)
                 {
                     Insert(blockItem, position, true);
                     e.Handled = true;
                 }
             }
-            else if (e.Data.GetDataPresent("Data"))
+            else if (e.Data.GetDataPresent(DataDropFormat))
             {
-                var dataItem = e.Data.GetData("Data") as DataItem;
+                var dataItem = e.Data.GetData(DataDropFormat) as DataItem;
                 if (dataItem != null)
                 {
                     TryToBindData(position, dataItem);
