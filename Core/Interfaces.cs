@@ -377,6 +377,24 @@ namespace Sheet
 
     #endregion
 
+    #region ICursorController
+
+    public enum SheetCursor
+    {
+        Unknown,
+        Normal,
+        Move,
+        Pan
+    }
+
+    public interface ICursorController
+    {
+        void Set(SheetCursor cursor);
+        SheetCursor Get();
+    }
+
+    #endregion
+
     #region IDataReader
 
     public interface IDataReader
