@@ -14,19 +14,19 @@ namespace Sheet
         #region IoC
 
         private readonly IServiceLocator _serviceLocator;
-        private readonly IPageController _pageController;
+        private readonly ISheetController _sheetController;
         private readonly IItemSerializer _itemSerializer;
 
         public PageHistoryController(IServiceLocator serviceLocator)
         {
             this._serviceLocator = serviceLocator;
-            this._pageController = serviceLocator.GetInstance<IPageController>();
+            this._sheetController = serviceLocator.GetInstance<ISheetController>();
             this._itemSerializer = serviceLocator.GetInstance<IItemSerializer>();
         }
 
-        public PageHistoryController(IPageController pageController, IItemSerializer itemSerializer)
+        public PageHistoryController(ISheetController sheetController, IItemSerializer itemSerializer)
         {
-            this._pageController = pageController;
+            this._sheetController = sheetController;
             this._itemSerializer = itemSerializer;
         }
 
@@ -43,7 +43,7 @@ namespace Sheet
 
         private async Task<ChangeItem> CreateChange(string message)
         {
-            var block = _pageController.SerializePage();
+            var block = _sheetController.SerializePage();
             var text = await Task.Run(() => _itemSerializer.SerializeContents(block));
             var change = new ChangeItem()
             {
@@ -80,8 +80,8 @@ namespace Sheet
                     redos.Push(change);
                     var undo = undos.Pop();
                     var block = await Task.Run(() => _itemSerializer.DeserializeContents(undo.Model));
-                    _pageController.ResetPage();
-                    _pageController.DeserializePage(block);
+                    _sheetController.ResetPage();
+                    _sheetController.DeserializePage(block);
                 }
                 catch(Exception ex)
                 {
@@ -101,8 +101,8 @@ namespace Sheet
                     undos.Push(change);
                     var redo = redos.Pop();
                     var block = await Task.Run(() => _itemSerializer.DeserializeContents(redo.Model));
-                    _pageController.ResetPage();
-                    _pageController.DeserializePage(block);
+                    _sheetController.ResetPage();
+                    _sheetController.DeserializePage(block);
                 }
                 catch(Exception ex)
                 {

@@ -21,19 +21,19 @@ namespace Sheet
     {
         #region IoC
 
-        private IPageController _pageController;
+        private ISheetController _sheetController;
         private IEntryController _entryController;
 
-        public SolutionControl(IPageController pageController, IEntryController entryController)
+        public SolutionControl(ISheetController sheetController, IEntryController entryController)
         {
             InitializeComponent();
 
-            Init(pageController, entryController);
+            Init(sheetController, entryController);
         }
 
-        public void Init(IPageController pageController, IEntryController entryController)
+        public void Init(ISheetController sheetController, IEntryController entryController)
         {
-            this._pageController = pageController;
+            this._sheetController = sheetController;
             this._entryController = entryController;
         }
 
@@ -54,7 +54,7 @@ namespace Sheet
         {
             if (newValue != null && newValue is DocumentEntry)
             {
-                if (_pageController != null)
+                if (_sheetController != null)
                 {
                     if (oldValue != null && oldValue is PageEntry)
                     {
@@ -66,7 +66,7 @@ namespace Sheet
             }
             else if (newValue != null && newValue is PageEntry)
             {
-                if (_pageController != null)
+                if (_sheetController != null)
                 {
                     if (oldValue != null && oldValue is PageEntry)
                     {
@@ -78,7 +78,7 @@ namespace Sheet
             }
             else
             {
-                if (_pageController != null)
+                if (_sheetController != null)
                 {
                     EmptyPage();
                 }
@@ -87,19 +87,19 @@ namespace Sheet
 
         private void EmptyPage()
         {
-            _pageController.SetPage(null);
+            _sheetController.SetPage(null);
         }
 
         private void SetPage(object newValue)
         {
             var newPage = newValue as PageEntry;
-            _pageController.SetPage(newPage.Content);
+            _sheetController.SetPage(newPage.Content);
         }
 
         private void UpdatePage(object oldValue)
         {
             var oldPage = oldValue as PageEntry;
-            var text = _pageController.GetPage();
+            var text = _sheetController.GetPage();
             oldPage.Content = text;
         }
 
@@ -109,7 +109,7 @@ namespace Sheet
             if (item != null && item is PageEntry)
             {
                 var page = item as PageEntry;
-                var text = _pageController.GetPage();
+                var text = _sheetController.GetPage();
                 page.Content = text;
             }
         }
@@ -120,25 +120,25 @@ namespace Sheet
 
         public void ExportPage(object item)
         {
-            if (_pageController != null)
+            if (_sheetController != null)
             {
                 if (item != null && item is PageEntry)
                 {
                     var page = item as PageEntry;
-                    _pageController.ExportPage(page.Content);
+                    _sheetController.ExportPage(page.Content);
                 }
             }
         }
 
         public void ExportDocument(object item)
         {
-            if (_pageController != null)
+            if (_sheetController != null)
             {
                 if (item != null && item is DocumentEntry)
                 {
                     var document = item as DocumentEntry;
                     var texts = document.Pages.Select(x => x.Content);
-                    _pageController.ExportPages(texts);
+                    _sheetController.ExportPages(texts);
                 }
             }
         }

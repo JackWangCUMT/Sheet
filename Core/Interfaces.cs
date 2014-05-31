@@ -363,25 +363,6 @@ namespace Sheet
 
     #endregion
 
-    #region IPageController
-
-    public interface IPageController
-    {
-        IHistoryController History { get; set; }
-        ILibraryController Library { get; set; }
-        IPanAndZoomController PanAndZoom { get; set; }
-        void SetPage(string text);
-        string GetPage();
-        void ExportPage(string text);
-        void ExportPages(IEnumerable<string> texts);
-        BlockItem SerializePage();
-        void DeserializePage(BlockItem page);
-        void ResetPage();
-        void ResetPageContent();
-    }
-
-    #endregion
-
     #region IPanAndZoomController
 
     public interface IPanAndZoomController
