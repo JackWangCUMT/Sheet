@@ -32,13 +32,19 @@ namespace Sheet
 
             this._serviceLocator = serviceLocator;
             //this._sheetController = serviceLocator.GetInstance<ISheetController>();
-
             this._sheetController = new SheetController(serviceLocator);
 
+            InitSheetController();
+        }
+
+        private void InitSheetController()
+        {
             _sheetController.PanAndZoomController = this;
             _sheetController.CursorController = this;
+
             _sheetController.FocusSheet = () => this.Focus();
             _sheetController.IsSheetFocused = () => this.IsFocused;
+
             _sheetController.EditorSheet = new WpfCanvasSheet(EditorCanvas);
             _sheetController.BackSheet = new WpfCanvasSheet(Root.Back);
             _sheetController.ContentSheet = new WpfCanvasSheet(Root.Sheet);
