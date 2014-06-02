@@ -21,6 +21,7 @@ namespace Sheet
         public TextControl()
         {
             InitializeComponent();
+
             Loaded += (sender, e) =>
             {
                 TextValue.Focus();
