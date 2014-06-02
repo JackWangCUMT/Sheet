@@ -520,7 +520,7 @@ namespace Sheet
 
         #endregion
 
-        #region Clipboard Text
+        #region Clipboard
 
         public void CutText()
         {
@@ -579,10 +579,6 @@ namespace Sheet
                 Debug.Print(ex.StackTrace);
             }
         }
-
-        #endregion
-
-        #region Clipboard Json
 
         public void CutJson()
         {
