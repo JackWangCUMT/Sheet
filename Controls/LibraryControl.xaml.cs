@@ -63,18 +63,21 @@ namespace Sheet
         {
             if (Blocks != null)
             {
-                Blocks.ItemsSource = null;
-                Blocks.ItemsSource = source;
-                Blocks.SelectedIndex = 0;
+                Dispatcher.Invoke(() =>
+                {
+                    Blocks.ItemsSource = null;
+                    Blocks.ItemsSource = source;
+                    Blocks.SelectedIndex = 0;
 
-                if (source.Count() == 0)
-                {
-                    Visibility = Visibility.Hidden;
-                }
-                else
-                {
-                    Visibility = Visibility.Visible;
-                }
+                    if (source.Count() == 0)
+                    {
+                        Visibility = Visibility.Hidden;
+                    }
+                    else
+                    {
+                        Visibility = Visibility.Visible;
+                    }
+                });
             }
         } 
 
