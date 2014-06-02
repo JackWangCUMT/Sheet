@@ -371,8 +371,6 @@ namespace Sheet
             CreatePage();
 
             LoadLibraryFromResource(string.Concat("Sheet.Libraries", '.', "Digital.library"));
-
-            FocusSheet();
         }
 
         private void SetDefaults()

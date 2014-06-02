@@ -78,6 +78,7 @@ namespace Sheet
             this._entrySerializer = serviceLocator.GetInstance<IEntrySerializer>();
 
             Init();
+            Loaded += (sender, e) => SheetController.FocusSheet();
         }
 
         #endregion
@@ -125,6 +126,8 @@ namespace Sheet
             controller.BackSheet = new WpfCanvasSheet(sheet.Root.Back);
             controller.ContentSheet = new WpfCanvasSheet(sheet.Root.Sheet);
             controller.OverlaySheet = new WpfCanvasSheet(sheet.Root.Overlay);
+
+            controller.Init();
 
             SheetController = controller;
             Sheet.Content = sheet;

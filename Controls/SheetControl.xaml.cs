@@ -30,11 +30,6 @@ namespace Sheet
             InitializeComponent();
 
             this._sheetController = sheetController;
-
-            Loaded += (sender, e) =>
-            {
-                this._sheetController.Init();
-            };
         }
 
         #endregion
