@@ -152,11 +152,11 @@ namespace Sheet
         void Init();
 
         // Clipboard
-        void CutAsText();
-        void CopyAsText();
+        void CutText();
+        void CopyText();
         void PasteText();
-        void CutAsJson();
-        void CopyAsJson();
+        void CutJson();
+        void CopyJson();
         void PasteJson();
 
         // Delete
@@ -522,7 +522,7 @@ namespace Sheet
 
         #region Clipboard Text
 
-        public void CutAsText()
+        public void CutText()
         {
             try
             {
@@ -530,7 +530,7 @@ namespace Sheet
                 {
                     var copy = _blockController.ShallowCopy(SelectedBlock);
                     HistoryController.Register("Cut");
-                    CopyAsText(copy);
+                    CopyText(copy);
                     Delete(copy);
                 }
             }
@@ -541,7 +541,7 @@ namespace Sheet
             }
         }
 
-        private void CopyAsText(IBlock block)
+        private void CopyText(IBlock block)
         {
             try
             {
@@ -556,11 +556,11 @@ namespace Sheet
             }
         }
 
-        public void CopyAsText()
+        public void CopyText()
         {
             if (_blockController.HaveSelected(SelectedBlock))
             {
-                CopyAsText(SelectedBlock);
+                CopyText(SelectedBlock);
             }
         }
 
@@ -584,7 +584,7 @@ namespace Sheet
 
         #region Clipboard Json
 
-        public void CutAsJson()
+        public void CutJson()
         {
             try
             {
@@ -592,7 +592,7 @@ namespace Sheet
                 {
                     var copy = _blockController.ShallowCopy(SelectedBlock);
                     HistoryController.Register("Cut");
-                    CopyAsJson(copy);
+                    CopyJson(copy);
                     Delete(copy);
                 }
             }
@@ -603,7 +603,7 @@ namespace Sheet
             }
         }
 
-        private void CopyAsJson(IBlock block)
+        private void CopyJson(IBlock block)
         {
             try
             {
@@ -618,11 +618,11 @@ namespace Sheet
             }
         }
 
-        public void CopyAsJson()
+        public void CopyJson()
         {
             if (_blockController.HaveSelected(SelectedBlock))
             {
-                CopyAsJson(SelectedBlock);
+                CopyJson(SelectedBlock);
             }
         }
 

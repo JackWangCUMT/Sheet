@@ -425,11 +425,11 @@ namespace Sheet
                 case Key.X:
                     if (onlyCtrl)
                     {
-                        SheetController.CutAsText();
+                        SheetController.CutText();
                     }
                     else if (ctrlShift)
                     {
-                        SheetController.CutAsJson();
+                        SheetController.CutJson();
                     }
                     break;
                 // Ctrl+C: Copy
@@ -437,11 +437,11 @@ namespace Sheet
                 case Key.C:
                     if (onlyCtrl)
                     {
-                        SheetController.CopyAsText();
+                        SheetController.CopyText();
                     }
                     else if (ctrlShift)
                     {
-                        SheetController.CopyAsJson();
+                        SheetController.CopyJson();
                     }
                     break;
                 // Ctrl+V: Paste
@@ -767,12 +767,12 @@ namespace Sheet
 
         private void EditCut_Click(object sender, RoutedEventArgs e)
         {
-            SheetController.CutAsText();
+            SheetController.CutText();
         }
 
         private void EditCopy_Click(object sender, RoutedEventArgs e)
         {
-            SheetController.CopyAsText();
+            SheetController.CopyText();
         }
 
         private void EditPaste_Click(object sender, RoutedEventArgs e)
