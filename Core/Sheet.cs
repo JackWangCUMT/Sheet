@@ -130,6 +130,10 @@ namespace Sheet
     public interface ISheetController
     {
         // Properties
+        IHistoryController HistoryController { get; set; }
+        ILibraryController LibraryController { get; set; }
+        IZoomController ZoomController { get; set; }
+        ICursorController CursorController { get; set; }
         SheetOptions Options { get; set; }
         ISheet EditorSheet { get; set; }
         ISheet BackSheet { get; set; }
@@ -137,8 +141,6 @@ namespace Sheet
         ISheet OverlaySheet { get; set; }
         double LastFinalWidth { get; set; }
         double LastFinalHeight { get; set; }
-
-        // Focus
         Action FocusSheet { get; set; }
         Func<bool> IsSheetFocused { get; set; }
 
@@ -220,11 +222,7 @@ namespace Sheet
         void Wheel(int delta, XImmutablePoint position);
         void Down(InputArgs args);
 
-        // IPageController
-        IHistoryController HistoryController { get; set; }
-        ILibraryController LibraryController { get; set; }
-        IZoomController ZoomController { get; set; }
-        ICursorController CursorController { get; set; }
+        // Page
         void SetPage(string text);
         string GetPage();
         void ExportPage(string text);
@@ -280,70 +278,50 @@ namespace Sheet
 
         #region Properties
 
-        public SheetOptions Options { get; set; }
-        public SheetMode Mode { get; set; }
-        public SheetMode TempMode { get; set; }
-        public ISheet EditorSheet { get; set; }
-        public ISheet BackSheet { get; set; }
-        public ISheet ContentSheet { get; set; }
-        public ISheet OverlaySheet { get; set; }
-        public IBlock SelectedBlock { get; set; }
-        public IBlock ContentBlock { get; set; }
-        public IBlock FrameBlock { get; set; }
-        public IBlock GridBlock { get; set; }
-        public ILine TempLine { get; set; }
-        public IEllipse TempStartEllipse { get; set; }
-        public IEllipse TempEndEllipse { get; set; }
-        public IRectangle TempRectangle { get; set; }
-        public IEllipse TempEllipse { get; set; }
-        public IRectangle TempSelectionRect { get; set; }
-        public bool IsFirstMove { get; set; }
-        public XImmutablePoint PanStartPoint { get; set; }
-        public XImmutablePoint SelectionStartPoint { get; set; }
-        public double LastFinalWidth { get; set; }
-        public double LastFinalHeight { get; set; }
-        public ItemType SelectedType { get; set; }
-        public ILine SelectedLine { get; set; }
-        public IThumb LineThumbStart { get; set; }
-        public IThumb LineThumbEnd { get; set; }
-        public IElement SelectedElement { get; set; }
-        public IThumb ThumbTopLeft { get; set; }
-        public IThumb ThumbTopRight { get; set; }
-        public IThumb ThumbBottomLeft { get; set; }
-        public IThumb ThumbBottomRight { get; set; }
-        public Action FocusSheet { get; set; }
-        public Func<bool> IsSheetFocused { get; set; }
         public IHistoryController HistoryController { get; set; }
         public ILibraryController LibraryController { get; set; }
         public IZoomController ZoomController { get; set; }
         public ICursorController CursorController { get; set; }
-        public ISelectedBlockPlugin InvertLineStartPlugin { get; set; }
-        public ISelectedBlockPlugin InvertLineEndPlugin { get; set; }
+        public SheetOptions Options { get; set; }
+        public ISheet EditorSheet { get; set; }
+        public ISheet BackSheet { get; set; }
+        public ISheet ContentSheet { get; set; }
+        public ISheet OverlaySheet { get; set; }
+        public double LastFinalWidth { get; set; }
+        public double LastFinalHeight { get; set; }
+        public Action FocusSheet { get; set; }
+        public Func<bool> IsSheetFocused { get; set; }
 
         #endregion
 
-        #region Default Options
+        #region Fields
 
-        private static SheetOptions DefaultOptions()
-        {
-            return new SheetOptions()
-            {
-                PageOriginX = 0.0,
-                PageOriginY = 0.0,
-                PageWidth = 1260.0,
-                PageHeight = 891.0,
-                SnapSize = 15,
-                GridSize = 30,
-                FrameThickness = 1.0,
-                GridThickness = 1.0,
-                SelectionThickness = 1.0,
-                LineThickness = 2.0,
-                HitTestSize = 3.5,
-                DefaultZoomIndex = 9,
-                MaxZoomIndex = 21,
-                ZoomFactors = new double[] { 0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64 }
-            };
-        }
+        private SheetMode Mode;
+        private SheetMode TempMode;
+        private IBlock SelectedBlock;
+        private IBlock ContentBlock;
+        private IBlock FrameBlock;
+        private IBlock GridBlock;
+        private ILine TempLine;
+        private IEllipse TempStartEllipse;
+        private IEllipse TempEndEllipse;
+        private IRectangle TempRectangle;
+        private IEllipse TempEllipse;
+        private IRectangle TempSelectionRect;
+        private bool IsFirstMove;
+        private XImmutablePoint PanStartPoint;
+        private XImmutablePoint SelectionStartPoint;
+        private ItemType SelectedType;
+        private ILine SelectedLine;
+        private IThumb LineThumbStart;
+        private IThumb LineThumbEnd;
+        private IElement SelectedElement;
+        private IThumb ThumbTopLeft;
+        private IThumb ThumbTopRight;
+        private IThumb ThumbBottomLeft;
+        private IThumb ThumbBottomRight;
+        private ISelectedBlockPlugin InvertLineStartPlugin;
+        private ISelectedBlockPlugin InvertLineEndPlugin;
 
         #endregion
 
@@ -371,12 +349,29 @@ namespace Sheet
 
         private void SetDefaults()
         {
+            Options = new SheetOptions()
+            {
+                PageOriginX = 0.0,
+                PageOriginY = 0.0,
+                PageWidth = 1260.0,
+                PageHeight = 891.0,
+                SnapSize = 15,
+                GridSize = 30,
+                FrameThickness = 1.0,
+                GridThickness = 1.0,
+                SelectionThickness = 1.0,
+                LineThickness = 2.0,
+                HitTestSize = 3.5,
+                DefaultZoomIndex = 9,
+                MaxZoomIndex = 21,
+                ZoomFactors = new double[] { 0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64 }
+            };
+
             Mode = SheetMode.Selection;
             TempMode = SheetMode.None;
             IsFirstMove = true;
-            Options = DefaultOptions();
-            ZoomController.ZoomIndex = Options.DefaultZoomIndex;
             SelectedType = ItemType.None;
+            ZoomController.ZoomIndex = Options.DefaultZoomIndex;
         }
 
         private void CreateBlocks()
@@ -2342,92 +2337,6 @@ namespace Sheet
 
         #endregion
 
-        #region Logic: Standard Page
-
-        private void CreatePage()
-        {
-            _pageFactory.CreateGrid(BackSheet, GridBlock, 330.0, 30.0, 600.0, 750.0, Options.GridSize, Options.GridThickness, ItemColors.LightGray);
-            _pageFactory.CreateFrame(BackSheet, FrameBlock, Options.GridSize, Options.GridThickness, ItemColors.DarkGray);
-
-            AdjustThickness(GridBlock, Options.GridThickness / GetZoom(ZoomController.ZoomIndex));
-            AdjustThickness(FrameBlock, Options.FrameThickness / GetZoom(ZoomController.ZoomIndex));
-        }
-
-        private BlockItem CreateGridBlock(IBlock gridBlock, bool adjustThickness, bool adjustColor)
-        {
-            var grid = _blockSerializer.SerializerContents(gridBlock, -1, 0.0, 0.0, 0.0, 0.0, -1, "GRID");
-
-            // lines
-            foreach (var lineItem in grid.Lines)
-            {
-                if (adjustThickness)
-                {
-                    lineItem.StrokeThickness = 0.013 * 72.0 / 2.54; // 0.13mm 
-                }
-
-                if (adjustColor)
-                {
-                    lineItem.Stroke = ItemColors.Black;
-                }
-            }
-
-            return grid;
-        }
-
-        private BlockItem CreateFrameBlock(IBlock frameBlock, bool adjustThickness, bool adjustColor)
-        {
-            var frame = _blockSerializer.SerializerContents(frameBlock, -1, 0.0, 0.0, 0.0, 0.0, -1, "FRAME");
-
-            // texts
-            foreach (var textItem in frame.Texts)
-            {
-                if (adjustColor)
-                {
-                    textItem.Foreground = ItemColors.Black;
-                }
-            }
-
-            // lines
-            foreach (var lineItem in frame.Lines)
-            {
-                if (adjustThickness)
-                {
-                    lineItem.StrokeThickness = 0.018 * 72.0 / 2.54; // 0.18mm 
-                }
-
-                if (adjustColor)
-                {
-                    lineItem.Stroke = ItemColors.Black;
-                }
-            }
-
-            return frame;
-        }
-
-        private BlockItem CreatePage(BlockItem content, bool enableFrame, bool enableGrid)
-        {
-            var page = new BlockItem();
-            page.Init(-1, 0.0, 0.0, 0.0, 0.0, -1, "PAGE");
-
-            if (enableGrid)
-            {
-                var grid = CreateGridBlock(GridBlock, true, false);
-                page.Blocks.Add(grid);
-            }
-
-            if (enableFrame)
-            {
-                var frame = CreateFrameBlock(FrameBlock, true, true);
-                page.Blocks.Add(frame);
-            }
-
-            page.Blocks.Add(content);
-
-            return page;
-        }
-
-        #endregion
-
         #region Input
 
         public void LeftDown(InputArgs args)
@@ -2679,6 +2588,92 @@ namespace Sheet
                     ZoomController.AutoFit();
                 }
             }
+        }
+
+        #endregion
+
+        #region Page Frame & Grid
+
+        private void CreatePage()
+        {
+            _pageFactory.CreateGrid(BackSheet, GridBlock, 330.0, 30.0, 600.0, 750.0, Options.GridSize, Options.GridThickness, ItemColors.LightGray);
+            _pageFactory.CreateFrame(BackSheet, FrameBlock, Options.GridSize, Options.GridThickness, ItemColors.DarkGray);
+
+            AdjustThickness(GridBlock, Options.GridThickness / GetZoom(ZoomController.ZoomIndex));
+            AdjustThickness(FrameBlock, Options.FrameThickness / GetZoom(ZoomController.ZoomIndex));
+        }
+
+        private BlockItem CreateGridBlock(IBlock gridBlock, bool adjustThickness, bool adjustColor)
+        {
+            var grid = _blockSerializer.SerializerContents(gridBlock, -1, 0.0, 0.0, 0.0, 0.0, -1, "GRID");
+
+            // lines
+            foreach (var lineItem in grid.Lines)
+            {
+                if (adjustThickness)
+                {
+                    lineItem.StrokeThickness = 0.013 * 72.0 / 2.54; // 0.13mm 
+                }
+
+                if (adjustColor)
+                {
+                    lineItem.Stroke = ItemColors.Black;
+                }
+            }
+
+            return grid;
+        }
+
+        private BlockItem CreateFrameBlock(IBlock frameBlock, bool adjustThickness, bool adjustColor)
+        {
+            var frame = _blockSerializer.SerializerContents(frameBlock, -1, 0.0, 0.0, 0.0, 0.0, -1, "FRAME");
+
+            // texts
+            foreach (var textItem in frame.Texts)
+            {
+                if (adjustColor)
+                {
+                    textItem.Foreground = ItemColors.Black;
+                }
+            }
+
+            // lines
+            foreach (var lineItem in frame.Lines)
+            {
+                if (adjustThickness)
+                {
+                    lineItem.StrokeThickness = 0.018 * 72.0 / 2.54; // 0.18mm 
+                }
+
+                if (adjustColor)
+                {
+                    lineItem.Stroke = ItemColors.Black;
+                }
+            }
+
+            return frame;
+        }
+
+        private BlockItem CreatePage(BlockItem content, bool enableFrame, bool enableGrid)
+        {
+            var page = new BlockItem();
+            page.Init(-1, 0.0, 0.0, 0.0, 0.0, -1, "PAGE");
+
+            if (enableGrid)
+            {
+                var grid = CreateGridBlock(GridBlock, true, false);
+                page.Blocks.Add(grid);
+            }
+
+            if (enableFrame)
+            {
+                var frame = CreateFrameBlock(FrameBlock, true, true);
+                page.Blocks.Add(frame);
+            }
+
+            page.Blocks.Add(content);
+
+            return page;
         }
 
         #endregion
