@@ -137,7 +137,7 @@
                               Grid.Row="0" 
                               VerticalAlignment="Stretch" 
                               HorizontalAlignment="Stretch">
-                <ContentControl x:Name="SheetContent"/>
+                <ContentControl x:Name="Sheet"/>
             </local:SizeBorder>
             <GridSplitter Grid.Row="1" 
                           FocusVisualStyle="{x:Null}"

@@ -23,44 +23,19 @@ namespace Sheet
     {
         #region IoC
 
-        private readonly IServiceLocator _serviceLocator;
+        private readonly ISheetController _sheetController;
 
-        public SheetControl(IServiceLocator serviceLocator)
+        public SheetControl(ISheetController sheetController)
         {
             InitializeComponent();
 
-            this._serviceLocator = serviceLocator;
+            this._sheetController = sheetController;
 
-            this.SheetController = CreateSheetController(serviceLocator);
-            Loaded += (sender, e) => this.SheetController.Init();
+            Loaded += (sender, e) =>
+            {
+                this._sheetController.Init();
+            };
         }
-
-        private ISheetController CreateSheetController(IServiceLocator serviceLocator)
-        {
-            var controller = new SheetController(serviceLocator);
-
-            var serializer = serviceLocator.GetInstance<IItemSerializer>();
-
-            controller.HistoryController = new PageHistoryController(controller, serializer);
-            controller.ZoomController = this;
-            controller.CursorController = this;
-
-            controller.FocusSheet = () => this.Focus();
-            controller.IsSheetFocused = () => this.IsFocused;
-
-            controller.EditorSheet = new WpfCanvasSheet(EditorCanvas);
-            controller.BackSheet = new WpfCanvasSheet(Root.Back);
-            controller.ContentSheet = new WpfCanvasSheet(Root.Sheet);
-            controller.OverlaySheet = new WpfCanvasSheet(Root.Overlay);
-
-            return controller;
-        }
-
-        #endregion
-
-        #region Properties
-
-        public ISheetController SheetController { get; set; }
 
         #endregion
 
@@ -70,14 +45,14 @@ namespace Sheet
         {
             int index = -1;
 
-            if (SheetController == null || SheetController.Options == null)
+            if (_sheetController == null || _sheetController.Options == null)
             {
                 return index;
             }
 
-            for (int i = 0; i < SheetController.Options.ZoomFactors.Length; i++)
+            for (int i = 0; i < _sheetController.Options.ZoomFactors.Length; i++)
             {
-                if (SheetController.Options.ZoomFactors[i] > factor)
+                if (_sheetController.Options.ZoomFactors[i] > factor)
                 {
                     index = i;
                     break;
@@ -85,24 +60,24 @@ namespace Sheet
             }
 
             index = Math.Max(0, index);
-            index = Math.Min(index, SheetController.Options.MaxZoomIndex);
+            index = Math.Min(index, _sheetController.Options.MaxZoomIndex);
 
             return index;
         }
 
         private void AutoFit(double finalWidth,  double finalHeight, double desiredWidth, double desiredHeight)
         {
-            if (SheetController == null || SheetController.Options == null)
+            if (_sheetController == null || _sheetController.Options == null)
             {
                 return;
             }
 
             // calculate factor
-            double fwidth = finalWidth / SheetController.Options.PageWidth;
-            double fheight = finalHeight / SheetController.Options.PageHeight;
+            double fwidth = finalWidth / _sheetController.Options.PageWidth;
+            double fheight = finalHeight / _sheetController.Options.PageHeight;
             double factor = Math.Min(fwidth, fheight);
-            double panX = (finalWidth - (SheetController.Options.PageWidth * factor)) / 2.0;
-            double panY = (finalHeight - (SheetController.Options.PageHeight * factor)) / 2.0;
+            double panX = (finalWidth - (_sheetController.Options.PageWidth * factor)) / 2.0;
+            double panY = (finalHeight - (_sheetController.Options.PageHeight * factor)) / 2.0;
             double dx = Math.Max(0, (finalWidth - desiredWidth) / 2.0);
             double dy = Math.Max(0, (finalHeight - desiredHeight) / 2.0);
 
@@ -125,15 +100,15 @@ namespace Sheet
             get { return zoomIndex; }
             set
             {
-                if (SheetController == null || SheetController.Options == null)
+                if (_sheetController == null || _sheetController.Options == null)
                 {
                     return;
                 }
 
-                if (value >= 0 && value <= SheetController.Options.MaxZoomIndex)
+                if (value >= 0 && value <= _sheetController.Options.MaxZoomIndex)
                 {
                     zoomIndex = value;
-                    Zoom = SheetController.Options.ZoomFactors[zoomIndex];
+                    Zoom = _sheetController.Options.ZoomFactors[zoomIndex];
                 }
             }
         }
@@ -143,19 +118,19 @@ namespace Sheet
             get { return zoom.ScaleX; }
             set
             {
-                if (SheetController == null || SheetController.Options == null)
+                if (_sheetController == null || _sheetController.Options == null)
                 {
                     return;
                 }
 
                 if (IsLoaded)
                 {
-                    SheetController.AdjustPageThickness(value);
+                    _sheetController.AdjustPageThickness(value);
                 }
 
                 zoom.ScaleX = value;
                 zoom.ScaleY = value;
-                SheetController.Options.Zoom = value;
+                _sheetController.Options.Zoom = value;
             }
         }
 
@@ -164,13 +139,13 @@ namespace Sheet
             get { return pan.X; }
             set
             {
-                if (SheetController == null || SheetController.Options == null)
+                if (_sheetController == null || _sheetController.Options == null)
                 {
                     return;
                 }
 
                 pan.X = value;
-                SheetController.Options.PanX = value;
+                _sheetController.Options.PanX = value;
             }
         }
 
@@ -179,25 +154,25 @@ namespace Sheet
             get { return pan.Y; }
             set
             {
-                if (SheetController == null || SheetController.Options == null)
+                if (_sheetController == null || _sheetController.Options == null)
                 {
                     return;
                 }
 
                 pan.Y = value;
-                SheetController.Options.PanY = value;
+                _sheetController.Options.PanY = value;
             }
         }
 
         public void AutoFit()
         {
-            AutoFit(SheetController.LastFinalWidth, SheetController.LastFinalHeight, DesiredSize.Width, DesiredSize.Height);
+            AutoFit(_sheetController.LastFinalWidth, _sheetController.LastFinalHeight, DesiredSize.Width, DesiredSize.Height);
         }
 
         public void ActualSize()
         {
-            zoomIndex = SheetController.Options.DefaultZoomIndex;
-            Zoom = SheetController.Options.ZoomFactors[zoomIndex];
+            zoomIndex = _sheetController.Options.DefaultZoomIndex;
+            Zoom = _sheetController.Options.ZoomFactors[zoomIndex];
             PanX = 0.0;
             PanY = 0.0;
         }
@@ -238,7 +213,7 @@ namespace Sheet
             bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
             bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
             bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
-            Point sheetPoint = e.GetPosition(SheetController.OverlaySheet.GetParent() as FrameworkElement);
+            Point sheetPoint = e.GetPosition(_sheetController.OverlaySheet.GetParent() as FrameworkElement);
             XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
             Point rootPoint = e.GetPosition(this);
             XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
@@ -256,7 +231,7 @@ namespace Sheet
                 Clicks = 1
             };
 
-            SheetController.LeftDown(args);
+            _sheetController.LeftDown(args);
         }
 
         private void LeftUp(MouseButtonEventArgs e)
@@ -264,7 +239,7 @@ namespace Sheet
             bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
             bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
             bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
-            Point sheetPoint = e.GetPosition(SheetController.OverlaySheet.GetParent() as FrameworkElement);
+            Point sheetPoint = e.GetPosition(_sheetController.OverlaySheet.GetParent() as FrameworkElement);
             XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
             Point rootPoint = e.GetPosition(this);
             XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
@@ -282,7 +257,7 @@ namespace Sheet
                 Clicks = 1
             };
 
-            SheetController.LeftUp(args);
+            _sheetController.LeftUp(args);
         }
 
         private void Move(MouseEventArgs e)
@@ -290,7 +265,7 @@ namespace Sheet
             bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
             bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
             bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
-            Point sheetPoint = e.GetPosition(SheetController.OverlaySheet.GetParent() as FrameworkElement);
+            Point sheetPoint = e.GetPosition(_sheetController.OverlaySheet.GetParent() as FrameworkElement);
             XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
             Point rootPoint = e.GetPosition(this);
             XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
@@ -308,7 +283,7 @@ namespace Sheet
                 Clicks = 1
             };
 
-            SheetController.Move(args);
+            _sheetController.Move(args);
         }
 
         private void RightDown(MouseButtonEventArgs e)
@@ -316,7 +291,7 @@ namespace Sheet
             bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
             bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
             bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
-            Point sheetPoint = e.GetPosition(SheetController.OverlaySheet.GetParent() as FrameworkElement);
+            Point sheetPoint = e.GetPosition(_sheetController.OverlaySheet.GetParent() as FrameworkElement);
             XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
             Point rootPoint = e.GetPosition(this);
             XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
@@ -334,7 +309,7 @@ namespace Sheet
                 Clicks = 1
             };
 
-            SheetController.RightDown(args);
+            _sheetController.RightDown(args);
         }
 
         private void RightUp(MouseButtonEventArgs e)
@@ -342,7 +317,7 @@ namespace Sheet
             bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
             bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
             bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
-            Point sheetPoint = e.GetPosition(SheetController.OverlaySheet.GetParent() as FrameworkElement);
+            Point sheetPoint = e.GetPosition(_sheetController.OverlaySheet.GetParent() as FrameworkElement);
             XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
             Point rootPoint = e.GetPosition(this);
             XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
@@ -360,14 +335,14 @@ namespace Sheet
                 Clicks = 1
             };
 
-            SheetController.RightUp(args);
+            _sheetController.RightUp(args);
         }
 
         private void Wheel(MouseWheelEventArgs e)
         {
             int d = e.Delta;
             var p = e.GetPosition(Layout);
-            SheetController.Wheel(d, new XImmutablePoint(p.X, p.Y));
+            _sheetController.Wheel(d, new XImmutablePoint(p.X, p.Y));
         }
 
         private void Down(MouseButtonEventArgs e)
@@ -375,7 +350,7 @@ namespace Sheet
             bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
             bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
             bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
-            Point sheetPoint = e.GetPosition(SheetController.OverlaySheet.GetParent() as FrameworkElement);
+            Point sheetPoint = e.GetPosition(_sheetController.OverlaySheet.GetParent() as FrameworkElement);
             XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
             Point rootPoint = e.GetPosition(this);
             XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
@@ -400,7 +375,7 @@ namespace Sheet
                 default: args.Button = InputButton.None; break;
             }
 
-            SheetController.Down(args);
+            _sheetController.Down(args);
         }
 
         private void UserControl_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -457,7 +432,7 @@ namespace Sheet
 
         private void UserControl_Drop(object sender, DragEventArgs e)
         {
-            Point point = e.GetPosition(SheetController.OverlaySheet.GetParent() as FrameworkElement);
+            Point point = e.GetPosition(_sheetController.OverlaySheet.GetParent() as FrameworkElement);
             XImmutablePoint position = new XImmutablePoint(point.X, point.Y);
 
             if (e.Data.GetDataPresent(BlockDropFormat))
@@ -465,7 +440,7 @@ namespace Sheet
                 var blockItem = e.Data.GetData(BlockDropFormat) as BlockItem;
                 if (blockItem != null)
                 {
-                    SheetController.Insert(blockItem, position, true);
+                    _sheetController.Insert(blockItem, position, true);
                     e.Handled = true;
                 }
             }
@@ -474,7 +449,7 @@ namespace Sheet
                 var dataItem = e.Data.GetData(DataDropFormat) as DataItem;
                 if (dataItem != null)
                 {
-                    SheetController.TryToBindData(position, dataItem);
+                    _sheetController.TryToBindData(position, dataItem);
                     e.Handled = true;
                 }
             }
