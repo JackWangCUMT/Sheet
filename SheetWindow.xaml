@@ -102,16 +102,16 @@
                 <MenuItem x:Name="LogicInvertLineEnd" Header="Invert Line _End" InputGestureText="W" Click="LogicInvertLineEnd_Click"/>
             </MenuItem>
         </Menu>
-        <local:LibraryControl x:Name="Library" 
-                              Background="Transparent"
-                              Grid.Row="1"
-                              Grid.Column="0"
-                              Visibility="Hidden" 
-                              Margin="6,6,0,6" 
-                              VerticalAlignment="Stretch" 
-                              HorizontalAlignment="Stretch"
-                              BorderBrush="LightGray"
-                              BorderThickness="0,0,1,0"/>
+        <Border x:Name="LibraryBorder"
+                BorderBrush="LightGray"
+                BorderThickness="0,0,1,0"                         
+                Grid.Row="1"
+                Grid.Column="0"
+                Margin="6,6,0,6" 
+                VerticalAlignment="Stretch" 
+                HorizontalAlignment="Stretch">
+            <ContentControl x:Name="Library"/>
+        </Border>
         <GridSplitter Grid.Row="1" 
                       Grid.Column="1" 
                       FocusVisualStyle="{x:Null}"

@@ -23,13 +23,15 @@ namespace Sheet
     {
         #region IoC
 
+        private readonly IServiceLocator _serviceLocator;
         private readonly ISheetController _sheetController;
 
-        public SheetControl(ISheetController sheetController)
+        public SheetControl(IServiceLocator serviceLocator)
         {
             InitializeComponent();
 
-            this._sheetController = sheetController;
+            this._serviceLocator = serviceLocator;
+            this._sheetController = serviceLocator.GetInstance<ISheetController>();
         }
 
         #endregion

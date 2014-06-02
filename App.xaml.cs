@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -40,31 +41,54 @@ namespace Sheet
         {
             var builder = new ContainerBuilder();
 
-            builder.RegisterInstance(new WpfBlockHelper()).As<IBlockHelper>().SingleInstance();
-            builder.RegisterInstance(new WpfBlockFactory()).As<IBlockFactory>().SingleInstance();
-            builder.RegisterInstance(new WpfClipboard()).As<IClipboard>().SingleInstance();
-            builder.RegisterInstance(new Base64()).As<IBase64>().SingleInstance();
-            builder.RegisterInstance(new NewtonsoftJsonSerializer()).As<IJsonSerializer>().SingleInstance();
-            builder.RegisterInstance(new EntryFactory()).As<IEntryFactory>().SingleInstance();
+            builder.RegisterType<AppServiceLocator>().As<IServiceLocator>().InstancePerLifetimeScope();
 
-            builder.RegisterType<BlockSerializer>().As<IBlockSerializer>().SingleInstance();
-            builder.RegisterType<ItemSerializer>().As<IItemSerializer>().SingleInstance();
-            builder.RegisterType<EntrySerializer>().As<IEntrySerializer>().SingleInstance();
-            builder.RegisterType<BlockController>().As<IBlockController>().SingleInstance();
-            builder.RegisterType<ItemController>().As<IItemController>().SingleInstance();
+            builder.RegisterType<WpfClipboard>().As<IClipboard>().SingleInstance();
+            builder.RegisterType<Base64>().As<IBase64>().SingleInstance();
+            builder.RegisterType<NewtonsoftJsonSerializer>().As<IJsonSerializer>().SingleInstance();
+
             builder.RegisterType<EntryController>().As<IEntryController>().SingleInstance();
+            builder.RegisterType<EntrySerializer>().As<IEntrySerializer>().SingleInstance();
+            builder.RegisterType<EntryFactory>().As<IEntryFactory>().SingleInstance();
+
+            builder.RegisterType<BlockController>().As<IBlockController>().SingleInstance();
+            builder.RegisterType<BlockSerializer>().As<IBlockSerializer>().SingleInstance();
+            builder.RegisterType<WpfBlockFactory>().As<IBlockFactory>().SingleInstance();
+            builder.RegisterType<WpfBlockHelper>().As<IBlockHelper>().SingleInstance();
+
+            builder.RegisterType<ItemController>().As<IItemController>().SingleInstance();
+            builder.RegisterType<ItemSerializer>().As<IItemSerializer>().SingleInstance();
+
             builder.RegisterType<PointController>().As<IPointController>().SingleInstance();
             builder.RegisterType<LogicContentPageFactory>().As<IPageFactory>().SingleInstance();
 
-            builder.RegisterType<AppServiceLocator>().As<IServiceLocator>().SingleInstance();
+            builder.RegisterType<PageHistoryController>().As<IHistoryController>().InstancePerDependency();
+            builder.RegisterType<WpfCanvasSheet>().As<ISheet>().InstancePerDependency();
 
-            builder.RegisterType<SheetWindow>();
+            builder.RegisterType<SheetController>().As<ISheetController>().InstancePerLifetimeScope();
 
-            Container = builder.Build();
+            builder.RegisterType<SheetControl>()
+                .AsSelf()
+                .As<IZoomController>()
+                .As<ICursorController>()
+                .InstancePerLifetimeScope();
 
-            var window = Container.Resolve<SheetWindow>();
-            window.Show();
-        } 
+            builder.RegisterType<LibraryControl>()
+                .AsSelf()
+                .As<ILibraryController>()
+                .InstancePerLifetimeScope();
+
+            builder.RegisterType<SheetWindow>().InstancePerLifetimeScope();
+
+            using(Container = builder.Build())
+            {
+                using (var scope = Container.BeginLifetimeScope())
+                {
+                    var window = Container.Resolve<SheetWindow>();
+                    window.Show();
+                }
+            }
+        }
 
         #endregion
     }

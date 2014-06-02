@@ -412,6 +412,7 @@ namespace Sheet
         double Height { get; set; }
         bool IsCaptured { get; }
         object GetParent();
+        void SetParent(object parent);
         void Add(IElement element);
         void Remove(IElement element);
         void Add(object element);

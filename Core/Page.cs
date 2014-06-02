@@ -24,12 +24,6 @@ namespace Sheet
             this._itemSerializer = serviceLocator.GetInstance<IItemSerializer>();
         }
 
-        public PageHistoryController(ISheetController sheetController, IItemSerializer itemSerializer)
-        {
-            this._sheetController = sheetController;
-            this._itemSerializer = itemSerializer;
-        }
-
         #endregion
 
         #region Fields

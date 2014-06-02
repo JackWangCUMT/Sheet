@@ -119,15 +119,6 @@ namespace Sheet
 
         #endregion
 
-        #region Constructor
-
-        public WpfCanvasSheet(Canvas canvas)
-        {
-            this._canvas = canvas;
-        }
-
-        #endregion
-
         #region ISheet
 
         public double Width 
@@ -156,6 +147,11 @@ namespace Sheet
         public object GetParent()
         {
             return _canvas;
+        }
+
+        public void SetParent(object parent)
+        {
+            _canvas = parent as Canvas;
         }
 
         public void Add(IElement element)
