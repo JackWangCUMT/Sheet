@@ -363,9 +363,9 @@ namespace Sheet
 
     #endregion
 
-    #region IPanAndZoomController
+    #region IZoomController
 
-    public interface IPanAndZoomController
+    public interface IZoomController
     {
         int ZoomIndex { get; set; }
         double Zoom { get; set; }

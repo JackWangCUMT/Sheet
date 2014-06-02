@@ -148,7 +148,6 @@ namespace Sheet
 
         // Init
         void Init();
-        void InitLoaded();
 
         // Clipboard
         void CutAsText();
@@ -224,7 +223,7 @@ namespace Sheet
         // IPageController
         IHistoryController HistoryController { get; set; }
         ILibraryController LibraryController { get; set; }
-        IPanAndZoomController PanAndZoomController { get; set; }
+        IZoomController ZoomController { get; set; }
         ICursorController CursorController { get; set; }
         void SetPage(string text);
         string GetPage();
@@ -275,10 +274,6 @@ namespace Sheet
             this._base64 = serviceLocator.GetInstance<IBase64>();
             this._pointController = serviceLocator.GetInstance<IPointController>();
             this._pageFactory = serviceLocator.GetInstance<IPageFactory>();
-
-            _historyController = new PageHistoryController(this, _itemSerializer);
-
-            CreatePlugins(serviceLocator);
         }
 
         #endregion
@@ -369,11 +364,18 @@ namespace Sheet
 
         public void Init()
         {
-            InitDefaults();
-            InitBlocks();
+            SetDefaults();
+
+            CreateBlocks();
+            CreatePlugins();
+            CreatePage();
+
+            LoadLibraryFromResource(string.Concat("Sheet.Libraries", '.', "Digital.library"));
+
+            FocusSheet();
         }
 
-        private void InitDefaults()
+        private void SetDefaults()
         {
             Mode = SheetMode.Selection;
             TempMode = SheetMode.None;
@@ -382,7 +384,7 @@ namespace Sheet
             _zoomController.ZoomIndex = Options.DefaultZoomIndex;
         }
 
-        private void InitBlocks()
+        private void CreateBlocks()
         {
             ContentBlock = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "CONTENT", null);
             ContentBlock.Init();
@@ -396,22 +398,13 @@ namespace Sheet
             SelectedBlock = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "SELECTED", null);
         }
 
-        public void InitLoaded()
-        {
-            LoadStandardPage();
-
-            LoadLibraryFromResource(string.Concat("Sheet.Libraries", '.', "Digital.library"));
-
-            FocusSheet();
-        }
-
         #endregion
 
         #region IPageController
 
         private IHistoryController _historyController;
         private ILibraryController _libraryController;
-        private IPanAndZoomController _zoomController;
+        private IZoomController _zoomController;
         private ICursorController _cursorController;
 
         public IHistoryController HistoryController
@@ -426,7 +419,7 @@ namespace Sheet
             set { _libraryController = value; }
         }
 
-        public IPanAndZoomController PanAndZoomController
+        public IZoomController ZoomController
         {
             get { return _zoomController; }
             set { _zoomController = value; }
@@ -530,7 +523,7 @@ namespace Sheet
             _blockController.Remove(BackSheet, FrameBlock);
             _blockController.Remove(ContentSheet, ContentBlock);
 
-            InitBlocks();
+            CreateBlocks();
         }
 
         public void ResetPageContent()
@@ -1079,13 +1072,16 @@ namespace Sheet
 
         private void AdjustThickness(IBlock parent, double thickness)
         {
-            AdjustThickness(parent.Lines, thickness);
-            AdjustThickness(parent.Rectangles, thickness);
-            AdjustThickness(parent.Ellipses, thickness);
-
-            foreach (var block in parent.Blocks)
+            if (parent != null)
             {
-                AdjustThickness(block, thickness);
+                AdjustThickness(parent.Lines, thickness);
+                AdjustThickness(parent.Rectangles, thickness);
+                AdjustThickness(parent.Ellipses, thickness);
+
+                foreach (var block in parent.Blocks)
+                {
+                    AdjustThickness(block, thickness);
+                }
             }
         }
 
@@ -2020,7 +2016,7 @@ namespace Sheet
         {
             _historyController.Register("New");
             ResetPage();
-            LoadStandardPage();
+            CreatePage();
             _zoomController.AutoFit();
         }
 
@@ -2382,7 +2378,7 @@ namespace Sheet
 
         #region Logic: Standard Page
 
-        private void LoadStandardPage()
+        private void CreatePage()
         {
             _pageFactory.CreateGrid(BackSheet, GridBlock, 330.0, 30.0, 600.0, 750.0, Options.GridSize, Options.GridThickness, ItemColors.LightGray);
             _pageFactory.CreateFrame(BackSheet, FrameBlock, Options.GridSize, Options.GridThickness, ItemColors.DarkGray);
@@ -2726,10 +2722,10 @@ namespace Sheet
         private ISelectedBlockPlugin invertLineStartPlugin;
         private ISelectedBlockPlugin invertLineEndPlugin;
 
-        private void CreatePlugins(IServiceLocator serviceLocator)
+        private void CreatePlugins()
         {
-            invertLineStartPlugin = new InvertLineStartPlugin(serviceLocator);
-            invertLineEndPlugin = new InvertLineEndPlugin(serviceLocator);
+            invertLineStartPlugin = new InvertLineStartPlugin(_serviceLocator);
+            invertLineEndPlugin = new InvertLineEndPlugin(_serviceLocator);
         }
 
         private void ProcessPlugin(ISelectedBlockPlugin plugin)

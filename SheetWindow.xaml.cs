@@ -122,7 +122,7 @@ namespace Sheet
         private void InitSizeBorder()
         {
             SizeBorder.ExecuteUpdateSize = (size) => GetSheetController().SetAutoFitSize(size.Width, size.Height);
-            SizeBorder.ExecuteSizeChanged = () => GetSheetController().PanAndZoomController.AutoFit();
+            SizeBorder.ExecuteSizeChanged = () => GetSheetController().ZoomController.AutoFit();
         }
 
         private void InitSolution()
@@ -309,7 +309,7 @@ namespace Sheet
                 case Key.NumPad0:
                     if (onlyCtrl)
                     {
-                        GetSheetController().PanAndZoomController.AutoFit();
+                        GetSheetController().ZoomController.AutoFit();
                     }
                     break;
                 // Ctrl+1: Actual Size
@@ -317,7 +317,7 @@ namespace Sheet
                 case Key.NumPad1:
                     if (onlyCtrl)
                     {
-                        GetSheetController().PanAndZoomController.ActualSize();
+                        GetSheetController().ZoomController.ActualSize();
                     }
                     break;
                 // N: Mode None
@@ -859,12 +859,12 @@ namespace Sheet
 
         private void ViewZoomToPageLevel_Click(object sender, RoutedEventArgs e)
         {
-            GetSheetController().PanAndZoomController.AutoFit();
+            GetSheetController().ZoomController.AutoFit();
         }
 
         private void ViewZoomActualSize_Click(object sender, RoutedEventArgs e)
         {
-            GetSheetController().PanAndZoomController.ActualSize();
+            GetSheetController().ZoomController.ActualSize();
         }
 
         #endregion
