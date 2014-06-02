@@ -29,8 +29,15 @@ namespace Sheet
         {
             InitializeComponent();
 
-            Loaded += (sender, e) => Init();
-            DataContextChanged += (sender, e) => Init();
+            Loaded += (sender, e) =>
+            {
+                Init();
+            };
+
+            DataContextChanged += (sender, e) =>
+            {
+                Init();
+            };
         }
 
         #endregion
