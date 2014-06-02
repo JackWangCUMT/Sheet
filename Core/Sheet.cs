@@ -302,27 +302,23 @@ namespace Sheet
         public XImmutablePoint SelectionStartPoint { get; set; }
         public double LastFinalWidth { get; set; }
         public double LastFinalHeight { get; set; }
-
-        #endregion
-
-        #region Focus
-
+        public ItemType SelectedType { get; set; }
+        public ILine SelectedLine { get; set; }
+        public IThumb LineThumbStart { get; set; }
+        public IThumb LineThumbEnd { get; set; }
+        public IElement SelectedElement { get; set; }
+        public IThumb ThumbTopLeft { get; set; }
+        public IThumb ThumbTopRight { get; set; }
+        public IThumb ThumbBottomLeft { get; set; }
+        public IThumb ThumbBottomRight { get; set; }
         public Action FocusSheet { get; set; }
         public Func<bool> IsSheetFocused { get; set; }
-
-        #endregion
-
-        #region Fields
-
-        private ItemType SelectedType = ItemType.None;
-        private ILine SelectedLine = null;
-        private IThumb LineThumbStart = null;
-        private IThumb LineThumbEnd = null;
-        private IElement SelectedElement = null;
-        private IThumb ThumbTopLeft = null;
-        private IThumb ThumbTopRight = null;
-        private IThumb ThumbBottomLeft = null;
-        private IThumb ThumbBottomRight = null;
+        public IHistoryController HistoryController { get; set; }
+        public ILibraryController LibraryController { get; set; }
+        public IZoomController ZoomController { get; set; }
+        public ICursorController CursorController { get; set; }
+        public ISelectedBlockPlugin InvertLineStartPlugin { get; set; }
+        public ISelectedBlockPlugin InvertLineEndPlugin { get; set; }
 
         #endregion
 
@@ -379,7 +375,8 @@ namespace Sheet
             TempMode = SheetMode.None;
             IsFirstMove = true;
             Options = DefaultOptions();
-            _zoomController.ZoomIndex = Options.DefaultZoomIndex;
+            ZoomController.ZoomIndex = Options.DefaultZoomIndex;
+            SelectedType = ItemType.None;
         }
 
         private void CreateBlocks()
@@ -398,36 +395,7 @@ namespace Sheet
 
         #endregion
 
-        #region IPageController
-
-        private IHistoryController _historyController;
-        private ILibraryController _libraryController;
-        private IZoomController _zoomController;
-        private ICursorController _cursorController;
-
-        public IHistoryController HistoryController
-        {
-            get { return _historyController; }
-            set { _historyController = value; }
-        }
-
-        public ILibraryController LibraryController
-        {
-            get { return _libraryController; }
-            set { _libraryController = value; }
-        }
-
-        public IZoomController ZoomController
-        {
-            get { return _zoomController; }
-            set { _zoomController = value; }
-        }
-
-        public ICursorController CursorController
-        {
-            get { return _cursorController; }
-            set { _cursorController = value; }
-        }
+        #region Page
 
         public async void SetPage(string text)
         {
@@ -435,13 +403,13 @@ namespace Sheet
             {
                 if (text == null)
                 {
-                    _historyController.Reset();
+                    HistoryController.Reset();
                     ResetPage();
                 }
                 else
                 {
                     var block = await Task.Run(() => _itemSerializer.DeserializeContents(text));
-                    _historyController.Reset();
+                    HistoryController.Reset();
                     ResetPage();
                     DeserializePage(block);
                 }
@@ -499,17 +467,17 @@ namespace Sheet
 
             if (grid != null)
             {
-                _blockController.AddContents(BackSheet, grid, GridBlock, null, false, Options.GridThickness / _zoomController.Zoom);
+                _blockController.AddContents(BackSheet, grid, GridBlock, null, false, Options.GridThickness / ZoomController.Zoom);
             }
 
             if (frame != null)
             {
-                _blockController.AddContents(BackSheet, frame, FrameBlock, null, false, Options.FrameThickness / _zoomController.Zoom);
+                _blockController.AddContents(BackSheet, frame, FrameBlock, null, false, Options.FrameThickness / ZoomController.Zoom);
             }
 
             if (content != null)
             {
-                _blockController.AddContents(ContentSheet, content, ContentBlock, null, false, Options.LineThickness / _zoomController.Zoom);
+                _blockController.AddContents(ContentSheet, content, ContentBlock, null, false, Options.LineThickness / ZoomController.Zoom);
             }
         }
 
@@ -566,7 +534,7 @@ namespace Sheet
                 if (_blockController.HaveSelected(SelectedBlock))
                 {
                     var copy = _blockController.ShallowCopy(SelectedBlock);
-                    _historyController.Register("Cut");
+                    HistoryController.Register("Cut");
                     CopyAsText(copy);
                     Delete(copy);
                 }
@@ -607,7 +575,7 @@ namespace Sheet
             {
                 var text = _clipboard.Get();
                 var block = await Task.Run(() => _itemSerializer.DeserializeContents(text));
-                _historyController.Register("Paste");
+                HistoryController.Register("Paste");
                 InsertContent(block, true);
             }
             catch (Exception ex)
@@ -628,7 +596,7 @@ namespace Sheet
                 if (_blockController.HaveSelected(SelectedBlock))
                 {
                     var copy = _blockController.ShallowCopy(SelectedBlock);
-                    _historyController.Register("Cut");
+                    HistoryController.Register("Cut");
                     CopyAsJson(copy);
                     Delete(copy);
                 }
@@ -669,7 +637,7 @@ namespace Sheet
             {
                 var text = _clipboard.Get();
                 var block = await Task.Run(() => _jsonSerializer.Deerialize<BlockItem>(text));
-                _historyController.Register("Paste");
+                HistoryController.Register("Paste");
                 InsertContent(block, true);
             }
             catch (Exception ex)
@@ -747,7 +715,7 @@ namespace Sheet
             if (_blockController.HaveSelected(SelectedBlock))
             {
                 var copy = _blockController.ShallowCopy(SelectedBlock);
-                _historyController.Register("Delete");
+                HistoryController.Register("Delete");
                 Delete(copy);
             }
         }
@@ -785,7 +753,7 @@ namespace Sheet
         private void InsertContent(BlockItem block, bool select)
         {
             _blockController.DeselectContent(SelectedBlock);
-            _blockController.AddContents(ContentSheet, block, ContentBlock, SelectedBlock, select, Options.LineThickness / _zoomController.Zoom);
+            _blockController.AddContents(ContentSheet, block, ContentBlock, SelectedBlock, select, Options.LineThickness / ZoomController.Zoom);
         }
 
         private BlockItem CreateBlock(string name, IBlock block)
@@ -843,9 +811,9 @@ namespace Sheet
             {
                 var text = _itemSerializer.SerializeContents(_blockSerializer.SerializerContents(SelectedBlock, 0, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED"));
                 var block = await Task.Run(() => _itemSerializer.DeserializeContents(text));
-                _historyController.Register("Break Block");
+                HistoryController.Register("Break Block");
                 Delete();
-                _blockController.AddBroken(ContentSheet, block, ContentBlock, SelectedBlock, true, Options.LineThickness / _zoomController.Zoom);
+                _blockController.AddBroken(ContentSheet, block, ContentBlock, SelectedBlock, true, Options.LineThickness / ZoomController.Zoom);
             }
         }
 
@@ -855,7 +823,7 @@ namespace Sheet
 
         public IPoint InsertPoint(XImmutablePoint p, bool register, bool select)
         {
-            double thickness = Options.LineThickness / _zoomController.Zoom;
+            double thickness = Options.LineThickness / ZoomController.Zoom;
             double x = _itemController.Snap(p.X, Options.SnapSize);
             double y = _itemController.Snap(p.Y, Options.SnapSize);
 
@@ -864,7 +832,7 @@ namespace Sheet
             if (register)
             {
                 _blockController.DeselectContent(SelectedBlock);
-                _historyController.Register("Insert Point");
+                HistoryController.Register("Insert Point");
             }
 
             ContentBlock.Points.Add(point);
@@ -891,7 +859,7 @@ namespace Sheet
             {
                 IBlock moveBlock = _blockController.ShallowCopy(SelectedBlock);
                 FinishEdit();
-                _historyController.Register("Move");
+                HistoryController.Register("Move");
                 _blockController.Select(moveBlock);
                 SelectedBlock = moveBlock;
                 _blockController.MoveDelta(x, y, SelectedBlock);
@@ -946,9 +914,9 @@ namespace Sheet
             if (IsFirstMove)
             {
                 IBlock moveBlock = _blockController.ShallowCopy(SelectedBlock);
-                _historyController.Register("Move");
+                HistoryController.Register("Move");
                 IsFirstMove = false;
-                _cursorController.Set(SheetCursor.Move);
+                CursorController.Set(SheetCursor.Move);
                 _blockController.Select(moveBlock);
                 SelectedBlock = moveBlock;
             }
@@ -968,7 +936,7 @@ namespace Sheet
         private void FinishMove()
         {
             RestoreTempMode();
-            _cursorController.Set(SheetCursor.Normal);
+            CursorController.Set(SheetCursor.Normal);
             OverlaySheet.ReleaseCapture();
         }
 
@@ -985,11 +953,11 @@ namespace Sheet
         private void ZoomTo(double x, double y, int oldZoomIndex)
         {
             double oldZoom = GetZoom(oldZoomIndex);
-            double newZoom = GetZoom(_zoomController.ZoomIndex);
-            _zoomController.Zoom = newZoom;
+            double newZoom = GetZoom(ZoomController.ZoomIndex);
+            ZoomController.Zoom = newZoom;
 
-            _zoomController.PanX = (x * oldZoom + _zoomController.PanX) - x * newZoom;
-            _zoomController.PanY = (y * oldZoom + _zoomController.PanY) - y * newZoom;
+            ZoomController.PanX = (x * oldZoom + ZoomController.PanX) - x * newZoom;
+            ZoomController.PanY = (y * oldZoom + ZoomController.PanY) - y * newZoom;
         }
 
         private void ZoomTo(int delta, XImmutablePoint p)
@@ -997,16 +965,16 @@ namespace Sheet
             if (delta > 0)
             {
 
-                if (_zoomController.ZoomIndex > -1 && _zoomController.ZoomIndex < Options.MaxZoomIndex)
+                if (ZoomController.ZoomIndex > -1 && ZoomController.ZoomIndex < Options.MaxZoomIndex)
                 {
-                    ZoomTo(p.X, p.Y, _zoomController.ZoomIndex++);
+                    ZoomTo(p.X, p.Y, ZoomController.ZoomIndex++);
                 }
             }
             else
             {
-                if (_zoomController.ZoomIndex > 0)
+                if (ZoomController.ZoomIndex > 0)
                 {
-                    ZoomTo(p.X, p.Y, _zoomController.ZoomIndex--);
+                    ZoomTo(p.X, p.Y, ZoomController.ZoomIndex--);
                 }
             }
         }
@@ -1017,7 +985,7 @@ namespace Sheet
             {
                 return Options.ZoomFactors[index];
             }
-            return _zoomController.Zoom;
+            return ZoomController.Zoom;
         }
 
         private void InitPan(XImmutablePoint p)
@@ -1026,21 +994,21 @@ namespace Sheet
             SetMode(SheetMode.Pan);
             PanStartPoint = new XImmutablePoint(p.X, p.Y);
             ResetOverlay();
-            _cursorController.Set(SheetCursor.Pan);
+            CursorController.Set(SheetCursor.Pan);
             OverlaySheet.Capture();
         }
 
         private void Pan(XImmutablePoint p)
         {
-            _zoomController.PanX = _zoomController.PanX + p.X - PanStartPoint.X;
-            _zoomController.PanY = _zoomController.PanY + p.Y - PanStartPoint.Y;
+            ZoomController.PanX = ZoomController.PanX + p.X - PanStartPoint.X;
+            ZoomController.PanY = ZoomController.PanY + p.Y - PanStartPoint.Y;
             PanStartPoint = new XImmutablePoint(p.X, p.Y);
         }
 
         private void FinishPan()
         {
             RestoreTempMode();
-            _cursorController.Set(SheetCursor.Normal);
+            CursorController.Set(SheetCursor.Normal);
             OverlaySheet.ReleaseCapture();
         }
 
@@ -1138,7 +1106,7 @@ namespace Sheet
         private void InitSelectionRect(XImmutablePoint p)
         {
             SelectionStartPoint = new XImmutablePoint(p.X, p.Y);
-            TempSelectionRect = _pageFactory.CreateSelectionRectangle(Options.SelectionThickness / _zoomController.Zoom, p.X, p.Y, 0.0, 0.0);
+            TempSelectionRect = _pageFactory.CreateSelectionRectangle(Options.SelectionThickness / ZoomController.Zoom, p.X, p.Y, 0.0, 0.0);
             OverlaySheet.Add(TempSelectionRect);
             OverlaySheet.Capture();
         }
@@ -1207,15 +1175,15 @@ namespace Sheet
             double x = _itemController.Snap(p.X, Options.SnapSize);
             double y = _itemController.Snap(p.Y, Options.SnapSize);
 
-            TempLine = _blockFactory.CreateLine(Options.LineThickness / _zoomController.Zoom, x, y, x, y, ItemColors.Black);
+            TempLine = _blockFactory.CreateLine(Options.LineThickness / ZoomController.Zoom, x, y, x, y, ItemColors.Black);
 
             if (start != null)
             {
                 TempLine.Start = start;
             }
 
-            TempStartEllipse = _blockFactory.CreateEllipse(Options.LineThickness / _zoomController.Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true, ItemColors.Black, ItemColors.Black);
-            TempEndEllipse = _blockFactory.CreateEllipse(Options.LineThickness / _zoomController.Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true, ItemColors.Black, ItemColors.Black);
+            TempStartEllipse = _blockFactory.CreateEllipse(Options.LineThickness / ZoomController.Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true, ItemColors.Black, ItemColors.Black);
+            TempEndEllipse = _blockFactory.CreateEllipse(Options.LineThickness / ZoomController.Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true, ItemColors.Black, ItemColors.Black);
 
             OverlaySheet.Add(TempLine);
             OverlaySheet.Add(TempStartEllipse);
@@ -1262,7 +1230,7 @@ namespace Sheet
                 OverlaySheet.Remove(TempStartEllipse);
                 OverlaySheet.Remove(TempEndEllipse);
 
-                _historyController.Register("Create Line");
+                HistoryController.Register("Create Line");
 
                 if (TempLine.Start != null)
                 {
@@ -1303,7 +1271,7 @@ namespace Sheet
             double x = _itemController.Snap(p.X, Options.SnapSize);
             double y = _itemController.Snap(p.Y, Options.SnapSize);
             SelectionStartPoint = new XImmutablePoint(x, y);
-            TempRectangle = _blockFactory.CreateRectangle(Options.LineThickness / _zoomController.Zoom, x, y, 0.0, 0.0, false, ItemColors.Black, ItemColors.Transparent);
+            TempRectangle = _blockFactory.CreateRectangle(Options.LineThickness / ZoomController.Zoom, x, y, 0.0, 0.0, false, ItemColors.Black, ItemColors.Transparent);
             OverlaySheet.Add(TempRectangle);
             OverlaySheet.Capture();
         }
@@ -1334,7 +1302,7 @@ namespace Sheet
             {
                 OverlaySheet.ReleaseCapture();
                 OverlaySheet.Remove(TempRectangle);
-                _historyController.Register("Create Rectangle");
+                HistoryController.Register("Create Rectangle");
                 ContentBlock.Rectangles.Add(TempRectangle);
                 ContentSheet.Add(TempRectangle);
                 TempRectangle = null;
@@ -1357,7 +1325,7 @@ namespace Sheet
             double x = _itemController.Snap(p.X, Options.SnapSize);
             double y = _itemController.Snap(p.Y, Options.SnapSize);
             SelectionStartPoint = new XImmutablePoint(x, y);
-            TempEllipse = _blockFactory.CreateEllipse(Options.LineThickness / _zoomController.Zoom, x, y, 0.0, 0.0, false, ItemColors.Black, ItemColors.Transparent);
+            TempEllipse = _blockFactory.CreateEllipse(Options.LineThickness / ZoomController.Zoom, x, y, 0.0, 0.0, false, ItemColors.Black, ItemColors.Transparent);
             OverlaySheet.Add(TempEllipse);
             OverlaySheet.Capture();
         }
@@ -1388,7 +1356,7 @@ namespace Sheet
             {
                 OverlaySheet.ReleaseCapture();
                 OverlaySheet.Remove(TempEllipse);
-                _historyController.Register("Create Ellipse");
+                HistoryController.Register("Create Ellipse");
                 ContentBlock.Ellipses.Add(TempEllipse);
                 ContentSheet.Add(TempEllipse);
                 TempEllipse = null;
@@ -1419,7 +1387,7 @@ namespace Sheet
         {
             double x = _itemController.Snap(p.X, Options.SnapSize);
             double y = _itemController.Snap(p.Y, Options.SnapSize);
-            _historyController.Register("Create Text");
+            HistoryController.Register("Create Text");
 
             var text = _blockFactory.CreateText("Text", x, y, 30.0, 15.0, (int)XHorizontalAlignment.Center, (int)XVerticalAlignment.Center, 11.0, ItemColors.Transparent, ItemColors.Black);
             ContentBlock.Texts.Add(text);
@@ -1442,7 +1410,7 @@ namespace Sheet
 
                 Action<string> ok = (text) =>
                 {
-                    _historyController.Register("Edit Text");
+                    HistoryController.Register("Edit Text");
                     tb.Text = text;
                     EditorSheet.Remove(tc);
                     FocusSheet();
@@ -1931,7 +1899,7 @@ namespace Sheet
 
             if (_blockController.HaveOneBlockSelected(temp))
             {
-                _historyController.Register("Bind Data");
+                HistoryController.Register("Bind Data");
                 var block = temp.Blocks[0];
                 var result = BindDataToBlock(block, dataItem);
                 _blockController.Deselect(temp);
@@ -1983,7 +1951,7 @@ namespace Sheet
             // if failed insert selected block from library and try again to bind
             if (!firstTryResult)
             {
-                var blockItem = _libraryController.GetSelected();
+                var blockItem = LibraryController.GetSelected();
                 if (blockItem != null)
                 {
                     var block = Insert(blockItem, p, false);
@@ -2012,10 +1980,10 @@ namespace Sheet
 
         public void NewPage()
         {
-            _historyController.Register("New");
+            HistoryController.Register("New");
             ResetPage();
             CreatePage();
-            _zoomController.AutoFit();
+            ZoomController.AutoFit();
         }
 
         #endregion
@@ -2028,7 +1996,7 @@ namespace Sheet
             if (text != null)
             {
                 var page = await Task.Run(() => _itemSerializer.DeserializeContents(text));
-                _historyController.Register("Open Text");
+                HistoryController.Register("Open Text");
                 ResetPage();
                 DeserializePage(page);
             }
@@ -2040,7 +2008,7 @@ namespace Sheet
             if (text != null)
             {
                 var page = await Task.Run(() => _jsonSerializer.Deerialize<BlockItem>(text));
-                _historyController.Register("Open Json");
+                HistoryController.Register("Open Json");
                 ResetPage();
                 DeserializePage(page);
             }
@@ -2272,9 +2240,9 @@ namespace Sheet
 
         public void Insert(XImmutablePoint p)
         {
-            if (_libraryController != null)
+            if (LibraryController != null)
             {
-                var blockItem = _libraryController.GetSelected() as BlockItem;
+                var blockItem = LibraryController.GetSelected() as BlockItem;
                 Insert(blockItem, p, true);
             }
         }
@@ -2282,9 +2250,9 @@ namespace Sheet
         public IBlock Insert(BlockItem blockItem, XImmutablePoint p, bool select)
         {
             _blockController.DeselectContent(SelectedBlock);
-            double thickness = Options.LineThickness / _zoomController.Zoom;
+            double thickness = Options.LineThickness / ZoomController.Zoom;
 
-            _historyController.Register("Insert Block");
+            HistoryController.Register("Insert Block");
 
             var block = _blockSerializer.Deserialize(ContentSheet, ContentBlock, blockItem, thickness);
 
@@ -2332,22 +2300,22 @@ namespace Sheet
 
         private async void InitLibrary(string text)
         {
-            if (_libraryController != null && text != null)
+            if (LibraryController != null && text != null)
             {
                 var block = await Task.Run(() => _itemSerializer.DeserializeContents(text));
-                _libraryController.SetSource(block.Blocks);
+                LibraryController.SetSource(block.Blocks);
             }
         }
 
         private void AddToLibrary(BlockItem blockItem)
         {
-            if (_libraryController != null && blockItem != null)
+            if (LibraryController != null && blockItem != null)
             {
-                var source = _libraryController.GetSource();
+                var source = LibraryController.GetSource();
                 var items = new List<BlockItem>(source);
                 _itemController.ResetPosition(blockItem, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight);
                 items.Add(blockItem);
-                _libraryController.SetSource(items);
+                LibraryController.SetSource(items);
             }
         }
 
@@ -2381,8 +2349,8 @@ namespace Sheet
             _pageFactory.CreateGrid(BackSheet, GridBlock, 330.0, 30.0, 600.0, 750.0, Options.GridSize, Options.GridThickness, ItemColors.LightGray);
             _pageFactory.CreateFrame(BackSheet, FrameBlock, Options.GridSize, Options.GridThickness, ItemColors.DarkGray);
 
-            AdjustThickness(GridBlock, Options.GridThickness / GetZoom(_zoomController.ZoomIndex));
-            AdjustThickness(FrameBlock, Options.FrameThickness / GetZoom(_zoomController.ZoomIndex));
+            AdjustThickness(GridBlock, Options.GridThickness / GetZoom(ZoomController.ZoomIndex));
+            AdjustThickness(FrameBlock, Options.FrameThickness / GetZoom(ZoomController.ZoomIndex));
         }
 
         private BlockItem CreateGridBlock(IBlock gridBlock, bool adjustThickness, bool adjustColor)
@@ -2704,11 +2672,11 @@ namespace Sheet
                 // Mouse Middle Double-Click to Auto Fit page to window size
                 if (args.OnlyControl)
                 {
-                    _zoomController.ActualSize();
+                    ZoomController.ActualSize();
                 }
                 else
                 {
-                    _zoomController.AutoFit();
+                    ZoomController.AutoFit();
                 }
             }
         }
@@ -2717,13 +2685,10 @@ namespace Sheet
 
         #region Plugins
 
-        private ISelectedBlockPlugin invertLineStartPlugin;
-        private ISelectedBlockPlugin invertLineEndPlugin;
-
         private void CreatePlugins()
         {
-            invertLineStartPlugin = new InvertLineStartPlugin(_serviceLocator);
-            invertLineEndPlugin = new InvertLineEndPlugin(_serviceLocator);
+            InvertLineStartPlugin = new InvertLineStartPlugin(_serviceLocator);
+            InvertLineEndPlugin = new InvertLineEndPlugin(_serviceLocator);
         }
 
         private void ProcessPlugin(ISelectedBlockPlugin plugin)
@@ -2733,7 +2698,7 @@ namespace Sheet
                 var selectedBlock = _blockController.ShallowCopy(SelectedBlock);
 
                 FinishEdit();
-                _historyController.Register(plugin.Name);
+                HistoryController.Register(plugin.Name);
 
                 plugin.Process(ContentSheet, ContentBlock, selectedBlock, Options);
 
@@ -2743,12 +2708,12 @@ namespace Sheet
 
         public void InvertSelectedLineStart()
         {
-            ProcessPlugin(invertLineStartPlugin);
+            ProcessPlugin(InvertLineStartPlugin);
         }
 
         public void InvertSelectedLineEnd()
         {
-            ProcessPlugin(invertLineEndPlugin);
+            ProcessPlugin(InvertLineEndPlugin);
         }
 
         #endregion
