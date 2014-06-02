@@ -82,16 +82,11 @@ namespace Sheet
 
         #endregion
 
-        #region Fields
-
-        private ObservableCollection<IDatabaseController> DatabaseControllers = new ObservableCollection<IDatabaseController>();
-
-        #endregion
-
         #region Properties
 
         public ISheetController SheetController { get; set; }
         public string SolutionPath { get; set; }
+        private ObservableCollection<IDatabaseController> DatabaseControllers { get; set; }
 
         #endregion
 
@@ -170,6 +165,7 @@ namespace Sheet
 
         private void InitDatabases()
         {
+            DatabaseControllers = new ObservableCollection<IDatabaseController>();
             Databases.Tabs.ItemsSource = DatabaseControllers;
 
             CreateTestDatabase();
@@ -191,7 +187,7 @@ namespace Sheet
             }
 
             var controller = CreateDatabaseController("Test", columns, data);
-            AddDatabaseController(controller);
+            DatabaseControllers.Add(controller);
         }
 
         public async void OpenDatabase()
@@ -223,7 +219,7 @@ namespace Sheet
             var name = System.IO.Path.GetFileName(fileName);
 
             var controller = CreateDatabaseController(name, fields.FirstOrDefault(), fields.Skip(1).ToList());
-            AddDatabaseController(controller);
+            DatabaseControllers.Add(controller);
         }
 
         private CsvDatabaseController CreateDatabaseController(string name, string[] columns, List<string[]> data)
@@ -234,11 +230,6 @@ namespace Sheet
             controller.Data = data;
 
             return controller;
-        }
-
-        private void AddDatabaseController(IDatabaseController controller)
-        {
-            DatabaseControllers.Add(controller);
         }
 
         #endregion
