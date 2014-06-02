@@ -106,15 +106,8 @@ namespace Sheet
         private void CreateSheet()
         {
             var controller = new SheetController(_serviceLocator);
+            var sheet = new SheetControl(controller);
             var serializer = _serviceLocator.GetInstance<IItemSerializer>();
-
-            var sheet = new SheetControl(controller)
-            {
-                Background = Brushes.Transparent,
-                ClipToBounds = false,
-                VerticalAlignment = VerticalAlignment.Stretch,
-                HorizontalAlignment = HorizontalAlignment.Stretch
-            };
 
             controller.HistoryController = new PageHistoryController(controller, serializer);
             controller.LibraryController = Library;
