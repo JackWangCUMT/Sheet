@@ -16,7 +16,7 @@ namespace Sheet
     {
         public T GetInstance<T>()
         {
-            return App.Container.Resolve<T>();
+            return App.Scope.Resolve<T>();
         }
     }
 
@@ -40,7 +40,7 @@ namespace Sheet
         
         public void CreateScope()
         {
-            _scope = App.Container.BeginLifetimeScope();
+            _scope = App.Scope.BeginLifetimeScope();
         }
         
         public void ReleaseScope()
@@ -135,6 +135,7 @@ namespace Sheet
         #region IoC
 
         public static IContainer Container { get; private set; }
+        public static ILifetimeScope Scope { get; private set; }
 
         private void Init()
         {
@@ -158,10 +159,12 @@ namespace Sheet
 
             using(Container = builder.Build())
             {
-                using (var scope = Container.BeginLifetimeScope())
+                using (Scope = Container.BeginLifetimeScope())
                 {
-                    var window = scope.Resolve<IMainWindow>();
-                    window.Show();
+                    using (var window = Scope.Resolve<IMainWindow>())
+                    {
+                        window.ShowDialog();
+                    }
                 }
             }
         }
