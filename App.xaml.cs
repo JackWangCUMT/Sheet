@@ -94,7 +94,8 @@ namespace Sheet
 
             builder.RegisterType<LibraryControl>()
                 .As<ILibraryView>()
-                .As<ILibraryController>().SingleInstance();
+                .As<ILibraryController>()
+                .SingleInstance();
 
             builder.RegisterType<SheetControl>()
                 .As<ISheetView>()
