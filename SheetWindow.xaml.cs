@@ -68,6 +68,10 @@ namespace Sheet
         private readonly IEntryFactory _entryFactory;
         private readonly IEntrySerializer _entrySerializer;
 
+        private ISheetController _sheetController;
+        private List<ISheetController> _sheetControllers;
+        private List<IScopeServiceLocator> _scopeServiceLocators;
+
         public SheetWindow(IServiceLocator serviceLocator)
         {
             InitializeComponent();
@@ -77,16 +81,76 @@ namespace Sheet
             this._entryFactory = serviceLocator.GetInstance<IEntryFactory>();
             this._entrySerializer = serviceLocator.GetInstance<IEntrySerializer>();
 
-            InitSheetController();
+            _scopeServiceLocators = new List<IScopeServiceLocator>();
+            _sheetControllers = new List<ISheetController>();
+
+            SinglePage();
+            //MultiPage();
+     
+            var library = _serviceLocator.GetInstance<LibraryControl>();
+            Library.Content = library;
+
             Init();
+
             Loaded += (sender, e) => _sheetController.FocusSheet();
+        }
+
+        private void SinglePage()
+        {
+            var sheet = CreateSheetControl();
+            Sheet.Content = sheet;
+            _sheetController = _sheetControllers.FirstOrDefault();
+        }
+
+        private void MultiPage()
+        {
+            //for (int i = 0; i < 5; i++)
+            //{
+            //    var sheet = CreateSheetControl();
+            //    var contentControl = new ContentControl();
+            //    contentControl.Content = sheet;
+            //    Sheets.Children.Add(contentControl);
+            //}
+            //_sheetController = _sheetControllers.FirstOrDefault();
+        }
+
+        private SheetControl CreateSheetControl()
+        {
+            var locator = _serviceLocator.GetInstance<IScopeServiceLocator>();
+            _scopeServiceLocators.Add(locator);
+
+            var controller = locator.GetInstance<ISheetController>();
+            _sheetControllers.Add(controller);
+
+            var sheet = locator.GetInstance<SheetControl>();
+
+            controller.HistoryController = locator.GetInstance<IHistoryController>();
+            controller.LibraryController = locator.GetInstance<ILibraryController>();
+            controller.ZoomController = locator.GetInstance<IZoomController>();
+            controller.CursorController = locator.GetInstance<ICursorController>();
+
+            controller.FocusSheet = () => sheet.Focus();
+            controller.IsSheetFocused = () => sheet.IsFocused;
+
+            controller.EditorSheet = locator.GetInstance<ISheet>();
+            controller.BackSheet = locator.GetInstance<ISheet>();
+            controller.ContentSheet = locator.GetInstance<ISheet>();
+            controller.OverlaySheet = locator.GetInstance<ISheet>();
+
+            controller.EditorSheet.SetParent(sheet.EditorCanvas);
+            controller.BackSheet.SetParent(sheet.Root.Back);
+            controller.ContentSheet.SetParent(sheet.Root.Sheet);
+            controller.OverlaySheet.SetParent(sheet.Root.Overlay);
+
+            controller.Init();
+
+            return sheet;
         }
 
         #endregion
 
         #region Fields
 
-        private ISheetController _sheetController;
         private string _solutionPath;
         private ObservableCollection<IDatabaseController> _databaseControllers;
 
@@ -102,37 +166,6 @@ namespace Sheet
             UpdateModeMenu();
             InitDatabases();
         }
-
-        private void InitSheetController()
-        {
-            var sheet = _serviceLocator.GetInstance<SheetControl>();
-            var library = _serviceLocator.GetInstance<LibraryControl>();
-
-            _sheetController = _serviceLocator.GetInstance<ISheetController>();
-
-            _sheetController.HistoryController = _serviceLocator.GetInstance<IHistoryController>();
-            _sheetController.LibraryController = _serviceLocator.GetInstance<ILibraryController>();
-            _sheetController.ZoomController = _serviceLocator.GetInstance<IZoomController>();
-            _sheetController.CursorController = _serviceLocator.GetInstance<ICursorController>();
-
-            _sheetController.FocusSheet = () => sheet.Focus();
-            _sheetController.IsSheetFocused = () => sheet.IsFocused;
-
-            _sheetController.EditorSheet = _serviceLocator.GetInstance<ISheet>();
-            _sheetController.BackSheet = _serviceLocator.GetInstance<ISheet>();
-            _sheetController.ContentSheet = _serviceLocator.GetInstance<ISheet>();
-            _sheetController.OverlaySheet = _serviceLocator.GetInstance<ISheet>();
-
-            _sheetController.EditorSheet.SetParent(sheet.EditorCanvas);
-            _sheetController.BackSheet.SetParent(sheet.Root.Back);
-            _sheetController.ContentSheet.SetParent(sheet.Root.Sheet);
-            _sheetController.OverlaySheet.SetParent(sheet.Root.Overlay);
-
-            _sheetController.Init();
-
-            Sheet.Content = sheet;
-            Library.Content = library;
-        } 
 
         private void InitSizeBorder()
         {

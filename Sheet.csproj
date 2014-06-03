@@ -52,8 +52,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Autofac">
-      <HintPath>packages\Autofac.3.4.0\lib\net40\Autofac.dll</HintPath>
+    <Reference Include="Autofac, Version=3.4.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>packages\Autofac.3.4.1\lib\net40\Autofac.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -68,8 +69,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>packages\PDFsharp.1.32.3057.0\lib\net20\PdfSharp.Charting.dll</HintPath>
     </Reference>
-    <Reference Include="Splat">
-      <HintPath>packages\Splat.1.3.1\lib\Net45\Splat.dll</HintPath>
+    <Reference Include="Splat, Version=1.3.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>packages\Splat.1.3.2\lib\Net45\Splat.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -98,12 +100,12 @@
     </Compile>
     <Compile Include="Core\Base64.cs" />
     <Compile Include="Core\Block.cs" />
+    <Compile Include="Core\Test.cs" />
     <Compile Include="Core\Interfaces.cs" />
     <Compile Include="Core\Database.cs" />
     <Compile Include="Core\Entry.cs" />
     <Compile Include="Core\Item.cs" />
     <Compile Include="Core\Json.cs" />
-    <Compile Include="Core\Page.cs" />
     <Compile Include="Core\Plugins.cs" />
     <Compile Include="Core\Point.cs" />
     <Compile Include="Core\Sheet.cs" />

@@ -22,6 +22,35 @@ namespace Sheet
 
     #endregion
 
+    #region AppScopeServiceLocator
+
+    public class AppScopeServiceLocator : IScopeServiceLocator
+    {
+        ILifetimeScope _scope;
+        
+        public AppScopeServiceLocator()
+        {
+            CreateScope();
+        }
+        
+        public T GetInstance<T>()
+        {
+            return _scope.Resolve<T>();
+        }
+        
+        public void CreateScope()
+        {
+            _scope = App.Container.BeginLifetimeScope();
+        }
+        
+        public void ReleaseScope()
+        {
+            _scope.Dispose();
+        }
+    }
+
+    #endregion
+
     public partial class App : Application
     {
         #region Constructor
@@ -41,7 +70,8 @@ namespace Sheet
         {
             var builder = new ContainerBuilder();
 
-            builder.RegisterType<AppServiceLocator>().As<IServiceLocator>().InstancePerLifetimeScope();
+            builder.RegisterType<AppServiceLocator>().As<IServiceLocator>().SingleInstance();
+            builder.RegisterType<AppScopeServiceLocator>().As<IScopeServiceLocator>().InstancePerDependency();
 
             builder.RegisterType<WpfClipboard>().As<IClipboard>().SingleInstance();
             builder.RegisterType<Base64>().As<IBase64>().SingleInstance();
@@ -60,31 +90,31 @@ namespace Sheet
             builder.RegisterType<ItemSerializer>().As<IItemSerializer>().SingleInstance();
 
             builder.RegisterType<PointController>().As<IPointController>().SingleInstance();
-            builder.RegisterType<LogicContentPageFactory>().As<IPageFactory>().SingleInstance();
+            builder.RegisterType<SheetPageFactory>().As<IPageFactory>().SingleInstance();
 
-            builder.RegisterType<PageHistoryController>().As<IHistoryController>().InstancePerDependency();
             builder.RegisterType<WpfCanvasSheet>().As<ISheet>().InstancePerDependency();
-
             builder.RegisterType<SheetController>().As<ISheetController>().InstancePerLifetimeScope();
 
+            //builder.RegisterType<TestHistoryController>().As<IHistoryController>().InstancePerDependency();
+            //builder.RegisterType<TestLibraryController>().As<ILibraryController>().SingleInstance();
+            //builder.RegisterType<TestZoomController>().As<IZoomController>().InstancePerLifetimeScope();
+            //builder.RegisterType<TestCursorController>().As<ICursorController>().InstancePerLifetimeScope();
+            //builder.RegisterType<SheetControl>().AsSelf().InstancePerLifetimeScope();
+
+            builder.RegisterType<SheetHistoryController>().As<IHistoryController>().InstancePerDependency();
+            builder.RegisterType<LibraryControl>().AsSelf().As<ILibraryController>().SingleInstance();
             builder.RegisterType<SheetControl>()
                 .AsSelf()
                 .As<IZoomController>()
                 .As<ICursorController>()
                 .InstancePerLifetimeScope();
-
-            builder.RegisterType<LibraryControl>()
-                .AsSelf()
-                .As<ILibraryController>()
-                .InstancePerLifetimeScope();
-
             builder.RegisterType<SheetWindow>().InstancePerLifetimeScope();
 
             using(Container = builder.Build())
             {
                 using (var scope = Container.BeginLifetimeScope())
                 {
-                    var window = Container.Resolve<SheetWindow>();
+                    var window = scope.Resolve<SheetWindow>();
                     window.Show();
                 }
             }

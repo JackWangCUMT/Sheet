@@ -137,6 +137,13 @@
                               Grid.Row="0" 
                               VerticalAlignment="Stretch" 
                               HorizontalAlignment="Stretch">
+                <!-- multi page -->
+                <!--
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="Sheets"></StackPanel>  
+                </ScrollViewer>
+                -->
+                <!-- single page -->
                 <ContentControl x:Name="Sheet"/>
             </local:SizeBorder>
             <GridSplitter Grid.Row="1" 
