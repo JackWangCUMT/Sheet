@@ -8,6 +8,55 @@ using System.Threading.Tasks;
 
 namespace Sheet
 {
+    #region IWindow
+
+    public interface IWindow
+    {
+        void Show();
+    }
+
+    #endregion
+
+    #region IView
+
+    public interface IView
+    {
+    }
+
+    #endregion
+
+    #region Windows
+
+    public interface IMainWindow : IWindow
+    {
+    }
+
+    #endregion
+
+    #region Views
+
+    public interface ISheetView : IView
+    {
+    }
+
+    public interface ILibraryView : IView
+    {
+    }
+
+    public interface ISolutionView : IView
+    {
+    }
+
+    public interface IDatabaseView : IView
+    {
+    }
+
+    public interface ITextView : IView
+    {
+    }
+
+    #endregion
+
     #region IServiceLocator
 
     public interface IServiceLocator

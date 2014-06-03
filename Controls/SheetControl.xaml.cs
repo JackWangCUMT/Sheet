@@ -19,7 +19,7 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
-    public partial class SheetControl : UserControl, IZoomController, ICursorController
+    public partial class SheetControl : UserControl, ISheetView, IZoomController, ICursorController
     {
         #region IoC
 

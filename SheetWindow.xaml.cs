@@ -59,7 +59,7 @@ namespace Sheet
 
     #endregion
 
-    public partial class SheetWindow : Window
+    public partial class SheetWindow : Window, IMainWindow
     {
         #region IoC
 

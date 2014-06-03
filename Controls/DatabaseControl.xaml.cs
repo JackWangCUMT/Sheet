@@ -15,7 +15,7 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
-    public partial class DatabaseControl : UserControl
+    public partial class DatabaseControl : UserControl, IDatabaseView
     {
         #region Fields
 

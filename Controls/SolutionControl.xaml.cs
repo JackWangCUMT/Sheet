@@ -17,7 +17,7 @@ using System.Windows.Shapes;
 
 namespace Sheet
 {
-    public partial class SolutionControl : UserControl
+    public partial class SolutionControl : UserControl, ISolutionView
     {
         #region IoC
 
