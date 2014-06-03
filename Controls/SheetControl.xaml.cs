@@ -30,6 +30,23 @@ namespace Sheet
             InitializeComponent();
 
             this._sheetController = sheetController;
+
+            Loaded += (sender, e) =>
+            {
+                _sheetController.EditorSheet.SetParent(EditorCanvas);
+                _sheetController.BackSheet.SetParent(Root.Back);
+                _sheetController.ContentSheet.SetParent(Root.Sheet);
+                _sheetController.OverlaySheet.SetParent(Root.Overlay);
+                _sheetController.Init();
+            };
+        }
+
+        #endregion
+
+        #region IDisposable
+
+        public void Dispose()
+        {
         }
 
         #endregion

@@ -16,6 +16,13 @@ namespace Sheet
 {
     public partial class TextControl : UserControl, ITextView, ITextController
     {
+        #region Fields
+
+        private Action<string> okAction = null;
+        private Action cancelAction = null; 
+
+        #endregion
+
         #region Constructor
 
         public TextControl()
@@ -31,10 +38,11 @@ namespace Sheet
 
         #endregion
 
-        #region Fields
+        #region IDisposable
 
-        private Action<string> okAction = null;
-        private Action cancelAction = null; 
+        public void Dispose()
+        {
+        }
 
         #endregion
 

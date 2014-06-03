@@ -48,6 +48,14 @@ namespace Sheet
 
         #endregion
 
+        #region IDisposable
+
+        public void Dispose()
+        {
+        }
+
+        #endregion
+
         #region Entries Editor
 
         private void EntryChanged(object oldValue, object newValue)

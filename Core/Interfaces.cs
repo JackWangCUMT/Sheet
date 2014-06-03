@@ -10,17 +10,20 @@ namespace Sheet
 {
     #region IWindow
 
-    public interface IWindow
+    public interface IWindow : IDisposable
     {
         void Show();
+        bool? ShowDialog();
     }
 
     #endregion
 
     #region IView
 
-    public interface IView
+    public interface IView : IDisposable
     {
+        bool Focus();
+        bool IsFocused { get; }
     }
 
     #endregion
@@ -544,10 +547,9 @@ namespace Sheet
         ISheet BackSheet { get; set; }
         ISheet ContentSheet { get; set; }
         ISheet OverlaySheet { get; set; }
+        ISheetView View { get; set; }
         double LastFinalWidth { get; set; }
         double LastFinalHeight { get; set; }
-        Action FocusSheet { get; set; }
-        Func<bool> IsSheetFocused { get; set; }
 
         // Mode
         SheetMode GetMode();

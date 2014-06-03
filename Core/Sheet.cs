@@ -472,17 +472,16 @@ namespace Sheet
         public ISheet BackSheet { get; set; }
         public ISheet ContentSheet { get; set; }
         public ISheet OverlaySheet { get; set; }
+        public ISheetView View { get; set; }
         public double LastFinalWidth { get; set; }
         public double LastFinalHeight { get; set; }
-        public Action FocusSheet { get; set; }
-        public Func<bool> IsSheetFocused { get; set; }
 
         #endregion
 
         #region Fields
 
-        private SheetMode Mode;
-        private SheetMode TempMode;
+        private SheetMode Mode = SheetMode.Selection;
+        private SheetMode TempMode = SheetMode.None;
         private IBlock SelectedBlock;
         private IBlock ContentBlock;
         private IBlock FrameBlock;
@@ -493,10 +492,10 @@ namespace Sheet
         private IRectangle TempRectangle;
         private IEllipse TempEllipse;
         private IRectangle TempSelectionRect;
-        private bool IsFirstMove;
+        private bool IsFirstMove = true;
         private XImmutablePoint PanStartPoint;
         private XImmutablePoint SelectionStartPoint;
-        private ItemType SelectedType;
+        private ItemType SelectedType = ItemType.None;
         private ILine SelectedLine;
         private IThumb LineThumbStart;
         private IThumb LineThumbEnd;
@@ -552,10 +551,6 @@ namespace Sheet
                 ZoomFactors = new double[] { 0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64 }
             };
 
-            Mode = SheetMode.Selection;
-            TempMode = SheetMode.None;
-            IsFirstMove = true;
-            SelectedType = ItemType.None;
             ZoomController.ZoomIndex = Options.DefaultZoomIndex;
         }
 
@@ -965,14 +960,14 @@ namespace Sheet
                         AddToLibrary(block);
                     }
                     EditorSheet.Remove(tc);
-                    FocusSheet();
+                    View.Focus();
                     RestoreTempMode();
                 };
 
                 Action cancel = () =>
                 {
                     EditorSheet.Remove(tc);
-                    FocusSheet();
+                    View.Focus();
                     RestoreTempMode();
                 };
 
@@ -1589,14 +1584,14 @@ namespace Sheet
                     HistoryController.Register("Edit Text");
                     tb.Text = text;
                     EditorSheet.Remove(tc);
-                    FocusSheet();
+                    View.Focus();
                     RestoreTempMode();
                 };
 
                 Action cancel = () =>
                 {
                     EditorSheet.Remove(tc);
-                    FocusSheet();
+                    View.Focus();
                     RestoreTempMode();
                 };
 

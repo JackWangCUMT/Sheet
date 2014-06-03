@@ -80,24 +80,24 @@ namespace Sheet
             this._entryController = serviceLocator.GetInstance<IEntryController>();
             this._entryFactory = serviceLocator.GetInstance<IEntryFactory>();
             this._entrySerializer = serviceLocator.GetInstance<IEntrySerializer>();
-
+ 
             _scopeServiceLocators = new List<IScopeServiceLocator>();
             _sheetControllers = new List<ISheetController>();
 
             SinglePage();
             //MultiPage();
-     
+
             var library = _serviceLocator.GetInstance<LibraryControl>();
             Library.Content = library;
 
             Init();
 
-            Loaded += (sender, e) => _sheetController.FocusSheet();
+            Loaded += (sender, e) => _sheetController.View.Focus();
         }
 
         private void SinglePage()
         {
-            var sheet = CreateSheetControl();
+            var sheet = CreateSheetView();
             Sheet.Content = sheet;
             _sheetController = _sheetControllers.FirstOrDefault();
         }
@@ -114,7 +114,7 @@ namespace Sheet
             //_sheetController = _sheetControllers.FirstOrDefault();
         }
 
-        private SheetControl CreateSheetControl()
+        private ISheetView CreateSheetView()
         {
             var locator = _serviceLocator.GetInstance<IScopeServiceLocator>();
             _scopeServiceLocators.Add(locator);
@@ -122,30 +122,35 @@ namespace Sheet
             var controller = locator.GetInstance<ISheetController>();
             _sheetControllers.Add(controller);
 
-            var sheet = locator.GetInstance<SheetControl>();
-
             controller.HistoryController = locator.GetInstance<IHistoryController>();
             controller.LibraryController = locator.GetInstance<ILibraryController>();
             controller.ZoomController = locator.GetInstance<IZoomController>();
             controller.CursorController = locator.GetInstance<ICursorController>();
-
-            controller.FocusSheet = () => sheet.Focus();
-            controller.IsSheetFocused = () => sheet.IsFocused;
 
             controller.EditorSheet = locator.GetInstance<ISheet>();
             controller.BackSheet = locator.GetInstance<ISheet>();
             controller.ContentSheet = locator.GetInstance<ISheet>();
             controller.OverlaySheet = locator.GetInstance<ISheet>();
 
-            controller.EditorSheet.SetParent(sheet.EditorCanvas);
-            controller.BackSheet.SetParent(sheet.Root.Back);
-            controller.ContentSheet.SetParent(sheet.Root.Sheet);
-            controller.OverlaySheet.SetParent(sheet.Root.Overlay);
+            controller.View = locator.GetInstance<ISheetView>();
 
-            controller.Init();
-
-            return sheet;
+            return controller.View;
         }
+
+        #endregion
+
+        #region IDisposable
+
+        public void Dispose()
+        {
+            if (_scopeServiceLocators != null)
+            {
+                foreach (var locator in _scopeServiceLocators)
+                {
+                    locator.ReleaseScope();
+                }
+            }
+        } 
 
         #endregion
 
@@ -528,7 +533,7 @@ namespace Sheet
                     break;
                 // Up: Move Up
                 case Key.Up:
-                    if (none && _sheetController.IsSheetFocused())
+                    if (none && _sheetController.View.IsFocused)
                     {
                         _sheetController.MoveUp();
                         e.Handled = true;
@@ -536,7 +541,7 @@ namespace Sheet
                     break;
                 // Down: Move Down
                 case Key.Down:
-                    if (none && _sheetController.IsSheetFocused())
+                    if (none && _sheetController.View.IsFocused)
                     {
                         _sheetController.MoveDown();
                         e.Handled = true;
@@ -544,7 +549,7 @@ namespace Sheet
                     break;
                 // Left: Move Left
                 case Key.Left:
-                    if (none && _sheetController.IsSheetFocused())
+                    if (none && _sheetController.View.IsFocused)
                     {
                         _sheetController.MoveLeft();
                         e.Handled = true;
@@ -552,7 +557,7 @@ namespace Sheet
                     break;
                 // Right: Move Right
                 case Key.Right:
-                    if (none && _sheetController.IsSheetFocused())
+                    if (none && _sheetController.View.IsFocused)
                     {
                         _sheetController.MoveRight();
                         e.Handled = true;
@@ -849,7 +854,7 @@ namespace Sheet
 
         private void EditMoveUp_Click(object sender, RoutedEventArgs e)
         {
-            if (_sheetController.IsSheetFocused())
+            if (_sheetController.View.IsFocused)
             {
                 _sheetController.MoveUp();
             }
@@ -857,7 +862,7 @@ namespace Sheet
 
         private void EditMoveDown_Click(object sender, RoutedEventArgs e)
         {
-            if (_sheetController.IsSheetFocused())
+            if (_sheetController.View.IsFocused)
             {
                 _sheetController.MoveDown();
             }
@@ -865,7 +870,7 @@ namespace Sheet
 
         private void EditMoveLeft_Click(object sender, RoutedEventArgs e)
         {
-            if (_sheetController.IsSheetFocused())
+            if (_sheetController.View.IsFocused)
             {
                 _sheetController.MoveLeft();
             }
@@ -873,7 +878,7 @@ namespace Sheet
 
         private void EditMoveRight_Click(object sender, RoutedEventArgs e)
         {
-            if (_sheetController.IsSheetFocused())
+            if (_sheetController.View.IsFocused)
             {
                 _sheetController.MoveRight();
             }

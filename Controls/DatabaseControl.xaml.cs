@@ -42,6 +42,14 @@ namespace Sheet
 
         #endregion
 
+        #region IDisposable
+
+        public void Dispose()
+        {
+        }
+
+        #endregion
+
         #region Init
 
         private void Init()
