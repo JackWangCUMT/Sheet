@@ -51,6 +51,76 @@ namespace Sheet
 
     #endregion
 
+    #region Modules
+
+    public class EntryModule : Module
+    {
+        protected override void Load(ContainerBuilder builder)
+        {
+            builder.RegisterType<EntryController>().As<IEntryController>().SingleInstance();
+            builder.RegisterType<EntrySerializer>().As<IEntrySerializer>().SingleInstance();
+            builder.RegisterType<EntryFactory>().As<IEntryFactory>().SingleInstance();
+        }
+    }
+
+    public class BlockModule : Module
+    {
+        protected override void Load(ContainerBuilder builder)
+        {
+            builder.RegisterType<BlockController>().As<IBlockController>().SingleInstance();
+            builder.RegisterType<BlockSerializer>().As<IBlockSerializer>().SingleInstance();
+        }
+    }
+
+    public class ItemModule : Module
+    {
+        protected override void Load(ContainerBuilder builder)
+        {
+            builder.RegisterType<ItemController>().As<IItemController>().SingleInstance();
+            builder.RegisterType<ItemSerializer>().As<IItemSerializer>().SingleInstance();
+        }
+    }
+
+    public class WpfModule : Module
+    {
+        protected override void Load(ContainerBuilder builder)
+        {
+            builder.RegisterType<WpfClipboard>().As<IClipboard>().SingleInstance();
+            builder.RegisterType<WpfBlockFactory>().As<IBlockFactory>().SingleInstance();
+            builder.RegisterType<WpfBlockHelper>().As<IBlockHelper>().SingleInstance();
+            builder.RegisterType<WpfCanvasSheet>().As<ISheet>().InstancePerDependency();
+
+            builder.RegisterType<SheetHistoryController>().As<IHistoryController>().InstancePerDependency();
+
+            builder.RegisterType<LibraryControl>()
+                .AsSelf()
+                .As<ILibraryView>()
+                .As<ILibraryController>().SingleInstance();
+
+            builder.RegisterType<SheetControl>()
+                .AsSelf()
+                .As<ISheetView>()
+                .As<IZoomController>()
+                .As<ICursorController>()
+                .InstancePerLifetimeScope();
+
+            builder.RegisterType<SheetWindow>().As<IMainWindow>().InstancePerLifetimeScope();
+        }
+    } 
+
+    public class TestModule : Module
+    {
+        protected override void Load(ContainerBuilder builder)
+        {
+            builder.RegisterType<TestHistoryController>().As<IHistoryController>().InstancePerDependency();
+            builder.RegisterType<TestLibraryController>().As<ILibraryController>().SingleInstance();
+            builder.RegisterType<TestZoomController>().As<IZoomController>().InstancePerLifetimeScope();
+            builder.RegisterType<TestCursorController>().As<ICursorController>().InstancePerLifetimeScope();
+        }
+    }
+
+    #endregion
+
     public partial class App : Application
     {
         #region Constructor
@@ -73,48 +143,24 @@ namespace Sheet
             builder.RegisterType<AppServiceLocator>().As<IServiceLocator>().SingleInstance();
             builder.RegisterType<AppScopeServiceLocator>().As<IScopeServiceLocator>().InstancePerDependency();
 
-            builder.RegisterType<WpfClipboard>().As<IClipboard>().SingleInstance();
             builder.RegisterType<Base64>().As<IBase64>().SingleInstance();
             builder.RegisterType<NewtonsoftJsonSerializer>().As<IJsonSerializer>().SingleInstance();
 
-            builder.RegisterType<EntryController>().As<IEntryController>().SingleInstance();
-            builder.RegisterType<EntrySerializer>().As<IEntrySerializer>().SingleInstance();
-            builder.RegisterType<EntryFactory>().As<IEntryFactory>().SingleInstance();
-
-            builder.RegisterType<BlockController>().As<IBlockController>().SingleInstance();
-            builder.RegisterType<BlockSerializer>().As<IBlockSerializer>().SingleInstance();
-            builder.RegisterType<WpfBlockFactory>().As<IBlockFactory>().SingleInstance();
-            builder.RegisterType<WpfBlockHelper>().As<IBlockHelper>().SingleInstance();
-
-            builder.RegisterType<ItemController>().As<IItemController>().SingleInstance();
-            builder.RegisterType<ItemSerializer>().As<IItemSerializer>().SingleInstance();
+            builder.RegisterModule<EntryModule>();
+            builder.RegisterModule<BlockModule>();
+            builder.RegisterModule<ItemModule>();
 
             builder.RegisterType<PointController>().As<IPointController>().SingleInstance();
             builder.RegisterType<SheetPageFactory>().As<IPageFactory>().SingleInstance();
-
-            builder.RegisterType<WpfCanvasSheet>().As<ISheet>().InstancePerDependency();
             builder.RegisterType<SheetController>().As<ISheetController>().InstancePerLifetimeScope();
 
-            //builder.RegisterType<TestHistoryController>().As<IHistoryController>().InstancePerDependency();
-            //builder.RegisterType<TestLibraryController>().As<ILibraryController>().SingleInstance();
-            //builder.RegisterType<TestZoomController>().As<IZoomController>().InstancePerLifetimeScope();
-            //builder.RegisterType<TestCursorController>().As<ICursorController>().InstancePerLifetimeScope();
-            //builder.RegisterType<SheetControl>().AsSelf().InstancePerLifetimeScope();
-
-            builder.RegisterType<SheetHistoryController>().As<IHistoryController>().InstancePerDependency();
-            builder.RegisterType<LibraryControl>().AsSelf().As<ILibraryController>().SingleInstance();
-            builder.RegisterType<SheetControl>()
-                .AsSelf()
-                .As<IZoomController>()
-                .As<ICursorController>()
-                .InstancePerLifetimeScope();
-            builder.RegisterType<SheetWindow>().InstancePerLifetimeScope();
+            builder.RegisterModule<WpfModule>();
 
             using(Container = builder.Build())
             {
                 using (var scope = Container.BeginLifetimeScope())
                 {
-                    var window = scope.Resolve<SheetWindow>();
+                    var window = scope.Resolve<IMainWindow>();
                     window.Show();
                 }
             }
