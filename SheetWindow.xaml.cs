@@ -87,7 +87,7 @@ namespace Sheet
             SinglePage();
             //MultiPage();
 
-            var library = _serviceLocator.GetInstance<LibraryControl>();
+            var library = _serviceLocator.GetInstance<ILibraryView>();
             Library.Content = library;
 
             Init();
@@ -106,7 +106,7 @@ namespace Sheet
         {
             //for (int i = 0; i < 5; i++)
             //{
-            //    var sheet = CreateSheetControl();
+            //    var sheet = CreateSheetView();
             //    var contentControl = new ContentControl();
             //    contentControl.Content = sheet;
             //    Sheets.Children.Add(contentControl);

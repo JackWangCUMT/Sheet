@@ -93,12 +93,10 @@ namespace Sheet
             builder.RegisterType<SheetHistoryController>().As<IHistoryController>().InstancePerDependency();
 
             builder.RegisterType<LibraryControl>()
-                .AsSelf()
                 .As<ILibraryView>()
                 .As<ILibraryController>().SingleInstance();
 
             builder.RegisterType<SheetControl>()
-                .AsSelf()
                 .As<ISheetView>()
                 .As<IZoomController>()
                 .As<ICursorController>()
