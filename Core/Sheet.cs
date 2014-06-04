@@ -1612,10 +1612,10 @@ namespace Sheet
 
         private void Image(XImmutablePoint p)
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog()
-            {
-                Filter = FileDialogSettings.ImageFilter
-            };
+            var dlg = _serviceLocator.GetInstance<IOpenFileDialog>();
+            dlg.Filter = FileDialogSettings.ImageFilter;
+            dlg.FilterIndex = 1;
+            dlg.FileName = "";
 
             if (dlg.ShowDialog() == true)
             {
@@ -2187,10 +2187,10 @@ namespace Sheet
 
         public async void OpenPage()
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog()
-            {
-                Filter = FileDialogSettings.PageFilter
-            };
+            var dlg = _serviceLocator.GetInstance<IOpenFileDialog>();
+            dlg.Filter = FileDialogSettings.PageFilter;
+            dlg.FilterIndex = 1;
+            dlg.FileName = "";
 
             if (dlg.ShowDialog() == true)
             {
@@ -2256,12 +2256,11 @@ namespace Sheet
 
         public void SavePage()
         {
-            var dlg = new Microsoft.Win32.SaveFileDialog()
-            {
-                Filter = FileDialogSettings.PageFilter,
-                FileName = "sheet"
-            };
-
+            var dlg = _serviceLocator.GetInstance<ISaveFileDialog>();
+            dlg.Filter = FileDialogSettings.PageFilter;
+            dlg.FilterIndex = 1;
+            dlg.FileName = "sheet";
+            
             if (dlg.ShowDialog() == true)
             {
                 string path = dlg.FileName;
@@ -2492,11 +2491,11 @@ namespace Sheet
 
         public async void LoadLibrary()
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog()
-            {
-                Filter = FileDialogSettings.LibraryFilter
-            };
-
+            var dlg = _serviceLocator.GetInstance<IOpenFileDialog>();
+            dlg.Filter = FileDialogSettings.LibraryFilter;
+            dlg.FilterIndex = 1;
+            dlg.FileName = "";
+            
             if (dlg.ShowDialog() == true)
             {
                 try
