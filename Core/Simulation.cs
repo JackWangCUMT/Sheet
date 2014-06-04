@@ -2358,9 +2358,9 @@ namespace Simulation
 
     #endregion
 
-    #region Test
+    #region Tests
 
-    public class SolutionSimulationRunner
+    public class TestSimulationRunner
     {
         #region Fields
 
@@ -2380,7 +2380,7 @@ namespace Simulation
 
         #region Constructor
 
-        public SolutionSimulationRunner(Solution solution, int periodInMillisencods = 100)
+        public TestSimulationRunner(Solution solution, int periodInMillisencods = 100)
         {
             _solution = solution;
             _periodInMillisencods = periodInMillisencods;
@@ -2390,21 +2390,6 @@ namespace Simulation
         #endregion
 
         #region Tags
-
-        public Tag CreateSignalTag(string designation, string description, string signal, string condition)
-        {
-            var tag = new Tag()
-            {
-                Id = Guid.NewGuid().ToString()
-            };
-
-            tag.Properties.Add("Designation", new Property(designation));
-            tag.Properties.Add("Description", new Property(description));
-            tag.Properties.Add("Signal", new Property(signal));
-            tag.Properties.Add("Condition", new Property(condition));
-
-            return tag;
-        }
 
         private void ResetTags()
         {
@@ -2574,6 +2559,32 @@ namespace Simulation
         } 
 
         #endregion
+    }
+
+    public class TestSolutionFactory
+    {
+        public Tag CreateSignalTag(string designation, string description, string signal, string condition)
+        {
+            var tag = new Tag() { Id = Guid.NewGuid().ToString() };
+            tag.Properties.Add("Designation", new Property(designation));
+            tag.Properties.Add("Description", new Property(description));
+            tag.Properties.Add("Signal", new Property(signal));
+            tag.Properties.Add("Condition", new Property(condition));
+            return tag;
+        }
+
+        public TestSolutionFactory()
+        {
+            var solution = new Solution() { Id = Guid.NewGuid().ToString(), Name = "solution", DefaultTag = CreateSignalTag("tag", "", "", "") };
+
+            var project = new Project() { Id = Guid.NewGuid().ToString(), Name = "project", Parent = solution };
+            solution.Children.Add(project);
+
+            var context = new Context() { Id = Guid.NewGuid().ToString(), Parent = project };
+            project.Children.Add(context);
+
+            // TODO:
+        }
     }
 
     #endregion
