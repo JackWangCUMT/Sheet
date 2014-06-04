@@ -1,4 +1,5 @@
 ﻿using Autofac;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -10,6 +11,100 @@ using System.Windows;
 
 namespace Sheet
 {
+    #region OpenFileDialog
+    
+    public interface IOpenFileDialog
+    {
+        string Filter { get; set; }
+        string FileName { get; set; }
+        string[] FileNames{ get; set; }
+        int FilterIndex { get; set; }
+        bool ShowDialog();
+    }
+    
+    public class Win32OpenFileDialog : IOpenFileDialog
+    {
+        private readonly OpenFileDialog dlg;
+        
+        public Win32OpenFileDialog()
+        {
+            dlg = new OpenFileDialog();
+        }
+            
+        public string Filter { get; set; }
+        public string FileName { get; set; }
+        public string[] FileNames { get; set; }
+        public int FilterIndex { get; set; }
+            
+        public bool ShowDialog()
+        {
+            FileNames = null;
+            
+            dlg.Filter = Filter;
+            dlg.FilterIndex = FilterIndex;
+            dlg.FileName = FileName;
+            
+            var result = dlg.ShowDialog();
+            if (result.HasValue && result.Value == true)
+            {
+                FileName = dlg.FileName;
+                FileNames = dlg.FileNames;
+                FilterIndex = dlg.FilterIndex;
+                return true;
+            }
+            return false;
+        }
+    }
+    
+    #endregion
+
+    #region SaveFileDialog
+    
+    public interface ISaveFileDialog
+    {
+        string Filter { get; set; }
+        string FileName { get; set; }
+        string[] FileNames { get; set; }
+        int FilterIndex { get; set; }
+        bool ShowDialog();
+    }
+    
+    public class Win32SaveFileDialog : ISaveFileDialog
+    {
+        private readonly SaveFileDialog dlg;
+        
+        public Win32SaveFileDialog()
+        {
+            dlg = new SaveFileDialog();
+        }
+            
+        public string Filter { get; set; }
+        public string FileName { get; set; }
+        public string[] FileNames { get; set; }
+        public int FilterIndex { get; set; }
+            
+        public bool ShowDialog()
+        {
+            FileNames = null;
+        
+            dlg.Filter = Filter;
+            dlg.FilterIndex = FilterIndex;
+            dlg.FileName = FileName;
+            
+            var result = dlg.ShowDialog();
+            if (result.HasValue && result.Value == true)
+            {
+                FileName = dlg.FileName;
+                FileNames = dlg.FileNames;
+                FilterIndex = dlg.FilterIndex;
+                return true;
+            }
+            return false;
+        }
+    }
+    
+    #endregion
+
     #region AppServiceLocator
 
     public class AppServiceLocator : IServiceLocator
@@ -86,6 +181,10 @@ namespace Sheet
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterType<WpfClipboard>().As<IClipboard>().SingleInstance();
+            
+            builder.RegisterType<Win32OpenFileDialog>().As<IOpenFileDialog>().InstancePerDependency();
+            builder.RegisterType<Win32SaveFileDialog>().As<ISaveFileDialog>().InstancePerDependency();
+            
             builder.RegisterType<WpfBlockFactory>().As<IBlockFactory>().SingleInstance();
             builder.RegisterType<WpfBlockHelper>().As<IBlockHelper>().SingleInstance();
             builder.RegisterType<WpfCanvasSheet>().As<ISheet>().InstancePerDependency();
