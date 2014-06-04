@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+//using Simulation.Tests;
 
 namespace Sheet
 {
@@ -225,8 +226,17 @@ namespace Sheet
 
         public App()
         {
+            //Demo();
             Init();
-        } 
+        }
+
+        //private void Demo()
+        //{
+        //    var demo = new TestDemoSolution(5000);
+        //    demo.EnableSimulationDebug(true);
+        //    demo.EnableSimulationLog(false);
+        //    demo.StartSimulation();
+        //} 
 
         #endregion
 
