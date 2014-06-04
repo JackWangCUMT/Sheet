@@ -6,8 +6,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Simulation.Core;
+using Simulation.Model;
 
-namespace Simulation
+namespace Simulation.Core
 {
     #region Model.Core
 
@@ -15,17 +17,15 @@ namespace Simulation
     {
         public Element() 
         {
-            IsEditable = true;
-            SelectChildren = true;
             Children = new ObservableCollection<Element>();
             Parent = null;
         }
         public string Id { get; set; }
-        public UInt32 ElementId{ get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
+        public UInt32 ElementId { get; set; }
         public string Name{ get; set; }
         public string FactoryName { get; set; }
-        public bool IsEditable { get; set; }
-        public bool SelectChildren { get; set; }
         public Element Parent { get; set; }
         public ObservableCollection<Element> Children { get; set; }
         public Element SimulationParent { get; set; }
@@ -56,7 +56,10 @@ namespace Simulation
     }
 
     #endregion
+}
 
+namespace Simulation.Model
+{
     #region Model.Elements.Basic
 
     public class Tag : Element, IStateSimulation
@@ -245,7 +248,10 @@ namespace Simulation
     }
 
     #endregion
+}
 
+namespace Simulation
+{
     #region Simulation.Core
 
     public interface IClock
@@ -2357,10 +2363,531 @@ namespace Simulation
     }
 
     #endregion
+}
 
+namespace Simulation.Tests
+{
     #region Tests
 
-    public class TestSimulationRunner
+    public class TestFactory
+    {
+        public Tag CreateSignalTag(string designation, string description, string signal, string condition)
+        {
+            var tag = new Tag() { Id = Guid.NewGuid().ToString() };
+            tag.Properties.Add("Designation", new Property(designation));
+            tag.Properties.Add("Description", new Property(description));
+            tag.Properties.Add("Signal", new Property(signal));
+            tag.Properties.Add("Condition", new Property(condition));
+            return tag;
+        }
+
+        public Wire CreateWire(Context context, Pin start, Pin end)
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new Wire()
+            {
+                Start = start,
+                End = end,
+                X = 0,
+                Y = 0,
+                Id = Guid.NewGuid().ToString(),
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            return element;
+        }
+
+        public Pin CreatePin(Context context,
+            double x,
+            double y,
+            Element parent,
+            string name = "",
+            string factoryName = "",
+            PinType type = PinType.Undefined,
+            bool isPinTypeUndefined = true)
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new Pin()
+            {
+                Name = name,
+                FactoryName = factoryName,
+                X = x,
+                Y = y,
+                Id = Guid.NewGuid().ToString(),
+                Parent = parent,
+                Type = type,
+                IsPinTypeUndefined = isPinTypeUndefined
+            };
+
+            if (parent != null && !(parent is Context))
+            {
+                parent.Children.Add(element);
+            }
+
+            context.Children.Add(element);
+
+            return element;
+        }
+
+        public Signal CreateSignal(Context context, double x, double y, string name = "")
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new Signal()
+            {
+                Name = name,
+                Id = Guid.NewGuid().ToString(),
+                X = x,
+                Y = y,
+                Tag = null,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            // left, Input: Children[0]
+            CreatePin(context, x, y + 15, element, "I", "I", PinType.Input, false);
+
+            // right, Output: Children[1]
+            CreatePin(context, x + 285, y + 15, element, "O", "O", PinType.Output, false);
+
+            return element;
+        }
+
+        public AndGate CreateAndGate(Context context, double x, double y, string name = "")
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new AndGate()
+            {
+                Name = name,
+                Id = Guid.NewGuid().ToString(),
+                X = x,
+                Y = y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            // left
+            CreatePin(context, x, y + 15, element, "L", "L");
+            // right
+            CreatePin(context, x + 30, y + 15, element, "R", "R");
+            // top
+            CreatePin(context, x + 15, y, element, "T", "T");
+            // bottom
+            CreatePin(context, x + 15, y + 30, element, "B", "B");
+
+            return element;
+        }
+
+        public OrGate CreateOrGate(Context context, double x, double y, string name = "")
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new OrGate()
+            {
+                Name = name,
+                Id = Guid.NewGuid().ToString(),
+                X = x,
+                Y = y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            // left
+            CreatePin(context, x, y + 15, element, "L", "L");
+            // right
+            CreatePin(context, x + 30, y + 15, element, "R", "R");
+            // top
+            CreatePin(context, x + 15, y, element, "T", "T");
+            // bottom
+            CreatePin(context, x + 15, y + 30, element, "B", "B");
+
+            return element;
+        }
+
+        public NotGate CreateNotGate(Context context, double x, double y, string name = "")
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new NotGate()
+            {
+                Name = name,
+                Id = Guid.NewGuid().ToString(),
+                X = x,
+                Y = y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            // left
+            CreatePin(context, x, y + 15, element, "L", "L");
+            // right
+            CreatePin(context, x + 40, y + 15, element, "R", "R");
+            // top
+            CreatePin(context, x + 15, y, element, "T", "T");
+            // bottom
+            CreatePin(context, x + 15, y + 30, element, "B", "B");
+
+            return element;
+        }
+
+        public BufferGate CreateBufferGate(Context context, double x, double y, string name = "")
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new BufferGate()
+            {
+                Name = name,
+                Id = Guid.NewGuid().ToString(),
+                X = x,
+                Y = y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            // left
+            CreatePin(context, x, y + 15, element, "L", "L");
+            // right
+            CreatePin(context, x + 30, y + 15, element, "R", "R");
+            // top
+            CreatePin(context, x + 15, y, element, "T", "T");
+            // bottom
+            CreatePin(context, x + 15, y + 30, element, "B", "B");
+
+            return element;
+        }
+
+        public NandGate CreateNandGate(Context context, double x, double y, string name = "")
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new NandGate()
+            {
+                Name = name,
+                Id = Guid.NewGuid().ToString(),
+                X = x,
+                Y = y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            // left
+            CreatePin(context, x, y + 15, element, "L", "L");
+            // right
+            CreatePin(context, x + 40, y + 15, element, "R", "R");
+            // top
+            CreatePin(context, x + 15, y, element, "T", "T");
+            // bottom
+            CreatePin(context, x + 15, y + 30, element, "B", "B");
+
+            return element;
+        }
+
+        public NorGate CreateNorGate(Context context, double x, double y, string name = "")
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new NorGate()
+            {
+                Name = name,
+                Id = Guid.NewGuid().ToString(),
+                X = x,
+                Y = y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            // left
+            CreatePin(context, x, y + 15, element, "L", "L");
+            // right
+            CreatePin(context, x + 40, y + 15, element, "R", "R");
+            // top
+            CreatePin(context, x + 15, y, element, "T", "T");
+            // bottom
+            CreatePin(context, x + 15, y + 30, element, "B", "B");
+
+            return element;
+        }
+
+        public XorGate CreateXorGate(Context context, double x, double y, string name = "")
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new XorGate()
+            {
+                Name = name,
+                Id = Guid.NewGuid().ToString(),
+                X = x,
+                Y = y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            // left
+            CreatePin(context, x, y + 15, element, "L", "L");
+            // right
+            CreatePin(context, x + 30, y + 15, element, "R", "R");
+            // top
+            CreatePin(context, x + 15, y, element, "T", "T");
+            // bottom
+            CreatePin(context, x + 15, y + 30, element, "B", "B");
+
+            return element;
+        }
+
+        public XnorGate CreateXnorGate(Context context, double x, double y, string name = "")
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new XnorGate()
+            {
+                Name = name,
+                Id = Guid.NewGuid().ToString(),
+                X = x,
+                Y = y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            // left
+            CreatePin(context, x, y + 15, element, "L", "L");
+            // right
+            CreatePin(context, x + 40, y + 15, element, "R", "R");
+            // top
+            CreatePin(context, x + 15, y, element, "T", "T");
+            // bottom
+            CreatePin(context, x + 15, y + 30, element, "B", "B");
+
+            return element;
+        }
+
+        public MemorySetPriority CreateMemorySetPriority(Context context, double x, double y, string name = "")
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new MemorySetPriority()
+            {
+                Name = name,
+                Id = Guid.NewGuid().ToString(),
+                X = x,
+                Y = y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            // S
+            CreatePin(context, x + 15, y, element, "S", "S");
+            // R
+            CreatePin(context, x + 45, y, element, "R", "R");
+            // Q
+            CreatePin(context, x + 15, y + 30, element, "Q", "Q");
+            // Q'
+            CreatePin(context, x + 45, y + 30, element, "NQ", "NQ");
+
+            return element;
+        }
+
+        public MemoryResetPriority CreateMemoryResetPriority(Context context, double x, double y, string name = "")
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new MemoryResetPriority()
+            {
+                Name = name,
+                Id = Guid.NewGuid().ToString(),
+                X = x,
+                Y = y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            // S
+            CreatePin(context, x + 15, y, element, "S", "S");
+            // R
+            CreatePin(context, x + 45, y, element, "R", "R");
+            // Q
+            CreatePin(context, x + 15, y + 30, element, "Q", "Q");
+            // Q'
+            CreatePin(context, x + 45, y + 30, element, "NQ", "NQ");
+
+            return element;
+        }
+
+        public TimerPulse CreateTimerPulse(Context context, double x, double y, string name = "")
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new TimerPulse()
+            {
+                Name = name,
+                Id = Guid.NewGuid().ToString(),
+                X = x,
+                Y = y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            // left
+            CreatePin(context, x, y + 15, element, "L", "L");
+            // right
+            CreatePin(context, x + 30, y + 15, element, "R", "R");
+            // top
+            CreatePin(context, x + 15, y, element, "T", "T");
+            // bottom
+            CreatePin(context, x + 15, y + 30, element, "B", "B");
+
+            return element;
+        }
+
+        public TimerOn CreateTimerOn(Context context, double x, double y, string name = "")
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new TimerOn()
+            {
+                Name = name,
+                Id = Guid.NewGuid().ToString(),
+                X = x,
+                Y = y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            // left
+            CreatePin(context, x, y + 15, element, "L", "L");
+            // right
+            CreatePin(context, x + 30, y + 15, element, "R", "R");
+            // top
+            CreatePin(context, x + 15, y, element, "T", "T");
+            // bottom
+            CreatePin(context, x + 15, y + 30, element, "B", "B");
+
+            return element;
+        }
+
+        public TimerOff CreateTimerOff(Context context, double x, double y, string name = "")
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            var element = new TimerOff()
+            {
+                Name = name,
+                Id = Guid.NewGuid().ToString(),
+                X = x,
+                Y = y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            // left
+            CreatePin(context, x, y + 15, element, "L", "L");
+            // right
+            CreatePin(context, x + 30, y + 15, element, "R", "R");
+            // top
+            CreatePin(context, x + 15, y, element, "T", "T");
+            // bottom
+            CreatePin(context, x + 15, y + 30, element, "B", "B");
+
+            return element;
+        }
+
+        public Element CreateElementFromType(Context context, string type, double x, double y)
+        {
+            if (context == null)
+                throw new ArgumentException("context");
+
+            if (string.IsNullOrEmpty(type))
+                throw new ArgumentException("type");
+
+            Element element = null;
+
+            switch (type)
+            {
+                case "Signal":
+                    element = CreateSignal(context, x, y);
+                    break;
+                case "AndGate":
+                    element = CreateAndGate(context, x, y);
+                    break;
+                case "OrGate":
+                    element = CreateOrGate(context, x, y);
+                    break;
+                case "NotGate":
+                    element = CreateNotGate(context, x, y);
+                    break;
+                case "BufferGate":
+                    element = CreateBufferGate(context, x, y);
+                    break;
+                case "NandGate":
+                    element = CreateNandGate(context, x, y);
+                    break;
+                case "NorGate":
+                    element = CreateNorGate(context, x, y);
+                    break;
+                case "XorGate":
+                    element = CreateXorGate(context, x, y);
+                    break;
+                case "XnorGate":
+                    element = CreateXnorGate(context, x, y);
+                    break;
+                case "MemorySetPriority":
+                    element = CreateMemorySetPriority(context, x, y);
+                    break;
+                case "MemoryResetPriority":
+                    element = CreateMemoryResetPriority(context, x, y);
+                    break;
+                case "TimerPulse":
+                    element = CreateTimerPulse(context, x, y);
+                    break;
+                case "TimerOn":
+                    element = CreateTimerOn(context, x, y);
+                    break;
+                case "TimerOff":
+                    element = CreateTimerOff(context, x, y);
+                    break;
+                default:
+                    throw new ArgumentException("type");
+            };
+
+            return element;
+        }
+    }
+
+    public class TestSimulation
     {
         #region Fields
 
@@ -2380,7 +2907,7 @@ namespace Simulation
 
         #region Constructor
 
-        public TestSimulationRunner(Solution solution, int periodInMillisencods = 100)
+        public TestSimulation(Solution solution, int periodInMillisencods = 100)
         {
             _solution = solution;
             _periodInMillisencods = periodInMillisencods;
@@ -2556,26 +3083,233 @@ namespace Simulation
 
                 ResetTags();
             }
-        } 
+        }
 
         #endregion
     }
 
-    public class TestSolutionFactory
+    public class TestRenamer
     {
-        public Tag CreateSignalTag(string designation, string description, string signal, string condition)
+        public void AutoRename(Element element)
         {
-            var tag = new Tag() { Id = Guid.NewGuid().ToString() };
-            tag.Properties.Add("Designation", new Property(designation));
-            tag.Properties.Add("Description", new Property(description));
-            tag.Properties.Add("Signal", new Property(signal));
-            tag.Properties.Add("Condition", new Property(condition));
-            return tag;
+            AutoRenameSelector(element);
         }
 
-        public TestSolutionFactory()
+        public void AutoRenameSelector(Element element)
         {
-            var solution = new Solution() { Id = Guid.NewGuid().ToString(), Name = "solution", DefaultTag = CreateSignalTag("tag", "", "", "") };
+            if (element is Context)
+            {
+                AutoRenameElements(element as Context);
+            }
+            else if (element is Project)
+            {
+                AutoRenameElements(element as Project);
+            }
+            else if (element is Solution)
+            {
+                AutoRenameElements(element as Solution);
+            }
+            else
+            {
+                throw new Exception("Not supported Type for rename.");
+            }
+        }
+
+        private Dictionary<string, int> GetLogicModelCounters()
+        {
+            // element counters based on type
+            var types = System.Reflection.Assembly.GetAssembly(typeof(Solution))
+                                                  .GetTypes()
+                                                  .Where(x => x.IsClass && x.Namespace == "Simulation.Model")
+                                                  .Select(y => y.ToString().Split('.').Last());
+
+            // counters: key = element Type, value = element counter
+            var counters = new Dictionary<string, int>();
+            foreach (var type in types)
+                counters.Add(type, 0);
+
+            return counters;
+        }
+
+        private Dictionary<string, string> ShortElementNames =
+            new Dictionary<string, string>()
+        {
+            // Solution
+            { "Solution", "sln" },
+		    { "Project", "prj" },
+            { "Context", "ctx" },
+            // Basic
+		    { "Wire", "w" },
+		    { "Pin", "p" },
+		    { "Signal", "s" },
+            // Gates
+            { "BufferGate", "bg" },
+            { "NotGate", "ng" },
+            { "OrGate", "og" },
+            { "NorGate", "nog" },
+		    { "AndGate", "ag" },
+		    { "NandGate", "nag" },
+		    { "XorGate", "xog" },
+		    { "XnorGate", "xnog" },
+            // Timers
+		    { "TimerOff", "toff" },
+		    { "TimerOn", "ton" },
+		    { "TimerPulse", "tp" },
+            // Memory
+		    { "MemoryResetPriority", "mr" },
+		    { "MemorySetPriority", "ms" }
+        };
+
+        private void AutoRenameElements(Solution solution)
+        {
+            // counters: key = element Type, value = element counter
+            Dictionary<string, int> counters = GetLogicModelCounters();
+
+            // dict: key = element Id, value = generated name for simulation
+            Dictionary<string, string> ids = new Dictionary<string, string>();
+
+            // rename solution
+            string solution_name = string.Format("{0}{1}",
+                ShortElementNames["Solution"],
+                ++counters["Solution"]);
+
+            solution.Name = solution_name;
+            ids.Add(solution.Id, solution_name);
+
+            //System.Diagnostics.Debug.Print("Solution: {0} : {1}", solution.Name, solution.Id);
+
+            // get all projects
+            var projects = solution.Children.Cast<Project>();
+
+            foreach (var project in projects)
+            {
+                // rename project
+                string project_name = string.Format("{0}{1}",
+                    ShortElementNames["Project"],
+                    ++counters["Project"]);
+
+                project.Name = project_name;
+                ids.Add(project.Id, project_name);
+
+                //System.Diagnostics.Debug.Print("Project: {0} : {1}", project.Name, project.Id);
+
+                // rename contexts
+                var contexts = project.Children.Cast<Context>();
+
+                AutoRenameElements(contexts, counters, ids);
+            }
+        }
+
+        private void AutoRenameElements(Project project)
+        {
+            // counters: key = element Type, value = element counter
+            Dictionary<string, int> counters = GetLogicModelCounters();
+
+            // dict: key = element Id, value = generated name for simulation
+            Dictionary<string, string> ids = new Dictionary<string, string>();
+
+            // rename project
+            string project_name = string.Format("{0}{1}",
+                ShortElementNames["Project"],
+                ++counters["Project"]);
+
+            project.Name = project_name;
+            ids.Add(project.Id, project_name);
+
+            //System.Diagnostics.Debug.Print("Project: {0} : {1}", project.Name, project.Id);
+
+            // rename contexts
+            var contexts = project.Children.Cast<Context>();
+
+            AutoRenameElements(contexts, counters, ids);
+        }
+
+        private void AutoRenameElements(Context context)
+        {
+            // counters: key = element Type, value = element counter
+            Dictionary<string, int> counters = GetLogicModelCounters();
+
+            // dict: key = element Id, value = generated name for simulation
+            Dictionary<string, string> ids = new Dictionary<string, string>();
+
+            AutoRenameContext(context, counters, ids);
+        }
+
+        private void AutoRenameElements(IEnumerable<Context> contexts,
+                                               Dictionary<string, int> counters,
+                                               Dictionary<string, string> ids)
+        {
+            foreach (var context in contexts)
+            {
+                AutoRenameContext(context, counters, ids);
+            }
+        }
+
+        public void AutoRenameContext(Context context,
+                                             Dictionary<string, int> counters,
+                                             Dictionary<string, string> ids)
+        {
+            string context_name = string.Format("{0}{1}",
+                ShortElementNames["Context"],
+                ++counters["Context"]);
+
+            context.Name = context_name;
+            ids.Add(context.Id, context_name);
+
+            //System.Diagnostics.Debug.Print("Context: {0} : {1}", context.Name, context.Id);
+
+            foreach (var child in context.Children)
+            {
+                string type = child.GetType().ToString().Split('.').Last();
+
+                // element is Pin with parent Element uses FactoryName
+                if (child is Pin && child.Parent != null && !(child.Parent is Context))
+                {
+                    string child_name = string.Format("{0}_{1}",
+                        child.FactoryName.ToLower(),
+                        child.Parent.Name);
+
+                    child.Name = child_name;
+                    ids.Add(child.Id, child_name);
+
+                    //System.Diagnostics.Debug.Print("{2}: {0} : {1}", child.Name, child.Id, type);
+                }
+                // standalone element
+                else
+                {
+                    string child_name = string.Format("{0}{1}",
+                        ShortElementNames[type],
+                        ++counters[type]);
+
+                    child.Name = child_name;
+                    ids.Add(child.Id, child_name);
+
+                    //System.Diagnostics.Debug.Print("{2}: {0} : {1}", child.Name, child.Id, type);
+                }
+            }
+        }
+    }
+
+    public class TestDemoSolution
+    {
+        private TestFactory _factory = new TestFactory();
+        private TestSimulation _simulation = null;
+        private Solution _solution = null;
+
+        public TestDemoSolution(int period)
+        {
+            _solution = CreateTestSolution();
+
+            var renamer = new TestRenamer();
+            renamer.AutoRename(_solution);
+
+            _simulation = new TestSimulation(_solution, period);
+        }
+
+        private Solution CreateTestSolution()
+        {
+            // create solution
+            var solution = new Solution() { Id = Guid.NewGuid().ToString(), Name = "solution", DefaultTag = _factory.CreateSignalTag("tag", "", "", "") };
 
             var project = new Project() { Id = Guid.NewGuid().ToString(), Name = "project", Parent = solution };
             solution.Children.Add(project);
@@ -2583,7 +3317,59 @@ namespace Simulation
             var context = new Context() { Id = Guid.NewGuid().ToString(), Parent = project };
             project.Children.Add(context);
 
-            // TODO:
+            // create tags
+            var tag1 = _factory.CreateSignalTag("tag1", "", "", "");
+            var tag2 = _factory.CreateSignalTag("tag2", "", "", "");
+            var tag3 = _factory.CreateSignalTag("tag3", "", "", "");
+            solution.Tags.Add(tag1);
+            solution.Tags.Add(tag2);
+            solution.Tags.Add(tag3);
+
+            // context children
+            var s1 = _factory.CreateSignal(context, 0, 0);
+            var s2 = _factory.CreateSignal(context, 0, 0);
+            var s3 = _factory.CreateSignal(context, 0, 0);
+            var ag1 = _factory.CreateAndGate(context, 0, 0);
+            var p1 = _factory.CreatePin(context, 0, 0, context);
+
+            var o_s1 = s1.Children.Single((e) => e.FactoryName == "O") as Pin;
+            var o_s2 = s2.Children.Single((e) => e.FactoryName == "O") as Pin;
+            var t_ag1 = ag1.Children.Single((e) => e.FactoryName == "T") as Pin;
+            var l_ag1 = ag1.Children.Single((e) => e.FactoryName == "L") as Pin;
+            var r_ag1 = ag1.Children.Single((e) => e.FactoryName == "R") as Pin;
+            var i_s3 = s1.Children.Single((e) => e.FactoryName == "I") as Pin;
+
+            var w1 = _factory.CreateWire(context, o_s1, p1);
+            var w2 = _factory.CreateWire(context, p1, t_ag1);
+            var w3 = _factory.CreateWire(context, o_s2, l_ag1);
+            var w4 = _factory.CreateWire(context, r_ag1, i_s3);
+
+            // associate tags
+            s1.Tag = tag1;
+            s2.Tag = tag2;
+            s3.Tag = tag3;
+
+            return solution;
+        }
+
+        public void EnableSimulationDebug(bool enable)
+        {
+            SimulationSettings.EnableDebug = enable;
+        }
+
+        public void EnableSimulationLog(bool enable)
+        {
+            SimulationSettings.EnableLog = enable;
+        }
+
+        public void StartSimulation()
+        {
+            _simulation.Start();
+        }
+
+        public void StopSimulation()
+        {
+            _simulation.Stop();
         }
     }
 
