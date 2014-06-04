@@ -2,272 +2,33 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sheet.Simulation
+namespace Simulation
 {
     #region Model.Core
 
-    public abstract class NotifyObject : INotifyPropertyChanged
+    public abstract class Element
     {
-        #region INotifyPropertyChanged Implementation
-
-        public virtual void Notify(string propertyName)
+        public Element() 
         {
-            var handler = PropertyChanged;
-            if (handler != null)
-            {
-                handler(this, new PropertyChangedEventArgs(propertyName));
-            }
+            IsEditable = true;
+            SelectChildren = true;
+            Children = new ObservableCollection<Element>();
+            Parent = null;
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        #endregion
-    }
-
-    public interface IId
-    {
-        string Id { get; set; }
-    }
-
-    public interface ILocation
-    {
-        double X { get; set; }
-        double Y { get; set; }
-        double Z { get; set; }
-        bool IsLocked { get; set; }
-    }
-
-    public interface ISelected
-    {
-        bool IsSelected { get; set; }
-    }
-
-    public abstract class Element : NotifyObject, IId, ILocation, ISelected
-    {
-        #region Construtor
-
-        public Element() { }
-
-        #endregion
-
-        #region IId Implementation
-
-        private string id;
-
-        public string Id
-        {
-            get { return id; }
-            set
-            {
-                if (value != id)
-                {
-                    id = value;
-                    Notify("Id");
-                }
-            }
-        }
-
-        #endregion
-
-        #region ILocation Implementation
-
-        private double x;
-        private double y;
-        private double z;
-        private bool isLocked = false;
-
-        public double X
-        {
-            get { return x; }
-            set
-            {
-                if (value != x)
-                {
-                    x = value;
-                    Notify("X");
-                }
-            }
-        }
-
-        public double Y
-        {
-            get { return y; }
-            set
-            {
-                if (value != y)
-                {
-                    y = value;
-                    Notify("Y");
-                }
-            }
-        }
-
-        public double Z
-        {
-            get { return z; }
-            set
-            {
-                if (value != z)
-                {
-                    z = value;
-                    Notify("Z");
-                }
-            }
-        }
-
-        public bool IsLocked
-        {
-            get { return isLocked; }
-            set
-            {
-                if (value != isLocked)
-                {
-                    isLocked = value;
-                    Notify("IsLocked");
-                }
-            }
-        }
-
-        #endregion
-
-        #region ISelected Implementation
-
-        private bool isSelected = false;
-
-        public bool IsSelected
-        {
-            get { return isSelected; }
-            set
-            {
-                if (value != isSelected)
-                {
-                    isSelected = value;
-                    Notify("IsSelected");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Properties
-
-        private UInt32 elementId;
-        private string name = string.Empty;
-        private string factoryName = string.Empty;
-        private bool isEditable = true;
-        private bool selectChildren = true;
-        private Element parent = null;
-        private ObservableCollection<Element> children = new ObservableCollection<Element>();
-
-        public UInt32 ElementId
-        {
-            get { return elementId; }
-            set
-            {
-                if (value != elementId)
-                {
-                    elementId = value;
-                    Notify("ElementId");
-                }
-            }
-        }
-
-        public string Name
-        {
-            get { return name; }
-            set
-            {
-                if (value != name)
-                {
-                    name = value;
-                    Notify("Name");
-                }
-            }
-        }
-
-        public string FactoryName
-        {
-            get { return factoryName; }
-            set
-            {
-                if (value != factoryName)
-                {
-                    factoryName = value;
-                    Notify("FactoryName");
-                }
-            }
-        }
-
-        public bool IsEditable
-        {
-            get { return isEditable; }
-            set
-            {
-                if (value != isEditable)
-                {
-                    isEditable = value;
-                    Notify("IsEditable");
-                }
-            }
-        }
-
-        public bool SelectChildren
-        {
-            get { return selectChildren; }
-            set
-            {
-                if (value != selectChildren)
-                {
-                    selectChildren = value;
-                    Notify("SelectChildren");
-                }
-            }
-        }
-
-        public Element Parent
-        {
-            get { return parent; }
-            set
-            {
-                if (value != parent)
-                {
-                    parent = value;
-                    Notify("Parent");
-                }
-            }
-        }
-
-        public ObservableCollection<Element> Children
-        {
-            get { return children; }
-            set
-            {
-                if (value != children)
-                {
-                    children = value;
-                    Notify("Children");
-                }
-            }
-        }
-
+        public string Id { get; set; }
+        public UInt32 ElementId{ get; set; }
+        public string Name{ get; set; }
+        public string FactoryName { get; set; }
+        public bool IsEditable { get; set; }
+        public bool SelectChildren { get; set; }
+        public Element Parent { get; set; }
+        public ObservableCollection<Element> Children { get; set; }
         public Element SimulationParent { get; set; }
-
-        #endregion
-
-        #region Clone
-
-        public static ObservableCollection<T> CopyObservableCollection<T>(IEnumerable<T> list) where T : Element
-        {
-            return new ObservableCollection<T>(list.Select(x => x.Clone()).Cast<T>());
-        }
-
-        public abstract object Clone();
-
-        #endregion
     }
 
     public interface ITimer
@@ -276,111 +37,11 @@ namespace Sheet.Simulation
         string Unit { get; set; }
     }
 
-    public class Property : NotifyObject
+    public class Property
     {
-        #region Constructor
-
-        public Property()
-            : base()
-        {
-        }
-
-        public Property(object data)
-            : this()
-        {
-            this.data = data;
-        }
-
-        #endregion
-
-        #region Properties
-
-        private object data;
-
-        public object Data
-        {
-            get { return data; }
-            set
-            {
-                if (value != data)
-                {
-                    data = value;
-                    Notify("Data");
-                }
-            }
-        }
-
-        #endregion
-    }
-
-    public class Location : NotifyObject, ILocation
-    {
-        #region Construtor
-
-        public Location() { }
-
-        #endregion
-
-        #region ILocation Implementation
-
-        private double x;
-        private double y;
-        private double z;
-        private bool isLocked = false;
-
-        public double X
-        {
-            get { return x; }
-            set
-            {
-                if (value != x)
-                {
-                    x = value;
-                    Notify("X");
-                }
-            }
-        }
-
-        public double Y
-        {
-            get { return y; }
-            set
-            {
-                if (value != y)
-                {
-                    y = value;
-                    Notify("Y");
-                }
-            }
-        }
-
-        public double Z
-        {
-            get { return z; }
-            set
-            {
-                if (value != z)
-                {
-                    z = value;
-                    Notify("Z");
-                }
-            }
-        }
-
-        public bool IsLocked
-        {
-            get { return isLocked; }
-            set
-            {
-                if (value != isLocked)
-                {
-                    isLocked = value;
-                    Notify("IsLocked");
-                }
-            }
-        }
-
-        #endregion
+        public Property() : base() { }
+        public Property(object data) : this() { Data = data; }
+        public object Data { get; set; }
     }
 
     #endregion
@@ -394,272 +55,39 @@ namespace Sheet.Simulation
         Output
     }
 
-    public enum PageType
-    {
-        Undefined,
-        Title,
-        Logic,
-        Playground
-    }
-
-    public enum LabelPosition
-    {
-        Left,
-        Right,
-        Top,
-        Bottom
-    }
-
-    public enum Alignment
-    {
-        Undefined,
-        Left,
-        Right,
-        Top,
-        Bottom
-    }
-
     #endregion
 
     #region Model.Elements.Basic
 
+    public class Tag : Element, IStateSimulation
+    {
+        public Tag() : base() { Properties = new Dictionary<string, Property>(); }
+        public IDictionary<string, Property> Properties { get; set; }
+        public ISimulation Simulation { get; set; }
+    }
+
     public class Pin : Element
     {
-        #region Construtor
-
         public Pin() : base() { }
-
-        #endregion
-
-        #region Properties
-
-        public Alignment Alignment { get; set; }
         public bool IsPinTypeUndefined { get; set; }
         public PinType Type { get; set; }
-
-        // connection format: Tuple<Pin,bool> where bool is flag Inverted==True|False
-        public Tuple<Pin, bool>[] Connections { get; set; }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public Tuple<Pin, bool>[] Connections { get; set; } // bool is flag for Inverted
     }
 
     public class Signal : Element
     {
-        #region Construtor
-
         public Signal() : base() { }
-
-        #endregion
-
-        #region Properties
-
-        private Tag tag;
-        public Tag Tag
-        {
-            get { return tag; }
-            set
-            {
-                if (value != tag)
-                {
-                    tag = value;
-
-                    Notify("Tag");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public Tag Tag { get; set; }
     }
 
     public class Wire : Element
     {
-        #region Construtor
-
-        public Wire()
-            : base()
+        public Wire() : base() 
         {
-            this.Initialize();
+            InvertStart = false;
+            InvertEnd = false;
         }
-
-        #endregion
-
-        #region Methods
-
-        public void CalculateLocation()
-        {
-            // check for valid stan/end pin
-            if (this.start == null || this.end == null)
-                return;
-
-            // check if object was initialized
-            if (this.startPoint == null || this.endPoint == null || this.startCenter == null || this.endCenter == null)
-                return;
-
-            Options options = Defaults.Options;
-
-            if (options != null)
-                this.thickness = options.Thickness / 2.0;
-            else
-                this.thickness = 1.0 / 2.0;
-
-            double startX = this.start.X;
-            double startY = this.start.Y;
-            double endX = this.end.X;
-            double endY = this.end.Y;
-
-            // calculate new inverted start/end position
-            double alpha = Math.Atan2(startY - endY, endX - startX);
-            double theta = Math.PI - alpha;
-            double zet = theta - Math.PI / 2;
-            double sizeX = Math.Sin(zet) * (invertedThickness - thickness);
-            double sizeY = Math.Cos(zet) * (invertedThickness - thickness);
-
-            // TODO: shorten wire
-            if (options != null && this.DisableShortenWire == false /* && options.CaptureMouse == false */)
-            {
-                bool isStartSignal = start.Parent is Signal;
-                bool isEndSignal = end.Parent is Signal;
-
-                // shorten start
-                if (isStartSignal == true && isEndSignal == false && options.ShortenLineStarts == true)
-                {
-                    if (Math.Round(startY, 1) == Math.Round(endY, 1))
-                    {
-                        startX = end.X - 15;
-                    }
-                }
-
-                // shorten end
-                if (isStartSignal == false && isEndSignal == true && options.ShortenLineEnds == true)
-                {
-                    if (Math.Round(startY, 1) == Math.Round(endY, 1))
-                    {
-                        endX = start.X + 15;
-                    }
-                }
-            }
-
-            // set wire start location
-            if (this.invertStart)
-            {
-                startCenter.X = startX + sizeX - invertedThickness;
-                startCenter.Y = startY - sizeY - invertedThickness;
-
-                startPoint.X = startX + (2 * sizeX);
-                startPoint.Y = startY - (2 * sizeY);
-            }
-            else
-            {
-                startCenter.X = startX;
-                startCenter.Y = startY;
-
-                startPoint.X = startX;
-                startPoint.Y = startY;
-            }
-
-            // set line end location
-            if (this.invertEnd)
-            {
-                endCenter.X = endX - sizeX - invertedThickness;
-                endCenter.Y = endY + sizeY - invertedThickness;
-
-                endPoint.X = endX - (2 * sizeX);
-                endPoint.Y = endY + (2 * sizeY);
-            }
-            else
-            {
-                endCenter.X = endX;
-                endCenter.Y = endY;
-
-                endPoint.X = endX;
-                endPoint.Y = endY;
-            }
-        }
-
-        public void Initialize()
-        {
-            this.startPoint = new Location();
-            this.endPoint = new Location();
-            this.startCenter = new Location();
-            this.endCenter = new Location();
-
-            this.invertedThickness = 10.0 / 2.0;
-
-            Options options = Defaults.Options;
-
-            if (options != null)
-            {
-                this.thickness = options.Thickness / 2.0;
-
-                options.PropertyChanged += Options_PropertyChanged;
-            }
-            else
-            {
-                this.thickness = 1.0 / 2.0;
-            }
-
-            this.CalculateLocation();
-        }
-
-        private void Options_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            // TODO: 
-            if (e.PropertyName == "Thickness" || e.PropertyName == "ShortenLineStarts" || e.PropertyName == "ShortenLineEnds" || e.PropertyName == "CaptureMouse")
-            {
-                this.CalculateLocation();
-            }
-        }
-
-        #endregion
-
-        #region Events
-
-        private void PinPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName == "X" || e.PropertyName == "Y")
-            {
-                this.CalculateLocation();
-            }
-        }
-
-        #endregion
-
-        #region Properties
-
-        private double invertedThickness;
-        private double thickness;
-
         private Pin start;
-        private Pin end;
-
-        private bool invertStart = false;
-        private bool invertEnd = false;
-
-        private bool disableShortenWire = false;
-
-        private Location startPoint;
-        private Location endPoint = new Location();
-        private Location startCenter = new Location();
-        private Location endCenter = new Location();
-
         public Pin Start
         {
             get { return start; }
@@ -667,30 +95,17 @@ namespace Sheet.Simulation
             {
                 if (value != start)
                 {
-                    // remove listener for start pin change notifications
-                    if (start != null)
-                        start.PropertyChanged -= PinPropertyChanged;
-
                     if (start != null)
                         Children.Remove(start);
 
                     start = value;
 
-                    // add listener for start pin change notifications
-                    if (start != null)
-                        start.PropertyChanged += PinPropertyChanged;
-
                     if (start != null)
                         Children.Add(start);
-
-                    // update inveted start/end location
-                    this.CalculateLocation();
-
-                    Notify("Start");
                 }
             }
         }
-
+        private Pin end;
         public Pin End
         {
             get { return end; }
@@ -698,206 +113,18 @@ namespace Sheet.Simulation
             {
                 if (value != end)
                 {
-                    // remove listener for end pin change notifications
-                    if (end != null)
-                        end.PropertyChanged -= PinPropertyChanged;
-
                     if (end != null)
                         Children.Remove(end);
 
                     end = value;
 
-                    // add listener for end pin change notifications
-                    if (end != null)
-                        end.PropertyChanged += PinPropertyChanged;
-
                     if (end != null)
                         Children.Add(end);
-
-                    // update inveted start/end location
-                    this.CalculateLocation();
-
-                    Notify("End");
                 }
             }
         }
-
-        public bool InvertStart
-        {
-            get { return invertStart; }
-            set
-            {
-                if (value != invertStart)
-                {
-                    invertStart = value;
-
-                    // update inveted start/end location
-                    this.CalculateLocation();
-
-                    Notify("InvertStart");
-                }
-            }
-        }
-
-        public bool DisableShortenWire
-        {
-            get { return disableShortenWire; }
-            set
-            {
-                if (value != disableShortenWire)
-                {
-                    disableShortenWire = value;
-
-                    // update inveted start/end location
-                    this.CalculateLocation();
-
-                    Notify("DisableShortenWire");
-                }
-            }
-        }
-
-        public bool InvertEnd
-        {
-            get { return invertEnd; }
-            set
-            {
-                if (value != invertEnd)
-                {
-                    invertEnd = value;
-
-                    // update inveted start/end location
-                    this.CalculateLocation();
-
-                    Notify("InvertEnd");
-                }
-            }
-        }
-
-        public Location StartPoint
-        {
-            get { return startPoint; }
-            set
-            {
-                if (value != startPoint)
-                {
-                    startPoint = value;
-                    Notify("StartPoint");
-                }
-            }
-        }
-
-        public Location EndPoint
-        {
-            get { return endPoint; }
-            set
-            {
-                if (value != endPoint)
-                {
-                    endPoint = value;
-                    Notify("EndPoint");
-                }
-            }
-        }
-
-        public Location StartCenter
-        {
-            get { return startCenter; }
-            set
-            {
-                if (value != startCenter)
-                {
-                    startCenter = value;
-                    Notify("StartCenter");
-                }
-            }
-        }
-
-        public Location EndCenter
-        {
-            get { return endCenter; }
-            set
-            {
-                if (value != endCenter)
-                {
-                    endCenter = value;
-                    Notify("EndCenter");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            Wire element = (Wire)this.MemberwiseClone();
-            element.Children = Element.CopyObservableCollection<Element>(this.Children);
-            element.Id = Guid.NewGuid().ToString();
-            return element;
-        }
-
-        #endregion
-    }
-
-    public class Tag : Element, IStateSimulation
-    {
-        #region Construtor
-
-        public Tag()
-            : base()
-        {
-            this.properties = new Dictionary<string, Property>();
-        }
-
-        #endregion
-
-        #region Properties
-
-        private IDictionary<string, Property> properties = null;
-        public IDictionary<string, Property> Properties
-        {
-            get { return properties; }
-            set
-            {
-                if (value != properties)
-                {
-                    properties = value;
-                    Notify("Properties");
-                }
-            }
-        }
-
-        #endregion
-
-        #region IStateSimulation
-
-        public ISimulation simulation;
-        public ISimulation Simulation
-        {
-            get { return simulation; }
-            set
-            {
-                if (value != simulation)
-                {
-                    simulation = value;
-
-                    Notify("Simulation");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            Tag tag = (Tag)this.MemberwiseClone();
-            return tag;
-        }
-
-        #endregion
+        public bool InvertStart { get; set; }
+        public bool InvertEnd { get; set; }
     }
 
     #endregion
@@ -906,298 +133,50 @@ namespace Sheet.Simulation
 
     public class AndGate : Element, IStateSimulation
     {
-        #region Construtor
-
         public AndGate() : base() { }
-
-        #endregion
-
-        #region IStateSimulation
-
-        public ISimulation simulation;
-        public ISimulation Simulation
-        {
-            get { return simulation; }
-            set
-            {
-                if (value != simulation)
-                {
-                    simulation = value;
-
-                    Notify("Simulation");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public ISimulation Simulation { get; set; }
     }
 
     public class OrGate : Element, IStateSimulation
     {
-        #region Construtor
-
         public OrGate() : base() { }
-
-        #endregion
-
-        #region IStateSimulation
-
-        public ISimulation simulation;
-        public ISimulation Simulation
-        {
-            get { return simulation; }
-            set
-            {
-                if (value != simulation)
-                {
-                    simulation = value;
-
-                    Notify("Simulation");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public ISimulation Simulation { get; set; }
     }
 
     public class NotGate : Element, IStateSimulation
     {
-        #region Construtor
-
         public NotGate() : base() { }
-
-        #endregion
-
-        #region IStateSimulation
-
-        public ISimulation simulation;
-        public ISimulation Simulation
-        {
-            get { return simulation; }
-            set
-            {
-                if (value != simulation)
-                {
-                    simulation = value;
-
-                    Notify("Simulation");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public ISimulation Simulation { get; set; }
     }
 
     public class BufferGate : Element, IStateSimulation
     {
-        #region Construtor
-
         public BufferGate() : base() { }
-
-        #endregion
-
-        #region IStateSimulation
-
-        public ISimulation simulation;
-        public ISimulation Simulation
-        {
-            get { return simulation; }
-            set
-            {
-                if (value != simulation)
-                {
-                    simulation = value;
-
-                    Notify("Simulation");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public ISimulation Simulation { get; set; }
     }
 
     public class NandGate : Element, IStateSimulation
     {
-        #region Construtor
-
         public NandGate() : base() { }
-
-        #endregion
-
-        #region IStateSimulation
-
-        public ISimulation simulation;
-        public ISimulation Simulation
-        {
-            get { return simulation; }
-            set
-            {
-                if (value != simulation)
-                {
-                    simulation = value;
-
-                    Notify("Simulation");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public ISimulation Simulation { get; set; }
     }
 
     public class NorGate : Element, IStateSimulation
     {
-        #region Construtor
-
         public NorGate() : base() { }
-
-        #endregion
-
-        #region IStateSimulation
-
-        public ISimulation simulation;
-        public ISimulation Simulation
-        {
-            get { return simulation; }
-            set
-            {
-                if (value != simulation)
-                {
-                    simulation = value;
-
-                    Notify("Simulation");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public ISimulation Simulation { get; set; }
     }
 
     public class XorGate : Element, IStateSimulation
     {
-        #region Construtor
-
         public XorGate() : base() { }
-
-        #endregion
-
-        #region IStateSimulation
-
-        public ISimulation simulation;
-        public ISimulation Simulation
-        {
-            get { return simulation; }
-            set
-            {
-                if (value != simulation)
-                {
-                    simulation = value;
-
-                    Notify("Simulation");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public ISimulation Simulation { get; set; }
     }
 
     public class XnorGate : Element, IStateSimulation
     {
-        #region Construtor
-
         public XnorGate() : base() { }
-
-        #endregion
-
-        #region IStateSimulation
-
-        public ISimulation simulation;
-        public ISimulation Simulation
-        {
-            get { return simulation; }
-            set
-            {
-                if (value != simulation)
-                {
-                    simulation = value;
-
-                    Notify("Simulation");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public ISimulation Simulation { get; set; }
     }
 
     #endregion
@@ -1206,76 +185,14 @@ namespace Sheet.Simulation
 
     public class MemoryResetPriority : Element, IStateSimulation
     {
-        #region Construtor
-
         public MemoryResetPriority() : base() { }
-
-        #endregion
-
-        #region IStateSimulation
-
-        public ISimulation simulation;
-        public ISimulation Simulation
-        {
-            get { return simulation; }
-            set
-            {
-                if (value != simulation)
-                {
-                    simulation = value;
-
-                    Notify("Simulation");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public ISimulation Simulation { get; set; }
     }
 
     public class MemorySetPriority : Element, IStateSimulation
     {
-        #region Construtor
-
         public MemorySetPriority() : base() { }
-
-        #endregion
-
-        #region IStateSimulation
-
-        public ISimulation simulation;
-        public ISimulation Simulation
-        {
-            get { return simulation; }
-            set
-            {
-                if (value != simulation)
-                {
-                    simulation = value;
-
-                    Notify("Simulation");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public ISimulation Simulation { get; set; }
     }
 
     #endregion
@@ -1284,266 +201,26 @@ namespace Sheet.Simulation
 
     public class TimerOn : Element, ITimer, IStateSimulation
     {
-        #region Construtor
-
         public TimerOn() : base() { }
-
-        #endregion
-
-        #region ITimer Implementation
-
-        private float delay = 1.0F;
-        private string unit = "s";
-
-        public float Delay
-        {
-            get { return delay; }
-            set
-            {
-                if (value != delay)
-                {
-                    delay = value;
-                    Notify("Delay");
-                }
-            }
-        }
-
-        public string Unit
-        {
-            get { return unit; }
-            set
-            {
-                if (value != unit)
-                {
-                    unit = value;
-                    Notify("Unit");
-                }
-            }
-        }
-
-        #endregion
-
-        #region IStateSimulation
-
-        public ISimulation simulation;
-        public ISimulation Simulation
-        {
-            get { return simulation; }
-            set
-            {
-                if (value != simulation)
-                {
-                    simulation = value;
-
-                    Notify("Simulation");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Properties
-
-        private LabelPosition labelPosition = LabelPosition.Top;
-        public LabelPosition LabelPosition
-        {
-            get { return labelPosition; }
-            set
-            {
-                if (value != labelPosition)
-                {
-                    labelPosition = value;
-                    Notify("LabelPosition");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public float Delay { get; set; }
+        public string Unit { get; set; }
+        public ISimulation Simulation { get; set; }
     }
 
     public class TimerOff : Element, ITimer, IStateSimulation
     {
-        #region Construtor
-
         public TimerOff() : base() { }
-
-        #endregion
-
-        #region ITimer Implementation
-
-        private float delay = 1.0F;
-        private string unit = "s";
-
-        public float Delay
-        {
-            get { return delay; }
-            set
-            {
-                if (value != delay)
-                {
-                    delay = value;
-                    Notify("Delay");
-                }
-            }
-        }
-
-        public string Unit
-        {
-            get { return unit; }
-            set
-            {
-                if (value != unit)
-                {
-                    unit = value;
-                    Notify("Unit");
-                }
-            }
-        }
-
-        #endregion
-
-        #region IStateSimulation
-
-        public ISimulation simulation;
-        public ISimulation Simulation
-        {
-            get { return simulation; }
-            set
-            {
-                if (value != simulation)
-                {
-                    simulation = value;
-
-                    Notify("Simulation");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Properties
-
-        private LabelPosition labelPosition = LabelPosition.Top;
-        public LabelPosition LabelPosition
-        {
-            get { return labelPosition; }
-            set
-            {
-                if (value != labelPosition)
-                {
-                    labelPosition = value;
-                    Notify("LabelPosition");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public float Delay { get; set; }
+        public string Unit { get; set; }
+        public ISimulation Simulation { get; set; }
     }
 
     public class TimerPulse : Element, ITimer, IStateSimulation
     {
-        #region Construtor
-
         public TimerPulse() : base() { }
-
-        #endregion
-
-        #region ITimer Implementation
-
-        private float delay = 1.0F;
-        private string unit = "s";
-
-        public float Delay
-        {
-            get { return delay; }
-            set
-            {
-                if (value != delay)
-                {
-                    delay = value;
-                    Notify("Delay");
-                }
-            }
-        }
-
-        public string Unit
-        {
-            get { return unit; }
-            set
-            {
-                if (value != unit)
-                {
-                    unit = value;
-                    Notify("Unit");
-                }
-            }
-        }
-
-        #endregion
-
-        #region IStateSimulation
-
-        public ISimulation simulation;
-        public ISimulation Simulation
-        {
-            get { return simulation; }
-            set
-            {
-                if (value != simulation)
-                {
-                    simulation = value;
-
-                    Notify("Simulation");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Properties
-
-        private LabelPosition labelPosition = LabelPosition.Top;
-        public LabelPosition LabelPosition
-        {
-            get { return labelPosition; }
-            set
-            {
-                if (value != labelPosition)
-                {
-                    labelPosition = value;
-                    Notify("LabelPosition");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+        public float Delay { get; set; }
+        public string Unit { get; set; }
+        public ISimulation Simulation { get; set; }
     }
 
     #endregion
@@ -1552,705 +229,7 @@ namespace Sheet.Simulation
 
     public class Context : Element
     {
-        #region Construtor
-
         public Context() : base() { }
-
-        #endregion
-
-        #region Properties
-
-        private int number;
-        private PageType pageType = PageType.Logic;
-        private ObservableCollection<Element> selectedElements = null;
-
-        public int Number
-        {
-            get { return number; }
-            set
-            {
-                if (value != number)
-                {
-                    number = value;
-                    Notify("Number");
-                }
-            }
-        }
-
-        public PageType PageType
-        {
-            get { return pageType; }
-            set
-            {
-                if (value != pageType)
-                {
-                    pageType = value;
-                    Notify("PageType");
-                }
-            }
-        }
-
-        public ObservableCollection<Element> SelectedElements
-        {
-            get { return selectedElements; }
-            set
-            {
-                if (value != selectedElements)
-                {
-                    selectedElements = value;
-                    Notify("SelectedElements");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
-    }
-
-    public class Project : Element
-    {
-        #region Construtor
-
-        public Project() : base() { }
-
-        #endregion
-
-        #region Properties
-
-        private Title title = new Title();
-
-        public Title Title
-        {
-            get { return title; }
-            set
-            {
-                if (value != title)
-                {
-                    title = value;
-                    Notify("Title");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
-    }
-
-    public class Solution : Element
-    {
-        #region Construtor
-
-        public Solution() : base() { }
-
-        #endregion
-
-        #region Properties
-
-        private ObservableCollection<Tag> tags = new ObservableCollection<Tag>();
-        private Tag defaultTag = null;
-
-        public ObservableCollection<Tag> Tags
-        {
-            get { return tags; }
-            set
-            {
-                if (value != tags)
-                {
-                    tags = value;
-                    Notify("Tags");
-                }
-            }
-        }
-
-        public Tag DefaultTag
-        {
-            get { return defaultTag; }
-            set
-            {
-                if (value != defaultTag)
-                {
-                    defaultTag = value;
-                    Notify("DefaultTag");
-                }
-            }
-        }
-
-        #endregion
-
-        #region Clone
-
-        public override object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
-    }
-
-    public class Title : NotifyObject
-    {
-        #region Construtor
-
-        public Title() : base() { }
-
-        #endregion
-
-        #region Properties
-
-        private string documentId = string.Empty;
-        private string documentTitle = string.Empty;
-        private string documentNumber = string.Empty;
-
-        public string DocumentId
-        {
-            get { return documentId; }
-            set
-            {
-                if (value != documentId)
-                {
-                    documentId = value;
-                    Notify("DocumentId");
-                }
-            }
-        }
-
-        public string DocumentTitle
-        {
-            get { return documentTitle; }
-            set
-            {
-                if (value != documentTitle)
-                {
-                    documentTitle = value;
-                    Notify("DocumentTitle");
-                }
-            }
-        }
-
-        public string DocumentNumber
-        {
-            get { return documentNumber; }
-            set
-            {
-                if (value != documentNumber)
-                {
-                    documentNumber = value;
-                    Notify("DocumentNumber");
-                }
-            }
-        }
-
-        #endregion
-    }
-
-    public class Options : NotifyObject
-    {
-        #region Construtor
-
-        public Options() : base() { }
-
-        #endregion
-
-        #region Properties
-
-        private bool hidePins = false;
-        private bool hideHelperLines = true;
-
-        private bool shortenLineStarts = true;
-        private bool shortenLineEnds = false;
-
-        private double x = 0.0;
-        private double y = 0.0;
-        private double zoom = 1.0;
-        private double zoomSpeed = 3.5;
-        private double thickness = 1.0;
-        private double snap = 15.0;
-        private double offsetX = 0.0;
-        private double offsetY = 5.0;
-
-        private bool isSnapEnabled = true;
-        private bool isAutoFitEnabled = true;
-
-        private bool captureMouse = false;
-
-        private bool isPrinting = false;
-
-        private bool enableCharts = false;
-
-        private int simulationPeriod = 100;
-
-        private bool simulationIsRunning = false;
-
-        private string currentElement = "Signal";
-
-        private bool showSolutionExplorer = true;
-        private bool showToolbox = true;
-
-        private bool enableColors = true;
-        private bool enableRecent = true;
-        private bool enableUndoRedo = true;
-
-        private bool disablePrintColors = false;
-
-        private PageType defaultPageType = PageType.Logic;
-
-        public bool HidePins
-        {
-            get { return hidePins; }
-            set
-            {
-                if (value != hidePins)
-                {
-                    hidePins = value;
-                    Notify("HidePins");
-                }
-            }
-        }
-
-        public bool HideHelperLines
-        {
-            get { return hideHelperLines; }
-            set
-            {
-                if (value != hideHelperLines)
-                {
-                    hideHelperLines = value;
-                    Notify("HideHelperLines");
-                }
-            }
-        }
-
-        public bool ShortenLineStarts
-        {
-            get { return shortenLineStarts; }
-            set
-            {
-                if (value != shortenLineStarts)
-                {
-                    shortenLineStarts = value;
-                    Notify("ShortenLineStarts");
-                }
-            }
-        }
-
-        public bool ShortenLineEnds
-        {
-            get { return shortenLineEnds; }
-            set
-            {
-                if (value != shortenLineEnds)
-                {
-                    shortenLineEnds = value;
-                    Notify("ShortenLineEnds");
-                }
-            }
-        }
-
-        public double X
-        {
-            get { return x; }
-            set
-            {
-                if (value != x)
-                {
-                    x = value;
-                    Notify("X");
-                }
-            }
-        }
-
-        public double Y
-        {
-            get { return y; }
-            set
-            {
-                if (value != y)
-                {
-                    y = value;
-                    Notify("Y");
-                }
-            }
-        }
-
-        public double Zoom
-        {
-            get { return zoom; }
-            set
-            {
-                if (value != zoom)
-                {
-                    zoom = value;
-                    Notify("Zoom");
-                    Notify("Thickness");
-                }
-            }
-        }
-
-        public double ZoomSpeed
-        {
-            get { return zoomSpeed; }
-            set
-            {
-                if (value != zoomSpeed)
-                {
-                    zoomSpeed = value;
-                    Notify("ZoomSpeed");
-                }
-            }
-        }
-
-        public double Thickness
-        {
-            get { return thickness / zoom; }
-            set
-            {
-                if (value != thickness)
-                {
-                    thickness = value / zoom;
-                    Notify("Thickness");
-                }
-            }
-        }
-
-        public double Snap
-        {
-            get { return snap; }
-            set
-            {
-                if (value != snap)
-                {
-                    snap = value;
-                    Notify("Snap");
-                }
-            }
-        }
-
-        public double OffsetX
-        {
-            get { return offsetX; }
-            set
-            {
-                if (value != offsetX)
-                {
-                    offsetX = value;
-                    Notify("OffsetX");
-                }
-            }
-        }
-
-        public double OffsetY
-        {
-            get { return offsetY; }
-            set
-            {
-                if (value != offsetY)
-                {
-                    offsetY = value;
-                    Notify("OffsetY");
-                }
-            }
-        }
-
-        public bool IsSnapEnabled
-        {
-            get { return isSnapEnabled; }
-            set
-            {
-                if (value != isSnapEnabled)
-                {
-                    isSnapEnabled = value;
-                    Notify("IsSnapEnabled");
-                }
-            }
-        }
-
-        public bool IsAutoFitEnabled
-        {
-            get { return isAutoFitEnabled; }
-            set
-            {
-                if (value != isAutoFitEnabled)
-                {
-                    isAutoFitEnabled = value;
-                    Notify("IsAutoFitEnabled");
-                }
-            }
-        }
-
-        public bool EnableCharts
-        {
-            get { return enableCharts; }
-            set
-            {
-                if (value != enableCharts)
-                {
-                    enableCharts = value;
-                    Notify("EnableCharts");
-                }
-            }
-        }
-
-        public int SimulationPeriod
-        {
-            get { return simulationPeriod; }
-            set
-            {
-                if (value != simulationPeriod)
-                {
-                    simulationPeriod = value;
-                    Notify("SimulationPeriod");
-                }
-            }
-        }
-
-        public bool CaptureMouse
-        {
-            get { return captureMouse; }
-            set
-            {
-                if (value != captureMouse)
-                {
-                    captureMouse = value;
-                    Notify("CaptureMouse");
-                }
-            }
-        }
-
-        public volatile bool Sync;
-
-        public bool IsPrinting
-        {
-            get { return isPrinting; }
-            set
-            {
-                if (value != isPrinting)
-                {
-                    isPrinting = value;
-                    Notify("IsPrinting");
-                }
-            }
-        }
-
-        public bool SimulationIsRunning
-        {
-            get { return simulationIsRunning; }
-            set
-            {
-                if (value != simulationIsRunning)
-                {
-                    simulationIsRunning = value;
-                    Notify("SimulationIsRunning");
-                }
-            }
-        }
-
-        public string CurrentElement
-        {
-            get { return currentElement; }
-            set
-            {
-                if (value != currentElement)
-                {
-                    currentElement = value;
-                    Notify("CurrentElement");
-                }
-            }
-        }
-
-        public bool ShowSolutionExplorer
-        {
-            get { return showSolutionExplorer; }
-            set
-            {
-                if (value != showSolutionExplorer)
-                {
-                    showSolutionExplorer = value;
-                    Notify("ShowSolutionExplorer");
-                }
-            }
-        }
-
-        public bool ShowToolbox
-        {
-            get { return showToolbox; }
-            set
-            {
-                if (value != showToolbox)
-                {
-                    showToolbox = value;
-                    Notify("ShowToolbox");
-                }
-            }
-        }
-
-        public bool EnableColors
-        {
-            get { return enableColors; }
-            set
-            {
-                if (value != enableColors)
-                {
-                    enableColors = value;
-                    Notify("EnableColors");
-                }
-            }
-        }
-
-        public bool EnableRecent
-        {
-            get { return enableRecent; }
-            set
-            {
-                if (value != enableRecent)
-                {
-                    enableRecent = value;
-                    Notify("EnableRecent");
-                }
-            }
-        }
-
-        public bool EnableUndoRedo
-        {
-            get { return enableUndoRedo; }
-            set
-            {
-                if (value != enableUndoRedo)
-                {
-                    enableUndoRedo = value;
-                    Notify("EnableUndoRedo");
-                }
-            }
-        }
-
-        public bool DisablePrintColors
-        {
-            get { return disablePrintColors; }
-            set
-            {
-                if (value != disablePrintColors)
-                {
-                    disablePrintColors = value;
-                    Notify("DisablePrintColors");
-                }
-            }
-        }
-
-        public PageType DefaultPageType
-        {
-            get { return defaultPageType; }
-            set
-            {
-                if (value != defaultPageType)
-                {
-                    defaultPageType = value;
-                    Notify("DefaultPageType");
-                }
-            }
-        }
-
-        #endregion
-    }
-
-    public static class Defaults
-    {
-        #region Constants
-
-        public const string DataFormat = "LogicObjectType";
-
-        public const string OptionsFileName = "options.json";
-        public const string RecentFileName = "recent.json";
-        public const string ColorsFileName = "colors.json";
-
-        public const string DefaultElement = "Signal";
-
-        public const double NewPinZIndex = 1.0;
-        public const double PinZIndex = 2.0;
-        public const double LineZIndex = 1.0;
-        public const double SignalZIndex = 1.0;
-        public const double ElementZIndex = 1.0;
-
-        #endregion
-
-        #region Properties
-
-        private static Options options = new Options();
-
-        public static Options Options
-        {
-            get { return options; }
-            set
-            {
-                if (value != options)
-                {
-                    options = value;
-                }
-            }
-        }
-
-        #endregion
-
-        #region Methods
-
-        public static void SetDefaults(Options options)
-        {
-            options.HidePins = false;
-            options.HideHelperLines = true;
-
-            options.ShortenLineStarts = true;
-            options.ShortenLineEnds = false;
-
-            options.X = 0.0;
-            options.Y = 0.0;
-
-            options.Zoom = 1.0;
-            options.ZoomSpeed = 3.5;
-            options.Thickness = 1.0;
-            options.Snap = 15.0;
-            options.OffsetX = 0.0;
-            options.OffsetY = 5.0;
-
-            options.IsSnapEnabled = true;
-            options.IsAutoFitEnabled = true;
-
-            options.CaptureMouse = false;
-            options.Sync = false;
-            options.IsPrinting = false;
-
-            options.EnableCharts = false;
-
-            options.SimulationPeriod = 100;
-
-            options.CurrentElement = DefaultElement;
-
-            options.ShowSolutionExplorer = true;
-            options.ShowToolbox = true;
-
-            options.EnableColors = true;
-            options.EnableRecent = true;
-            options.EnableUndoRedo = true;
-
-            options.DisablePrintColors = false;
-
-            options.DefaultPageType = PageType.Logic;
-        }
-
-        #endregion
     }
 
     #endregion
@@ -2342,6 +321,527 @@ namespace Sheet.Simulation
 
     #region Simulation.Elements
 
+    public class TagSimulation : ISimulation
+    {
+        #region Constructor
+
+        public TagSimulation()
+            : base()
+        {
+            this.InitialState = false;
+        }
+
+        #endregion
+
+        #region Properties
+
+        public Element Element { get; set; }
+
+        #endregion
+
+        #region ISimulation
+
+        public IClock Clock { get; set; }
+
+        public IBoolState State { get; set; }
+
+        public bool? InitialState { get; set; }
+        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
+        public bool HaveCache { get; set; }
+
+        public Element[] DependsOn { get; set; }
+
+        public void Compile()
+        {
+            if (HaveCache)
+                Reset();
+
+            var tag = Element as Tag;
+
+            // TODO: Tag can only have one input
+            Pin input = tag.Children.Cast<Pin>().Where(x => x.Type == PinType.Input && x.Connections != null && x.Connections.Length > 0).FirstOrDefault();
+            //IEnumerable<Pin> outputs = tag.Children.Cast<Pin>().Where(x => x.Type == PinType.Output);
+
+            if (input == null || input.Connections == null || input.Connections.Length <= 0)
+            {
+                if (SimulationSettings.EnableDebug)
+                {
+                    Debug.Print("No Valid Input/Connections for Id: {0} | State: {1}", Element.ElementId, State.State);
+                }
+
+                return;
+            }
+
+            // get all connected inputs with possible state
+            var connections = input.Connections.Where(x => x.Item1.Type == PinType.Output);
+
+            // set ISimulation dependencies (used for topological sort)
+            DependsOn = connections.Where(x => x.Item1 != null).Select(y => y.Item1.SimulationParent).Take(1).ToArray();
+
+            if (SimulationSettings.EnableDebug)
+            {
+                foreach (var connection in connections)
+                {
+                    Debug.Print("Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
+                    connection.Item1.ElementId,
+                    connection.Item2,
+                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
+                    connection.Item1.Type);
+                }
+            }
+
+            // get all connected inputs with state
+            var states = connections.Select(x => new Tuple<IBoolState, bool>((x.Item1.SimulationParent as IStateSimulation).Simulation.State, x.Item2)).ToArray();
+
+            if (states.Length == 1)
+            {
+                StatesCache = states;
+                HaveCache = true;
+            }
+            else
+            {
+                // invalidate state
+                State = null;
+
+                StatesCache = null;
+                HaveCache = false;
+            }
+        }
+
+        public void Calculate()
+        {
+            if (HaveCache)
+            {
+                // calculate new state
+                var first = StatesCache[0];
+
+                State.State = first.Item2 ? !(first.Item1.State) : first.Item1.State;
+
+                if (SimulationSettings.EnableDebug)
+                {
+                    Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
+                    Debug.Print("");
+                }
+            }
+        }
+
+        public void Reset()
+        {
+            HaveCache = false;
+            StatesCache = null;
+            State = null;
+            Clock = null;
+        }
+
+        #endregion
+    }
+
+    public class AndGateSimulation : ISimulation
+    {
+        #region Constructor
+
+        public AndGateSimulation()
+            : base()
+        {
+            this.InitialState = null;
+        }
+
+        #endregion
+
+        #region ISimulation
+
+        public Element Element { get; set; }
+
+        public IClock Clock { get; set; }
+
+        public IBoolState State { get; set; }
+        public bool? InitialState { get; set; }
+        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
+        public bool HaveCache { get; set; }
+
+        public Element[] DependsOn { get; set; }
+
+        public void Compile()
+        {
+            if (HaveCache)
+                Reset();
+
+            // get all connected inputs with possible state
+            var connections = Element.Children.Cast<Pin>()
+                                              .Where(pin => pin.Connections != null && pin.Type == PinType.Input)
+                                              .SelectMany(pin => pin.Connections)
+                                              .Where(x => x.Item1.Type == PinType.Output);
+
+            // set ISimulation dependencies (used for topological sort)
+            DependsOn = connections.Select(y => y.Item1.SimulationParent).ToArray();
+
+            if (SimulationSettings.EnableDebug)
+            {
+                foreach (var connection in connections)
+                {
+                    Debug.Print("Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
+                    connection.Item1.ElementId,
+                    connection.Item2,
+                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
+                    connection.Item1.Type);
+                }
+            }
+
+            // get all connected inputs with state, where Tuple<IBoolState,bool> is IBoolState and Inverted
+            var states = connections.Select(x => new Tuple<IBoolState, bool>((x.Item1.SimulationParent as IStateSimulation).Simulation.State, x.Item2)).ToArray();
+
+            if (states.Length > 0)
+            {
+                StatesCache = states;
+                HaveCache = true;
+            }
+            else
+            {
+                // invalidate state
+                State = null;
+
+                StatesCache = null;
+                HaveCache = false;
+            }
+        }
+
+        public void Calculate()
+        {
+            if (HaveCache)
+            {
+                // calculate new state
+                State.State = CalculateState(StatesCache);
+
+                if (SimulationSettings.EnableDebug)
+                {
+                    Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
+                    Debug.Print("");
+                }
+            }
+        }
+
+        private static bool? CalculateState(Tuple<IBoolState, bool>[] states)
+        {
+            int lenght = states.Length;
+            if (lenght == 1)
+                return null;
+
+            bool? result = null;
+            for (int i = 0; i < lenght; i++)
+            {
+                var item = states[i];
+                var state = item.Item1.State;
+                var isInverted = item.Item2;
+
+                if (i == 0)
+                    result = isInverted ? !(state) : state;
+                else
+                    result &= isInverted ? !(state) : state;
+            }
+
+            return result;
+        }
+
+        public void Reset()
+        {
+            HaveCache = false;
+            StatesCache = null;
+            State = null;
+            Clock = null;
+        }
+
+        #endregion
+    }
+
+    public class OrGateSimulation : ISimulation
+    {
+        #region Constructor
+
+        public OrGateSimulation()
+            : base()
+        {
+            this.InitialState = null;
+        }
+
+        #endregion
+
+        #region ISimulation
+
+        public Element Element { get; set; }
+
+        public IClock Clock { get; set; }
+
+        public IBoolState State { get; set; }
+        public bool? InitialState { get; set; }
+        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
+        public bool HaveCache { get; set; }
+
+        public Element[] DependsOn { get; set; }
+
+        public void Compile()
+        {
+            if (HaveCache)
+                Reset();
+
+            // get all connected inputs with possible state
+            var connections = Element.Children.Cast<Pin>()
+                                              .Where(pin => pin.Connections != null && pin.Type == PinType.Input)
+                                              .SelectMany(pin => pin.Connections)
+                                              .Where(x => x.Item1.Type == PinType.Output);
+
+            // set ISimulation dependencies (used for topological sort)
+            DependsOn = connections.Select(y => y.Item1.SimulationParent).ToArray();
+
+            if (SimulationSettings.EnableDebug)
+            {
+                foreach (var connection in connections)
+                {
+                    Debug.Print("Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
+                    connection.Item1.ElementId,
+                    connection.Item2,
+                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
+                    connection.Item1.Type);
+                }
+            }
+
+            // get all connected inputs with state, where Tuple<IBoolState,bool> is IBoolState and Inverted
+            var states = connections.Select(x => new Tuple<IBoolState, bool>((x.Item1.SimulationParent as IStateSimulation).Simulation.State, x.Item2)).ToArray();
+
+            if (states.Length > 0)
+            {
+                StatesCache = states;
+                HaveCache = true;
+            }
+            else
+            {
+                // invalidate state
+                State = null;
+
+                StatesCache = null;
+                HaveCache = false;
+            }
+        }
+
+        public void Calculate()
+        {
+            if (HaveCache)
+            {
+                // calculate new state
+                State.State = CalculateState(StatesCache);
+
+                if (SimulationSettings.EnableDebug)
+                {
+                    Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
+                    Debug.Print("");
+                }
+            }
+        }
+
+        private static bool? CalculateState(Tuple<IBoolState, bool>[] states)
+        {
+            int lenght = states.Length;
+            if (lenght == 1)
+                return null;
+
+            bool? result = null;
+            for (int i = 0; i < lenght; i++)
+            {
+                var item = states[i];
+                var state = item.Item1.State;
+                var isInverted = item.Item2;
+
+                if (i == 0)
+                    result = isInverted ? !(state) : state;
+                else
+                    result |= isInverted ? !(state) : state;
+            }
+
+            return result;
+        }
+
+        public void Reset()
+        {
+            HaveCache = false;
+            StatesCache = null;
+            State = null;
+            Clock = null;
+        }
+
+        #endregion
+    }
+
+    public class NotGateSimulation : ISimulation
+    {
+        #region Constructor
+
+        public NotGateSimulation()
+            : base()
+        {
+            this.InitialState = null;
+        }
+
+        #endregion
+
+        #region ISimulation
+
+        public Element Element { get; set; }
+
+        public IClock Clock { get; set; }
+
+        public IBoolState State { get; set; }
+        public bool? InitialState { get; set; }
+        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
+        public bool HaveCache { get; set; }
+
+        public Element[] DependsOn { get; set; }
+
+        public void Compile()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Calculate()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+    }
+
+    public class BufferGateSimulation : ISimulation
+    {
+        #region Constructor
+
+        public BufferGateSimulation()
+            : base()
+        {
+            this.InitialState = null;
+        }
+
+        #endregion
+
+        #region ISimulation
+
+        public Element Element { get; set; }
+
+        public IClock Clock { get; set; }
+
+        public IBoolState State { get; set; }
+        public bool? InitialState { get; set; }
+        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
+        public bool HaveCache { get; set; }
+
+        public Element[] DependsOn { get; set; }
+
+        public void Compile()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Calculate()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+    }
+
+    public class NandGateSimulation : ISimulation
+    {
+        #region Constructor
+
+        public NandGateSimulation()
+            : base()
+        {
+            this.InitialState = null;
+        }
+
+        #endregion
+
+        #region ISimulation
+
+        public Element Element { get; set; }
+
+        public IClock Clock { get; set; }
+
+        public IBoolState State { get; set; }
+        public bool? InitialState { get; set; }
+        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
+        public bool HaveCache { get; set; }
+
+        public Element[] DependsOn { get; set; }
+
+        public void Compile()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Calculate()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+    }
+
+    public class NorGateSimulation : ISimulation
+    {
+        #region Constructor
+
+        public NorGateSimulation()
+            : base()
+        {
+            this.InitialState = null;
+        }
+
+        #endregion
+
+        #region ISimulation
+
+        public Element Element { get; set; }
+
+        public IClock Clock { get; set; }
+
+        public IBoolState State { get; set; }
+        public bool? InitialState { get; set; }
+        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
+        public bool HaveCache { get; set; }
+
+        public Element[] DependsOn { get; set; }
+
+        public void Compile()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Calculate()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+    }
+
     public class XorGateSimulation : ISimulation
     {
         #region Constructor
@@ -2428,6 +928,409 @@ namespace Sheet.Simulation
         #endregion
     }
 
+    public class MemoryResetPrioritySimulation : ISimulation
+    {
+        #region Constructor
+
+        public MemoryResetPrioritySimulation()
+            : base()
+        {
+            this.InitialState = null;
+        }
+
+        #endregion
+
+        #region ISimulation
+
+        public Element Element { get; set; }
+
+        public IClock Clock { get; set; }
+
+        public IBoolState State { get; set; }
+        public bool? InitialState { get; set; }
+        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
+        public bool HaveCache { get; set; }
+
+        public Element[] DependsOn { get; set; }
+
+        public void Compile()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Calculate()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+    }
+
+    public class MemorySetPrioritySimulation : ISimulation
+    {
+        #region Constructor
+
+        public MemorySetPrioritySimulation()
+            : base()
+        {
+            this.InitialState = null;
+        }
+
+        #endregion
+
+        #region ISimulation
+
+        public Element Element { get; set; }
+
+        public IClock Clock { get; set; }
+
+        public IBoolState State { get; set; }
+        public bool? InitialState { get; set; }
+        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
+        public bool HaveCache { get; set; }
+
+        public Element[] DependsOn { get; set; }
+
+        public void Compile()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Calculate()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+    }
+
+    public class TimerOnSimulation : ISimulation
+    {
+        #region Constructor
+
+        public TimerOnSimulation()
+            : base()
+        {
+            this.InitialState = null;
+        }
+
+        #endregion
+
+        #region ISimulation
+
+        public Element Element { get; set; }
+
+        public IClock Clock { get; set; }
+
+        public IBoolState State { get; set; }
+        public bool? InitialState { get; set; }
+        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
+        public bool HaveCache { get; set; }
+
+        public Element[] DependsOn { get; set; }
+
+        public void Compile()
+        {
+            if (HaveCache)
+                Reset();
+
+            // only one input is allowed for timer
+            var inputs = Element.Children.Cast<Pin>().Where(pin => pin.Connections != null && pin.Type == PinType.Input);
+
+            if (inputs == null || inputs.Count() != 1)
+            {
+                if (SimulationSettings.EnableDebug)
+                {
+                    Debug.Print("No Valid Input for Id: {0} | State: {1}", Element.ElementId, State.State);
+                }
+
+                return;
+            }
+
+            // get all connected inputs with possible state
+            var connections = inputs.First().Connections.Where(x => x.Item1.Type == PinType.Output);
+
+            // set ISimulation dependencies (used for topological sort)
+            DependsOn = connections.Where(x => x.Item1 != null).Select(y => y.Item1.SimulationParent).Take(1).ToArray();
+
+            if (SimulationSettings.EnableDebug)
+            {
+                foreach (var connection in connections)
+                {
+                    Debug.Print("Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
+                    connection.Item1.ElementId,
+                    connection.Item2,
+                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
+                    connection.Item1.Type);
+                }
+            }
+
+            // get all connected inputs with state
+            var states = connections.Select(x => new Tuple<IBoolState, bool>((x.Item1.SimulationParent as IStateSimulation).Simulation.State, x.Item2)).ToArray();
+
+            if (states.Length == 1)
+            {
+                StatesCache = states;
+                HaveCache = true;
+            }
+            else
+            {
+                // invalidate state
+                State = null;
+
+                StatesCache = null;
+                HaveCache = false;
+            }
+        }
+
+        private bool IsEnabled;
+        private long EndCycle;
+
+        public void Calculate()
+        {
+            if (HaveCache)
+            {
+                // calculate new state
+                var first = StatesCache[0];
+                bool? enableState = first.Item2 ? !(first.Item1.State) : first.Item1.State;
+
+                switch (enableState)
+                {
+                    case true:
+                        {
+                            if (IsEnabled)
+                            {
+                                if (Clock.Cycle >= EndCycle && State.State != true)
+                                {
+                                    State.State = true;
+                                }
+                            }
+                            else
+                            {
+                                // Delay -> in seconds
+                                // Clock.Cycle
+                                // Clock.Resolution -> in milsisecond
+                                long cyclesDelay = (long)((Element as ITimer).Delay * 1000) / Clock.Resolution;
+                                EndCycle = Clock.Cycle + cyclesDelay;
+
+                                IsEnabled = true;
+
+                                if (Clock.Cycle >= EndCycle)
+                                {
+                                    State.State = true;
+                                }
+                            }
+                        }
+                        break;
+                    case false:
+                        {
+                            IsEnabled = false;
+                            State.State = false;
+                        }
+                        break;
+                    case null:
+                        {
+                            IsEnabled = false;
+                            State.State = null;
+                        }
+                        break;
+                }
+
+                if (SimulationSettings.EnableDebug)
+                {
+                    Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
+                    Debug.Print("");
+                }
+            }
+        }
+
+        public void Reset()
+        {
+            HaveCache = false;
+            StatesCache = null;
+            State = null;
+            Clock = null;
+        }
+
+        #endregion
+    }
+
+    public class TimerOffSimulation : ISimulation
+    {
+        #region Constructor
+
+        public TimerOffSimulation()
+            : base()
+        {
+            this.InitialState = null;
+        }
+
+        #endregion
+
+        #region ISimulation
+
+        public Element Element { get; set; }
+
+        public IClock Clock { get; set; }
+
+        public IBoolState State { get; set; }
+        public bool? InitialState { get; set; }
+        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
+        public bool HaveCache { get; set; }
+
+        public Element[] DependsOn { get; set; }
+
+        public void Compile()
+        {
+            if (HaveCache)
+                Reset();
+
+            // only one input is allowed for timer
+            var inputs = Element.Children.Cast<Pin>().Where(pin => pin.Connections != null && pin.Type == PinType.Input);
+
+            if (inputs == null || inputs.Count() != 1)
+            {
+                if (SimulationSettings.EnableDebug)
+                {
+                    Debug.Print("No Valid Input for Id: {0} | State: {1}", Element.ElementId, State.State);
+                }
+
+                return;
+            }
+
+            // get all connected inputs with possible state
+            var connections = inputs.First().Connections.Where(x => x.Item1.Type == PinType.Output);
+
+            // set ISimulation dependencies (used for topological sort)
+            DependsOn = connections.Where(x => x.Item1 != null).Select(y => y.Item1.SimulationParent).Take(1).ToArray();
+
+            if (SimulationSettings.EnableDebug)
+            {
+                foreach (var connection in connections)
+                {
+                    Debug.Print("Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
+                    connection.Item1.ElementId,
+                    connection.Item2,
+                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
+                    connection.Item1.Type);
+                }
+            }
+
+            // get all connected inputs with state
+            var states = connections.Select(x => new Tuple<IBoolState, bool>((x.Item1.SimulationParent as IStateSimulation).Simulation.State, x.Item2)).ToArray();
+
+            if (states.Length == 1)
+            {
+                StatesCache = states;
+                HaveCache = true;
+            }
+            else
+            {
+                // invalidate state
+                State = null;
+
+                StatesCache = null;
+                HaveCache = false;
+            }
+        }
+
+        private bool IsEnabled;
+        private bool IsLowEnabled;
+        private long EndCycle;
+
+        public void Calculate()
+        {
+            if (HaveCache)
+            {
+                // calculate new state
+                var first = StatesCache[0];
+                bool? enableState = first.Item2 ? !(first.Item1.State) : first.Item1.State;
+
+                switch (enableState)
+                {
+                    case true:
+                        {
+                            if (IsEnabled == false && IsLowEnabled == false)
+                            {
+                                State.State = true;
+                                IsEnabled = true;
+                                IsLowEnabled = false;
+                            }
+                            else if (IsEnabled == true && IsLowEnabled == true && State.State != false)
+                            {
+                                if (Clock.Cycle >= EndCycle)
+                                {
+                                    State.State = false;
+                                    IsEnabled = false;
+                                    IsLowEnabled = false;
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    case false:
+                        {
+                            if (IsEnabled == true && IsLowEnabled == false)
+                            {
+                                // Delay -> in seconds
+                                // Clock.Cycle
+                                // Clock.Resolution -> in milsisecond
+                                long cyclesDelay = (long)((Element as ITimer).Delay * 1000) / Clock.Resolution;
+                                EndCycle = Clock.Cycle + cyclesDelay;
+
+                                IsLowEnabled = true;
+                                break;
+                            }
+                            else if (IsEnabled == true && IsLowEnabled == true && State.State != false)
+                            {
+                                if (Clock.Cycle >= EndCycle)
+                                {
+                                    State.State = false;
+                                    IsEnabled = false;
+                                    IsLowEnabled = false;
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    case null:
+                        {
+                            IsEnabled = false;
+                            IsLowEnabled = false;
+                            State.State = null;
+                        }
+                        break;
+                }
+
+                if (SimulationSettings.EnableDebug)
+                {
+                    Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
+                    Debug.Print("");
+                }
+            }
+        }
+
+        public void Reset()
+        {
+            HaveCache = false;
+            StatesCache = null;
+            State = null;
+            Clock = null;
+        }
+
+        #endregion
+    }
+
     public class TimerPulseSimulation : ISimulation
     {
         #region Constructor
@@ -2465,7 +1368,7 @@ namespace Sheet.Simulation
             {
                 if (SimulationSettings.EnableDebug)
                 {
-                    System.Diagnostics.Debug.Print("No Valid Input for Id: {0} | State: {1}", Element.ElementId, State.State);
+                    Debug.Print("No Valid Input for Id: {0} | State: {1}", Element.ElementId, State.State);
                 }
 
                 return;
@@ -2481,7 +1384,7 @@ namespace Sheet.Simulation
             {
                 foreach (var connection in connections)
                 {
-                    System.Diagnostics.Debug.Print("Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
+                    Debug.Print("Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
                     connection.Item1.ElementId,
                     connection.Item2,
                     (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
@@ -2586,8 +1489,8 @@ namespace Sheet.Simulation
 
                 if (SimulationSettings.EnableDebug)
                 {
-                    System.Diagnostics.Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
-                    System.Diagnostics.Debug.Print("");
+                    Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
+                    Debug.Print("");
                 }
             }
         }
@@ -2602,948 +1505,6 @@ namespace Sheet.Simulation
 
         #endregion
     }
-
-    public class TimerOnSimulation : ISimulation
-    {
-        #region Constructor
-
-        public TimerOnSimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            if (HaveCache)
-                Reset();
-
-            // only one input is allowed for timer
-            var inputs = Element.Children.Cast<Pin>().Where(pin => pin.Connections != null && pin.Type == PinType.Input);
-
-            if (inputs == null || inputs.Count() != 1)
-            {
-                if (SimulationSettings.EnableDebug)
-                {
-                    System.Diagnostics.Debug.Print("No Valid Input for Id: {0} | State: {1}", Element.ElementId, State.State);
-                }
-
-                return;
-            }
-
-            // get all connected inputs with possible state
-            var connections = inputs.First().Connections.Where(x => x.Item1.Type == PinType.Output);
-
-            // set ISimulation dependencies (used for topological sort)
-            DependsOn = connections.Where(x => x.Item1 != null).Select(y => y.Item1.SimulationParent).Take(1).ToArray();
-
-            if (SimulationSettings.EnableDebug)
-            {
-                foreach (var connection in connections)
-                {
-                    System.Diagnostics.Debug.Print("Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
-                    connection.Item1.ElementId,
-                    connection.Item2,
-                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
-                    connection.Item1.Type);
-                }
-            }
-
-            // get all connected inputs with state
-            var states = connections.Select(x => new Tuple<IBoolState, bool>((x.Item1.SimulationParent as IStateSimulation).Simulation.State, x.Item2)).ToArray();
-
-            if (states.Length == 1)
-            {
-                StatesCache = states;
-                HaveCache = true;
-            }
-            else
-            {
-                // invalidate state
-                State = null;
-
-                StatesCache = null;
-                HaveCache = false;
-            }
-        }
-
-        private bool IsEnabled;
-        private long EndCycle;
-
-        public void Calculate()
-        {
-            if (HaveCache)
-            {
-                // calculate new state
-                var first = StatesCache[0];
-                bool? enableState = first.Item2 ? !(first.Item1.State) : first.Item1.State;
-
-                switch (enableState)
-                {
-                    case true:
-                        {
-                            if (IsEnabled)
-                            {
-                                if (Clock.Cycle >= EndCycle && State.State != true)
-                                {
-                                    State.State = true;
-                                }
-                            }
-                            else
-                            {
-                                // Delay -> in seconds
-                                // Clock.Cycle
-                                // Clock.Resolution -> in milsisecond
-                                long cyclesDelay = (long)((Element as ITimer).Delay * 1000) / Clock.Resolution;
-                                EndCycle = Clock.Cycle + cyclesDelay;
-
-                                IsEnabled = true;
-
-                                if (Clock.Cycle >= EndCycle)
-                                {
-                                    State.State = true;
-                                }
-                            }
-                        }
-                        break;
-                    case false:
-                        {
-                            IsEnabled = false;
-                            State.State = false;
-                        }
-                        break;
-                    case null:
-                        {
-                            IsEnabled = false;
-                            State.State = null;
-                        }
-                        break;
-                }
-
-                if (SimulationSettings.EnableDebug)
-                {
-                    System.Diagnostics.Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
-                    System.Diagnostics.Debug.Print("");
-                }
-            }
-        }
-
-        public void Reset()
-        {
-            HaveCache = false;
-            StatesCache = null;
-            State = null;
-            Clock = null;
-        }
-
-        #endregion
-    }
-
-    public class TimerOffSimulation : ISimulation
-    {
-        #region Constructor
-
-        public TimerOffSimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            if (HaveCache)
-                Reset();
-
-            // only one input is allowed for timer
-            var inputs = Element.Children.Cast<Pin>().Where(pin => pin.Connections != null && pin.Type == PinType.Input);
-
-            if (inputs == null || inputs.Count() != 1)
-            {
-                if (SimulationSettings.EnableDebug)
-                {
-                    System.Diagnostics.Debug.Print("No Valid Input for Id: {0} | State: {1}", Element.ElementId, State.State);
-                }
-
-                return;
-            }
-
-            // get all connected inputs with possible state
-            var connections = inputs.First().Connections.Where(x => x.Item1.Type == PinType.Output);
-
-            // set ISimulation dependencies (used for topological sort)
-            DependsOn = connections.Where(x => x.Item1 != null).Select(y => y.Item1.SimulationParent).Take(1).ToArray();
-
-            if (SimulationSettings.EnableDebug)
-            {
-                foreach (var connection in connections)
-                {
-                    System.Diagnostics.Debug.Print("Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
-                    connection.Item1.ElementId,
-                    connection.Item2,
-                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
-                    connection.Item1.Type);
-                }
-            }
-
-            // get all connected inputs with state
-            var states = connections.Select(x => new Tuple<IBoolState, bool>((x.Item1.SimulationParent as IStateSimulation).Simulation.State, x.Item2)).ToArray();
-
-            if (states.Length == 1)
-            {
-                StatesCache = states;
-                HaveCache = true;
-            }
-            else
-            {
-                // invalidate state
-                State = null;
-
-                StatesCache = null;
-                HaveCache = false;
-            }
-        }
-
-        private bool IsEnabled;
-        private bool IsLowEnabled;
-        private long EndCycle;
-
-        public void Calculate()
-        {
-            if (HaveCache)
-            {
-                // calculate new state
-                var first = StatesCache[0];
-                bool? enableState = first.Item2 ? !(first.Item1.State) : first.Item1.State;
-
-                switch (enableState)
-                {
-                    case true:
-                        {
-                            if (IsEnabled == false && IsLowEnabled == false)
-                            {
-                                State.State = true;
-                                IsEnabled = true;
-                                IsLowEnabled = false;
-                            }
-                            else if (IsEnabled == true && IsLowEnabled == true && State.State != false)
-                            {
-                                if (Clock.Cycle >= EndCycle)
-                                {
-                                    State.State = false;
-                                    IsEnabled = false;
-                                    IsLowEnabled = false;
-                                    break;
-                                }
-                            }
-                        }
-                        break;
-                    case false:
-                        {
-                            if (IsEnabled == true && IsLowEnabled == false)
-                            {
-                                // Delay -> in seconds
-                                // Clock.Cycle
-                                // Clock.Resolution -> in milsisecond
-                                long cyclesDelay = (long)((Element as ITimer).Delay * 1000) / Clock.Resolution;
-                                EndCycle = Clock.Cycle + cyclesDelay;
-
-                                IsLowEnabled = true;
-                                break;
-                            }
-                            else if (IsEnabled == true && IsLowEnabled == true && State.State != false)
-                            {
-                                if (Clock.Cycle >= EndCycle)
-                                {
-                                    State.State = false;
-                                    IsEnabled = false;
-                                    IsLowEnabled = false;
-                                    break;
-                                }
-                            }
-                        }
-                        break;
-                    case null:
-                        {
-                            IsEnabled = false;
-                            IsLowEnabled = false;
-                            State.State = null;
-                        }
-                        break;
-                }
-
-                if (SimulationSettings.EnableDebug)
-                {
-                    System.Diagnostics.Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
-                    System.Diagnostics.Debug.Print("");
-                }
-            }
-        }
-
-        public void Reset()
-        {
-            HaveCache = false;
-            StatesCache = null;
-            State = null;
-            Clock = null;
-        }
-
-        #endregion
-    }
-
-    public class TagSimulation : NotifyObject, ISimulation
-    {
-        #region Constructor
-
-        public TagSimulation()
-            : base()
-        {
-            this.InitialState = false;
-        }
-
-        #endregion
-
-        #region Properties
-
-        public Element Element { get; set; }
-
-        #endregion
-
-        #region ISimulation
-
-        public IClock Clock { get; set; }
-
-        public IBoolState state;
-
-        public IBoolState State
-        {
-            get { return state; }
-            set
-            {
-                if (value != state)
-                {
-                    state = value;
-                    Notify("State");
-                }
-            }
-        }
-
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            if (HaveCache)
-                Reset();
-
-            var tag = Element as Tag;
-
-            // TODO: Tag can only have one input
-            Pin input = tag.Children.Cast<Pin>().Where(x => x.Type == PinType.Input && x.Connections != null && x.Connections.Length > 0).FirstOrDefault();
-            //IEnumerable<Pin> outputs = tag.Children.Cast<Pin>().Where(x => x.Type == PinType.Output);
-
-            if (input == null || input.Connections == null || input.Connections.Length <= 0)
-            {
-                if (SimulationSettings.EnableDebug)
-                {
-                    System.Diagnostics.Debug.Print("No Valid Input/Connections for Id: {0} | State: {1}", Element.ElementId, State.State);
-                }
-
-                return;
-            }
-
-            // get all connected inputs with possible state
-            var connections = input.Connections.Where(x => x.Item1.Type == PinType.Output);
-
-            // set ISimulation dependencies (used for topological sort)
-            DependsOn = connections.Where(x => x.Item1 != null).Select(y => y.Item1.SimulationParent).Take(1).ToArray();
-
-            if (SimulationSettings.EnableDebug)
-            {
-                foreach (var connection in connections)
-                {
-                    System.Diagnostics.Debug.Print("Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
-                    connection.Item1.ElementId,
-                    connection.Item2,
-                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
-                    connection.Item1.Type);
-                }
-            }
-
-            // get all connected inputs with state
-            var states = connections.Select(x => new Tuple<IBoolState, bool>((x.Item1.SimulationParent as IStateSimulation).Simulation.State, x.Item2)).ToArray();
-
-            if (states.Length == 1)
-            {
-                StatesCache = states;
-                HaveCache = true;
-            }
-            else
-            {
-                // invalidate state
-                State = null;
-
-                StatesCache = null;
-                HaveCache = false;
-            }
-        }
-
-        public void Calculate()
-        {
-            if (HaveCache)
-            {
-                // calculate new state
-                var first = StatesCache[0];
-
-                State.State = first.Item2 ? !(first.Item1.State) : first.Item1.State;
-
-                if (SimulationSettings.EnableDebug)
-                {
-                    System.Diagnostics.Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
-                    System.Diagnostics.Debug.Print("");
-                }
-            }
-        }
-
-        public void Reset()
-        {
-            HaveCache = false;
-            StatesCache = null;
-            State = null;
-            Clock = null;
-        }
-
-        #endregion
-    }
-
-    public class OrGateSimulation : ISimulation
-    {
-        #region Constructor
-
-        public OrGateSimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            if (HaveCache)
-                Reset();
-
-            // get all connected inputs with possible state
-            var connections = Element.Children.Cast<Pin>()
-                                              .Where(pin => pin.Connections != null && pin.Type == PinType.Input)
-                                              .SelectMany(pin => pin.Connections)
-                                              .Where(x => x.Item1.Type == PinType.Output);
-
-            // set ISimulation dependencies (used for topological sort)
-            DependsOn = connections.Select(y => y.Item1.SimulationParent).ToArray();
-
-            if (SimulationSettings.EnableDebug)
-            {
-                foreach (var connection in connections)
-                {
-                    System.Diagnostics.Debug.Print("Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
-                    connection.Item1.ElementId,
-                    connection.Item2,
-                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
-                    connection.Item1.Type);
-                }
-            }
-
-            // get all connected inputs with state, where Tuple<IState,bool> is IState and Inverted
-            var states = connections.Select(x => new Tuple<IBoolState, bool>((x.Item1.SimulationParent as IStateSimulation).Simulation.State, x.Item2)).ToArray();
-
-            if (states.Length > 0)
-            {
-                StatesCache = states;
-                HaveCache = true;
-            }
-            else
-            {
-                // invalidate state
-                State = null;
-
-                StatesCache = null;
-                HaveCache = false;
-            }
-        }
-
-        public void Calculate()
-        {
-            if (HaveCache)
-            {
-                // calculate new state
-                State.State = CalculateState(StatesCache);
-
-                if (SimulationSettings.EnableDebug)
-                {
-                    System.Diagnostics.Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
-                    System.Diagnostics.Debug.Print("");
-                }
-            }
-        }
-
-        private static bool? CalculateState(Tuple<IBoolState, bool>[] states)
-        {
-            int lenght = states.Length;
-            if (lenght == 1)
-                return null;
-
-            bool? result = null;
-            for (int i = 0; i < lenght; i++)
-            {
-                var item = states[i];
-                var state = item.Item1.State;
-                var isInverted = item.Item2;
-
-                if (i == 0)
-                    result = isInverted ? !(state) : state;
-                else
-                    result |= isInverted ? !(state) : state;
-            }
-
-            return result;
-        }
-
-        public void Reset()
-        {
-            HaveCache = false;
-            StatesCache = null;
-            State = null;
-            Clock = null;
-        }
-
-        #endregion
-    }
-
-    public class NotGateSimulation : ISimulation
-    {
-        #region Constructor
-
-        public NotGateSimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }
-
-    public class NorGateSimulation : ISimulation
-    {
-        #region Constructor
-
-        public NorGateSimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }
-
-    public class NandGateSimulation : ISimulation
-    {
-        #region Constructor
-
-        public NandGateSimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }
-
-    public class MemorySetPrioritySimulation : ISimulation
-    {
-        #region Constructor
-
-        public MemorySetPrioritySimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }
-
-    public class MemoryResetPrioritySimulation : ISimulation
-    {
-        #region Constructor
-
-        public MemoryResetPrioritySimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }
-
-    public class BufferGateSimulation : ISimulation
-    {
-        #region Constructor
-
-        public BufferGateSimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }
-
-    public class AndGateSimulation : ISimulation
-    {
-        #region Constructor
-
-        public AndGateSimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            if (HaveCache)
-                Reset();
-
-            // get all connected inputs with possible state
-            var connections = Element.Children.Cast<Pin>()
-                                              .Where(pin => pin.Connections != null && pin.Type == PinType.Input)
-                                              .SelectMany(pin => pin.Connections)
-                                              .Where(x => x.Item1.Type == PinType.Output);
-
-            // set ISimulation dependencies (used for topological sort)
-            DependsOn = connections.Select(y => y.Item1.SimulationParent).ToArray();
-
-            if (SimulationSettings.EnableDebug)
-            {
-                foreach (var connection in connections)
-                {
-                    System.Diagnostics.Debug.Print("Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
-                    connection.Item1.ElementId,
-                    connection.Item2,
-                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
-                    connection.Item1.Type);
-                }
-            }
-
-            // get all connected inputs with state, where Tuple<IState,bool> is IState and Inverted
-            var states = connections.Select(x => new Tuple<IBoolState, bool>((x.Item1.SimulationParent as IStateSimulation).Simulation.State, x.Item2)).ToArray();
-
-            if (states.Length > 0)
-            {
-                StatesCache = states;
-                HaveCache = true;
-            }
-            else
-            {
-                // invalidate state
-                State = null;
-
-                StatesCache = null;
-                HaveCache = false;
-            }
-        }
-
-        public void Calculate()
-        {
-            if (HaveCache)
-            {
-                // calculate new state
-                State.State = CalculateState(StatesCache);
-
-                if (SimulationSettings.EnableDebug)
-                {
-                    System.Diagnostics.Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
-                    System.Diagnostics.Debug.Print("");
-                }
-            }
-        }
-
-        private static bool? CalculateState(Tuple<IBoolState, bool>[] states)
-        {
-            int lenght = states.Length;
-            if (lenght == 1)
-                return null;
-
-            bool? result = null;
-            for (int i = 0; i < lenght; i++)
-            {
-                var item = states[i];
-                var state = item.Item1.State;
-                var isInverted = item.Item2;
-
-                if (i == 0)
-                    result = isInverted ? !(state) : state;
-                else
-                    result &= isInverted ? !(state) : state;
-            }
-
-            return result;
-        }
-
-        public void Reset()
-        {
-            HaveCache = false;
-            StatesCache = null;
-            State = null;
-            Clock = null;
-        }
-
-        #endregion
-    }
-
-
-
-
-
 
     #endregion
 
@@ -3567,40 +1528,10 @@ namespace Sheet.Simulation
         public int Resolution { get; set; }
     }
 
-    public class BoolState : NotifyObject, IBoolState
+    public class BoolState : IBoolState
     {
-        #region IState
-
-        public bool? previousState;
-        public bool? state;
-
-        public bool? PreviousState
-        {
-            get { return previousState; }
-            set
-            {
-                if (value != previousState)
-                {
-                    previousState = value;
-                    Notify("PreviousState");
-                }
-            }
-        }
-
-        public bool? State
-        {
-            get { return state; }
-            set
-            {
-                if (value != state)
-                {
-                    state = value;
-                    Notify("State");
-                }
-            }
-        }
-
-        #endregion
+        public bool? PreviousState { get; set; }
+        public bool? State { get; set; }
     }
 
     public static class SimulationSettings
@@ -3627,7 +1558,7 @@ namespace Sheet.Simulation
 
                 if (SimulationSettings.EnableDebug)
                 {
-                    System.Diagnostics.Debug.Print("{0}    Pin: {1} | Inverted: {2} | SimulationParent: {3} | Type: {4}",
+                    Debug.Print("{0}    Pin: {1} | Inverted: {2} | SimulationParent: {3} | Type: {4}",
                     new string(' ', level),
                     p.Item1.ElementId,
                     p.Item2,
@@ -3682,9 +1613,9 @@ namespace Sheet.Simulation
         {
             if (SimulationSettings.EnableDebug)
             {
-                System.Diagnostics.Debug.Print("");
-                System.Diagnostics.Debug.Print("--- FindConnections(), elements.Count: {0}", elements.Count());
-                System.Diagnostics.Debug.Print("");
+                Debug.Print("");
+                Debug.Print("--- FindConnections(), elements.Count: {0}", elements.Count());
+                Debug.Print("");
             }
 
             var pinToWireDict = elements.PinToWireConections();
@@ -3703,7 +1634,7 @@ namespace Sheet.Simulation
 
                 if (SimulationSettings.EnableDebug)
                 {
-                    System.Diagnostics.Debug.Print("Pin  {0} | SimulationParent: {1} | Type: {2}",
+                    Debug.Print("Pin  {0} | SimulationParent: {1} | Type: {2}",
                         pin.ElementId,
                         (pin.SimulationParent != null) ? pin.SimulationParent.ElementId : UInt32.MaxValue,
                         pin.Type);
@@ -3721,7 +1652,7 @@ namespace Sheet.Simulation
 
             if (SimulationSettings.EnableDebug)
             {
-                System.Diagnostics.Debug.Print("");
+                Debug.Print("");
             }
 
             pinToWireDict = null;
@@ -3844,14 +1775,14 @@ namespace Sheet.Simulation
 
                         if (SimulationSettings.EnableDebug)
                         {
-                            System.Diagnostics.Debug.Print("{0}{1} -> {2}", level, connection.Item1.ElementId, connection.Item1.Type);
+                            Debug.Print("{0}{1} -> {2}", level, connection.Item1.ElementId, connection.Item1.Type);
                         }
                     }
                     else
                     {
                         if (SimulationSettings.EnableDebug)
                         {
-                            System.Diagnostics.Debug.Print("{0}(*) {1} -> {2}", level, connection.Item1.ElementId, connection.Item1.Type);
+                            Debug.Print("{0}(*) {1} -> {2}", level, connection.Item1.ElementId, connection.Item1.Type);
                         }
                     }
 
@@ -3879,7 +1810,7 @@ namespace Sheet.Simulation
 
                     if (SimulationSettings.EnableDebug)
                     {
-                        System.Diagnostics.Debug.Print("{0}{1} -> {2}", level, pin.ElementId, pin.Type);
+                        Debug.Print("{0}{1} -> {2}", level, pin.ElementId, pin.Type);
                     }
                 }
 
@@ -3912,14 +1843,14 @@ namespace Sheet.Simulation
 
                 if (SimulationSettings.EnableDebug)
                 {
-                    System.Diagnostics.Debug.Print("+ {0} -> {1}", connection.ElementId, connection.Type);
+                    Debug.Print("+ {0} -> {1}", connection.ElementId, connection.Type);
                 }
 
                 ProcessInput(connection, "  ");
 
                 if (SimulationSettings.EnableDebug)
                 {
-                    System.Diagnostics.Debug.Print("");
+                    Debug.Print("");
                 }
             }
         }
@@ -3945,8 +1876,8 @@ namespace Sheet.Simulation
             {
                 if (SimulationSettings.EnableDebug)
                 {
-                    System.Diagnostics.Debug.Print("--- warning: no ISimulation elements ---");
-                    System.Diagnostics.Debug.Print("");
+                    Debug.Print("--- warning: no ISimulation elements ---");
+                    Debug.Print("");
                 }
 
                 return;
@@ -3958,8 +1889,8 @@ namespace Sheet.Simulation
             {
                 if (SimulationSettings.EnableDebug)
                 {
-                    System.Diagnostics.Debug.Print("--- compilation: {0} | Type: {1} ---", simulations[i].Element.ElementId, simulations[i].GetType());
-                    System.Diagnostics.Debug.Print("");
+                    Debug.Print("--- compilation: {0} | Type: {1} ---", simulations[i].Element.ElementId, simulations[i].GetType());
+                    Debug.Print("");
                 }
 
                 simulations[i].Compile();
@@ -3968,7 +1899,7 @@ namespace Sheet.Simulation
 
                 if (SimulationSettings.EnableDebug)
                 {
-                    System.Diagnostics.Debug.Print("");
+                    Debug.Print("");
                 }
             }
         }
@@ -3977,15 +1908,15 @@ namespace Sheet.Simulation
         {
             if (SimulationSettings.EnableDebug)
             {
-                System.Diagnostics.Debug.Print("");
+                Debug.Print("");
             }
 
             if (simulations == null)
             {
                 if (SimulationSettings.EnableDebug)
                 {
-                    System.Diagnostics.Debug.Print("--- warning: no ISimulation elements ---");
-                    System.Diagnostics.Debug.Print("");
+                    Debug.Print("--- warning: no ISimulation elements ---");
+                    Debug.Print("");
                 }
 
                 return;
@@ -3995,7 +1926,7 @@ namespace Sheet.Simulation
 
             if (SimulationSettings.EnableDebug)
             {
-                System.Diagnostics.Debug.Print("");
+                Debug.Print("");
             }
 
             var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -4004,8 +1935,8 @@ namespace Sheet.Simulation
             {
                 if (SimulationSettings.EnableDebug)
                 {
-                    System.Diagnostics.Debug.Print("--- simulation: {0} | Type: {1} ---", simulations[i].Element.ElementId, simulations[i].GetType());
-                    System.Diagnostics.Debug.Print("");
+                    Debug.Print("--- simulation: {0} | Type: {1} ---", simulations[i].Element.ElementId, simulations[i].GetType());
+                    Debug.Print("");
                 }
 
                 simulations[i].Calculate();
@@ -4015,7 +1946,7 @@ namespace Sheet.Simulation
 
             if (SimulationSettings.EnableDebug)
             {
-                System.Diagnostics.Debug.Print("Calculate() done in: {0}ms | {1} elements", sw.Elapsed.TotalMilliseconds, lenght);
+                Debug.Print("Calculate() done in: {0}ms | {1} elements", sw.Elapsed.TotalMilliseconds, lenght);
             }
         }
 
@@ -4049,8 +1980,8 @@ namespace Sheet.Simulation
 
             if (SimulationSettings.EnableDebug)
             {
-                System.Diagnostics.Debug.Print("--- elements with input connected ---");
-                System.Diagnostics.Debug.Print("");
+                Debug.Print("--- elements with input connected ---");
+                Debug.Print("");
             }
 
             // -- step 4: get ordered elements for simulation ---
@@ -4066,8 +1997,8 @@ namespace Sheet.Simulation
 
             if (SimulationSettings.EnableDebug)
             {
-                System.Diagnostics.Debug.Print("-- dependencies ---");
-                System.Diagnostics.Debug.Print("");
+                Debug.Print("-- dependencies ---");
+                Debug.Print("");
             }
 
             var sortedSimulations = simulations.TopologicalSort(x =>
@@ -4080,15 +2011,15 @@ namespace Sheet.Simulation
 
             if (SimulationSettings.EnableDebug)
             {
-                System.Diagnostics.Debug.Print("-- sorted dependencies ---");
-                System.Diagnostics.Debug.Print("");
+                Debug.Print("-- sorted dependencies ---");
+                Debug.Print("");
 
                 foreach (var simulation in sortedSimulations)
                 {
-                    System.Diagnostics.Debug.Print("{0}", simulation.Element.ElementId);
+                    Debug.Print("{0}", simulation.Element.ElementId);
                 }
 
-                System.Diagnostics.Debug.Print("");
+                Debug.Print("");
             }
 
             // -- step 8: cache sorted elements
@@ -4112,7 +2043,7 @@ namespace Sheet.Simulation
 
             sw.Stop();
 
-            System.Diagnostics.Debug.Print("Compile() done in: {0}ms", sw.Elapsed.TotalMilliseconds);
+            Debug.Print("Compile() done in: {0}ms", sw.Elapsed.TotalMilliseconds);
 
             return cache;
         }
@@ -4168,14 +2099,14 @@ namespace Sheet.Simulation
             {
                 if (SimulationSettings.EnableDebug)
                 {
-                    System.Diagnostics.Debug.Print("+ {0} depends on:", (item as ISimulation).Element.Name);
+                    Debug.Print("+ {0} depends on:", (item as ISimulation).Element.Name);
                 }
 
                 Visit(item, visited, sorted, dependencies);
 
                 if (SimulationSettings.EnableDebug)
                 {
-                    System.Diagnostics.Debug.Print("");
+                    Debug.Print("");
                 }
             }
 
@@ -4196,7 +2127,7 @@ namespace Sheet.Simulation
                     {
                         if (SimulationSettings.EnableDebug)
                         {
-                            System.Diagnostics.Debug.Print("|     {0}", (dep as ISimulation).Element.Name);
+                            Debug.Print("|     {0}", (dep as ISimulation).Element.Name);
                         }
 
                         Visit(dep, visited, sorted, dependencies);
@@ -4211,7 +2142,7 @@ namespace Sheet.Simulation
             }
             //else if (!sorted.Contains(item))
             //{
-            //    System.Diagnostics.Debug.Print("Invalid dependency cycle: {0}", (item as Element).Name);
+            //    Debug.Print("Invalid dependency cycle: {0}", (item as Element).Name);
             //}
         }
 
@@ -4258,9 +2189,9 @@ namespace Sheet.Simulation
                 // get total number of elements for simulation
                 var elements = contexts.SelectMany(x => x.Children).Concat(tags);
 
-                System.Diagnostics.Debug.Print("Simulation for {0} contexts, elements: {1}", contexts.Count(), elements.Count());
-                System.Diagnostics.Debug.Print("Debug Simulation Enabled: {0}", SimulationSettings.EnableDebug);
-                System.Diagnostics.Debug.Print("Have Cache: {0}", CurrentSimulationContext.Cache == null ? false : CurrentSimulationContext.Cache.HaveCache);
+                Debug.Print("Simulation for {0} contexts, elements: {1}", contexts.Count(), elements.Count());
+                Debug.Print("Debug Simulation Enabled: {0}", SimulationSettings.EnableDebug);
+                Debug.Print("Have Cache: {0}", CurrentSimulationContext.Cache == null ? false : CurrentSimulationContext.Cache.HaveCache);
             }
 
             if (CurrentSimulationContext.Cache == null || CurrentSimulationContext.Cache.HaveCache == false)
@@ -4313,7 +2244,7 @@ namespace Sheet.Simulation
                         /*
                         if (Settings.EnableDebug)
                         {
-                            System.Diagnostics.Debug.Print("Cycle {0} | {1}ms | vt:{2} rt:{3} dt:{4} id:{5}",
+                            Debug.Print("Cycle {0} | {1}ms | vt:{2} rt:{3} dt:{4} id:{5}",
                                 SimulationClock.Cycle,
                                 sw.Elapsed.TotalMilliseconds,
                                 virtualTime.TotalMilliseconds,
@@ -4323,7 +2254,7 @@ namespace Sheet.Simulation
                         }
                         */
 
-                        System.Diagnostics.Debug.Print("Cycle {0} | {1}ms | vt:{2} rt:{3} dt:{4} id:{5}",
+                        Debug.Print("Cycle {0} | {1}ms | vt:{2} rt:{3} dt:{4} id:{5}",
                             CurrentSimulationContext.SimulationClock.Cycle,
                             sw.Elapsed.TotalMilliseconds,
                             virtualTime.TotalMilliseconds,
@@ -4342,7 +2273,7 @@ namespace Sheet.Simulation
             string logPath = string.Format("run-{0:yyyy-MM-dd_HH-mm-ss-fff}.log", DateTime.Now);
             var consoleOut = Console.Out;
 
-            System.Diagnostics.Debug.Print("{1}: {0}", message, logPath);
+            Debug.Print("{1}: {0}", message, logPath);
             try
             {
                 using (var writer = new System.IO.StreamWriter(logPath))
@@ -4355,7 +2286,7 @@ namespace Sheet.Simulation
             {
                 Console.SetOut(consoleOut);
             }
-            System.Diagnostics.Debug.Print("Done {0}.", message);
+            Debug.Print("Done {0}.", message);
         }
 
         public static void Run(List<Context> contexts, IEnumerable<Tag> tags, int period, Action update)
