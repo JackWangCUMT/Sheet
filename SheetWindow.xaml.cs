@@ -234,13 +234,12 @@ namespace Sheet
 
         public async void OpenDatabase()
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog()
-            {
-                Filter = FileDialogSettings.DatabaseFilter
-            };
+            var dlg = _serviceLocator.GetInstance<IOpenFileDialog>();
+            dlg.Filter = FileDialogSettings.DatabaseFilter;
+            dlg.FilterIndex = 1;
+            dlg.FileName = "";
 
-            var result = dlg.ShowDialog();
-            if (result.HasValue && result.Value == true)
+            if (dlg.ShowDialog() == true)
             {
                 try
                 {
@@ -663,11 +662,11 @@ namespace Sheet
 
         public async void OpenSolution()
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog()
-            {
-                Filter = FileDialogSettings.SolutionFilter
-            };
-
+            var dlg = _serviceLocator.GetInstance<IOpenFileDialog>();
+            dlg.Filter = FileDialogSettings.SolutionFilter;
+            dlg.FilterIndex = 1;
+            dlg.FileName = "";
+            
             if (dlg.ShowDialog() == true)
             {
                 try
