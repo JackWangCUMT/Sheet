@@ -624,11 +624,10 @@ namespace Sheet
 
         public async void NewSolution()
         {
-            var dlg = new Microsoft.Win32.SaveFileDialog()
-            {
-                Filter = FileDialogSettings.SolutionFilter,
-                FileName = "solution"
-            };
+            var dlg = _serviceLocator.GetInstance<ISaveFileDialog>();
+            dlg.Filter = FileDialogSettings.SolutionFilter;
+            dlg.FilterIndex = 1;
+            dlg.FileName = "solution";
 
             if (dlg.ShowDialog() == true)
             {
