@@ -2360,9 +2360,9 @@ namespace Simulation
 
     #region Test
 
-    public class TestSimulation
+    public class SolutionSimulationRunner
     {
-        #region Properties
+        #region Fields
 
         private Solution _solution;
         private Clock _clock;
@@ -2380,7 +2380,7 @@ namespace Simulation
 
         #region Constructor
 
-        public TestSimulation(Solution solution, int periodInMillisencods = 100)
+        public SolutionSimulationRunner(Solution solution, int periodInMillisencods = 100)
         {
             _solution = solution;
             _periodInMillisencods = periodInMillisencods;
