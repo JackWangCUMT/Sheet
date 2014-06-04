@@ -2348,11 +2348,10 @@ namespace Sheet
 
         public void Export(IEnumerable<BlockItem> blocks)
         {
-            var dlg = new Microsoft.Win32.SaveFileDialog()
-            {
-                Filter = FileDialogSettings.ExportFilter,
-                FileName = "sheet"
-            };
+            var dlg = _serviceLocator.GetInstance<ISaveFileDialog>();
+            dlg.Filter = FileDialogSettings.ExportFilter;
+            dlg.FilterIndex = 1;
+            dlg.FileName = "sheet";
 
             if (dlg.ShowDialog() == true)
             {
