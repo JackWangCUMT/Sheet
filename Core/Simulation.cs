@@ -3737,6 +3737,21 @@ namespace Simulation.Binary
 
     #region BinarySolutionFormat
 
+    public static class BinaryCommandId
+    {
+        public const UInt16 Solution   =  0;
+        public const UInt16 Project    =  1;
+        public const UInt16 Context    =  2;
+        public const UInt16 Pin        =  3;
+        public const UInt16 Signal     =  4;
+        public const UInt16 AndGate    =  5;
+        public const UInt16 OrGate     =  6;
+        public const UInt16 TimerOn    =  7;
+        public const UInt16 TimerOff   =  8;
+        public const UInt16 TimerPulse =  9;
+        public const UInt16 Connect    = 10;
+    }
+
     // command Id: sizeof(UInt16)
     // command data: sizeof(command)
     // ...
@@ -3882,7 +3897,7 @@ namespace Simulation.Binary
                     switch (commandId)
                     {
                         // Solution
-                        case 0:
+                        case BinaryCommandId.Solution:
                             {
                                 UInt32 Id = reader.ReadUInt32();
 
@@ -3891,7 +3906,7 @@ namespace Simulation.Binary
                             }
                             break;
                         // Project
-                        case 1:
+                        case BinaryCommandId.Project:
                             {
                                 UInt32 Id = reader.ReadUInt32();
 
@@ -3900,7 +3915,7 @@ namespace Simulation.Binary
                             }
                             break;
                         // Context
-                        case 2:
+                        case BinaryCommandId.Context:
                             {
                                 UInt32 Id = reader.ReadUInt32();
 
@@ -3909,7 +3924,7 @@ namespace Simulation.Binary
                             }
                             break;
                         // Pin
-                        case 3:
+                        case BinaryCommandId.Pin:
                             {
                                 UInt32 Id = reader.ReadUInt32();
 
@@ -3917,7 +3932,7 @@ namespace Simulation.Binary
                             }
                             break;
                         // Signal
-                        case 4:
+                        case BinaryCommandId.Signal:
                             {
                                 UInt32 Id = reader.ReadUInt32();
                                 UInt32 InputPinId = reader.ReadUInt32();
@@ -3927,7 +3942,7 @@ namespace Simulation.Binary
                             }
                             break;
                         // AndGate
-                        case 5:
+                        case BinaryCommandId.AndGate:
                             {
                                 UInt32 Id = reader.ReadUInt32();
                                 UInt32 LeftPinId = reader.ReadUInt32();
@@ -3939,7 +3954,7 @@ namespace Simulation.Binary
                             }
                             break;
                         // OrGate
-                        case 6:
+                        case BinaryCommandId.OrGate:
                             {
                                 UInt32 Id = reader.ReadUInt32();
                                 UInt32 LeftPinId = reader.ReadUInt32();
@@ -3951,7 +3966,7 @@ namespace Simulation.Binary
                             }
                             break;
                         // TimerOn
-                        case 7:
+                        case BinaryCommandId.TimerOn:
                             {
                                 UInt32 Id = reader.ReadUInt32();
                                 UInt32 LeftPinId = reader.ReadUInt32();
@@ -3964,7 +3979,7 @@ namespace Simulation.Binary
                             }
                             break;
                         // TimerOff
-                        case 8:
+                        case BinaryCommandId.TimerOff:
                             {
                                 UInt32 Id = reader.ReadUInt32();
                                 UInt32 LeftPinId = reader.ReadUInt32();
@@ -3977,7 +3992,7 @@ namespace Simulation.Binary
                             }
                             break;
                         // TimerPulse
-                        case 9:
+                        case BinaryCommandId.TimerPulse:
                             {
                                 UInt32 Id = reader.ReadUInt32();
                                 UInt32 LeftPinId = reader.ReadUInt32();
@@ -3990,7 +4005,7 @@ namespace Simulation.Binary
                             }
                             break;
                         // Connect
-                        case 10:
+                        case BinaryCommandId.Connect:
                             {
                                 UInt32 Id = reader.ReadUInt32();
                                 UInt32 SrcPinId = reader.ReadUInt32();
@@ -4001,6 +4016,8 @@ namespace Simulation.Binary
                                 AddWire(elements, currentContext, ref Id, ref SrcPinId, ref DstPinId, ref InvertStart, ref InvertEnd);
                             }
                             break;
+                        default:
+                            throw new NotSupportedException("Not supported command id.");
                     }
                 }
 
@@ -4456,9 +4473,10 @@ namespace Simulation.Binary
             WriteContext(context, writer);
 
             // write child
-            foreach (var child in context.Children)
+            var elements = context.Children.Where(x => !(x is Wire));
+            foreach (var element in elements)
             {
-                WriteElement(child, writer);
+                WriteElement(element, writer);
             }
 
             // write connections
@@ -4491,6 +4509,8 @@ namespace Simulation.Binary
                 case "TimerPulse":
                     WriteTimerPulse(element, writer);
                     break;
+                default:
+                    throw new NotSupportedException("Not supported element type.");
             }
         }
 
@@ -4507,7 +4527,7 @@ namespace Simulation.Binary
 
         private void WriteDummySolution(BinaryWriter writer)
         {
-            CommandId = 0;
+            CommandId = BinaryCommandId.Solution;
             writer.Write(CommandId);
             writer.Write(ElementId);
             ElementId++;
@@ -4515,7 +4535,7 @@ namespace Simulation.Binary
 
         private void WriteDummyProject(BinaryWriter writer)
         {
-            CommandId = 1;
+            CommandId = BinaryCommandId.Project;
             writer.Write(CommandId);
             writer.Write(ElementId);
             ElementId++;
@@ -4523,7 +4543,7 @@ namespace Simulation.Binary
 
         private void WriteSolution(Solution solution, BinaryWriter writer)
         {
-            CommandId = 0;
+            CommandId = BinaryCommandId.Solution;
             writer.Write(CommandId);
             writer.Write(ElementId);
             Ids.Add(solution.Id, ElementId);
@@ -4532,7 +4552,7 @@ namespace Simulation.Binary
 
         private void WriteProject(Project project, BinaryWriter writer)
         {
-            CommandId = 1;
+            CommandId = BinaryCommandId.Project;
             writer.Write(CommandId);
             writer.Write(ElementId);
             Ids.Add(project.Id, ElementId);
@@ -4541,7 +4561,7 @@ namespace Simulation.Binary
 
         private void WriteContext(Context context, BinaryWriter writer)
         {
-            CommandId = 2;
+            CommandId = BinaryCommandId.Context;
             writer.Write(CommandId);
             writer.Write(ElementId);
             Ids.Add(context.Id, ElementId);
@@ -4553,7 +4573,7 @@ namespace Simulation.Binary
             if (element.Parent == null || element.Parent is Context)
             {
                 // pin id
-                CommandId = 3;
+                CommandId = BinaryCommandId.Pin;
                 writer.Write(CommandId);
                 writer.Write(ElementId);
                 Ids.Add(element.Id, ElementId);
@@ -4564,7 +4584,7 @@ namespace Simulation.Binary
         private void WriteSignal(Element element, BinaryWriter writer)
         {
             // signal id
-            CommandId = 4;
+            CommandId = BinaryCommandId.Signal;
             writer.Write(CommandId);
             writer.Write(ElementId);
             Ids.Add(element.Id, ElementId);
@@ -4588,7 +4608,7 @@ namespace Simulation.Binary
         private void WriteAndGate(Element element, BinaryWriter writer)
         {
             // andgate id
-            CommandId = 5;
+            CommandId = BinaryCommandId.AndGate;
             writer.Write(CommandId);
             writer.Write(ElementId);
             Ids.Add(element.Id, ElementId);
@@ -4626,7 +4646,7 @@ namespace Simulation.Binary
         private void WriteOrGate(Element element, BinaryWriter writer)
         {
             // orgate id
-            CommandId = 6;
+            CommandId = BinaryCommandId.OrGate;
             writer.Write(CommandId);
             writer.Write(ElementId);
             Ids.Add(element.Id, ElementId);
@@ -4664,7 +4684,7 @@ namespace Simulation.Binary
         private void WriteTimerOn(Element element, BinaryWriter writer)
         {
             // timeron id
-            CommandId = 7;
+            CommandId = BinaryCommandId.TimerOn;
             writer.Write(CommandId);
             writer.Write(ElementId);
             Ids.Add(element.Id, ElementId);
@@ -4705,7 +4725,7 @@ namespace Simulation.Binary
         private void WriteTimerOff(Element element, BinaryWriter writer)
         {
             // timeroff id
-            CommandId = 8;
+            CommandId = BinaryCommandId.TimerOff;
             writer.Write(CommandId);
             writer.Write(ElementId);
             Ids.Add(element.Id, ElementId);
@@ -4746,7 +4766,7 @@ namespace Simulation.Binary
         private void WriteTimerPulse(Element element, BinaryWriter writer)
         {
             // timerpulse id
-            CommandId = 9;
+            CommandId = BinaryCommandId.TimerPulse;
             writer.Write(CommandId);
             writer.Write(ElementId);
             Ids.Add(element.Id, ElementId);
@@ -4798,7 +4818,7 @@ namespace Simulation.Binary
             invertEnd = wire.InvertEnd ? TrueByte : FalseByte;
 
             // connect id
-            CommandId = 10;
+            CommandId = BinaryCommandId.Connect;
             writer.Write(CommandId);
             writer.Write(ElementId);
             Ids.Add(wire.Id, ElementId);
