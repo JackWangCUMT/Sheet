@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Simulation.Tests;
 
 namespace Sheet
 {
@@ -601,6 +602,27 @@ namespace Sheet
                         UpdateModeMenu(); 
                     }
                     break;
+                // F5: Start Simulation
+                case Key.F5:
+                    if (none)
+                    {
+                        StartSimulation();
+                    }
+                    break;
+                // F6: Stop Simulation
+                case Key.F6:
+                    if (none)
+                    {
+                        StopSimulation();
+                    }
+                    break;
+                // F7: Restart Simulation
+                case Key.F7:
+                    if (none)
+                    {
+                        RestartSimulation();
+                    }
+                    break;
                 // Q: Invert Line Start
                 case Key.Q:
                     if (none)
@@ -731,6 +753,74 @@ namespace Sheet
 
         #endregion
 
+        #region Simulation
+        
+        private TestDemoSolution demo = null;
+        
+        private void CreateDemoSimulation()
+        {
+            var solution = TestDemoSolution.CreateDemoSolution();
+            demo = new TestDemoSolution(solution, 100);
+            demo.EnableSimulationDebug(false);
+            demo.EnableSimulationLog(false);
+            demo.StartSimulation();
+        } 
+        
+        private void StartSimulation()
+        {
+            try
+            {
+                if (demo == null)
+                {
+                    //var solution = TestDemoSolution.CreateDemoSolution();
+                    
+                    var block = _sheetController.GetContent();
+                    var serializer = new TestSerializer();
+                    var solution = serializer.Serialize(block);
+                    
+                    demo = new TestDemoSolution(solution, 100);
+                    demo.EnableSimulationDebug(false);
+                    demo.EnableSimulationLog(false);
+                    demo.StartSimulation();
+                    
+                    var window = new Window() { Title = "Tags", Width = 300, Height = 500, WindowStartupLocation = WindowStartupLocation.CenterScreen };
+                    window.Content = new TagsControl();
+                    window.DataContext = solution.Tags;
+                    window.Show();
+                }
+            }
+            catch(Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
+        }
+        
+        private void StopSimulation()
+        {
+            try
+            {
+                if (demo != null)
+                {
+                    demo.StopSimulation();
+                    demo = null;
+                }
+            }
+            catch(Exception ex)
+            {
+                Debug.Print(ex.Message);
+                Debug.Print(ex.StackTrace);
+            }
+        }
+        
+        private void RestartSimulation()
+        {
+            StopSimulation();
+            StartSimulation();
+        }
+        
+        #endregion
+        
         #region File Menu Events
 
         private void FileNewSolution_Click(object sender, RoutedEventArgs e)
@@ -961,6 +1051,25 @@ namespace Sheet
 
         #endregion
 
+        #region Simulation Menu Events
+
+        private void SimulationStart_Click(object sender, RoutedEventArgs e)
+        {
+            StartSimulation();
+        }
+
+        private void SimulationStop_Click(object sender, RoutedEventArgs e)
+        {
+            StopSimulation();
+        } 
+
+        private void SimulationRestart_Click(object sender, RoutedEventArgs e)
+        {
+            RestartSimulation();
+        } 
+        
+        #endregion
+        
         #region Logic Menu Events
 
         private void LogicInvertLineStart_Click(object sender, RoutedEventArgs e)
