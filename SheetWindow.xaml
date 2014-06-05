@@ -97,6 +97,12 @@
                 <MenuItem x:Name="ModeText" Header="_Text" InputGestureText="T" Click="ModeText_Click"/>
                 <MenuItem x:Name="ModeImage" Header="Ima_ge" InputGestureText="D" Click="ModeImage_Click"/>
             </MenuItem>
+            <MenuItem Header="_Simulation">
+                <MenuItem x:Name="SimulationStart" Header="_Start" InputGestureText="F5" Click="SimulationStart_Click"/>
+                <MenuItem x:Name="SimulationStop" Header="S_top" InputGestureText="F6" Click="SimulationStop_Click"/>
+                <Separator/>
+                <MenuItem x:Name="SimulationRestart" Header="_Restart" InputGestureText="F7" Click="SimulationRestart_Click"/>
+            </MenuItem>
             <MenuItem Header="_Logic">
                 <MenuItem x:Name="LogicInvertLineStart" Header="Invert Line _Start" InputGestureText="Q" Click="LogicInvertLineStart_Click"/>
                 <MenuItem x:Name="LogicInvertLineEnd" Header="Invert Line _End" InputGestureText="W" Click="LogicInvertLineEnd_Click"/>
