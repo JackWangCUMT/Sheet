@@ -3279,16 +3279,15 @@ namespace Simulation.Tests
         public TestDemoSolution(Solution solution, int period)
         {
             _solution = solution;
-            new TestRenamer().AutoRename(_solution);
             _simulation = new TestSimulation(_solution, period);
         }
 
         public static Solution CreateDemoSolution()
         {
-            var _factory = new TestFactory();
+            var factory = new TestFactory();
         
             // create solution
-            var solution = new Solution() { Id = Guid.NewGuid().ToString(), Name = "solution", DefaultTag = _factory.CreateSignalTag("tag", "", "", "") };
+            var solution = new Solution() { Id = Guid.NewGuid().ToString(), Name = "solution", DefaultTag = factory.CreateSignalTag("tag", "", "", "") };
 
             var project = new Project() { Id = Guid.NewGuid().ToString(), Name = "project", Parent = solution };
             solution.Children.Add(project);
@@ -3297,19 +3296,19 @@ namespace Simulation.Tests
             project.Children.Add(context);
 
             // create tags
-            var tag1 = _factory.CreateSignalTag("tag1", "", "", "");
-            var tag2 = _factory.CreateSignalTag("tag2", "", "", "");
-            var tag3 = _factory.CreateSignalTag("tag3", "", "", "");
+            var tag1 = factory.CreateSignalTag("tag1", "", "", "");
+            var tag2 = factory.CreateSignalTag("tag2", "", "", "");
+            var tag3 = factory.CreateSignalTag("tag3", "", "", "");
             solution.Tags.Add(tag1);
             solution.Tags.Add(tag2);
             solution.Tags.Add(tag3);
 
             // context children
-            var s1 = _factory.CreateSignal(context, 0, 0);
-            var s2 = _factory.CreateSignal(context, 0, 0);
-            var s3 = _factory.CreateSignal(context, 0, 0);
-            var ag1 = _factory.CreateAndGate(context, 0, 0);
-            var p1 = _factory.CreatePin(context, 0, 0, context);
+            var s1 = factory.CreateSignal(context, 0, 0);
+            var s2 = factory.CreateSignal(context, 0, 0);
+            var s3 = factory.CreateSignal(context, 0, 0);
+            var ag1 = factory.CreateAndGate(context, 0, 0);
+            var p1 = factory.CreatePin(context, 0, 0, context);
 
             var o_s1 = s1.Children.Single((e) => e.FactoryName == "O") as Pin;
             var o_s2 = s2.Children.Single((e) => e.FactoryName == "O") as Pin;
@@ -3318,10 +3317,10 @@ namespace Simulation.Tests
             var r_ag1 = ag1.Children.Single((e) => e.FactoryName == "R") as Pin;
             var i_s3 = s1.Children.Single((e) => e.FactoryName == "I") as Pin;
 
-            var w1 = _factory.CreateWire(context, o_s1, p1);
-            var w2 = _factory.CreateWire(context, p1, t_ag1);
-            var w3 = _factory.CreateWire(context, o_s2, l_ag1);
-            var w4 = _factory.CreateWire(context, r_ag1, i_s3);
+            var w1 = factory.CreateWire(context, o_s1, p1);
+            var w2 = factory.CreateWire(context, p1, t_ag1);
+            var w3 = factory.CreateWire(context, o_s2, l_ag1);
+            var w4 = factory.CreateWire(context, r_ag1, i_s3);
 
             // associate tags
             s1.Tag = tag1;
@@ -3352,7 +3351,7 @@ namespace Simulation.Tests
         }
     }
 
-    public class TestSerializer 
+    public class TestSerializer
     {
         private TestFactory _factory = new TestFactory();
         private ObservableCollection<Tag> tags = null;
@@ -3734,10 +3733,9 @@ namespace Simulation.Tests
 namespace Simulation.Binary
 {
     using System.IO;
-    using System.IO.Compression;
     using System.Runtime.InteropServices;
 
-    #region BinaryFileFormat
+    #region BinarySolutionFormat
 
     // command Id: sizeof(UInt16)
     // command data: sizeof(command)
@@ -3823,103 +3821,61 @@ namespace Simulation.Binary
 
     #endregion
 
-    #region BinaryFileReader
+    #region BinarySolutionReader
 
-    public class BinaryFileReader
+    public class BinarySolutionReader
     {
         #region Fields
 
-        private static int sizeOfCommandId = Marshal.SizeOf(typeof(UInt16));
-        private static int sizeOfTotalElements = Marshal.SizeOf(typeof(UInt32));
-        private static Element[] Elements;
-        public static Solution CurrentSolution;
-        public static Project CurrentProject;
-        public static Context CurrentContext;
-
-        #endregion
-
-        #region Compression
-
-        public void CompressFile(string sourcePath, string destinationPath)
-        {
-            using (var inputStream = File.OpenRead(sourcePath))
-            {
-                using (var outputStream = File.Create(destinationPath))
-                {
-                    using (var compressedStream = new GZipStream(outputStream, CompressionMode.Compress))
-                    {
-                        inputStream.CopyTo(compressedStream);
-                    }
-                }
-            }
-        }
-
-        public void DecompressFile(string sourcePath, string destinationPath)
-        {
-            using (var inputStream = File.OpenRead(sourcePath))
-            {
-                using (var outputStream = File.Create(destinationPath))
-                {
-                    using (var deCompressedStream = new GZipStream(outputStream, CompressionMode.Decompress))
-                    {
-                        inputStream.CopyTo(deCompressedStream);
-                    }
-                }
-            }
-        }
+        public static int SizeOfCommandId = Marshal.SizeOf(typeof(UInt16));
+        public static int SizeOfTotalElements = Marshal.SizeOf(typeof(UInt32));
 
         #endregion
 
         #region Open
 
-        public void OpenCompressed(string path)
+        public Solution Open(string path)
         {
-            using (var fileStream = File.OpenRead(path))
+            using (var fs = File.OpenRead(path))
             {
-                using (var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress))
+                using (var ms = new MemoryStream())
                 {
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        gzipStream.CopyTo(memoryStream);
-                        ReadData(memoryStream);
-                    }
+                    fs.CopyTo(ms);
+                    return Read(ms);
                 }
             }
         }
 
-        public void OpenUncompressed(string path)
-        {
-            using (var fileStream = File.OpenRead(path))
-            {
-                using (var memoryStream = new MemoryStream())
-                {
-                    fileStream.CopyTo(memoryStream);
-                    ReadData(memoryStream);
-                }
-            }
-        }
+        #endregion
 
-        private void ReadData(MemoryStream memoryStream)
+        #region Read
+
+        public Solution Read(MemoryStream ms)
         {
-            using (var reader = new BinaryReader(memoryStream))
+            Element[] elements = null;
+            Solution currentSolution = null;
+            Project currentProject = null;
+            Context currentContext = null;
+
+            using (var reader = new BinaryReader(ms))
             {
                 UInt32 totalElements = 0;
                 UInt16 commandId = 0;
 
-                long size = memoryStream.Length;
-                long dataSize = size - sizeOfTotalElements;
+                long size = ms.Length;
+                long dataSize = size - SizeOfTotalElements;
 
                 // get element counter
-                memoryStream.Seek(size - sizeOfTotalElements, SeekOrigin.Begin);
+                ms.Seek(size - SizeOfTotalElements, SeekOrigin.Begin);
 
                 totalElements = reader.ReadUInt32();
 
-                memoryStream.Seek(0, SeekOrigin.Begin);
+                ms.Seek(0, SeekOrigin.Begin);
 
                 // allocate elements array
-                Elements = new Element[totalElements];
+                elements = new Element[totalElements];
 
-                while (memoryStream.Position < dataSize)
+                while (ms.Position < dataSize)
                 {
                     commandId = reader.ReadUInt16();
 
@@ -3930,7 +3886,8 @@ namespace Simulation.Binary
                             {
                                 UInt32 Id = reader.ReadUInt32();
 
-                                AddSolution(ref Id);
+                                var solution = AddSolution(elements, ref Id);
+                                currentSolution = solution;
                             }
                             break;
                         // Project
@@ -3938,7 +3895,8 @@ namespace Simulation.Binary
                             {
                                 UInt32 Id = reader.ReadUInt32();
 
-                                AddProject(ref Id);
+                                var project = AddProject(elements, currentSolution, ref Id);
+                                currentProject = project;
                             }
                             break;
                         // Context
@@ -3946,7 +3904,8 @@ namespace Simulation.Binary
                             {
                                 UInt32 Id = reader.ReadUInt32();
 
-                                AddContext(ref Id);
+                                var context = AddContext(elements, currentProject, ref Id);
+                                currentContext = context;
                             }
                             break;
                         // Pin
@@ -3954,7 +3913,7 @@ namespace Simulation.Binary
                             {
                                 UInt32 Id = reader.ReadUInt32();
 
-                                AddPin(ref Id);
+                                AddPin(elements, currentContext, ref Id);
                             }
                             break;
                         // Signal
@@ -3964,7 +3923,7 @@ namespace Simulation.Binary
                                 UInt32 InputPinId = reader.ReadUInt32();
                                 UInt32 OutputPinId = reader.ReadUInt32();
 
-                                AddSignal(ref Id, ref InputPinId, ref OutputPinId);
+                                AddSignal(elements, currentContext, ref Id, ref InputPinId, ref OutputPinId);
                             }
                             break;
                         // AndGate
@@ -3976,7 +3935,7 @@ namespace Simulation.Binary
                                 UInt32 TopPinId = reader.ReadUInt32();
                                 UInt32 BottomPinId = reader.ReadUInt32();
 
-                                AddAndGate(ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId);
+                                AddAndGate(elements, currentContext, ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId);
                             }
                             break;
                         // OrGate
@@ -3988,7 +3947,7 @@ namespace Simulation.Binary
                                 UInt32 TopPinId = reader.ReadUInt32();
                                 UInt32 BottomPinId = reader.ReadUInt32();
 
-                                AddOrGate(ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId);
+                                AddOrGate(elements, currentContext, ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId);
                             }
                             break;
                         // TimerOn
@@ -4001,7 +3960,7 @@ namespace Simulation.Binary
                                 UInt32 BottomPinId = reader.ReadUInt32();
                                 Single Delay = reader.ReadSingle();
 
-                                AddTimerOn(ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId, ref Delay);
+                                AddTimerOn(elements, currentContext, ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId, ref Delay);
                             }
                             break;
                         // TimerOff
@@ -4014,7 +3973,7 @@ namespace Simulation.Binary
                                 UInt32 BottomPinId = reader.ReadUInt32();
                                 Single Delay = reader.ReadSingle();
 
-                                AddTimerOff(ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId, ref Delay);
+                                AddTimerOff(elements, currentContext, ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId, ref Delay);
                             }
                             break;
                         // TimerPulse
@@ -4027,7 +3986,7 @@ namespace Simulation.Binary
                                 UInt32 BottomPinId = reader.ReadUInt32();
                                 Single Delay = reader.ReadSingle();
 
-                                AddTimerPulse(ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId, ref Delay);
+                                AddTimerPulse(elements, currentContext, ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId, ref Delay);
                             }
                             break;
                         // Connect
@@ -4039,7 +3998,7 @@ namespace Simulation.Binary
                                 Byte InvertStart = reader.ReadByte();
                                 Byte InvertEnd = reader.ReadByte();
 
-                                AddWire(ref Id, ref SrcPinId, ref DstPinId, ref InvertStart, ref InvertEnd);
+                                AddWire(elements, currentContext, ref Id, ref SrcPinId, ref DstPinId, ref InvertStart, ref InvertEnd);
                             }
                             break;
                     }
@@ -4048,24 +4007,25 @@ namespace Simulation.Binary
                 // reset elements cache array
                 for (UInt32 i = 0; i < totalElements; i++)
                 {
-                    Elements[i] = null;
+                    elements[i] = null;
                 }
 
-                Elements = null;
+                elements = null;
             }
+
+            return currentSolution;
         }
 
         #endregion
 
         #region Add
 
-        private void AddWire(ref UInt32 Id, ref UInt32 SrcPinId, ref UInt32 DstPinId, ref Byte InvertStart, ref Byte InvertEnd)
+        private void AddWire(Element[] elements, Context context, ref UInt32 Id, ref UInt32 SrcPinId, ref UInt32 DstPinId, ref Byte InvertStart, ref Byte InvertEnd)
         {
-            var context = CurrentContext;
             var children = context.Children;
 
-            var p_src = Elements[SrcPinId];
-            var p_dst = Elements[DstPinId];
+            var p_src = elements[SrcPinId];
+            var p_dst = elements[DstPinId];
 
             if (p_src != null && p_dst != null && p_src is Pin && p_dst is Pin)
             {
@@ -4083,13 +4043,12 @@ namespace Simulation.Binary
 
                 children.Add(wire);
 
-                Elements[Id] = wire;
+                elements[Id] = wire;
             }
         }
 
-        private void AddTimerPulse(ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId, ref Single Delay)
+        private void AddTimerPulse(Element[] elements, Context context, ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId, ref Single Delay)
         {
-            var context = CurrentContext;
             var children = context.Children;
 
             var tp = new TimerPulse() { Delay = Delay }; //TP
@@ -4123,16 +4082,15 @@ namespace Simulation.Binary
             children.Add(p_left);
             children.Add(p_right);
 
-            Elements[Id] = tp;
-            Elements[TopPinId] = p_top;
-            Elements[BottomPinId] = p_bottom;
-            Elements[LeftPinId] = p_left;
-            Elements[RightPinId] = p_right;
+            elements[Id] = tp;
+            elements[TopPinId] = p_top;
+            elements[BottomPinId] = p_bottom;
+            elements[LeftPinId] = p_left;
+            elements[RightPinId] = p_right;
         }
 
-        private void AddTimerOff(ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId, ref Single Delay)
+        private void AddTimerOff(Element[] elements, Context context, ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId, ref Single Delay)
         {
-            var context = CurrentContext;
             var children = context.Children;
 
             var toff = new TimerOff() { Delay = Delay }; //TOFF
@@ -4166,16 +4124,15 @@ namespace Simulation.Binary
             children.Add(p_left);
             children.Add(p_right);
 
-            Elements[Id] = toff;
-            Elements[TopPinId] = p_top;
-            Elements[BottomPinId] = p_bottom;
-            Elements[LeftPinId] = p_left;
-            Elements[RightPinId] = p_right;
+            elements[Id] = toff;
+            elements[TopPinId] = p_top;
+            elements[BottomPinId] = p_bottom;
+            elements[LeftPinId] = p_left;
+            elements[RightPinId] = p_right;
         }
 
-        private void AddTimerOn(ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId, ref Single Delay)
+        private void AddTimerOn(Element[] elements, Context context, ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId, ref Single Delay)
         {
-            var context = CurrentContext;
             var children = context.Children;
 
             var ton = new TimerOn() { Delay = Delay }; //TON
@@ -4209,16 +4166,15 @@ namespace Simulation.Binary
             children.Add(p_left);
             children.Add(p_right);
 
-            Elements[Id] = ton;
-            Elements[TopPinId] = p_top;
-            Elements[BottomPinId] = p_bottom;
-            Elements[LeftPinId] = p_left;
-            Elements[RightPinId] = p_right;
+            elements[Id] = ton;
+            elements[TopPinId] = p_top;
+            elements[BottomPinId] = p_bottom;
+            elements[LeftPinId] = p_left;
+            elements[RightPinId] = p_right;
         }
 
-        private void AddOrGate(ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId)
+        private void AddOrGate(Element[] elements, Context context, ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId)
         {
-            var context = CurrentContext;
             var children = context.Children;
 
             var og = new OrGate(); //ORGATE
@@ -4252,16 +4208,15 @@ namespace Simulation.Binary
             children.Add(p_left);
             children.Add(p_right);
 
-            Elements[Id] = og;
-            Elements[TopPinId] = p_top;
-            Elements[BottomPinId] = p_bottom;
-            Elements[LeftPinId] = p_left;
-            Elements[RightPinId] = p_right;
+            elements[Id] = og;
+            elements[TopPinId] = p_top;
+            elements[BottomPinId] = p_bottom;
+            elements[LeftPinId] = p_left;
+            elements[RightPinId] = p_right;
         }
 
-        private void AddAndGate(ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId)
+        private void AddAndGate(Element[] elements, Context context, ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId)
         {
-            var context = CurrentContext;
             var children = context.Children;
 
             var ag = new AndGate(); //ANDGATE
@@ -4295,16 +4250,15 @@ namespace Simulation.Binary
             children.Add(p_left);
             children.Add(p_right);
 
-            Elements[Id] = ag;
-            Elements[TopPinId] = p_top;
-            Elements[BottomPinId] = p_bottom;
-            Elements[LeftPinId] = p_left;
-            Elements[RightPinId] = p_right;
+            elements[Id] = ag;
+            elements[TopPinId] = p_top;
+            elements[BottomPinId] = p_bottom;
+            elements[LeftPinId] = p_left;
+            elements[RightPinId] = p_right;
         }
 
-        private void AddSignal(ref UInt32 Id, ref UInt32 InputPinId, ref UInt32 OutputPinId)
+        private void AddSignal(Element[] elements, Context context, ref UInt32 Id, ref UInt32 InputPinId, ref UInt32 OutputPinId)
         {
-            var context = CurrentContext;
             var children = context.Children;
 
             var signal = new Signal(); //SIGNAL
@@ -4331,14 +4285,13 @@ namespace Simulation.Binary
             children.Add(p_input);
             children.Add(p_output);
 
-            Elements[Id] = signal;
-            Elements[InputPinId] = p_input;
-            Elements[OutputPinId] = p_output;
+            elements[Id] = signal;
+            elements[InputPinId] = p_input;
+            elements[OutputPinId] = p_output;
         }
 
-        private void AddPin(ref UInt32 Id)
+        private void AddPin(Element[] elements, Context context, ref UInt32 Id)
         {
-            var context = CurrentContext;
             var children = context.Children;
 
             var p = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //PIN
@@ -4349,35 +4302,33 @@ namespace Simulation.Binary
 
             children.Add(p);
 
-            Elements[Id] = p;
+            elements[Id] = p;
         }
 
-        private void AddContext(ref UInt32 Id)
+        private Context AddContext(Element[] elements, Project project, ref UInt32 Id)
         {
             var context = new Context();
-            Elements[Id] = context;
+            elements[Id] = context;
 
-            CurrentProject.Children.Add(context);
-            CurrentContext = context;
-            //CurrentSolution.CurrentContext = context;
+            project.Children.Add(context);
+            return context;
         }
 
-        private void AddProject(ref UInt32 Id)
+        private Project AddProject(Element[] elements, Solution solution, ref UInt32 Id)
         {
             var project = new Project();
-            Elements[Id] = project;
+            elements[Id] = project;
 
-            CurrentSolution.Children.Add(project);
-            CurrentProject = project;
-            //CurrentSolution.CurrentProject = project;
+            solution.Children.Add(project);
+            return project;
         }
 
-        private void AddSolution(ref UInt32 Id)
+        private Solution AddSolution(Element[] elements, ref UInt32 Id)
         {
             var solution = new Solution();
-            Elements[Id] = solution;
+            elements[Id] = solution;
 
-            CurrentSolution = solution;
+            return solution;
         }
 
         #endregion
@@ -4385,39 +4336,39 @@ namespace Simulation.Binary
 
     #endregion
 
-    #region BinaryFileWriter
+    #region BinarySolutionWriter
 
-    public class BinaryFileWriter
+    public class BinarySolutionWriter
     {
         #region Fields
 
         // dict: key = element Id, value = generated element id for simulation
-        private Dictionary<string, UInt32> ids;
+        private Dictionary<string, UInt32> Ids;
 
         // generated element id
-        private UInt32 elementId;
+        private UInt32 ElementId;
 
         // command id
-        private UInt16 commandId;
+        private UInt16 CommandId;
 
         // bool true Byte value
-        private const Byte trueByte = 0x01;
+        private const Byte TrueByte = 0x01;
 
         // bool false Byte value
-        private const Byte falseByte = 0x00;
+        private const Byte FalseByte = 0x00;
 
         #endregion
 
         #region Save
 
-        public void Save(Solution solution, string path)
+        public void Save(string path, Solution solution)
         {
             using (var stream = new FileStream(path, FileMode.Create))
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    ids = new Dictionary<string, UInt32>();
-                    elementId = 0;
+                    Ids = new Dictionary<string, UInt32>();
+                    ElementId = 0;
 
                     // write solution
                     WriteSolution(solution, writer);
@@ -4431,19 +4382,19 @@ namespace Simulation.Binary
                     }
 
                     // total elements counter
-                    writer.Write(elementId);
+                    writer.Write(ElementId);
                 }
             }
         }
 
-        public void Save(Project project, string path)
+        public void Save(string path, Project project)
         {
             using (var stream = new FileStream(path, FileMode.Create))
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    ids = new Dictionary<string, UInt32>();
-                    elementId = 0;
+                    Ids = new Dictionary<string, UInt32>();
+                    ElementId = 0;
 
                     // write dummy solution
                     WriteDummySolution(writer);
@@ -4452,19 +4403,19 @@ namespace Simulation.Binary
                     WriteProjectAndChildren(project, writer);
 
                     // total elements counter
-                    writer.Write(elementId);
+                    writer.Write(ElementId);
                 }
             }
         }
 
-        public void Save(Context context, string path)
+        public void Save(string path, Context context)
         {
             using (var stream = new FileStream(path, FileMode.Create))
             {
                 using (var writer = new BinaryWriter(stream))
                 {
-                    ids = new Dictionary<string, UInt32>();
-                    elementId = 0;
+                    Ids = new Dictionary<string, UInt32>();
+                    ElementId = 0;
 
                     // write dummy solution
                     WriteDummySolution(writer);
@@ -4476,7 +4427,7 @@ namespace Simulation.Binary
                     WriteContextAndChildren(context, writer);
 
                     // total elements counter
-                    writer.Write(elementId);
+                    writer.Write(ElementId);
                 }
             }
         }
@@ -4556,45 +4507,45 @@ namespace Simulation.Binary
 
         private void WriteDummySolution(BinaryWriter writer)
         {
-            commandId = 0;
-            writer.Write(commandId);
-            writer.Write(elementId);
-            elementId++;
+            CommandId = 0;
+            writer.Write(CommandId);
+            writer.Write(ElementId);
+            ElementId++;
         }
 
         private void WriteDummyProject(BinaryWriter writer)
         {
-            commandId = 1;
-            writer.Write(commandId);
-            writer.Write(elementId);
-            elementId++;
+            CommandId = 1;
+            writer.Write(CommandId);
+            writer.Write(ElementId);
+            ElementId++;
         }
 
         private void WriteSolution(Solution solution, BinaryWriter writer)
         {
-            commandId = 0;
-            writer.Write(commandId);
-            writer.Write(elementId);
-            ids.Add(solution.Id, elementId);
-            elementId++;
+            CommandId = 0;
+            writer.Write(CommandId);
+            writer.Write(ElementId);
+            Ids.Add(solution.Id, ElementId);
+            ElementId++;
         }
 
         private void WriteProject(Project project, BinaryWriter writer)
         {
-            commandId = 1;
-            writer.Write(commandId);
-            writer.Write(elementId);
-            ids.Add(project.Id, elementId);
-            elementId++;
+            CommandId = 1;
+            writer.Write(CommandId);
+            writer.Write(ElementId);
+            Ids.Add(project.Id, ElementId);
+            ElementId++;
         }
 
         private void WriteContext(Context context, BinaryWriter writer)
         {
-            commandId = 2;
-            writer.Write(commandId);
-            writer.Write(elementId);
-            ids.Add(context.Id, elementId);
-            elementId++;
+            CommandId = 2;
+            writer.Write(CommandId);
+            writer.Write(ElementId);
+            Ids.Add(context.Id, ElementId);
+            ElementId++;
         }
 
         private void WritePin(Element element, BinaryWriter writer)
@@ -4602,150 +4553,150 @@ namespace Simulation.Binary
             if (element.Parent == null || element.Parent is Context)
             {
                 // pin id
-                commandId = 3;
-                writer.Write(commandId);
-                writer.Write(elementId);
-                ids.Add(element.Id, elementId);
-                elementId++;
+                CommandId = 3;
+                writer.Write(CommandId);
+                writer.Write(ElementId);
+                Ids.Add(element.Id, ElementId);
+                ElementId++;
             }
         }
 
         private void WriteSignal(Element element, BinaryWriter writer)
         {
             // signal id
-            commandId = 4;
-            writer.Write(commandId);
-            writer.Write(elementId);
-            ids.Add(element.Id, elementId);
-            elementId++;
+            CommandId = 4;
+            writer.Write(CommandId);
+            writer.Write(ElementId);
+            Ids.Add(element.Id, ElementId);
+            ElementId++;
 
             // input pin id
             var i = element.Children.Single(x => x.FactoryName == "I");
-            i.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(i.Id, elementId);
-            elementId++;
+            i.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(i.Id, ElementId);
+            ElementId++;
 
             // output pin id
             var o = element.Children.Single(x => x.FactoryName == "O");
-            o.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(o.Id, elementId);
-            elementId++;
+            o.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(o.Id, ElementId);
+            ElementId++;
         }
 
         private void WriteAndGate(Element element, BinaryWriter writer)
         {
             // andgate id
-            commandId = 5;
-            writer.Write(commandId);
-            writer.Write(elementId);
-            ids.Add(element.Id, elementId);
-            elementId++;
+            CommandId = 5;
+            writer.Write(CommandId);
+            writer.Write(ElementId);
+            Ids.Add(element.Id, ElementId);
+            ElementId++;
 
             // left pin id
             var left = element.Children.Single(x => x.FactoryName == "L");
-            left.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(left.Id, elementId);
-            elementId++;
+            left.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(left.Id, ElementId);
+            ElementId++;
 
             // right pin id
             var right = element.Children.Single(x => x.FactoryName == "R");
-            right.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(right.Id, elementId);
-            elementId++;
+            right.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(right.Id, ElementId);
+            ElementId++;
 
             // top pin id
             var top = element.Children.Single(x => x.FactoryName == "T");
-            top.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(top.Id, elementId);
-            elementId++;
+            top.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(top.Id, ElementId);
+            ElementId++;
 
             // bottom pin id
             var bottom = element.Children.Single(x => x.FactoryName == "B");
-            bottom.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(bottom.Id, elementId);
-            elementId++;
+            bottom.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(bottom.Id, ElementId);
+            ElementId++;
         }
 
         private void WriteOrGate(Element element, BinaryWriter writer)
         {
             // orgate id
-            commandId = 6;
-            writer.Write(commandId);
-            writer.Write(elementId);
-            ids.Add(element.Id, elementId);
-            elementId++;
+            CommandId = 6;
+            writer.Write(CommandId);
+            writer.Write(ElementId);
+            Ids.Add(element.Id, ElementId);
+            ElementId++;
 
             // left pin id
             var left = element.Children.Single(x => x.FactoryName == "L");
-            left.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(left.Id, elementId);
-            elementId++;
+            left.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(left.Id, ElementId);
+            ElementId++;
 
             // right pin id
             var right = element.Children.Single(x => x.FactoryName == "R");
-            right.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(right.Id, elementId);
-            elementId++;
+            right.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(right.Id, ElementId);
+            ElementId++;
 
             // top pin id
             var top = element.Children.Single(x => x.FactoryName == "T");
-            top.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(top.Id, elementId);
-            elementId++;
+            top.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(top.Id, ElementId);
+            ElementId++;
 
             // bottom pin id
             var bottom = element.Children.Single(x => x.FactoryName == "B");
-            bottom.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(bottom.Id, elementId);
-            elementId++;
+            bottom.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(bottom.Id, ElementId);
+            ElementId++;
         }
 
         private void WriteTimerOn(Element element, BinaryWriter writer)
         {
             // timeron id
-            commandId = 7;
-            writer.Write(commandId);
-            writer.Write(elementId);
-            ids.Add(element.Id, elementId);
-            elementId++;
+            CommandId = 7;
+            writer.Write(CommandId);
+            writer.Write(ElementId);
+            Ids.Add(element.Id, ElementId);
+            ElementId++;
 
             // left pin id
             var left = element.Children.Single(x => x.FactoryName == "L");
-            left.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(left.Id, elementId);
-            elementId++;
+            left.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(left.Id, ElementId);
+            ElementId++;
 
             // right pin id
             var right = element.Children.Single(x => x.FactoryName == "R");
-            right.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(right.Id, elementId);
-            elementId++;
+            right.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(right.Id, ElementId);
+            ElementId++;
 
             // top pin id
             var top = element.Children.Single(x => x.FactoryName == "T");
-            top.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(top.Id, elementId);
-            elementId++;
+            top.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(top.Id, ElementId);
+            ElementId++;
 
             // bottom pin id
             var bottom = element.Children.Single(x => x.FactoryName == "B");
-            bottom.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(bottom.Id, elementId);
-            elementId++;
+            bottom.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(bottom.Id, ElementId);
+            ElementId++;
 
             // delay
             writer.Write((element as ITimer).Delay);
@@ -4754,39 +4705,39 @@ namespace Simulation.Binary
         private void WriteTimerOff(Element element, BinaryWriter writer)
         {
             // timeroff id
-            commandId = 8;
-            writer.Write(commandId);
-            writer.Write(elementId);
-            ids.Add(element.Id, elementId);
-            elementId++;
+            CommandId = 8;
+            writer.Write(CommandId);
+            writer.Write(ElementId);
+            Ids.Add(element.Id, ElementId);
+            ElementId++;
 
             // left pin id
             var left = element.Children.Single(x => x.FactoryName == "L");
-            left.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(left.Id, elementId);
-            elementId++;
+            left.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(left.Id, ElementId);
+            ElementId++;
 
             // right pin id
             var right = element.Children.Single(x => x.FactoryName == "R");
-            right.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(right.Id, elementId);
-            elementId++;
+            right.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(right.Id, ElementId);
+            ElementId++;
 
             // top pin id
             var top = element.Children.Single(x => x.FactoryName == "T");
-            top.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(top.Id, elementId);
-            elementId++;
+            top.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(top.Id, ElementId);
+            ElementId++;
 
             // bottom pin id
             var bottom = element.Children.Single(x => x.FactoryName == "B");
-            bottom.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(bottom.Id, elementId);
-            elementId++;
+            bottom.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(bottom.Id, ElementId);
+            ElementId++;
 
             // delay
             writer.Write((element as ITimer).Delay);
@@ -4795,39 +4746,39 @@ namespace Simulation.Binary
         private void WriteTimerPulse(Element element, BinaryWriter writer)
         {
             // timerpulse id
-            commandId = 9;
-            writer.Write(commandId);
-            writer.Write(elementId);
-            ids.Add(element.Id, elementId);
-            elementId++;
+            CommandId = 9;
+            writer.Write(CommandId);
+            writer.Write(ElementId);
+            Ids.Add(element.Id, ElementId);
+            ElementId++;
 
             // left pin id
             var left = element.Children.Single(x => x.FactoryName == "L");
-            left.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(left.Id, elementId);
-            elementId++;
+            left.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(left.Id, ElementId);
+            ElementId++;
 
             // right pin id
             var right = element.Children.Single(x => x.FactoryName == "R");
-            right.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(right.Id, elementId);
-            elementId++;
+            right.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(right.Id, ElementId);
+            ElementId++;
 
             // top pin id
             var top = element.Children.Single(x => x.FactoryName == "T");
-            top.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(top.Id, elementId);
-            elementId++;
+            top.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(top.Id, ElementId);
+            ElementId++;
 
             // bottom pin id
             var bottom = element.Children.Single(x => x.FactoryName == "B");
-            bottom.ElementId = elementId;
-            writer.Write(elementId);
-            ids.Add(bottom.Id, elementId);
-            elementId++;
+            bottom.ElementId = ElementId;
+            writer.Write(ElementId);
+            Ids.Add(bottom.Id, ElementId);
+            ElementId++;
 
             // delay
             writer.Write((element as ITimer).Delay);
@@ -4840,18 +4791,18 @@ namespace Simulation.Binary
             Byte invertStart;
             Byte invertEnd;
 
-            srcPinId = ids[wire.Start.Id];
-            dstPinId = ids[wire.End.Id];
+            srcPinId = Ids[wire.Start.Id];
+            dstPinId = Ids[wire.End.Id];
 
-            invertStart = wire.InvertStart ? trueByte : falseByte;
-            invertEnd = wire.InvertEnd ? trueByte : falseByte;
+            invertStart = wire.InvertStart ? TrueByte : FalseByte;
+            invertEnd = wire.InvertEnd ? TrueByte : FalseByte;
 
             // connect id
-            commandId = 10;
-            writer.Write(commandId);
-            writer.Write(elementId);
-            ids.Add(wire.Id, elementId);
-            elementId++;
+            CommandId = 10;
+            writer.Write(CommandId);
+            writer.Write(ElementId);
+            Ids.Add(wire.Id, ElementId);
+            ElementId++;
 
             // source pin id
             writer.Write(srcPinId);
