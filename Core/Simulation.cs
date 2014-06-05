@@ -3358,6 +3358,11 @@ namespace Simulation.Tests
         private ObservableCollection<Tag> tags = null;
         private Dictionary<int, Pin> map = null;
 
+        private bool Compare(string strA, string strB)
+        {
+            return string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase) == 0;
+        }
+
         private int SetId(IBlock parent, int nextId)
         {
             if (parent.Points != null)
@@ -3415,14 +3420,7 @@ namespace Simulation.Tests
             return element;
         }
 
-        private Pin CreatePin(Context context,
-            double x,
-            double y,
-            Element parent,
-            string name = "",
-            string factoryName = "",
-            PinType type = PinType.Undefined,
-            bool isPinTypeUndefined = true)
+        private Pin CreatePin(Context context, double x, double y, Element parent, string name = "", string factoryName = "", PinType type = PinType.Undefined, bool pinTypeUndefined = true)
         {
             var element = new Pin()
             {
@@ -3433,7 +3431,7 @@ namespace Simulation.Tests
                 Id = Guid.NewGuid().ToString(),
                 Parent = parent,
                 Type = type,
-                IsPinTypeUndefined = isPinTypeUndefined
+                IsPinTypeUndefined = pinTypeUndefined
             };
 
             if (parent != null && !(parent is Context))
@@ -3650,27 +3648,27 @@ namespace Simulation.Tests
 
         private Element Serialize(Context context, IBlock block)
         {
-            if (block.Name == "SIGNAL")
+            if (Compare(block.Name, "SIGNAL"))
             {
                 return CreateSignal(context, block);
             }
-            else if (block.Name == "AND")
+            else if (Compare(block.Name, "AND"))
             {
                 return CreateAndGate(context, block);
             }
-            else if (block.Name == "OR")
+            else if (Compare(block.Name, "OR"))
             {
                 return CreateOrGate(context, block);
             }
-            else if (block.Name == "TIMER-ON")
+            else if (Compare(block.Name, "TIMER-ON"))
             {
                 return CreateTimerOn(context, block);
             }
-            else if (block.Name == "TIMER-OFF")
+            else if (Compare(block.Name, "TIMER-OFF"))
             {
                 return CreateTimerOff(context, block);
             }
-            else if (block.Name == "TIMER-PULSE")
+            else if (Compare(block.Name, "TIMER-PULSE"))
             {
                 return CreateTimerPulse(context, block);
             }
@@ -3728,6 +3726,1143 @@ namespace Simulation.Tests
 
             return solution;
         }
+    }
+
+    #endregion
+}
+
+namespace Simulation.Binary
+{
+    using System.IO;
+    using System.IO.Compression;
+    using System.Runtime.InteropServices;
+
+    #region BinaryFileFormat
+
+    // command Id: sizeof(UInt16)
+    // command data: sizeof(command)
+    // ...
+    // elements counter: sizeof(UInt32)
+    //
+    // where:
+    // Id   Command
+    // ---------------
+    // 0    Solution
+    // 1    Project
+    // 2    Context
+    // 3    Pin
+    // 4    Signal
+    // 5    AndGate
+    // 6    OrGate
+    // 7    TimerOn
+    // 8    TimerOff
+    // 9    TimerPulse
+    // 10   Connect
+
+    // Solution command:
+    // UInt32 Id;
+
+    // Project command:
+    // UInt32 Id;
+
+    // Context command:
+    // UInt32 Id;
+
+    // Pin command:
+    // UInt32 Id;
+
+    // Signal command:
+    // UInt32 Id;
+    // UInt32 InputPinId;
+    // UInt32 OutputPinId;
+
+    // AndGate command:
+    // UInt32 Id;
+    // UInt32 LeftPinId;
+    // UInt32 RightPinId;
+    // UInt32 TopPinId;
+    // UInt32 BottomPinId;
+
+    // OrGate command:
+    // UInt32 Id;
+    // UInt32 LeftPinId;
+    // UInt32 RightPinId;
+    // UInt32 TopPinId;
+    // UInt32 BottomPinId;
+
+    // TimerOn command:
+    // UInt32 Id;
+    // UInt32 LeftPinId;
+    // UInt32 RightPinId;
+    // UInt32 TopPinId;
+    // UInt32 BottomPinId;
+    // Single Delay;
+
+    // TimerOff command:
+    // UInt32 Id;
+    // UInt32 LeftPinId;
+    // UInt32 RightPinId;
+    // UInt32 TopPinId;
+    // UInt32 BottomPinId;
+    // Single Delay;
+
+    // TimerPulse command:
+    // UInt32 Id;
+    // UInt32 LeftPinId;
+    // UInt32 RightPinId;
+    // UInt32 TopPinId;
+    // UInt32 BottomPinId;
+    // Single Delay;
+
+    // Connect command:
+    // UInt32 Id;
+    // UInt32 SrcPinId;
+    // UInt32 DstPinId;
+    // Byte InvertStart;
+    // Byte InvertEnd;
+
+    #endregion
+
+    #region BinaryFileReader
+
+    public class BinaryFileReader
+    {
+        #region Fields
+
+        private static int sizeOfCommandId = Marshal.SizeOf(typeof(UInt16));
+        private static int sizeOfTotalElements = Marshal.SizeOf(typeof(UInt32));
+        private static Element[] Elements;
+        public static Solution CurrentSolution;
+        public static Project CurrentProject;
+        public static Context CurrentContext;
+
+        #endregion
+
+        #region Compression
+
+        public void CompressFile(string sourcePath, string destinationPath)
+        {
+            using (var inputStream = File.OpenRead(sourcePath))
+            {
+                using (var outputStream = File.Create(destinationPath))
+                {
+                    using (var compressedStream = new GZipStream(outputStream, CompressionMode.Compress))
+                    {
+                        inputStream.CopyTo(compressedStream);
+                    }
+                }
+            }
+        }
+
+        public void DecompressFile(string sourcePath, string destinationPath)
+        {
+            using (var inputStream = File.OpenRead(sourcePath))
+            {
+                using (var outputStream = File.Create(destinationPath))
+                {
+                    using (var deCompressedStream = new GZipStream(outputStream, CompressionMode.Decompress))
+                    {
+                        inputStream.CopyTo(deCompressedStream);
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region Open
+
+        public void OpenCompressed(string path)
+        {
+            using (var fileStream = File.OpenRead(path))
+            {
+                using (var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress))
+                {
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        gzipStream.CopyTo(memoryStream);
+                        ReadData(memoryStream);
+                    }
+                }
+            }
+        }
+
+        public void OpenUncompressed(string path)
+        {
+            using (var fileStream = File.OpenRead(path))
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    fileStream.CopyTo(memoryStream);
+                    ReadData(memoryStream);
+                }
+            }
+        }
+
+        private void ReadData(MemoryStream memoryStream)
+        {
+            using (var reader = new BinaryReader(memoryStream))
+            {
+                UInt32 totalElements = 0;
+                UInt16 commandId = 0;
+
+                long size = memoryStream.Length;
+                long dataSize = size - sizeOfTotalElements;
+
+                // get element counter
+                memoryStream.Seek(size - sizeOfTotalElements, SeekOrigin.Begin);
+
+                totalElements = reader.ReadUInt32();
+
+                memoryStream.Seek(0, SeekOrigin.Begin);
+
+                // allocate elements array
+                Elements = new Element[totalElements];
+
+                while (memoryStream.Position < dataSize)
+                {
+                    commandId = reader.ReadUInt16();
+
+                    switch (commandId)
+                    {
+                        // Solution
+                        case 0:
+                            {
+                                UInt32 Id = reader.ReadUInt32();
+
+                                AddSolution(ref Id);
+                            }
+                            break;
+                        // Project
+                        case 1:
+                            {
+                                UInt32 Id = reader.ReadUInt32();
+
+                                AddProject(ref Id);
+                            }
+                            break;
+                        // Context
+                        case 2:
+                            {
+                                UInt32 Id = reader.ReadUInt32();
+
+                                AddContext(ref Id);
+                            }
+                            break;
+                        // Pin
+                        case 3:
+                            {
+                                UInt32 Id = reader.ReadUInt32();
+
+                                AddPin(ref Id);
+                            }
+                            break;
+                        // Signal
+                        case 4:
+                            {
+                                UInt32 Id = reader.ReadUInt32();
+                                UInt32 InputPinId = reader.ReadUInt32();
+                                UInt32 OutputPinId = reader.ReadUInt32();
+
+                                AddSignal(ref Id, ref InputPinId, ref OutputPinId);
+                            }
+                            break;
+                        // AndGate
+                        case 5:
+                            {
+                                UInt32 Id = reader.ReadUInt32();
+                                UInt32 LeftPinId = reader.ReadUInt32();
+                                UInt32 RightPinId = reader.ReadUInt32();
+                                UInt32 TopPinId = reader.ReadUInt32();
+                                UInt32 BottomPinId = reader.ReadUInt32();
+
+                                AddAndGate(ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId);
+                            }
+                            break;
+                        // OrGate
+                        case 6:
+                            {
+                                UInt32 Id = reader.ReadUInt32();
+                                UInt32 LeftPinId = reader.ReadUInt32();
+                                UInt32 RightPinId = reader.ReadUInt32();
+                                UInt32 TopPinId = reader.ReadUInt32();
+                                UInt32 BottomPinId = reader.ReadUInt32();
+
+                                AddOrGate(ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId);
+                            }
+                            break;
+                        // TimerOn
+                        case 7:
+                            {
+                                UInt32 Id = reader.ReadUInt32();
+                                UInt32 LeftPinId = reader.ReadUInt32();
+                                UInt32 RightPinId = reader.ReadUInt32();
+                                UInt32 TopPinId = reader.ReadUInt32();
+                                UInt32 BottomPinId = reader.ReadUInt32();
+                                Single Delay = reader.ReadSingle();
+
+                                AddTimerOn(ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId, ref Delay);
+                            }
+                            break;
+                        // TimerOff
+                        case 8:
+                            {
+                                UInt32 Id = reader.ReadUInt32();
+                                UInt32 LeftPinId = reader.ReadUInt32();
+                                UInt32 RightPinId = reader.ReadUInt32();
+                                UInt32 TopPinId = reader.ReadUInt32();
+                                UInt32 BottomPinId = reader.ReadUInt32();
+                                Single Delay = reader.ReadSingle();
+
+                                AddTimerOff(ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId, ref Delay);
+                            }
+                            break;
+                        // TimerPulse
+                        case 9:
+                            {
+                                UInt32 Id = reader.ReadUInt32();
+                                UInt32 LeftPinId = reader.ReadUInt32();
+                                UInt32 RightPinId = reader.ReadUInt32();
+                                UInt32 TopPinId = reader.ReadUInt32();
+                                UInt32 BottomPinId = reader.ReadUInt32();
+                                Single Delay = reader.ReadSingle();
+
+                                AddTimerPulse(ref Id, ref LeftPinId, ref RightPinId, ref TopPinId, ref BottomPinId, ref Delay);
+                            }
+                            break;
+                        // Connect
+                        case 10:
+                            {
+                                UInt32 Id = reader.ReadUInt32();
+                                UInt32 SrcPinId = reader.ReadUInt32();
+                                UInt32 DstPinId = reader.ReadUInt32();
+                                Byte InvertStart = reader.ReadByte();
+                                Byte InvertEnd = reader.ReadByte();
+
+                                AddWire(ref Id, ref SrcPinId, ref DstPinId, ref InvertStart, ref InvertEnd);
+                            }
+                            break;
+                    }
+                }
+
+                // reset elements cache array
+                for (UInt32 i = 0; i < totalElements; i++)
+                {
+                    Elements[i] = null;
+                }
+
+                Elements = null;
+            }
+        }
+
+        #endregion
+
+        #region Add
+
+        private void AddWire(ref UInt32 Id, ref UInt32 SrcPinId, ref UInt32 DstPinId, ref Byte InvertStart, ref Byte InvertEnd)
+        {
+            var context = CurrentContext;
+            var children = context.Children;
+
+            var p_src = Elements[SrcPinId];
+            var p_dst = Elements[DstPinId];
+
+            if (p_src != null && p_dst != null && p_src is Pin && p_dst is Pin)
+            {
+                var wire = new Wire(); //WIRE
+
+                wire.ElementId = Id;
+
+                wire.Start = p_src as Pin;
+                wire.End = p_dst as Pin;
+
+                wire.InvertStart = InvertStart == 0x01;
+                wire.InvertEnd = InvertEnd == 0x01;
+
+                wire.Parent = context;
+
+                children.Add(wire);
+
+                Elements[Id] = wire;
+            }
+        }
+
+        private void AddTimerPulse(ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId, ref Single Delay)
+        {
+            var context = CurrentContext;
+            var children = context.Children;
+
+            var tp = new TimerPulse() { Delay = Delay }; //TP
+
+            var p_top = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //TOP
+            var p_bottom = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //BOTTOM
+            var p_left = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //LEFT
+            var p_right = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //RIGHT
+
+            tp.ElementId = Id;
+            p_top.ElementId = TopPinId;
+            p_bottom.ElementId = BottomPinId;
+            p_left.ElementId = LeftPinId;
+            p_right.ElementId = RightPinId;
+
+            tp.Children.Add(p_top);
+            tp.Children.Add(p_bottom);
+            tp.Children.Add(p_left);
+            tp.Children.Add(p_right);
+
+            tp.Parent = context;
+
+            p_top.Parent = tp;
+            p_bottom.Parent = tp;
+            p_left.Parent = tp;
+            p_right.Parent = tp;
+
+            children.Add(tp);
+            children.Add(p_top);
+            children.Add(p_bottom);
+            children.Add(p_left);
+            children.Add(p_right);
+
+            Elements[Id] = tp;
+            Elements[TopPinId] = p_top;
+            Elements[BottomPinId] = p_bottom;
+            Elements[LeftPinId] = p_left;
+            Elements[RightPinId] = p_right;
+        }
+
+        private void AddTimerOff(ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId, ref Single Delay)
+        {
+            var context = CurrentContext;
+            var children = context.Children;
+
+            var toff = new TimerOff() { Delay = Delay }; //TOFF
+
+            var p_top = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //TOP
+            var p_bottom = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //BOTTOM
+            var p_left = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //LEFT
+            var p_right = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //RIGHT
+
+            toff.ElementId = Id;
+            p_top.ElementId = TopPinId;
+            p_bottom.ElementId = BottomPinId;
+            p_left.ElementId = LeftPinId;
+            p_right.ElementId = RightPinId;
+
+            toff.Children.Add(p_top);
+            toff.Children.Add(p_bottom);
+            toff.Children.Add(p_left);
+            toff.Children.Add(p_right);
+
+            toff.Parent = context;
+
+            p_top.Parent = toff;
+            p_bottom.Parent = toff;
+            p_left.Parent = toff;
+            p_right.Parent = toff;
+
+            children.Add(toff);
+            children.Add(p_top);
+            children.Add(p_bottom);
+            children.Add(p_left);
+            children.Add(p_right);
+
+            Elements[Id] = toff;
+            Elements[TopPinId] = p_top;
+            Elements[BottomPinId] = p_bottom;
+            Elements[LeftPinId] = p_left;
+            Elements[RightPinId] = p_right;
+        }
+
+        private void AddTimerOn(ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId, ref Single Delay)
+        {
+            var context = CurrentContext;
+            var children = context.Children;
+
+            var ton = new TimerOn() { Delay = Delay }; //TON
+
+            var p_top = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //TOP
+            var p_bottom = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //BOTTOM
+            var p_left = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //LEFT
+            var p_right = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //RIGHT
+
+            ton.ElementId = Id;
+            p_top.ElementId = TopPinId;
+            p_bottom.ElementId = BottomPinId;
+            p_left.ElementId = LeftPinId;
+            p_right.ElementId = RightPinId;
+
+            ton.Children.Add(p_top);
+            ton.Children.Add(p_bottom);
+            ton.Children.Add(p_left);
+            ton.Children.Add(p_right);
+
+            ton.Parent = context;
+
+            p_top.Parent = ton;
+            p_bottom.Parent = ton;
+            p_left.Parent = ton;
+            p_right.Parent = ton;
+
+            children.Add(ton);
+            children.Add(p_top);
+            children.Add(p_bottom);
+            children.Add(p_left);
+            children.Add(p_right);
+
+            Elements[Id] = ton;
+            Elements[TopPinId] = p_top;
+            Elements[BottomPinId] = p_bottom;
+            Elements[LeftPinId] = p_left;
+            Elements[RightPinId] = p_right;
+        }
+
+        private void AddOrGate(ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId)
+        {
+            var context = CurrentContext;
+            var children = context.Children;
+
+            var og = new OrGate(); //ORGATE
+
+            var p_top = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //TOP
+            var p_bottom = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //BOTTOM
+            var p_left = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //LEFT
+            var p_right = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //RIGHT
+
+            og.ElementId = Id;
+            p_top.ElementId = TopPinId;
+            p_bottom.ElementId = BottomPinId;
+            p_left.ElementId = LeftPinId;
+            p_right.ElementId = RightPinId;
+
+            og.Children.Add(p_top);
+            og.Children.Add(p_bottom);
+            og.Children.Add(p_left);
+            og.Children.Add(p_right);
+
+            og.Parent = context;
+
+            p_top.Parent = og;
+            p_bottom.Parent = og;
+            p_left.Parent = og;
+            p_right.Parent = og;
+
+            children.Add(og);
+            children.Add(p_top);
+            children.Add(p_bottom);
+            children.Add(p_left);
+            children.Add(p_right);
+
+            Elements[Id] = og;
+            Elements[TopPinId] = p_top;
+            Elements[BottomPinId] = p_bottom;
+            Elements[LeftPinId] = p_left;
+            Elements[RightPinId] = p_right;
+        }
+
+        private void AddAndGate(ref UInt32 Id, ref UInt32 LeftPinId, ref UInt32 RightPinId, ref UInt32 TopPinId, ref UInt32 BottomPinId)
+        {
+            var context = CurrentContext;
+            var children = context.Children;
+
+            var ag = new AndGate(); //ANDGATE
+
+            var p_top = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //TOP
+            var p_bottom = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //BOTTOM
+            var p_left = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //LEFT
+            var p_right = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //RIGHT
+
+            ag.ElementId = Id;
+            p_top.ElementId = TopPinId;
+            p_bottom.ElementId = BottomPinId;
+            p_left.ElementId = LeftPinId;
+            p_right.ElementId = RightPinId;
+
+            ag.Children.Add(p_top);
+            ag.Children.Add(p_bottom);
+            ag.Children.Add(p_left);
+            ag.Children.Add(p_right);
+
+            ag.Parent = context;
+
+            p_top.Parent = ag;
+            p_bottom.Parent = ag;
+            p_left.Parent = ag;
+            p_right.Parent = ag;
+
+            children.Add(ag);
+            children.Add(p_top);
+            children.Add(p_bottom);
+            children.Add(p_left);
+            children.Add(p_right);
+
+            Elements[Id] = ag;
+            Elements[TopPinId] = p_top;
+            Elements[BottomPinId] = p_bottom;
+            Elements[LeftPinId] = p_left;
+            Elements[RightPinId] = p_right;
+        }
+
+        private void AddSignal(ref UInt32 Id, ref UInt32 InputPinId, ref UInt32 OutputPinId)
+        {
+            var context = CurrentContext;
+            var children = context.Children;
+
+            var signal = new Signal(); //SIGNAL
+
+            var p_input = new Pin() { Type = PinType.Input, IsPinTypeUndefined = false }; //INPUT
+            var p_output = new Pin() { Type = PinType.Output, IsPinTypeUndefined = false }; //OUTPUT   
+
+            signal.ElementId = Id;
+            p_input.ElementId = InputPinId;
+            p_output.ElementId = OutputPinId;
+
+            signal.Children.Add(p_input);
+            signal.Children.Add(p_output);
+
+            signal.Children.Add(p_input);
+            signal.Children.Add(p_output);
+
+            signal.Parent = context;
+
+            p_input.Parent = signal;
+            p_output.Parent = signal;
+
+            children.Add(signal);
+            children.Add(p_input);
+            children.Add(p_output);
+
+            Elements[Id] = signal;
+            Elements[InputPinId] = p_input;
+            Elements[OutputPinId] = p_output;
+        }
+
+        private void AddPin(ref UInt32 Id)
+        {
+            var context = CurrentContext;
+            var children = context.Children;
+
+            var p = new Pin() { Type = PinType.Undefined, IsPinTypeUndefined = true }; //PIN
+
+            p.ElementId = Id;
+
+            p.Parent = context;
+
+            children.Add(p);
+
+            Elements[Id] = p;
+        }
+
+        private void AddContext(ref UInt32 Id)
+        {
+            var context = new Context();
+            Elements[Id] = context;
+
+            CurrentProject.Children.Add(context);
+            CurrentContext = context;
+            //CurrentSolution.CurrentContext = context;
+        }
+
+        private void AddProject(ref UInt32 Id)
+        {
+            var project = new Project();
+            Elements[Id] = project;
+
+            CurrentSolution.Children.Add(project);
+            CurrentProject = project;
+            //CurrentSolution.CurrentProject = project;
+        }
+
+        private void AddSolution(ref UInt32 Id)
+        {
+            var solution = new Solution();
+            Elements[Id] = solution;
+
+            CurrentSolution = solution;
+        }
+
+        #endregion
+    }
+
+    #endregion
+
+    #region BinaryFileWriter
+
+    public class BinaryFileWriter
+    {
+        #region Fields
+
+        // dict: key = element Id, value = generated element id for simulation
+        private Dictionary<string, UInt32> ids;
+
+        // generated element id
+        private UInt32 elementId;
+
+        // command id
+        private UInt16 commandId;
+
+        // bool true Byte value
+        private const Byte trueByte = 0x01;
+
+        // bool false Byte value
+        private const Byte falseByte = 0x00;
+
+        #endregion
+
+        #region Save
+
+        public void Save(Solution solution, string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Create))
+            {
+                using (var writer = new BinaryWriter(stream))
+                {
+                    ids = new Dictionary<string, UInt32>();
+                    elementId = 0;
+
+                    // write solution
+                    WriteSolution(solution, writer);
+
+                    var projects = solution.Children.Cast<Project>();
+
+                    // write projects
+                    foreach (var project in projects)
+                    {
+                        WriteProjectAndChildren(project, writer);
+                    }
+
+                    // total elements counter
+                    writer.Write(elementId);
+                }
+            }
+        }
+
+        public void Save(Project project, string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Create))
+            {
+                using (var writer = new BinaryWriter(stream))
+                {
+                    ids = new Dictionary<string, UInt32>();
+                    elementId = 0;
+
+                    // write dummy solution
+                    WriteDummySolution(writer);
+
+                    // write project
+                    WriteProjectAndChildren(project, writer);
+
+                    // total elements counter
+                    writer.Write(elementId);
+                }
+            }
+        }
+
+        public void Save(Context context, string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Create))
+            {
+                using (var writer = new BinaryWriter(stream))
+                {
+                    ids = new Dictionary<string, UInt32>();
+                    elementId = 0;
+
+                    // write dummy solution
+                    WriteDummySolution(writer);
+
+                    // write dummy project
+                    WriteDummyProject(writer);
+
+                    // write context
+                    WriteContextAndChildren(context, writer);
+
+                    // total elements counter
+                    writer.Write(elementId);
+                }
+            }
+        }
+
+        #endregion
+
+        #region Write
+
+        private void WriteProjectAndChildren(Project project, BinaryWriter writer)
+        {
+            // write project
+            WriteProject(project, writer);
+
+            var contexts = project.Children.Cast<Context>();
+
+            // write contexts
+            foreach (var context in contexts)
+            {
+                WriteContextAndChildren(context, writer);
+            }
+        }
+
+        private void WriteContextAndChildren(Context context, BinaryWriter writer)
+        {
+            // write context
+            WriteContext(context, writer);
+
+            // write child
+            foreach (var child in context.Children)
+            {
+                WriteElement(child, writer);
+            }
+
+            // write connections
+            WriteConnections(context, writer);
+        }
+
+        private void WriteElement(Element element, BinaryWriter writer)
+        {
+            string type = element.GetType().ToString().Split('.').Last();
+            switch (type)
+            {
+                case "Signal":
+                    WriteSignal(element, writer);
+                    break;
+                case "Pin":
+                    WritePin(element, writer);
+                    break;
+                case "AndGate":
+                    WriteAndGate(element, writer);
+                    break;
+                case "OrGate":
+                    WriteOrGate(element, writer);
+                    break;
+                case "TimerOn":
+                    WriteTimerOn(element, writer);
+                    break;
+                case "TimerOff":
+                    WriteTimerOff(element, writer);
+                    break;
+                case "TimerPulse":
+                    WriteTimerPulse(element, writer);
+                    break;
+            }
+        }
+
+        private void WriteConnections(Context context, BinaryWriter writer)
+        {
+            // write connections
+            var wires = context.Children.Where(x => x is Wire).Cast<Wire>();
+
+            foreach (var wire in wires)
+            {
+                WriteWire(wire, writer);
+            }
+        }
+
+        private void WriteDummySolution(BinaryWriter writer)
+        {
+            commandId = 0;
+            writer.Write(commandId);
+            writer.Write(elementId);
+            elementId++;
+        }
+
+        private void WriteDummyProject(BinaryWriter writer)
+        {
+            commandId = 1;
+            writer.Write(commandId);
+            writer.Write(elementId);
+            elementId++;
+        }
+
+        private void WriteSolution(Solution solution, BinaryWriter writer)
+        {
+            commandId = 0;
+            writer.Write(commandId);
+            writer.Write(elementId);
+            ids.Add(solution.Id, elementId);
+            elementId++;
+        }
+
+        private void WriteProject(Project project, BinaryWriter writer)
+        {
+            commandId = 1;
+            writer.Write(commandId);
+            writer.Write(elementId);
+            ids.Add(project.Id, elementId);
+            elementId++;
+        }
+
+        private void WriteContext(Context context, BinaryWriter writer)
+        {
+            commandId = 2;
+            writer.Write(commandId);
+            writer.Write(elementId);
+            ids.Add(context.Id, elementId);
+            elementId++;
+        }
+
+        private void WritePin(Element element, BinaryWriter writer)
+        {
+            if (element.Parent == null || element.Parent is Context)
+            {
+                // pin id
+                commandId = 3;
+                writer.Write(commandId);
+                writer.Write(elementId);
+                ids.Add(element.Id, elementId);
+                elementId++;
+            }
+        }
+
+        private void WriteSignal(Element element, BinaryWriter writer)
+        {
+            // signal id
+            commandId = 4;
+            writer.Write(commandId);
+            writer.Write(elementId);
+            ids.Add(element.Id, elementId);
+            elementId++;
+
+            // input pin id
+            var i = element.Children.Single(x => x.FactoryName == "I");
+            i.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(i.Id, elementId);
+            elementId++;
+
+            // output pin id
+            var o = element.Children.Single(x => x.FactoryName == "O");
+            o.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(o.Id, elementId);
+            elementId++;
+        }
+
+        private void WriteAndGate(Element element, BinaryWriter writer)
+        {
+            // andgate id
+            commandId = 5;
+            writer.Write(commandId);
+            writer.Write(elementId);
+            ids.Add(element.Id, elementId);
+            elementId++;
+
+            // left pin id
+            var left = element.Children.Single(x => x.FactoryName == "L");
+            left.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(left.Id, elementId);
+            elementId++;
+
+            // right pin id
+            var right = element.Children.Single(x => x.FactoryName == "R");
+            right.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(right.Id, elementId);
+            elementId++;
+
+            // top pin id
+            var top = element.Children.Single(x => x.FactoryName == "T");
+            top.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(top.Id, elementId);
+            elementId++;
+
+            // bottom pin id
+            var bottom = element.Children.Single(x => x.FactoryName == "B");
+            bottom.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(bottom.Id, elementId);
+            elementId++;
+        }
+
+        private void WriteOrGate(Element element, BinaryWriter writer)
+        {
+            // orgate id
+            commandId = 6;
+            writer.Write(commandId);
+            writer.Write(elementId);
+            ids.Add(element.Id, elementId);
+            elementId++;
+
+            // left pin id
+            var left = element.Children.Single(x => x.FactoryName == "L");
+            left.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(left.Id, elementId);
+            elementId++;
+
+            // right pin id
+            var right = element.Children.Single(x => x.FactoryName == "R");
+            right.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(right.Id, elementId);
+            elementId++;
+
+            // top pin id
+            var top = element.Children.Single(x => x.FactoryName == "T");
+            top.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(top.Id, elementId);
+            elementId++;
+
+            // bottom pin id
+            var bottom = element.Children.Single(x => x.FactoryName == "B");
+            bottom.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(bottom.Id, elementId);
+            elementId++;
+        }
+
+        private void WriteTimerOn(Element element, BinaryWriter writer)
+        {
+            // timeron id
+            commandId = 7;
+            writer.Write(commandId);
+            writer.Write(elementId);
+            ids.Add(element.Id, elementId);
+            elementId++;
+
+            // left pin id
+            var left = element.Children.Single(x => x.FactoryName == "L");
+            left.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(left.Id, elementId);
+            elementId++;
+
+            // right pin id
+            var right = element.Children.Single(x => x.FactoryName == "R");
+            right.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(right.Id, elementId);
+            elementId++;
+
+            // top pin id
+            var top = element.Children.Single(x => x.FactoryName == "T");
+            top.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(top.Id, elementId);
+            elementId++;
+
+            // bottom pin id
+            var bottom = element.Children.Single(x => x.FactoryName == "B");
+            bottom.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(bottom.Id, elementId);
+            elementId++;
+
+            // delay
+            writer.Write((element as ITimer).Delay);
+        }
+
+        private void WriteTimerOff(Element element, BinaryWriter writer)
+        {
+            // timeroff id
+            commandId = 8;
+            writer.Write(commandId);
+            writer.Write(elementId);
+            ids.Add(element.Id, elementId);
+            elementId++;
+
+            // left pin id
+            var left = element.Children.Single(x => x.FactoryName == "L");
+            left.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(left.Id, elementId);
+            elementId++;
+
+            // right pin id
+            var right = element.Children.Single(x => x.FactoryName == "R");
+            right.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(right.Id, elementId);
+            elementId++;
+
+            // top pin id
+            var top = element.Children.Single(x => x.FactoryName == "T");
+            top.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(top.Id, elementId);
+            elementId++;
+
+            // bottom pin id
+            var bottom = element.Children.Single(x => x.FactoryName == "B");
+            bottom.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(bottom.Id, elementId);
+            elementId++;
+
+            // delay
+            writer.Write((element as ITimer).Delay);
+        }
+
+        private void WriteTimerPulse(Element element, BinaryWriter writer)
+        {
+            // timerpulse id
+            commandId = 9;
+            writer.Write(commandId);
+            writer.Write(elementId);
+            ids.Add(element.Id, elementId);
+            elementId++;
+
+            // left pin id
+            var left = element.Children.Single(x => x.FactoryName == "L");
+            left.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(left.Id, elementId);
+            elementId++;
+
+            // right pin id
+            var right = element.Children.Single(x => x.FactoryName == "R");
+            right.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(right.Id, elementId);
+            elementId++;
+
+            // top pin id
+            var top = element.Children.Single(x => x.FactoryName == "T");
+            top.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(top.Id, elementId);
+            elementId++;
+
+            // bottom pin id
+            var bottom = element.Children.Single(x => x.FactoryName == "B");
+            bottom.ElementId = elementId;
+            writer.Write(elementId);
+            ids.Add(bottom.Id, elementId);
+            elementId++;
+
+            // delay
+            writer.Write((element as ITimer).Delay);
+        }
+
+        private void WriteWire(Wire wire, BinaryWriter writer)
+        {
+            UInt32 srcPinId;
+            UInt32 dstPinId;
+            Byte invertStart;
+            Byte invertEnd;
+
+            srcPinId = ids[wire.Start.Id];
+            dstPinId = ids[wire.End.Id];
+
+            invertStart = wire.InvertStart ? trueByte : falseByte;
+            invertEnd = wire.InvertEnd ? trueByte : falseByte;
+
+            // connect id
+            commandId = 10;
+            writer.Write(commandId);
+            writer.Write(elementId);
+            ids.Add(wire.Id, elementId);
+            elementId++;
+
+            // source pin id
+            writer.Write(srcPinId);
+            // destination pin id
+            writer.Write(dstPinId);
+            // invert flags
+            writer.Write(invertStart);
+            writer.Write(invertEnd);
+        }
+
+        #endregion
     }
 
     #endregion
