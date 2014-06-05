@@ -15,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Simulation.Tests;
+using Simulation.Binary;
 
 namespace Sheet
 {
@@ -772,12 +773,32 @@ namespace Sheet
             {
                 if (demo == null)
                 {
-                    //var solution = TestDemoSolution.CreateDemoSolution();
-                    
                     var block = _sheetController.GetContent();
                     var serializer = new TestSerializer();
                     var solution = serializer.Serialize(block);
-                    
+
+                    var renamer = new TestRenamer();
+                    renamer.AutoRename(solution);
+
+                    /*
+                    var writer = new BinarySolutionWriter();
+                    writer.Save("test.bin", solution);
+
+                    var reader = new BinarySolutionReader();
+                    var binarySolution = reader.Open("test.bin");
+
+                    var factory = new TestFactory();
+                    var signals = (binarySolution.Children[0].Children[0] as Simulation.Core.Context).Children.Where(c => c is Simulation.Core.Signal).Cast<Simulation.Core.Signal>();
+                    foreach(var signal in signals)
+                    {
+                        var tag = factory.CreateSignalTag(signal.ElementId.ToString(), "", "", "");
+                        binarySolution.Tags.Add(tag);
+                        signal.Tag = tag;
+                    }
+
+                    solution = binarySolution;
+                    */
+
                     demo = new TestDemoSolution(solution, 100);
                     demo.EnableSimulationDebug(false);
                     demo.EnableSimulationLog(false);
