@@ -551,6 +551,10 @@ namespace Sheet
         double LastFinalWidth { get; set; }
         double LastFinalHeight { get; set; }
 
+        // Blocks
+        IBlock GetSelected();
+        IBlock GetContent();
+        
         // Mode
         SheetMode GetMode();
         void SetMode(SheetMode mode);
