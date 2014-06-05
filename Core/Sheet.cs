@@ -570,6 +570,20 @@ namespace Sheet
 
         #endregion
 
+        #region Blocks
+        
+        public IBlock GetSelected()
+        {
+            return SelectedBlock;
+        }
+        
+        public IBlock GetContent()
+        {
+            return ContentBlock;
+        }
+        
+        #endregion
+        
         #region Page
 
         public async void SetPage(string text)
