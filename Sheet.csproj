@@ -92,6 +92,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Controls\PropertiesControl.xaml.cs">
+      <DependentUpon>PropertiesControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Controls\TagsControl.xaml.cs">
       <DependentUpon>TagsControl.xaml</DependentUpon>
     </Compile>
@@ -131,6 +134,10 @@
       <DependentUpon>SolutionControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Core\Csv.cs" />
+    <Page Include="Controls\PropertiesControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Controls\TagsControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
