@@ -145,6 +145,8 @@ namespace Sheet
 
         public void Dispose()
         {
+            StopSimulation();
+
             if (_scopeServiceLocators != null)
             {
                 foreach (var locator in _scopeServiceLocators)
@@ -805,6 +807,7 @@ namespace Sheet
                     demo.StartSimulation();
                     
                     var window = new Window() { Title = "Tags", Width = 300, Height = 500, WindowStartupLocation = WindowStartupLocation.CenterScreen };
+                    window.Owner = this;
                     window.Content = new TagsControl();
                     window.DataContext = solution.Tags;
                     window.Show();
