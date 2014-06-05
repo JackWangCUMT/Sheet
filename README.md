@@ -48,6 +48,10 @@ Keyboard  Shortcuts:
     E               Mode Ellipse
     T               Mode Text
     D               Mode Image
+    (Simulation)
+    F5              Start Simulation
+    F6              Stop Simulation
+    F7              Restart Simulation
     (Logic)
     Q               Invert Line Start
     W               Invert Line End
