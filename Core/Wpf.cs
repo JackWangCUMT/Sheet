@@ -95,7 +95,7 @@ namespace Sheet
             {
                 var bounds = VisualTreeHelper.GetContentBounds(reference.Native as UIElement);
                 var offset = (reference.Native as UIElement).TranslatePoint(new Point(0, 0), relativeTo as UIElement);
-                if (bounds != null && bounds.IsEmpty == false)
+                if (bounds.IsEmpty == false)
                 {
                     bounds.Offset(offset.X, offset.Y);
                 }
