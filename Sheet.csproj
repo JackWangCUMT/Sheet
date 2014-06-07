@@ -106,7 +106,7 @@
     </Compile>
     <Compile Include="Core\Base64.cs" />
     <Compile Include="Core\Block.cs" />
-    <Compile Include="Core\Simulation.cs" />
+    <Compile Include="Simulation\Core.cs" />
     <Compile Include="Core\Test.cs" />
     <Compile Include="Core\Interfaces.cs" />
     <Compile Include="Core\Database.cs" />
@@ -134,6 +134,16 @@
       <DependentUpon>SolutionControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Core\Csv.cs" />
+    <Compile Include="Simulation\Binary\BinaryCommandId.cs" />
+    <Compile Include="Simulation\Binary\BinarySolutionReader.cs" />
+    <Compile Include="Simulation\Binary\BinarySolutionWriter.cs" />
+    <Compile Include="Simulation\Binary\IBinarySolutionReader.cs" />
+    <Compile Include="Simulation\Binary\IBinarySolutionWriter.cs" />
+    <Compile Include="Simulation\Tests\TestFactory.cs" />
+    <Compile Include="Simulation\Tests\TestRenamer.cs" />
+    <Compile Include="Simulation\Tests\TestSimulation.cs" />
+    <Compile Include="Simulation\Tests\TestSimulationFactory.cs" />
+    <Compile Include="Simulation\Tests\TestSerializer.cs" />
     <Page Include="Controls\PropertiesControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -234,6 +244,9 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Simulation\Core\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

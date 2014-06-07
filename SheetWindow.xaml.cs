@@ -14,9 +14,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using Simulation.Core;
-using Simulation.Tests;
-using Simulation.Binary;
+using Sheet.Simulation.Core;
+using Sheet.Simulation.Tests;
+using Sheet.Simulation.Binary;
 
 namespace Sheet
 {
