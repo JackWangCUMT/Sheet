@@ -14,6 +14,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Simulation.Core;
 using Simulation.Tests;
 using Simulation.Binary;
 
@@ -758,29 +759,35 @@ namespace Sheet
 
         #region Simulation
         
-        private TestDemoSolution demo = null;
+        private TestSimulation demo = null;
         
         private void CreateDemoSimulation()
         {
-            var solution = TestDemoSolution.CreateDemoSolution();
-            demo = new TestDemoSolution(solution, 100);
+            var solution = TestSimulation.CreateDemoSolution();
+            demo = new TestSimulation(solution, 100);
             demo.EnableSimulationDebug(false);
             demo.EnableSimulationLog(false);
             demo.StartSimulation();
-        } 
-        
+        }
+
+        private Solution GetSolution()
+        {
+            var block = _sheetController.GetContent();
+            var serializer = new TestSerializer();
+            var solution = serializer.Serialize(block);
+
+            var renamer = new TestRenamer();
+            renamer.Rename(solution);
+            return solution;
+        }
+
         private void StartSimulation()
         {
             try
             {
                 if (demo == null)
                 {
-                    var block = _sheetController.GetContent();
-                    var serializer = new TestSerializer();
-                    var solution = serializer.Serialize(block);
-
-                    var renamer = new TestRenamer();
-                    renamer.AutoRename(solution);
+                    var solution = GetSolution();
 
                     /*
                     var writer = new BinarySolutionWriter();
@@ -801,7 +808,7 @@ namespace Sheet
                     solution = binarySolution;
                     */
 
-                    demo = new TestDemoSolution(solution, 100);
+                    demo = new TestSimulation(solution, 100);
                     demo.EnableSimulationDebug(false);
                     demo.EnableSimulationLog(false);
                     demo.StartSimulation();

@@ -490,7 +490,7 @@ namespace Simulation.Core
             }
         }
 
-        private static bool? CalculateState(Tuple<IBoolState, bool>[] states)
+        private bool? CalculateState(Tuple<IBoolState, bool>[] states)
         {
             int lenght = states.Length;
             if (lenght == 1)
@@ -607,7 +607,7 @@ namespace Simulation.Core
             }
         }
 
-        private static bool? CalculateState(Tuple<IBoolState, bool>[] states)
+        private bool? CalculateState(Tuple<IBoolState, bool>[] states)
         {
             int lenght = states.Length;
             if (lenght == 1)
@@ -1478,6 +1478,8 @@ namespace Simulation.Core
 
     public class Clock : IClock
     {
+        #region Constructor
+
         public Clock()
             : base()
         {
@@ -1490,14 +1492,22 @@ namespace Simulation.Core
             this.Resolution = resolution;
         }
 
+        #endregion
+
+        #region Properties
+
         public long Cycle { get; set; }
-        public int Resolution { get; set; }
+        public int Resolution { get; set; } 
+
+        #endregion
     }
 
     public class BoolState : IBoolState, INotifyPropertyChanged
     {
+        #region INotifyPropertyChanged
+
         public event PropertyChangedEventHandler PropertyChanged;
-        
+
         public virtual void Notify(string propertyName)
         {
             var handler = PropertyChanged;
@@ -1506,7 +1516,11 @@ namespace Simulation.Core
                 handler(this, new PropertyChangedEventArgs(propertyName));
             }
         }
-        
+
+        #endregion
+
+        #region Properties
+
         public bool? previousState;
         public bool? PreviousState
         {
@@ -1520,7 +1534,7 @@ namespace Simulation.Core
                 }
             }
         }
-        
+
         public bool? state;
         public bool? State
         {
@@ -1533,7 +1547,76 @@ namespace Simulation.Core
                     Notify("State");
                 }
             }
+        } 
+
+        #endregion
+    }
+
+    public class TopologicalSort<T> where T : class
+    {
+        #region Sort
+
+        public IEnumerable<T> Sort(IEnumerable<T> source, Func<T, IEnumerable<T>> dependencies, bool ignoreDependencyCycles)
+        {
+            var sorted = new List<T>();
+            var visited = new HashSet<T>();
+
+            foreach (var item in source)
+            {
+                if (SimulationSettings.EnableDebug)
+                {
+                    Debug.Print("+ {0} depends on:", (item as ISimulation).Element.Name);
+                }
+
+                Visit(item, visited, sorted, dependencies, ignoreDependencyCycles);
+
+                if (SimulationSettings.EnableDebug)
+                {
+                    Debug.Print("");
+                }
+            }
+
+            return sorted;
         }
+
+        #endregion
+
+        #region Visit
+
+        private void Visit(T item, HashSet<T> visited, List<T> sorted, Func<T, IEnumerable<T>> dependencies, bool ignoreDependencyCycles)
+        {
+            if (!visited.Contains(item))
+            {
+                visited.Add(item);
+
+                var dependsOn = dependencies(item);
+
+                if (dependsOn != null)
+                {
+                    foreach (var dep in dependsOn)
+                    {
+                        if (SimulationSettings.EnableDebug)
+                        {
+                            Debug.Print("|     {0}", (dep as ISimulation).Element.Name);
+                        }
+
+                        Visit(dep, visited, sorted, dependencies, ignoreDependencyCycles);
+                    }
+
+                    // add items with simulation dependencies
+                    sorted.Add(item);
+                }
+
+                // add  items without simulation dependencies
+                sorted.Add(item);
+            }
+            else if (!ignoreDependencyCycles && !sorted.Contains(item))
+            {
+                Debug.Print("Invalid dependency cycle: {0}", (item as Element).Name);
+            }
+        } 
+
+        #endregion
     }
 
     public static class SimulationSettings
@@ -1542,15 +1625,11 @@ namespace Simulation.Core
         public static bool EnableLog { get; set; }
     }
 
-    public static class Simulation
+    public class Simulation
     {
-        #region Connections by Id
+        #region Pin Connections by Id
 
-        private static void FindPinConnections(Pin root,
-            Pin pin,
-            Dictionary<UInt32, Tuple<Pin, bool>> connections,
-            Dictionary<UInt32, List<Tuple<Pin, bool>>> pinToWireDict,
-            int level)
+        private void FindPinConnections(Pin root, Pin pin, Dictionary<UInt32, Tuple<Pin, bool>> connections, Dictionary<UInt32, List<Tuple<Pin, bool>>> pinToWireDict, int level)
         {
             var connectedPins = pinToWireDict[pin.ElementId].Where(x => x.Item1 != pin && x.Item1 != root && connections.ContainsKey(x.Item1.ElementId) == false);
 
@@ -1575,7 +1654,7 @@ namespace Simulation.Core
             }
         }
 
-        private static Dictionary<UInt32, List<Tuple<Pin, bool>>> PinToWireConections(this Element[] elements)
+        private Dictionary<UInt32, List<Tuple<Pin, bool>>> PinToWireConections(Element[] elements)
         {
             int lenght = elements.Length;
 
@@ -1611,7 +1690,7 @@ namespace Simulation.Core
             return dict;
         }
 
-        private static void FindConnections(Element[] elements)
+        private void FindConnections(Element[] elements)
         {
             if (SimulationSettings.EnableDebug)
             {
@@ -1620,7 +1699,7 @@ namespace Simulation.Core
                 Debug.Print("");
             }
 
-            var pinToWireDict = elements.PinToWireConections();
+            var pinToWireDict = PinToWireConections(elements);
 
             var pins = elements.Where(x => x is IStateSimulation && x.Children != null)
                                .SelectMany(x => x.Children)
@@ -1661,7 +1740,7 @@ namespace Simulation.Core
             pins = null;
         }
 
-        public static void ResetConnections(IEnumerable<Pin> pins)
+        public void ResetConnections(IEnumerable<Pin> pins)
         {
             foreach (var pin in pins)
             {
@@ -1681,8 +1760,7 @@ namespace Simulation.Core
 
         #region State Simulation Dictionary
 
-        public static Dictionary<Type, Func<Element, ISimulation>> StateSimulationDict =
-            new Dictionary<Type, Func<Element, ISimulation>>()
+        public Dictionary<Type, Func<Element, ISimulation>> StateSimulationDict = new Dictionary<Type, Func<Element, ISimulation>>()
         {
             // Tag
             { 
@@ -1756,7 +1834,7 @@ namespace Simulation.Core
 
         #region Simulation
 
-        private static void ProcessInput(Pin input, string level)
+        private void ProcessInput(Pin input, string level)
         {
             var connections = input.Connections;
             var lenght = connections.Length;
@@ -1796,7 +1874,7 @@ namespace Simulation.Core
             }
         }
 
-        private static void ProcessOutput(Pin output, string level)
+        private void ProcessOutput(Pin output, string level)
         {
             var pins = output.SimulationParent.Children.Where(p => p != output).Cast<Pin>();
 
@@ -1823,7 +1901,7 @@ namespace Simulation.Core
             }
         }
 
-        private static void FindPinTypes(IEnumerable<Element> elements)
+        private void FindPinTypes(IEnumerable<Element> elements)
         {
             // find input connections
             var connections = elements.Where(x => x.Children != null)
@@ -1857,7 +1935,7 @@ namespace Simulation.Core
             }
         }
 
-        private static void InitializeStates(List<ISimulation> simulations)
+        private void InitializeStates(List<ISimulation> simulations)
         {
             var lenght = simulations.Count;
 
@@ -1872,7 +1950,7 @@ namespace Simulation.Core
             }
         }
 
-        private static void GenerateCompileCache(List<ISimulation> simulations, IClock clock)
+        private void GenerateCompileCache(List<ISimulation> simulations, IClock clock)
         {
             if (simulations == null)
             {
@@ -1906,7 +1984,7 @@ namespace Simulation.Core
             }
         }
 
-        private static void Calculate(ISimulation[] simulations)
+        private void Calculate(ISimulation[] simulations)
         {
             if (SimulationSettings.EnableDebug)
             {
@@ -1952,7 +2030,7 @@ namespace Simulation.Core
             }
         }
 
-        private static SimulationCache Compile(Element[] elements, IClock clock)
+        private SimulationCache Compile(Element[] elements, IClock clock)
         {
             var sw = System.Diagnostics.Stopwatch.StartNew();
 
@@ -1961,7 +2039,7 @@ namespace Simulation.Core
             // -- step 1: reset pin connections ---
             var pins = elements.Where(x => x is Pin).Cast<Pin>();
 
-            Simulation.ResetConnections(pins);
+            ResetConnections(pins);
 
             // -- step 2: initialize IStateSimulation simulation
             var simulations = new List<ISimulation>();
@@ -1978,7 +2056,7 @@ namespace Simulation.Core
             }
 
             // -- step 3: update pin connections ---
-            Simulation.FindConnections(elements);
+            FindConnections(elements);
 
             if (SimulationSettings.EnableDebug)
             {
@@ -1987,13 +2065,13 @@ namespace Simulation.Core
             }
 
             // -- step 4: get ordered elements for simulation ---
-            Simulation.FindPinTypes(elements);
+            FindPinTypes(elements);
 
             // -- step 5: initialize ISimulation states
-            Simulation.InitializeStates(simulations);
+            InitializeStates(simulations);
 
             // -- step 6: complile each simulation ---
-            Simulation.GenerateCompileCache(simulations, clock);
+            GenerateCompileCache(simulations, clock);
 
             // -- step 7: sort simulations using dependencies ---
 
@@ -2003,13 +2081,14 @@ namespace Simulation.Core
                 Debug.Print("");
             }
 
-            var sortedSimulations = simulations.TopologicalSort(x =>
+            var ts = new TopologicalSort<ISimulation>();
+            var sortedSimulations = ts.Sort(simulations, x =>
             {
                 if (x.DependsOn == null)
                     return null;
                 else
                     return x.DependsOn.Cast<IStateSimulation>().Select(y => y.Simulation);
-            });
+            }, true);
 
             if (SimulationSettings.EnableDebug)
             {
@@ -2050,16 +2129,12 @@ namespace Simulation.Core
             return cache;
         }
 
-        #endregion
-
-        #region Run
-
-        public static SimulationCache Compile(IEnumerable<Context> contexts, IEnumerable<Tag> tags, IClock clock)
+        public SimulationCache Compile(IEnumerable<Context> contexts, IEnumerable<Tag> tags, IClock clock)
         {
             var elements = contexts.SelectMany(x => x.Children).Concat(tags).ToArray();
 
             // compile elements
-            var cache = Simulation.Compile(elements, clock);
+            var cache = Compile(elements, clock);
 
             // collect unused memory
             System.GC.Collect();
@@ -2067,12 +2142,12 @@ namespace Simulation.Core
             return cache;
         }
 
-        public static SimulationCache Compile(Context context, IEnumerable<Tag> tags, IClock clock)
+        public SimulationCache Compile(Context context, IEnumerable<Tag> tags, IClock clock)
         {
             var elements = context.Children.Concat(tags).ToArray();
 
             // compile elements
-            var cache = Simulation.Compile(elements, clock);
+            var cache = Compile(elements, clock);
 
             // collect unused memory
             System.GC.Collect();
@@ -2080,89 +2155,39 @@ namespace Simulation.Core
             return cache;
         }
 
-        public static void Run(SimulationCache cache)
+        public void Run(SimulationCache cache)
         {
             if (cache == null || cache.HaveCache == false)
                 return;
 
-            Simulation.Calculate(cache.Simulations);
-        }
-
-        #endregion
-
-        #region Topological Sort
-
-        private static IEnumerable<T> TopologicalSort<T>(this IEnumerable<T> source, Func<T, IEnumerable<T>> dependencies)
-        {
-            var sorted = new List<T>();
-            var visited = new HashSet<T>();
-
-            foreach (var item in source)
-            {
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print("+ {0} depends on:", (item as ISimulation).Element.Name);
-                }
-
-                Visit(item, visited, sorted, dependencies);
-
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print("");
-                }
-            }
-
-            return sorted;
-        }
-
-        private static void Visit<T>(T item, HashSet<T> visited, List<T> sorted, Func<T, IEnumerable<T>> dependencies)
-        {
-            if (!visited.Contains(item))
-            {
-                visited.Add(item);
-
-                var dependsOn = dependencies(item);
-
-                if (dependsOn != null)
-                {
-                    foreach (var dep in dependsOn)
-                    {
-                        if (SimulationSettings.EnableDebug)
-                        {
-                            Debug.Print("|     {0}", (dep as ISimulation).Element.Name);
-                        }
-
-                        Visit(dep, visited, sorted, dependencies);
-                    }
-
-                    // add items with simulation dependencies
-                    sorted.Add(item);
-                }
-
-                // add  items without simulation dependencies
-                sorted.Add(item);
-            }
-            //else if (!sorted.Contains(item))
-            //{
-            //    Debug.Print("Invalid dependency cycle: {0}", (item as Element).Name);
-            //}
+            Calculate(cache.Simulations);
         }
 
         #endregion
     }
 
-    public static class SimulationFactory
+    public class SimulationFactory
     {
         #region Properties
 
-        public static SimulationContext CurrentSimulationContext { get; set; }
-        public static bool IsConsole { get; set; }
+        public Simulation Simulation { get; private set; }
+        public SimulationContext CurrentSimulationContext { get; set; }
+        public bool IsConsole { get; set; }
+
+        #endregion
+
+        #region Constructor
+
+        public SimulationFactory()
+        {
+            Simulation = new Simulation();
+        } 
 
         #endregion
 
         #region Reset
 
-        public static void Reset(bool collect)
+        public void Reset(bool collect)
         {
             // reset simulation cache
             if (CurrentSimulationContext.Cache != null)
@@ -2183,7 +2208,7 @@ namespace Simulation.Core
 
         #region Simulation
 
-        private static void Run(IEnumerable<Context> contexts, IEnumerable<Tag> tags, bool showInfo)
+        private void Run(IEnumerable<Context> contexts, IEnumerable<Tag> tags, bool showInfo)
         {
             // print simulation info
             if (showInfo)
@@ -2209,7 +2234,7 @@ namespace Simulation.Core
             }
         }
 
-        private static void Run(Action<object> action, object contexts, object tags, TimeSpan period)
+        private void Run(Action<object> action, object contexts, object tags, TimeSpan period)
         {
             CurrentSimulationContext.SimulationClock.Cycle = 0;
             CurrentSimulationContext.SimulationClock.Resolution = (int)period.TotalMilliseconds;
@@ -2270,7 +2295,7 @@ namespace Simulation.Core
                 period);
         }
 
-        private static void LogRun(Action run, string message)
+        private void LogRun(Action run, string message)
         {
             string logPath = string.Format("run-{0:yyyy-MM-dd_HH-mm-ss-fff}.log", DateTime.Now);
             var consoleOut = Console.Out;
@@ -2291,7 +2316,7 @@ namespace Simulation.Core
             Debug.Print("Done {0}.", message);
         }
 
-        public static void Run(List<Context> contexts, IEnumerable<Tag> tags, int period, Action update)
+        public void Run(List<Context> contexts, IEnumerable<Tag> tags, int period, Action update)
         {
             ResetTimerAndClock();
 
@@ -2311,7 +2336,7 @@ namespace Simulation.Core
                 action();
         }
 
-        public static void Run(List<Context> contexts, IEnumerable<Tag> tags)
+        public void Run(List<Context> contexts, IEnumerable<Tag> tags)
         {
             ResetTimerAndClock();
 
@@ -2321,7 +2346,7 @@ namespace Simulation.Core
                 Run(contexts, tags, true);
         }
 
-        public static void Stop()
+        public void Stop()
         {
             if (CurrentSimulationContext != null &&
             CurrentSimulationContext.SimulationTimer != null)
@@ -2330,7 +2355,7 @@ namespace Simulation.Core
             }
         }
 
-        public static void ResetTimerAndClock()
+        public void ResetTimerAndClock()
         {
             // stop simulation timer
             if (CurrentSimulationContext.SimulationTimer != null)
@@ -2355,8 +2380,406 @@ namespace Simulation.Tests
 
     #region Tests
 
+    public class TestSerializer
+    {
+        #region Fields
+
+        private TestFactory _factory = new TestFactory();
+        private ObservableCollection<Tag> tags = null;
+        private Dictionary<int, Pin> map = null; 
+
+        #endregion
+        
+        #region Compare
+
+        private bool Compare(string strA, string strB)
+        {
+            return string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase) == 0;
+        }
+
+        #endregion
+
+        #region Ids
+
+        private int SetId(IBlock parent, int nextId)
+        {
+            if (parent.Points != null)
+            {
+                foreach (var point in parent.Points)
+                {
+                    point.Id = nextId++;
+                }
+            }
+
+            if (parent.Lines != null)
+            {
+                foreach (var line in parent.Lines)
+                {
+                    line.Id = nextId++;
+                }
+            }
+
+            if (parent.Blocks != null)
+            {
+                foreach (var block in parent.Blocks)
+                {
+                    block.Id = nextId++;
+                    nextId = SetId(block, nextId);
+                }
+            }
+
+            return nextId;
+        }
+
+        #endregion
+
+        #region Create
+
+        private Tag CreateSignalTag(string designation, string description, string signal, string condition)
+        {
+            var tag = new Tag() { Id = Guid.NewGuid().ToString() };
+            tag.Properties.Add("Designation", new Property(designation));
+            tag.Properties.Add("Description", new Property(description));
+            tag.Properties.Add("Signal", new Property(signal));
+            tag.Properties.Add("Condition", new Property(condition));
+            return tag;
+        }
+
+        private Wire CreateWire(Context context, Pin start, Pin end)
+        {
+            var element = new Wire()
+            {
+                Start = start,
+                End = end,
+                X = 0,
+                Y = 0,
+                Id = Guid.NewGuid().ToString(),
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            return element;
+        }
+
+        private Pin CreatePin(Context context, double x, double y, Element parent, string name = "", string factoryName = "", PinType type = PinType.Undefined, bool pinTypeUndefined = true)
+        {
+            var element = new Pin()
+            {
+                Name = name,
+                FactoryName = factoryName,
+                X = x,
+                Y = y,
+                Id = Guid.NewGuid().ToString(),
+                Parent = parent,
+                Type = type,
+                IsPinTypeUndefined = pinTypeUndefined
+            };
+
+            if (parent != null && !(parent is Context))
+            {
+                parent.Children.Add(element);
+            }
+
+            context.Children.Add(element);
+
+            return element;
+        }
+
+        private Signal CreateSignal(Context context, IBlock block)
+        {
+            var tag = _factory.CreateSignalTag("tag" + block.Id.ToString(), "", "", "");
+            tags.Add(tag);
+
+            var element = new Signal()
+            {
+                Name = block.Name.ToLower() + block.Id.ToString(),
+                Id = Guid.NewGuid().ToString(),
+                X = block.X,
+                Y = block.Y,
+                Tag = tag,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            var input = block.Points[0];
+            var output = block.Points[1];
+
+            var ipin = CreatePin(context, input.X, input.Y, element, "I", "I", PinType.Input, false);
+            var opin = CreatePin(context, output.X, output.Y, element, "O", "O", PinType.Output, false);
+
+            map.Add(input.Id, ipin);
+            map.Add(output.Id, opin);
+
+            return element;
+        }
+
+        private AndGate CreateAndGate(Context context, IBlock block)
+        {
+            var element = new AndGate()
+            {
+                Name = block.Name.ToLower() + block.Id.ToString(),
+                Id = Guid.NewGuid().ToString(),
+                X = block.X,
+                Y = block.Y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            var left = block.Points[0];
+            var right = block.Points[1];
+            var top = block.Points[2];
+            var bottom = block.Points[3];
+
+            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
+            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
+            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
+            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
+
+            map.Add(left.Id, lpin);
+            map.Add(right.Id, rpin);
+            map.Add(top.Id, tpin);
+            map.Add(bottom.Id, bpin);
+
+            return element;
+        }
+
+        private OrGate CreateOrGate(Context context, IBlock block)
+        {
+            var element = new OrGate()
+            {
+                Name = block.Name.ToLower() + block.Id.ToString(),
+                Id = Guid.NewGuid().ToString(),
+                X = block.X,
+                Y = block.Y,
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            var left = block.Points[0];
+            var right = block.Points[1];
+            var top = block.Points[2];
+            var bottom = block.Points[3];
+
+            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
+            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
+            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
+            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
+
+            map.Add(left.Id, lpin);
+            map.Add(right.Id, rpin);
+            map.Add(top.Id, tpin);
+            map.Add(bottom.Id, bpin);
+
+            return element;
+        }
+
+        private TimerOn CreateTimerOn(Context context, IBlock block)
+        {
+            var element = new TimerOn()
+            {
+                Name = block.Name.ToLower() + block.Id.ToString(),
+                Id = Guid.NewGuid().ToString(),
+                X = block.X,
+                Y = block.Y,
+                Parent = context,
+                Delay = 1.0f
+            };
+
+            context.Children.Add(element);
+
+            var left = block.Points[0];
+            var right = block.Points[1];
+            var top = block.Points[2];
+            var bottom = block.Points[3];
+
+            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
+            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
+            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
+            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
+
+            map.Add(left.Id, lpin);
+            map.Add(right.Id, rpin);
+            map.Add(top.Id, tpin);
+            map.Add(bottom.Id, bpin);
+
+            return element;
+        }
+
+        private TimerOff CreateTimerOff(Context context, IBlock block)
+        {
+            var element = new TimerOff()
+            {
+                Name = block.Name.ToLower() + block.Id.ToString(),
+                Id = Guid.NewGuid().ToString(),
+                X = block.X,
+                Y = block.Y,
+                Parent = context,
+                Delay = 1.0f
+            };
+
+            context.Children.Add(element);
+
+            var left = block.Points[0];
+            var right = block.Points[1];
+            var top = block.Points[2];
+            var bottom = block.Points[3];
+
+            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
+            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
+            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
+            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
+
+            map.Add(left.Id, lpin);
+            map.Add(right.Id, rpin);
+            map.Add(top.Id, tpin);
+            map.Add(bottom.Id, bpin);
+
+            return element;
+        }
+
+        private TimerPulse CreateTimerPulse(Context context, IBlock block)
+        {
+            var element = new TimerPulse()
+            {
+                Name = block.Name.ToLower() + block.Id.ToString(),
+                Id = Guid.NewGuid().ToString(),
+                X = block.X,
+                Y = block.Y,
+                Parent = context,
+                Delay = 1.0f
+            };
+
+            context.Children.Add(element);
+
+            var left = block.Points[0];
+            var right = block.Points[1];
+            var top = block.Points[2];
+            var bottom = block.Points[3];
+
+            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
+            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
+            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
+            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
+
+            map.Add(left.Id, lpin);
+            map.Add(right.Id, rpin);
+            map.Add(top.Id, tpin);
+            map.Add(bottom.Id, bpin);
+
+            return element;
+        } 
+        
+        #endregion
+
+        #region Serialize
+
+        private Pin Serialize(Context context, IPoint point)
+        {
+            var pin = CreatePin(context, point.X, point.Y, context, "pin" + point.Id.ToString());
+            map.Add(point.Id, pin);
+            return pin;
+        }
+
+        private Wire Serialize(Context context, ILine line)
+        {
+            Pin start = map[line.Start.Id];
+            Pin end = map[line.End.Id];
+            var wire = CreateWire(context, start, end);
+            return wire;
+        }
+
+        private Element Serialize(Context context, IBlock block)
+        {
+            if (Compare(block.Name, "SIGNAL"))
+            {
+                return CreateSignal(context, block);
+            }
+            else if (Compare(block.Name, "AND"))
+            {
+                return CreateAndGate(context, block);
+            }
+            else if (Compare(block.Name, "OR"))
+            {
+                return CreateOrGate(context, block);
+            }
+            else if (Compare(block.Name, "TIMER-ON"))
+            {
+                return CreateTimerOn(context, block);
+            }
+            else if (Compare(block.Name, "TIMER-OFF"))
+            {
+                return CreateTimerOff(context, block);
+            }
+            else if (Compare(block.Name, "TIMER-PULSE"))
+            {
+                return CreateTimerPulse(context, block);
+            }
+            else
+            {
+                throw new Exception("Unsupported block Name");
+            }
+        }
+
+        private void SerializerContents(Context context, IBlock root)
+        {
+            SetId(root, 1);
+
+            if (root.Blocks != null)
+            {
+                foreach (var block in root.Blocks)
+                {
+                    Serialize(context, block);
+                }
+            }
+
+            if (root.Points != null)
+            {
+                foreach (var point in root.Points)
+                {
+                    Serialize(context, point);
+                }
+            }
+
+            if (root.Lines != null)
+            {
+                foreach (var line in root.Lines)
+                {
+                    Serialize(context, line);
+                }
+            }
+        }
+
+        public Solution Serialize(IBlock root)
+        {
+            var solution = new Solution() { Id = Guid.NewGuid().ToString(), Name = "solution", DefaultTag = null };
+
+            var project = new Project() { Id = Guid.NewGuid().ToString(), Name = "project", Parent = solution };
+            solution.Children.Add(project);
+
+            var context = new Context() { Id = Guid.NewGuid().ToString(), Name = "context", Parent = project };
+            project.Children.Add(context);
+
+            map = new Dictionary<int, Pin>();
+            tags = new ObservableCollection<Tag>();
+
+            SerializerContents(context, root);
+
+            solution.Tags = tags;
+
+            return solution;
+        } 
+
+        #endregion
+    }
+
     public class TestFactory
     {
+        #region Create
+
         public Tag CreateSignalTag(string designation, string description, string signal, string condition)
         {
             var tag = new Tag() { Id = Guid.NewGuid().ToString() };
@@ -2870,15 +3293,18 @@ namespace Simulation.Tests
             };
 
             return element;
-        }
+        } 
+        
+        #endregion
     }
 
-    public class TestSimulation
+    public class TestSimulationFactory
     {
         #region Fields
 
         private Solution _solution;
         private Clock _clock;
+        private SimulationFactory _factory;
         private int _periodInMillisencods;
         private bool _isSimulationRunning = false;
 
@@ -2887,13 +3313,15 @@ namespace Simulation.Tests
         #region Properties
 
         public Solution Solution { get { return _solution; } }
+        public Clock Clock { get { return _clock; } }
+        public SimulationFactory SimulationFactory { get { return _factory; } }
         public bool IsSimulationRunning { get { return _isSimulationRunning; } }
 
         #endregion
 
         #region Constructor
 
-        public TestSimulation(Solution solution, int periodInMillisencods = 100)
+        public TestSimulationFactory(Solution solution, int periodInMillisencods = 100)
         {
             _solution = solution;
             _periodInMillisencods = periodInMillisencods;
@@ -2979,16 +3407,17 @@ namespace Simulation.Tests
 
         private void Initialize()
         {
+            _factory = new SimulationFactory();
             _clock = new Clock();
 
             // create simulation context
-            SimulationFactory.CurrentSimulationContext = new SimulationContext()
+            _factory.CurrentSimulationContext = new SimulationContext()
             {
                 Cache = null,
                 SimulationClock = _clock
             };
 
-            SimulationFactory.IsConsole = false;
+            _factory.IsConsole = false;
 
             // disable Console debug output
             SimulationSettings.EnableDebug = false;
@@ -3000,7 +3429,7 @@ namespace Simulation.Tests
         public void Start()
         {
             // simulation is already running
-            if (SimulationFactory.CurrentSimulationContext.SimulationTimer != null)
+            if (_factory.CurrentSimulationContext.SimulationTimer != null)
                 return;
 
             if (_solution == null)
@@ -3042,10 +3471,10 @@ namespace Simulation.Tests
             int period = _periodInMillisencods;
 
             // reset previous simulation cache
-            SimulationFactory.Reset(true);
+            _factory.Reset(true);
 
             // run simulation
-            SimulationFactory.Run(contexts, _solution.Tags, period, () => { });
+            _factory.Run(contexts, _solution.Tags, period, () => { });
             _isSimulationRunning = true;
 
             // reset simulation parent
@@ -3057,15 +3486,15 @@ namespace Simulation.Tests
 
         public void Stop()
         {
-            if (SimulationFactory.CurrentSimulationContext.SimulationTimer != null)
+            if (_factory.CurrentSimulationContext.SimulationTimer != null)
             {
                 // stop simulation
-                SimulationFactory.Stop();
+                _factory.Stop();
 
                 _isSimulationRunning = false;
 
                 // reset previous simulation cache
-                SimulationFactory.Reset(true);
+                _factory.Reset(true);
 
                 ResetTags();
             }
@@ -3076,46 +3505,7 @@ namespace Simulation.Tests
 
     public class TestRenamer
     {
-        public void AutoRename(Element element)
-        {
-            AutoRenameSelector(element);
-        }
-
-        public void AutoRenameSelector(Element element)
-        {
-            if (element is Context)
-            {
-                AutoRenameElements(element as Context);
-            }
-            else if (element is Project)
-            {
-                AutoRenameElements(element as Project);
-            }
-            else if (element is Solution)
-            {
-                AutoRenameElements(element as Solution);
-            }
-            else
-            {
-                throw new Exception("Not supported Type for rename.");
-            }
-        }
-
-        private Dictionary<string, int> GetLogicModelCounters()
-        {
-            // element counters based on type
-            var types = System.Reflection.Assembly.GetAssembly(typeof(Solution))
-                                                  .GetTypes()
-                                                  .Where(x => x.IsClass && x.Namespace == "Simulation.Core")
-                                                  .Select(y => y.ToString().Split('.').Last());
-
-            // counters: key = element Type, value = element counter
-            var counters = new Dictionary<string, int>();
-            foreach (var type in types)
-                counters.Add(type, 0);
-
-            return counters;
-        }
+        #region Fields
 
         private Dictionary<string, string> ShortElementNames = new Dictionary<string, string>()
         {
@@ -3145,10 +3535,58 @@ namespace Simulation.Tests
 		    { "MemorySetPriority", "ms" }
         };
 
-        private void AutoRenameElements(Solution solution)
+        #endregion
+
+        #region Counters
+
+        public const string CountersNamepsace = "Simulation.Core";
+        
+        private Dictionary<string, int> GetCountersDictionary()
+        {
+            // element counters based on type
+            var types = System.Reflection.Assembly.GetAssembly(typeof(Solution))
+                                                  .GetTypes()
+                                                  .Where(x => x.IsClass && x.Namespace == CountersNamepsace)
+                                                  .Select(y => y.ToString().Split('.').Last());
+
+            // counters: key = element Type, value = element counter
+            var counters = new Dictionary<string, int>();
+            foreach (var type in types)
+            {
+                counters.Add(type, 0);
+            }
+
+            return counters;
+        }
+
+        #endregion
+
+        #region Rename
+
+        public void Rename(Element element)
+        {
+            if (element is Context)
+            {
+                Rename(element as Context);
+            }
+            else if (element is Project)
+            {
+                Rename(element as Project);
+            }
+            else if (element is Solution)
+            {
+                Rename(element as Solution);
+            }
+            else
+            {
+                throw new ArgumentException("Not supported element Type.");
+            }
+        }
+
+        public void Rename(Solution solution)
         {
             // counters: key = element Type, value = element counter
-            Dictionary<string, int> counters = GetLogicModelCounters();
+            Dictionary<string, int> counters = GetCountersDictionary();
 
             // dict: key = element Id, value = generated name for simulation
             Dictionary<string, string> ids = new Dictionary<string, string>();
@@ -3181,14 +3619,14 @@ namespace Simulation.Tests
                 // rename contexts
                 var contexts = project.Children.Cast<Context>();
 
-                AutoRenameElements(contexts, counters, ids);
+                Rename(contexts, counters, ids);
             }
         }
 
-        private void AutoRenameElements(Project project)
+        public void Rename(Project project)
         {
             // counters: key = element Type, value = element counter
-            Dictionary<string, int> counters = GetLogicModelCounters();
+            Dictionary<string, int> counters = GetCountersDictionary();
 
             // dict: key = element Id, value = generated name for simulation
             Dictionary<string, string> ids = new Dictionary<string, string>();
@@ -3206,29 +3644,29 @@ namespace Simulation.Tests
             // rename contexts
             var contexts = project.Children.Cast<Context>();
 
-            AutoRenameElements(contexts, counters, ids);
+            Rename(contexts, counters, ids);
         }
 
-        private void AutoRenameElements(Context context)
+        public void Rename(Context context)
         {
             // counters: key = element Type, value = element counter
-            Dictionary<string, int> counters = GetLogicModelCounters();
+            Dictionary<string, int> counters = GetCountersDictionary();
 
             // dict: key = element Id, value = generated name for simulation
             Dictionary<string, string> ids = new Dictionary<string, string>();
 
-            AutoRenameContext(context, counters, ids);
+            Rename(context, counters, ids);
         }
 
-        private void AutoRenameElements(IEnumerable<Context> contexts, Dictionary<string, int> counters, Dictionary<string, string> ids)
+        private void Rename(IEnumerable<Context> contexts, Dictionary<string, int> counters, Dictionary<string, string> ids)
         {
             foreach (var context in contexts)
             {
-                AutoRenameContext(context, counters, ids);
+                Rename(context, counters, ids);
             }
         }
 
-        public void AutoRenameContext(Context context, Dictionary<string, int> counters, Dictionary<string, string> ids)
+        public void Rename(Context context, Dictionary<string, int> counters, Dictionary<string, string> ids)
         {
             string context_name = string.Format("{0}{1}",
                 ShortElementNames["Context"],
@@ -3269,23 +3707,63 @@ namespace Simulation.Tests
                 }
             }
         }
+
+        #endregion
     }
 
-    public class TestDemoSolution
+    public class TestSimulation
     {
-        private TestSimulation _simulation = null;
-        private Solution _solution = null;
+        #region Fields
 
-        public TestDemoSolution(Solution solution, int period)
+        private Solution _solution;
+        private TestSimulationFactory _simulation;
+
+        #endregion
+
+        #region Constructor
+
+        public TestSimulation(Solution solution, int period)
         {
             _solution = solution;
-            _simulation = new TestSimulation(_solution, period);
+            _simulation = new TestSimulationFactory(_solution, period);
         }
+
+        #endregion
+
+        #region Simulation Settings
+
+        public void EnableSimulationDebug(bool enable)
+        {
+            SimulationSettings.EnableDebug = enable;
+        }
+
+        public void EnableSimulationLog(bool enable)
+        {
+            SimulationSettings.EnableLog = enable;
+        }
+
+        #endregion
+
+        #region Simulation
+
+        public void StartSimulation()
+        {
+            _simulation.Start();
+        }
+
+        public void StopSimulation()
+        {
+            _simulation.Stop();
+        } 
+
+        #endregion
+
+        #region Demo Solution
 
         public static Solution CreateDemoSolution()
         {
             var factory = new TestFactory();
-        
+
             // create solution
             var solution = new Solution() { Id = Guid.NewGuid().ToString(), Name = "solution", DefaultTag = factory.CreateSignalTag("tag", "", "", "") };
 
@@ -3330,401 +3808,7 @@ namespace Simulation.Tests
             return solution;
         }
 
-        public void EnableSimulationDebug(bool enable)
-        {
-            SimulationSettings.EnableDebug = enable;
-        }
-
-        public void EnableSimulationLog(bool enable)
-        {
-            SimulationSettings.EnableLog = enable;
-        }
-
-        public void StartSimulation()
-        {
-            _simulation.Start();
-        }
-
-        public void StopSimulation()
-        {
-            _simulation.Stop();
-        }
-    }
-
-    public class TestSerializer
-    {
-        private TestFactory _factory = new TestFactory();
-        private ObservableCollection<Tag> tags = null;
-        private Dictionary<int, Pin> map = null;
-
-        private bool Compare(string strA, string strB)
-        {
-            return string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase) == 0;
-        }
-
-        private int SetId(IBlock parent, int nextId)
-        {
-            if (parent.Points != null)
-            {
-                foreach (var point in parent.Points)
-                {
-                    point.Id = nextId++;
-                }
-            }
-
-            if (parent.Lines != null)
-            {
-                foreach (var line in parent.Lines)
-                {
-                    line.Id = nextId++;
-                }
-            }
-
-            if (parent.Blocks != null)
-            {
-                foreach (var block in parent.Blocks)
-                {
-                    block.Id = nextId++;
-                    nextId = SetId(block, nextId);
-                } 
-            }
-
-            return nextId;
-        }
-
-        private Tag CreateSignalTag(string designation, string description, string signal, string condition)
-        {
-            var tag = new Tag() { Id = Guid.NewGuid().ToString() };
-            tag.Properties.Add("Designation", new Property(designation));
-            tag.Properties.Add("Description", new Property(description));
-            tag.Properties.Add("Signal", new Property(signal));
-            tag.Properties.Add("Condition", new Property(condition));
-            return tag;
-        }
-
-        private Wire CreateWire(Context context, Pin start, Pin end)
-        {
-            var element = new Wire()
-            {
-                Start = start,
-                End = end,
-                X = 0,
-                Y = 0,
-                Id = Guid.NewGuid().ToString(),
-                Parent = context
-            };
-
-            context.Children.Add(element);
-
-            return element;
-        }
-
-        private Pin CreatePin(Context context, double x, double y, Element parent, string name = "", string factoryName = "", PinType type = PinType.Undefined, bool pinTypeUndefined = true)
-        {
-            var element = new Pin()
-            {
-                Name = name,
-                FactoryName = factoryName,
-                X = x,
-                Y = y,
-                Id = Guid.NewGuid().ToString(),
-                Parent = parent,
-                Type = type,
-                IsPinTypeUndefined = pinTypeUndefined
-            };
-
-            if (parent != null && !(parent is Context))
-            {
-                parent.Children.Add(element);
-            }
-
-            context.Children.Add(element);
-
-            return element;
-        }
-
-        private Signal CreateSignal(Context context, IBlock block)
-        {
-            var tag = _factory.CreateSignalTag("tag" + block.Id.ToString(), "", "", "");
-            tags.Add(tag);
-
-            var element = new Signal()
-            {
-                Name = block.Name.ToLower() + block.Id.ToString(),
-                Id = Guid.NewGuid().ToString(),
-                X = block.X,
-                Y = block.Y,
-                Tag = tag,
-                Parent = context
-            };
-
-            context.Children.Add(element);
-
-            var input = block.Points[0];
-            var output = block.Points[1];
-            
-            var ipin = CreatePin(context, input.X, input.Y, element, "I", "I", PinType.Input, false);
-            var opin = CreatePin(context, output.X, output.Y, element, "O", "O", PinType.Output, false);
-
-            map.Add(input.Id, ipin);
-            map.Add(output.Id, opin);
-  
-            return element;
-        }
-
-        private AndGate CreateAndGate(Context context, IBlock block)
-        {
-            var element = new AndGate()
-            {
-                Name = block.Name.ToLower() + block.Id.ToString(),
-                Id = Guid.NewGuid().ToString(),
-                X = block.X,
-                Y = block.Y,
-                Parent = context
-            };
-
-            context.Children.Add(element);
-
-            var left = block.Points[0];
-            var right = block.Points[1];
-            var top = block.Points[2];
-            var bottom = block.Points[3];
-
-            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
-            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
-            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
-            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
-
-            map.Add(left.Id, lpin);
-            map.Add(right.Id, rpin);
-            map.Add(top.Id, tpin);
-            map.Add(bottom.Id, bpin);
-            
-            return element;
-        }
-
-        private OrGate CreateOrGate(Context context, IBlock block)
-        {
-            var element = new OrGate()
-            {
-                Name = block.Name.ToLower() + block.Id.ToString(),
-                Id = Guid.NewGuid().ToString(),
-                X = block.X,
-                Y = block.Y,
-                Parent = context
-            };
-
-            context.Children.Add(element);
-
-            var left = block.Points[0];
-            var right = block.Points[1];
-            var top = block.Points[2];
-            var bottom = block.Points[3];
-
-            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
-            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
-            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
-            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
-
-            map.Add(left.Id, lpin);
-            map.Add(right.Id, rpin);
-            map.Add(top.Id, tpin);
-            map.Add(bottom.Id, bpin);
-            
-            return element;
-        }
-
-        private TimerOn CreateTimerOn(Context context, IBlock block)
-        {
-            var element = new TimerOn()
-            {
-                Name = block.Name.ToLower() + block.Id.ToString(),
-                Id = Guid.NewGuid().ToString(),
-                X = block.X,
-                Y = block.Y,
-                Parent = context,
-                Delay = 1.0f
-            };
-
-            context.Children.Add(element);
-
-            var left = block.Points[0];
-            var right = block.Points[1];
-            var top = block.Points[2];
-            var bottom = block.Points[3];
-
-            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
-            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
-            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
-            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
-
-            map.Add(left.Id, lpin);
-            map.Add(right.Id, rpin);
-            map.Add(top.Id, tpin);
-            map.Add(bottom.Id, bpin);
-            
-            return element;
-        }
-
-        private TimerOff CreateTimerOff(Context context, IBlock block)
-        {
-            var element = new TimerOff()
-            {
-                Name = block.Name.ToLower() + block.Id.ToString(),
-                Id = Guid.NewGuid().ToString(),
-                X = block.X,
-                Y = block.Y,
-                Parent = context,
-                Delay = 1.0f
-            };
-
-            context.Children.Add(element);
-
-            var left = block.Points[0];
-            var right = block.Points[1];
-            var top = block.Points[2];
-            var bottom = block.Points[3];
-
-            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
-            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
-            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
-            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
-
-            map.Add(left.Id, lpin);
-            map.Add(right.Id, rpin);
-            map.Add(top.Id, tpin);
-            map.Add(bottom.Id, bpin);
-            
-            return element;
-        }
-
-        private TimerPulse CreateTimerPulse(Context context, IBlock block)
-        {
-            var element = new TimerPulse()
-            {
-                Name = block.Name.ToLower() + block.Id.ToString(),
-                Id = Guid.NewGuid().ToString(),
-                X = block.X,
-                Y = block.Y,
-                Parent = context,
-                Delay = 1.0f
-            };
-
-            context.Children.Add(element);
-
-            var left = block.Points[0];
-            var right = block.Points[1];
-            var top = block.Points[2];
-            var bottom = block.Points[3];
-
-            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
-            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
-            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
-            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
-
-            map.Add(left.Id, lpin);
-            map.Add(right.Id, rpin);
-            map.Add(top.Id, tpin);
-            map.Add(bottom.Id, bpin);
-            
-            return element;
-        }
-
-        private Pin Serialize(Context context, IPoint point)
-        { 
-            var pin = CreatePin(context, point.X, point.Y, context, "pin" + point.Id.ToString());
-            map.Add(point.Id, pin);
-            return pin;
-        }
-
-        private Wire Serialize(Context context, ILine line)
-        {
-            Pin start = map[line.Start.Id];
-            Pin end = map[line.End.Id];
-            var wire = CreateWire(context, start, end);
-            return wire;
-        }
-
-        private Element Serialize(Context context, IBlock block)
-        {
-            if (Compare(block.Name, "SIGNAL"))
-            {
-                return CreateSignal(context, block);
-            }
-            else if (Compare(block.Name, "AND"))
-            {
-                return CreateAndGate(context, block);
-            }
-            else if (Compare(block.Name, "OR"))
-            {
-                return CreateOrGate(context, block);
-            }
-            else if (Compare(block.Name, "TIMER-ON"))
-            {
-                return CreateTimerOn(context, block);
-            }
-            else if (Compare(block.Name, "TIMER-OFF"))
-            {
-                return CreateTimerOff(context, block);
-            }
-            else if (Compare(block.Name, "TIMER-PULSE"))
-            {
-                return CreateTimerPulse(context, block);
-            }
-            else
-            {
-                throw new Exception("Unsupported block Name");
-            }
-        }
-
-        private void SerializerContents(Context context, IBlock root)
-        {
-            SetId(root, 1);
-
-            if (root.Blocks != null)
-            {
-                foreach (var block in root.Blocks)
-                {
-                    Serialize(context, block);
-                }
-            }
-            
-            if (root.Points != null)
-            {
-                foreach (var point in root.Points)
-                {
-                    Serialize(context, point);
-                }
-            }
-
-            if (root.Lines != null)
-            {
-                foreach (var line in root.Lines)
-                {
-                    Serialize(context, line);
-                }
-            }
-        }
-        
-        public Solution Serialize(IBlock root)
-        {
-            var solution = new Solution() { Id = Guid.NewGuid().ToString(), Name = "solution", DefaultTag = null };
-
-            var project = new Project() { Id = Guid.NewGuid().ToString(), Name = "project", Parent = solution };
-            solution.Children.Add(project);
-
-            var context = new Context() { Id = Guid.NewGuid().ToString(), Name = "context", Parent = project };
-            project.Children.Add(context);
-
-            map = new Dictionary<int, Pin>();
-            tags = new ObservableCollection<Tag>();
-
-            SerializerContents(context, root);
-
-            solution.Tags = tags;
-
-            return solution;
-        }
+        #endregion
     }
 
     #endregion
@@ -3771,38 +3855,38 @@ namespace Simulation.Binary
     // 8    TimerOff
     // 9    TimerPulse
     // 10   Connect
-
+    //
     // Solution command:
     // UInt32 Id;
-
+    //
     // Project command:
     // UInt32 Id;
-
+    //
     // Context command:
     // UInt32 Id;
-
+    //
     // Pin command:
     // UInt32 Id;
-
+    //
     // Signal command:
     // UInt32 Id;
     // UInt32 InputPinId;
     // UInt32 OutputPinId;
-
+    //
     // AndGate command:
     // UInt32 Id;
     // UInt32 LeftPinId;
     // UInt32 RightPinId;
     // UInt32 TopPinId;
     // UInt32 BottomPinId;
-
+    //
     // OrGate command:
     // UInt32 Id;
     // UInt32 LeftPinId;
     // UInt32 RightPinId;
     // UInt32 TopPinId;
     // UInt32 BottomPinId;
-
+    //
     // TimerOn command:
     // UInt32 Id;
     // UInt32 LeftPinId;
@@ -3810,7 +3894,7 @@ namespace Simulation.Binary
     // UInt32 TopPinId;
     // UInt32 BottomPinId;
     // Single Delay;
-
+    //
     // TimerOff command:
     // UInt32 Id;
     // UInt32 LeftPinId;
@@ -3818,7 +3902,7 @@ namespace Simulation.Binary
     // UInt32 TopPinId;
     // UInt32 BottomPinId;
     // Single Delay;
-
+    //
     // TimerPulse command:
     // UInt32 Id;
     // UInt32 LeftPinId;
@@ -3826,7 +3910,7 @@ namespace Simulation.Binary
     // UInt32 TopPinId;
     // UInt32 BottomPinId;
     // Single Delay;
-
+    //
     // Connect command:
     // UInt32 Id;
     // UInt32 SrcPinId;
