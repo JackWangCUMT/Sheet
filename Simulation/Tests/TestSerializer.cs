@@ -52,7 +52,6 @@ namespace Sheet.Simulation.Tests
                 foreach (var block in parent.Blocks)
                 {
                     block.Id = nextId++;
-                    nextId = SetId(block, nextId);
                 }
             }
 
