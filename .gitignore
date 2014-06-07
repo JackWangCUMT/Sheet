@@ -78,6 +78,10 @@ build/
 *.log
 *.scc
 
+# IDE
+
+Sheet.sln.ide/
+
 # Visual C++ cache files
 ipch/
 *.aps
