@@ -65,10 +65,10 @@ namespace Sheet.Simulation.Tests
         private Tag CreateSignalTag(string designation, string description, string signal, string condition)
         {
             var tag = new Tag() { Id = Guid.NewGuid().ToString() };
-            tag.Properties.Add("Designation", new Property(designation));
-            tag.Properties.Add("Description", new Property(description));
-            tag.Properties.Add("Signal", new Property(signal));
-            tag.Properties.Add("Condition", new Property(condition));
+            tag.Properties.Add("Designation", new TagProperty(designation));
+            tag.Properties.Add("Description", new TagProperty(description));
+            tag.Properties.Add("Signal", new TagProperty(signal));
+            tag.Properties.Add("Condition", new TagProperty(condition));
             return tag;
         }
 
