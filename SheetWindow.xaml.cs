@@ -789,30 +789,14 @@ namespace Sheet
                 {
                     var solution = GetSolution();
 
-                    /*
-                    var writer = new BinarySolutionWriter();
-                    writer.Save("test.bin", solution);
-
-                    var reader = new BinarySolutionReader();
-                    var binarySolution = reader.Open("test.bin");
-
-                    var factory = new TestFactory();
-                    var signals = (binarySolution.Children[0].Children[0] as Simulation.Core.Context).Children.Where(c => c is Simulation.Core.Signal).Cast<Simulation.Core.Signal>();
-                    foreach(var signal in signals)
-                    {
-                        var tag = factory.CreateSignalTag(signal.ElementId.ToString(), "", "", "");
-                        binarySolution.Tags.Add(tag);
-                        signal.Tag = tag;
-                    }
-
-                    solution = binarySolution;
-                    */
+                    //var binarySolution = TestSolutionBinaryReaderWriter(solution);
+                    //solution = binarySolution;
 
                     demo = new TestSolutionSimulationController(solution, 100);
                     demo.EnableDebug(false);
                     demo.EnableLog(false);
                     demo.Start();
-                    
+
                     var window = new Window() { Title = "Tags", Width = 300, Height = 500, WindowStartupLocation = WindowStartupLocation.CenterScreen };
                     window.Owner = this;
                     window.Content = new TagsControl();
@@ -826,7 +810,27 @@ namespace Sheet
                 Debug.Print(ex.StackTrace);
             }
         }
-        
+
+        private Solution TestSolutionBinaryReaderWriter(Solution solution)
+        {
+            IBinarySolutionWriter writer = new BinarySolutionWriter();
+            writer.Save("test.bin", solution);
+
+            IBinarySolutionReader reader = new BinarySolutionReader();
+            var binarySolution = reader.Open("test.bin");
+
+            ISolutionFactory factory = new TestFactory();
+            var signals = (binarySolution.Children[0].Children[0] as Context).Children.Where(c => c is Signal).Cast<Signal>();
+            foreach (var signal in signals)
+            {
+                var tag = factory.CreateSignalTag(signal.ElementId.ToString(), "", "", "");
+                binarySolution.Tags.Add(tag);
+                signal.Tag = tag;
+            }
+
+            return binarySolution;
+        }
+
         private void StopSimulation()
         {
             try
