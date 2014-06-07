@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Sheet.Simulation.Tests
 {
-    public class TestSerializer
+    public class TestSerializer : ISolutionSerializer
     {
         #region Fields
 

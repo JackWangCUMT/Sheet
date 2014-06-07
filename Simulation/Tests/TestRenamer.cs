@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Sheet.Simulation.Tests
 {
-    public class TestRenamer
+    public class TestSolutionRenamer : ISolutionRenamer
     {
         #region Fields
 
@@ -66,26 +66,6 @@ namespace Sheet.Simulation.Tests
         #endregion
 
         #region Rename
-
-        public void Rename(Element element)
-        {
-            if (element is Context)
-            {
-                Rename(element as Context);
-            }
-            else if (element is Project)
-            {
-                Rename(element as Project);
-            }
-            else if (element is Solution)
-            {
-                Rename(element as Solution);
-            }
-            else
-            {
-                throw new ArgumentException("Not supported element Type.");
-            }
-        }
 
         public void Rename(Solution solution)
         {
@@ -170,7 +150,7 @@ namespace Sheet.Simulation.Tests
             }
         }
 
-        public void Rename(Context context, Dictionary<string, int> counters, Dictionary<string, string> ids)
+        private void Rename(Context context, Dictionary<string, int> counters, Dictionary<string, string> ids)
         {
             string context_name = string.Format("{0}{1}",
                 ShortElementNames["Context"],

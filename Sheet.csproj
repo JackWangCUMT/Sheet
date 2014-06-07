@@ -106,7 +106,7 @@
     </Compile>
     <Compile Include="Core\Base64.cs" />
     <Compile Include="Core\Block.cs" />
-    <Compile Include="Simulation\Core.cs" />
+    <Compile Include="Simulation\Core\Core.cs" />
     <Compile Include="Core\Test.cs" />
     <Compile Include="Core\Interfaces.cs" />
     <Compile Include="Core\Database.cs" />
@@ -139,10 +139,15 @@
     <Compile Include="Simulation\Binary\BinarySolutionWriter.cs" />
     <Compile Include="Simulation\Binary\IBinarySolutionReader.cs" />
     <Compile Include="Simulation\Binary\IBinarySolutionWriter.cs" />
+    <Compile Include="Simulation\Tests\ISolutionFactory.cs" />
+    <Compile Include="Simulation\Tests\ISolutionRenamer.cs" />
+    <Compile Include="Simulation\Tests\ISolutionSerializer.cs" />
+    <Compile Include="Simulation\Tests\ISolutionSimulationController.cs" />
+    <Compile Include="Simulation\Tests\ISolutionSimulationFactory.cs" />
     <Compile Include="Simulation\Tests\TestFactory.cs" />
     <Compile Include="Simulation\Tests\TestRenamer.cs" />
     <Compile Include="Simulation\Tests\TestSimulation.cs" />
-    <Compile Include="Simulation\Tests\TestSimulationFactory.cs" />
+    <Compile Include="Simulation\Tests\TestSolutionSimulationFactory.cs" />
     <Compile Include="Simulation\Tests\TestSerializer.cs" />
     <Page Include="Controls\PropertiesControl.xaml">
       <SubType>Designer</SubType>
@@ -245,9 +250,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Simulation\Core\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

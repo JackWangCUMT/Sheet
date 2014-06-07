@@ -759,15 +759,15 @@ namespace Sheet
 
         #region Simulation
         
-        private TestSimulation demo = null;
+        private TestSolutionSimulationController demo = null;
         
         private void CreateDemoSimulation()
         {
-            var solution = TestSimulation.CreateDemoSolution();
-            demo = new TestSimulation(solution, 100);
-            demo.EnableSimulationDebug(false);
-            demo.EnableSimulationLog(false);
-            demo.StartSimulation();
+            var solution = TestSolutionSimulationController.CreateDemoSolution();
+            demo = new TestSolutionSimulationController(solution, 100);
+            demo.EnableDebug(false);
+            demo.EnableLog(false);
+            demo.Start();
         }
 
         private Solution GetSolution()
@@ -776,7 +776,7 @@ namespace Sheet
             var serializer = new TestSerializer();
             var solution = serializer.Serialize(block);
 
-            var renamer = new TestRenamer();
+            var renamer = new TestSolutionRenamer();
             renamer.Rename(solution);
             return solution;
         }
@@ -808,10 +808,10 @@ namespace Sheet
                     solution = binarySolution;
                     */
 
-                    demo = new TestSimulation(solution, 100);
-                    demo.EnableSimulationDebug(false);
-                    demo.EnableSimulationLog(false);
-                    demo.StartSimulation();
+                    demo = new TestSolutionSimulationController(solution, 100);
+                    demo.EnableDebug(false);
+                    demo.EnableLog(false);
+                    demo.Start();
                     
                     var window = new Window() { Title = "Tags", Width = 300, Height = 500, WindowStartupLocation = WindowStartupLocation.CenterScreen };
                     window.Owner = this;
@@ -833,7 +833,7 @@ namespace Sheet
             {
                 if (demo != null)
                 {
-                    demo.StopSimulation();
+                    demo.Stop();
                     demo = null;
                 }
             }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Sheet.Simulation.Tests
 {
-    public class TestFactory
+    public class TestFactory : ISolutionFactory
     {
         #region Create
 

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Sheet.Simulation.Tests
 {
-    public class TestSimulationFactory
+    public class TestSolutionSimulationFactory : ISolutionSimulationFactory
     {
         #region Fields
 
@@ -31,7 +31,7 @@ namespace Sheet.Simulation.Tests
 
         #region Constructor
 
-        public TestSimulationFactory(Solution solution, int periodInMillisencods = 100)
+        public TestSolutionSimulationFactory(Solution solution, int periodInMillisencods = 100)
         {
             _solution = solution;
             _periodInMillisencods = periodInMillisencods;
@@ -88,7 +88,7 @@ namespace Sheet.Simulation.Tests
             }
         }
 
-        public void MapTags(List<Context> contexts)
+        private void MapTags(List<Context> contexts)
         {
             var signals = contexts.SelectMany(x => x.Children).Where(y => y is Signal).Cast<Signal>().ToList();
 

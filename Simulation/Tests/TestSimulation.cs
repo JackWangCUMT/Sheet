@@ -7,33 +7,33 @@ using System.Threading.Tasks;
 
 namespace Sheet.Simulation.Tests
 {
-    public class TestSimulation
+    public class TestSolutionSimulationController : ISolutionSimulationController
     {
         #region Fields
 
         private Solution _solution;
-        private TestSimulationFactory _simulation;
+        private TestSolutionSimulationFactory _simulation;
 
         #endregion
 
         #region Constructor
 
-        public TestSimulation(Solution solution, int period)
+        public TestSolutionSimulationController(Solution solution, int period)
         {
             _solution = solution;
-            _simulation = new TestSimulationFactory(_solution, period);
+            _simulation = new TestSolutionSimulationFactory(_solution, period);
         }
 
         #endregion
 
         #region Simulation Settings
 
-        public void EnableSimulationDebug(bool enable)
+        public void EnableDebug(bool enable)
         {
             SimulationSettings.EnableDebug = enable;
         }
 
-        public void EnableSimulationLog(bool enable)
+        public void EnableLog(bool enable)
         {
             SimulationSettings.EnableLog = enable;
         }
@@ -42,12 +42,12 @@ namespace Sheet.Simulation.Tests
 
         #region Simulation
 
-        public void StartSimulation()
+        public void Start()
         {
             _simulation.Start();
         }
 
-        public void StopSimulation()
+        public void Stop()
         {
             _simulation.Stop();
         }
