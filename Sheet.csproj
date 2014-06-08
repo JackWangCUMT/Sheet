@@ -139,11 +139,11 @@
     <Compile Include="Simulation\Connections.cs" />
     <Compile Include="Simulation\Core\Elements\Gates\AndGate.cs" />
     <Compile Include="Simulation\Core\Simulations\AndGateSimulation.cs" />
-    <Compile Include="Simulation\Core\State\BoolState.cs" />
+    <Compile Include="Simulation\Core\BoolState.cs" />
     <Compile Include="Simulation\Core\Elements\Gates\BufferGate.cs" />
     <Compile Include="Simulation\Core\Simulations\BufferGateSimulation.cs" />
-    <Compile Include="Simulation\Core\Clock\Clock.cs" />
-    <Compile Include="Simulation\Core\Solution\Context.cs" />
+    <Compile Include="Simulation\Core\Clock.cs" />
+    <Compile Include="Simulation\Core\Context.cs" />
     <Compile Include="Core\Test.cs" />
     <Compile Include="Core\Interfaces.cs" />
     <Compile Include="Core\Database.cs" />
@@ -177,8 +177,8 @@
     <Compile Include="Simulation\Binary\IBinarySolutionReader.cs" />
     <Compile Include="Simulation\Binary\IBinarySolutionWriter.cs" />
     <Compile Include="Simulation\Core\Element.cs" />
-    <Compile Include="Simulation\Core\State\IBoolState.cs" />
-    <Compile Include="Simulation\Core\Clock\IClock.cs" />
+    <Compile Include="Simulation\Core\IBoolState.cs" />
+    <Compile Include="Simulation\Core\IClock.cs" />
     <Compile Include="Simulation\Core\ISimulation.cs" />
     <Compile Include="Simulation\Core\IStateSimulation.cs" />
     <Compile Include="Simulation\Core\ITimer.cs" />
@@ -196,7 +196,7 @@
     <Compile Include="Simulation\Core\Simulations\OrGateSimulation.cs" />
     <Compile Include="Simulation\Core\Elements\Basic\Pin.cs" />
     <Compile Include="Simulation\Core\Elements\Basic\PinType.cs" />
-    <Compile Include="Simulation\Core\Solution\Project.cs" />
+    <Compile Include="Simulation\Core\Project.cs" />
     <Compile Include="Simulation\Core\Elements\Basic\TagProperty.cs" />
     <Compile Include="Simulation\Core\Elements\Basic\Signal.cs" />
     <Compile Include="Simulation\ISimulationController.cs" />
@@ -204,7 +204,7 @@
     <Compile Include="Simulation\Core\SimulationContext.cs" />
     <Compile Include="Simulation\SimulationController.cs" />
     <Compile Include="Simulation\Core\SimulationSettings.cs" />
-    <Compile Include="Simulation\Core\Solution\Solution.cs" />
+    <Compile Include="Simulation\Core\Solution.cs" />
     <Compile Include="Simulation\Core\Elements\Basic\Tag.cs" />
     <Compile Include="Simulation\Core\Simulations\TagSimulation.cs" />
     <Compile Include="Simulation\Core\Elements\Timers\TimerOff.cs" />
