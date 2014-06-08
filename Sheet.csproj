@@ -136,6 +136,8 @@
     <Compile Include="Controls\DatabaseControl.xaml.cs">
       <DependentUpon>DatabaseControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Block\IPointController.cs" />
+    <Compile Include="Block\PointController.cs" />
     <Compile Include="UI\Core\IView.cs" />
     <Compile Include="UI\Core\IWindow.cs" />
     <Compile Include="UI\Views\IDatabaseView.cs" />
@@ -191,7 +193,6 @@
     <Compile Include="Util\Core\IJsonSerializer.cs" />
     <Compile Include="Util\Json.cs" />
     <Compile Include="Core\Plugins.cs" />
-    <Compile Include="Core\Point.cs" />
     <Compile Include="Core\Sheet.cs" />
     <Compile Include="Controls\DatabasesControl.xaml.cs">
       <DependentUpon>DatabasesControl.xaml</DependentUpon>

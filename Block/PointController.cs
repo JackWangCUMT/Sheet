@@ -7,10 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sheet
+namespace Sheet.Block
 {
-    #region PointController
-
     public class PointController : IPointController
     {
         #region IoC
@@ -141,6 +139,4 @@ namespace Sheet
 
         #endregion
     }
-
-    #endregion
 }

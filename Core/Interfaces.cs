@@ -33,17 +33,6 @@ namespace Sheet
     
     #endregion
 
-    #region IPointController
-
-    public interface IPointController
-    {
-        void ConnectStart(IPoint point, ILine line);
-        void ConnectEnd(IPoint point, ILine line);
-        void UpdateDependencies(List<IBlock> blocks, List<IPoint> points, List<ILine> lines);
-    }
-
-    #endregion
-
     #region IPageFactory
 
     public interface IPageFactory
