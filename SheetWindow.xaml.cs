@@ -103,7 +103,7 @@ namespace Sheet
 
             Init();
 
-            Loaded += (sender, e) => _sheetController.View.Focus();
+            Loaded += (sender, e) => _sheetController.State.View.Focus();
         }
 
         private void SinglePage()
@@ -133,19 +133,19 @@ namespace Sheet
             var controller = locator.GetInstance<ISheetController>();
             _sheetControllers.Add(controller);
 
-            controller.HistoryController = locator.GetInstance<IHistoryController>();
-            controller.LibraryController = locator.GetInstance<ILibraryController>();
-            controller.ZoomController = locator.GetInstance<IZoomController>();
-            controller.CursorController = locator.GetInstance<ICursorController>();
+            controller.State.HistoryController = locator.GetInstance<IHistoryController>();
+            controller.State.LibraryController = locator.GetInstance<ILibraryController>();
+            controller.State.ZoomController = locator.GetInstance<IZoomController>();
+            controller.State.CursorController = locator.GetInstance<ICursorController>();
 
-            controller.EditorSheet = locator.GetInstance<ISheet>();
-            controller.BackSheet = locator.GetInstance<ISheet>();
-            controller.ContentSheet = locator.GetInstance<ISheet>();
-            controller.OverlaySheet = locator.GetInstance<ISheet>();
+            controller.State.EditorSheet = locator.GetInstance<ISheet>();
+            controller.State.BackSheet = locator.GetInstance<ISheet>();
+            controller.State.ContentSheet = locator.GetInstance<ISheet>();
+            controller.State.OverlaySheet = locator.GetInstance<ISheet>();
 
-            controller.View = locator.GetInstance<ISheetView>();
+            controller.State.View = locator.GetInstance<ISheetView>();
 
-            return controller.View;
+            return controller.State.View;
         }
 
         #endregion
@@ -188,7 +188,7 @@ namespace Sheet
         private void InitSizeBorder()
         {
             SizeBorder.ExecuteUpdateSize = (size) => _sheetController.SetAutoFitSize(size.Width, size.Height);
-            SizeBorder.ExecuteSizeChanged = () => _sheetController.ZoomController.AutoFit();
+            SizeBorder.ExecuteSizeChanged = () => _sheetController.State.ZoomController.AutoFit();
         }
 
         private void InitSolution()
@@ -324,7 +324,7 @@ namespace Sheet
 
         private void UpdateModeMenu()
         {
-            var mode = _sheetController.GetMode();
+            var mode = _sheetController.State.Mode;
             ModeNone.IsChecked = mode == SheetMode.None ? true : false;
             ModeSelection.IsChecked = mode == SheetMode.Selection ? true : false;
             ModeInsert.IsChecked = mode == SheetMode.Insert ? true : false;
@@ -342,7 +342,7 @@ namespace Sheet
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            if (_sheetController.GetMode() == SheetMode.TextEditor)
+            if (_sheetController.State.Mode == SheetMode.TextEditor)
             {
                 return;
             }
@@ -359,7 +359,7 @@ namespace Sheet
                 case Key.NumPad0:
                     if (onlyCtrl)
                     {
-                        _sheetController.ZoomController.AutoFit();
+                        _sheetController.State.ZoomController.AutoFit();
                     }
                     break;
                 // Ctrl+1: Actual Size
@@ -367,7 +367,7 @@ namespace Sheet
                 case Key.NumPad1:
                     if (onlyCtrl)
                     {
-                        _sheetController.ZoomController.ActualSize();
+                        _sheetController.State.ZoomController.ActualSize();
                     }
                     break;
                 // N: Mode None
@@ -376,7 +376,7 @@ namespace Sheet
                 case Key.N:
                     if (none)
                     {
-                        _sheetController.SetMode(SheetMode.None);
+                        _sheetController.State.Mode = SheetMode.None;
                         UpdateModeMenu();
                     }
                     if (onlyCtrl)
@@ -414,7 +414,7 @@ namespace Sheet
                     }
                     else if (none)
                     {
-                        _sheetController.SetMode(SheetMode.Selection);
+                        _sheetController.State.Mode = SheetMode.Selection;
                         UpdateModeMenu();
                     }
                     break;
@@ -434,7 +434,7 @@ namespace Sheet
                     }
                     else if (none)
                     {
-                        _sheetController.SetMode(SheetMode.Ellipse);
+                        _sheetController.State.Mode = SheetMode.Ellipse;
                         UpdateModeMenu();
                     }
                     break;
@@ -447,7 +447,7 @@ namespace Sheet
                     }
                     else if (none)
                     {
-                        _sheetController.SetMode(SheetMode.Line);
+                        _sheetController.State.Mode = SheetMode.Line;
                         UpdateModeMenu();
                     }
                     break;
@@ -460,7 +460,7 @@ namespace Sheet
                     }
                     else if (none)
                     {
-                        _sheetController.SetMode(SheetMode.Image);
+                        _sheetController.State.Mode = SheetMode.Image;
                         UpdateModeMenu();
                     }
                     break;
@@ -468,14 +468,14 @@ namespace Sheet
                 case Key.Z:
                     if (onlyCtrl)
                     {
-                        _sheetController.HistoryController.Undo();
+                        _sheetController.State.HistoryController.Undo();
                     }
                     break;
                 // Ctrl+Y: Redo
                 case Key.Y:
                     if (onlyCtrl)
                     {
-                        _sheetController.HistoryController.Redo();
+                        _sheetController.State.HistoryController.Redo();
                     }
                     break;
                 // Ctrl+X: Cut
@@ -515,7 +515,7 @@ namespace Sheet
                 case Key.Delete:
                     if (onlyCtrl)
                     {
-                        _sheetController.HistoryController.Register("Reset");
+                        _sheetController.State.HistoryController.Register("Reset");
                         _sheetController.ResetPage();
                     }
                     else if (none)
@@ -545,7 +545,7 @@ namespace Sheet
                     break;
                 // Up: Move Up
                 case Key.Up:
-                    if (none && _sheetController.View.IsFocused)
+                    if (none && _sheetController.State.View.IsFocused)
                     {
                         _sheetController.MoveUp();
                         e.Handled = true;
@@ -553,7 +553,7 @@ namespace Sheet
                     break;
                 // Down: Move Down
                 case Key.Down:
-                    if (none && _sheetController.View.IsFocused)
+                    if (none && _sheetController.State.View.IsFocused)
                     {
                         _sheetController.MoveDown();
                         e.Handled = true;
@@ -561,7 +561,7 @@ namespace Sheet
                     break;
                 // Left: Move Left
                 case Key.Left:
-                    if (none && _sheetController.View.IsFocused)
+                    if (none && _sheetController.State.View.IsFocused)
                     {
                         _sheetController.MoveLeft();
                         e.Handled = true;
@@ -569,7 +569,7 @@ namespace Sheet
                     break;
                 // Right: Move Right
                 case Key.Right:
-                    if (none && _sheetController.View.IsFocused)
+                    if (none && _sheetController.State.View.IsFocused)
                     {
                         _sheetController.MoveRight();
                         e.Handled = true;
@@ -586,7 +586,7 @@ namespace Sheet
                 case Key.I:
                     if (none)
                     {
-                        _sheetController.SetMode(SheetMode.Insert);
+                        _sheetController.State.Mode = SheetMode.Insert;
                         UpdateModeMenu(); 
                     }
                     break;
@@ -594,7 +594,7 @@ namespace Sheet
                 case Key.P:
                     if (none)
                     {
-                        _sheetController.SetMode(SheetMode.Point);
+                        _sheetController.State.Mode = SheetMode.Point;
                         UpdateModeMenu(); 
                     }
                     break;
@@ -602,7 +602,7 @@ namespace Sheet
                 case Key.R:
                     if (none)
                     {
-                        _sheetController.SetMode(SheetMode.Rectangle);
+                        _sheetController.State.Mode = SheetMode.Rectangle;
                         UpdateModeMenu(); 
                     }
                     break;
@@ -610,7 +610,7 @@ namespace Sheet
                 case Key.T:
                     if (none)
                     {
-                        _sheetController.SetMode(SheetMode.Text);
+                        _sheetController.State.Mode = SheetMode.Text;
                         UpdateModeMenu(); 
                     }
                     break;
@@ -780,7 +780,7 @@ namespace Sheet
 
         private Solution GetSolution()
         {
-            var block = _sheetController.GetContent();
+            var block = _sheetController.State.ContentBlock;
             var serializer = new TestSerializer();
             var solution = serializer.Serialize(block);
 
@@ -934,12 +934,12 @@ namespace Sheet
 
         private void EditUndo_Click(object sender, RoutedEventArgs e)
         {
-            _sheetController.HistoryController.Undo();
+            _sheetController.State.HistoryController.Undo();
         }
 
         private void EditRedo_Click(object sender, RoutedEventArgs e)
         {
-            _sheetController.HistoryController.Redo();
+            _sheetController.State.HistoryController.Redo();
         }
 
         private void EditCut_Click(object sender, RoutedEventArgs e)
@@ -964,7 +964,7 @@ namespace Sheet
 
         private void EditReset_Click(object sender, RoutedEventArgs e)
         {
-            _sheetController.HistoryController.Register("Reset");
+            _sheetController.State.HistoryController.Register("Reset");
             _sheetController.ResetPage();
         }
 
@@ -985,7 +985,7 @@ namespace Sheet
 
         private void EditMoveUp_Click(object sender, RoutedEventArgs e)
         {
-            if (_sheetController.View.IsFocused)
+            if (_sheetController.State.View.IsFocused)
             {
                 _sheetController.MoveUp();
             }
@@ -993,7 +993,7 @@ namespace Sheet
 
         private void EditMoveDown_Click(object sender, RoutedEventArgs e)
         {
-            if (_sheetController.View.IsFocused)
+            if (_sheetController.State.View.IsFocused)
             {
                 _sheetController.MoveDown();
             }
@@ -1001,7 +1001,7 @@ namespace Sheet
 
         private void EditMoveLeft_Click(object sender, RoutedEventArgs e)
         {
-            if (_sheetController.View.IsFocused)
+            if (_sheetController.State.View.IsFocused)
             {
                 _sheetController.MoveLeft();
             }
@@ -1009,7 +1009,7 @@ namespace Sheet
 
         private void EditMoveRight_Click(object sender, RoutedEventArgs e)
         {
-            if (_sheetController.View.IsFocused)
+            if (_sheetController.State.View.IsFocused)
             {
                 _sheetController.MoveRight();
             }
@@ -1026,12 +1026,12 @@ namespace Sheet
 
         private void ViewZoomToPageLevel_Click(object sender, RoutedEventArgs e)
         {
-            _sheetController.ZoomController.AutoFit();
+            _sheetController.State.ZoomController.AutoFit();
         }
 
         private void ViewZoomActualSize_Click(object sender, RoutedEventArgs e)
         {
-            _sheetController.ZoomController.ActualSize();
+            _sheetController.State.ZoomController.ActualSize();
         }
 
         #endregion
@@ -1040,55 +1040,55 @@ namespace Sheet
 
         private void ModeNone_Click(object sender, RoutedEventArgs e)
         {
-            _sheetController.SetMode(SheetMode.None);
+            _sheetController.State.Mode = SheetMode.None;
             UpdateModeMenu();
         }
 
         private void ModeSelection_Click(object sender, RoutedEventArgs e)
         {
-            _sheetController.SetMode(SheetMode.Selection);
+            _sheetController.State.Mode = SheetMode.Selection;
             UpdateModeMenu();
         }
 
         private void ModeInsert_Click(object sender, RoutedEventArgs e)
         {
-            _sheetController.SetMode(SheetMode.Insert);
+            _sheetController.State.Mode = SheetMode.Insert;
             UpdateModeMenu();
         }
 
         private void ModePoint_Click(object sender, RoutedEventArgs e)
         {
-            _sheetController.SetMode(SheetMode.Point);
+            _sheetController.State.Mode = SheetMode.Point;
             UpdateModeMenu();
         }
         
         private void ModeLine_Click(object sender, RoutedEventArgs e)
         {
-            _sheetController.SetMode(SheetMode.Line);
+            _sheetController.State.Mode = SheetMode.Line;
             UpdateModeMenu();
         }
 
         private void ModeRectangle_Click(object sender, RoutedEventArgs e)
         {
-            _sheetController.SetMode(SheetMode.Rectangle);
+            _sheetController.State.Mode = SheetMode.Rectangle;
             UpdateModeMenu();
         }
 
         private void ModeEllipse_Click(object sender, RoutedEventArgs e)
         {
-            _sheetController.SetMode(SheetMode.Ellipse);
+            _sheetController.State.Mode = SheetMode.Ellipse;
             UpdateModeMenu();
         }
 
         private void ModeText_Click(object sender, RoutedEventArgs e)
         {
-            _sheetController.SetMode(SheetMode.Text);
+            _sheetController.State.Mode = SheetMode.Text;
             UpdateModeMenu();
         }
         
         private void ModeImage_Click(object sender, RoutedEventArgs e)
         {
-            _sheetController.SetMode(SheetMode.Image);
+            _sheetController.State.Mode = SheetMode.Image;
             UpdateModeMenu();
         }
 

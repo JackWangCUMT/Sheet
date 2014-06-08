@@ -124,6 +124,7 @@
     <Compile Include="Block\Model\XText.cs" />
     <Compile Include="Block\Model\XThumb.cs" />
     <Compile Include="Block\Model\XVerticalAlignment.cs" />
+    <Compile Include="Controller\Core\SheetState.cs" />
     <Compile Include="Controller\Modes\SheetEllipseMode.cs" />
     <Compile Include="Controller\Modes\SheetLineMode.cs" />
     <Compile Include="Controller\Modes\SheetRectangleMode.cs" />

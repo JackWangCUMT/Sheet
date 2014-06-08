@@ -59,53 +59,32 @@ namespace Sheet.Controller
             this._pointController = serviceLocator.GetInstance<IPointController>();
             this._pageFactory = serviceLocator.GetInstance<IPageFactory>();
 
-            this._lineMode = new SheetLineMode(this, serviceLocator);
-            this._rectangleMode = new SheetRectangleMode(this, serviceLocator);
-            this._ellipseMode = new SheetEllipseMode(this, serviceLocator);
+            this.State = DefaultState;
+
+            this._lineMode = new SheetLineMode(_serviceLocator, this.State);
+            this._rectangleMode = new SheetRectangleMode(_serviceLocator, this.State);
+            this._ellipseMode = new SheetEllipseMode(_serviceLocator, this.State);
         }
 
         #endregion
 
         #region Properties
 
-        public IHistoryController HistoryController { get; set; }
-        public ILibraryController LibraryController { get; set; }
-        public IZoomController ZoomController { get; set; }
-        public ICursorController CursorController { get; set; }
-        public SheetOptions Options { get; set; }
-        public ISheet EditorSheet { get; set; }
-        public ISheet BackSheet { get; set; }
-        public ISheet ContentSheet { get; set; }
-        public ISheet OverlaySheet { get; set; }
-        public ISheetView View { get; set; }
-        public double LastFinalWidth { get; set; }
-        public double LastFinalHeight { get; set; }
+        public SheetState State { get; set; }
 
-        #endregion
-
-        #region Fields
-
-        private SheetMode Mode = SheetMode.Selection;
-        private SheetMode TempMode = SheetMode.None;
-        private IBlock SelectedBlock;
-        private IBlock ContentBlock;
-        private IBlock FrameBlock;
-        private IBlock GridBlock;
-        private IRectangle TempSelectionRect;
-        private bool IsFirstMove = true;
-        private ImmutablePoint PanStartPoint;
-        private ImmutablePoint SelectionStartPoint;
-        private ItemType SelectedType = ItemType.None;
-        private ILine SelectedLine;
-        private IThumb LineThumbStart;
-        private IThumb LineThumbEnd;
-        private IElement SelectedElement;
-        private IThumb ThumbTopLeft;
-        private IThumb ThumbTopRight;
-        private IThumb ThumbBottomLeft;
-        private IThumb ThumbBottomRight;
-        private ISelectedBlockPlugin InvertLineStartPlugin;
-        private ISelectedBlockPlugin InvertLineEndPlugin;
+        public static SheetState DefaultState
+        {
+            get 
+            {
+                return new SheetState()
+                {
+                    Mode = SheetMode.Selection,
+                    TempMode = SheetMode.None,
+                    IsFirstMove = true,
+                    SelectedType = ItemType.None
+                };
+            }
+        }
 
         #endregion
 
@@ -133,7 +112,7 @@ namespace Sheet.Controller
 
         private void SetDefaults()
         {
-            Options = new SheetOptions()
+            State.Options = new SheetOptions()
             {
                 PageOriginX = 0.0,
                 PageOriginY = 0.0,
@@ -151,35 +130,21 @@ namespace Sheet.Controller
                 ZoomFactors = new double[] { 0.01, 0.0625, 0.0833, 0.125, 0.25, 0.3333, 0.5, 0.6667, 0.75, 1, 1.25, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32, 64 }
             };
 
-            ZoomController.ZoomIndex = Options.DefaultZoomIndex;
+            State.ZoomController.ZoomIndex = State.Options.DefaultZoomIndex;
         }
 
         private void CreateBlocks()
         {
-            ContentBlock = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "CONTENT", null);
-            ContentBlock.Init();
+            State.ContentBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "CONTENT", null);
+            State.ContentBlock.Init();
 
-            FrameBlock = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "FRAME", null);
-            FrameBlock.Init();
+            State.FrameBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "FRAME", null);
+            State.FrameBlock.Init();
 
-            GridBlock = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "GRID", null);
-            GridBlock.Init();
+            State.GridBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "GRID", null);
+            State.GridBlock.Init();
 
-            SelectedBlock = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "SELECTED", null);
-        }
-
-        #endregion
-
-        #region Blocks
-
-        public IBlock GetSelected()
-        {
-            return SelectedBlock;
-        }
-
-        public IBlock GetContent()
-        {
-            return ContentBlock;
+            State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
         }
 
         #endregion
@@ -192,13 +157,13 @@ namespace Sheet.Controller
             {
                 if (text == null)
                 {
-                    HistoryController.Reset();
+                    State.HistoryController.Reset();
                     ResetPage();
                 }
                 else
                 {
                     var block = await Task.Run(() => _itemSerializer.DeserializeContents(text));
-                    HistoryController.Reset();
+                    State.HistoryController.Reset();
                     ResetPage();
                     DeserializePage(block);
                 }
@@ -232,14 +197,14 @@ namespace Sheet.Controller
 
         public BlockItem SerializePage()
         {
-            _blockController.DeselectContent(SelectedBlock);
+            _blockController.DeselectContent(State.SelectedBlock);
 
-            var grid = _blockSerializer.SerializerContents(GridBlock, -1, GridBlock.X, GridBlock.Y, GridBlock.Width, GridBlock.Height, -1, "GRID");
-            var frame = _blockSerializer.SerializerContents(FrameBlock, -1, FrameBlock.X, FrameBlock.Y, FrameBlock.Width, FrameBlock.Height, -1, "FRAME");
-            var content = _blockSerializer.SerializerContents(ContentBlock, -1, ContentBlock.X, ContentBlock.Y, ContentBlock.Width, ContentBlock.Height, -1, "CONTENT");
+            var grid = _blockSerializer.SerializerContents(State.GridBlock, -1, State.GridBlock.X, State.GridBlock.Y, State.GridBlock.Width, State.GridBlock.Height, -1, "GRID");
+            var frame = _blockSerializer.SerializerContents(State.FrameBlock, -1, State.FrameBlock.X, State.FrameBlock.Y, State.FrameBlock.Width, State.FrameBlock.Height, -1, "FRAME");
+            var content = _blockSerializer.SerializerContents(State.ContentBlock, -1, State.ContentBlock.X, State.ContentBlock.Y, State.ContentBlock.Width, State.ContentBlock.Height, -1, "CONTENT");
 
             var page = new BlockItem();
-            page.Init(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "PAGE");
+            page.Init(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "PAGE");
 
             page.Blocks.Add(grid);
             page.Blocks.Add(frame);
@@ -256,17 +221,17 @@ namespace Sheet.Controller
 
             if (grid != null)
             {
-                _blockController.AddContents(BackSheet, grid, GridBlock, null, false, Options.GridThickness / ZoomController.Zoom);
+                _blockController.AddContents(State.BackSheet, grid, State.GridBlock, null, false, State.Options.GridThickness / State.ZoomController.Zoom);
             }
 
             if (frame != null)
             {
-                _blockController.AddContents(BackSheet, frame, FrameBlock, null, false, Options.FrameThickness / ZoomController.Zoom);
+                _blockController.AddContents(State.BackSheet, frame, State.FrameBlock, null, false, State.Options.FrameThickness / State.ZoomController.Zoom);
             }
 
             if (content != null)
             {
-                _blockController.AddContents(ContentSheet, content, ContentBlock, null, false, Options.LineThickness / ZoomController.Zoom);
+                _blockController.AddContents(State.ContentSheet, content, State.ContentBlock, null, false, State.Options.LineThickness / State.ZoomController.Zoom);
             }
         }
 
@@ -274,9 +239,9 @@ namespace Sheet.Controller
         {
             ResetOverlay();
 
-            _blockController.Remove(BackSheet, GridBlock);
-            _blockController.Remove(BackSheet, FrameBlock);
-            _blockController.Remove(ContentSheet, ContentBlock);
+            _blockController.Remove(State.BackSheet, State.GridBlock);
+            _blockController.Remove(State.BackSheet, State.FrameBlock);
+            _blockController.Remove(State.ContentSheet, State.ContentBlock);
 
             CreateBlocks();
         }
@@ -285,31 +250,7 @@ namespace Sheet.Controller
         {
             ResetOverlay();
 
-            _blockController.Remove(ContentSheet, ContentBlock);
-        }
-
-        #endregion
-
-        #region Mode
-
-        public SheetMode GetMode()
-        {
-            return Mode;
-        }
-
-        public void SetMode(SheetMode mode)
-        {
-            Mode = mode;
-        }
-
-        private void StoreTempMode()
-        {
-            TempMode = GetMode();
-        }
-
-        private void RestoreTempMode()
-        {
-            SetMode(TempMode);
+            _blockController.Remove(State.ContentSheet, State.ContentBlock);
         }
 
         #endregion
@@ -320,10 +261,10 @@ namespace Sheet.Controller
         {
             try
             {
-                if (_blockController.HaveSelected(SelectedBlock))
+                if (_blockController.HaveSelected(State.SelectedBlock))
                 {
-                    var copy = _blockController.ShallowCopy(SelectedBlock);
-                    HistoryController.Register("Cut");
+                    var copy = _blockController.ShallowCopy(State.SelectedBlock);
+                    State.HistoryController.Register("Cut");
                     CopyText(copy);
                     Delete(copy);
                 }
@@ -352,9 +293,9 @@ namespace Sheet.Controller
 
         public void CopyText()
         {
-            if (_blockController.HaveSelected(SelectedBlock))
+            if (_blockController.HaveSelected(State.SelectedBlock))
             {
-                CopyText(SelectedBlock);
+                CopyText(State.SelectedBlock);
             }
         }
 
@@ -364,7 +305,7 @@ namespace Sheet.Controller
             {
                 var text = _clipboard.Get();
                 var block = await Task.Run(() => _itemSerializer.DeserializeContents(text));
-                HistoryController.Register("Paste");
+                State.HistoryController.Register("Paste");
                 InsertContent(block, true);
             }
             catch (Exception ex)
@@ -378,10 +319,10 @@ namespace Sheet.Controller
         {
             try
             {
-                if (_blockController.HaveSelected(SelectedBlock))
+                if (_blockController.HaveSelected(State.SelectedBlock))
                 {
-                    var copy = _blockController.ShallowCopy(SelectedBlock);
-                    HistoryController.Register("Cut");
+                    var copy = _blockController.ShallowCopy(State.SelectedBlock);
+                    State.HistoryController.Register("Cut");
                     CopyJson(copy);
                     Delete(copy);
                 }
@@ -410,9 +351,9 @@ namespace Sheet.Controller
 
         public void CopyJson()
         {
-            if (_blockController.HaveSelected(SelectedBlock))
+            if (_blockController.HaveSelected(State.SelectedBlock))
             {
-                CopyJson(SelectedBlock);
+                CopyJson(State.SelectedBlock);
             }
         }
 
@@ -422,7 +363,7 @@ namespace Sheet.Controller
             {
                 var text = _clipboard.Get();
                 var block = await Task.Run(() => _jsonSerializer.Deerialize<BlockItem>(text));
-                HistoryController.Register("Paste");
+                State.HistoryController.Register("Paste");
                 InsertContent(block, true);
             }
             catch (Exception ex)
@@ -442,20 +383,20 @@ namespace Sheet.Controller
             _rectangleMode.Reset();
             _ellipseMode.Reset();
 
-            if (TempSelectionRect != null)
+            if (State.TempSelectionRect != null)
             {
-                OverlaySheet.Remove(TempSelectionRect);
-                TempSelectionRect = null;
+                State.OverlaySheet.Remove(State.TempSelectionRect);
+                State.TempSelectionRect = null;
             }
 
-            if (LineThumbStart != null)
+            if (State.LineThumbStart != null)
             {
-                OverlaySheet.Remove(LineThumbStart);
+                State.OverlaySheet.Remove(State.LineThumbStart);
             }
 
-            if (LineThumbEnd != null)
+            if (State.LineThumbEnd != null)
             {
-                OverlaySheet.Remove(LineThumbEnd);
+                State.OverlaySheet.Remove(State.LineThumbEnd);
             }
         }
 
@@ -466,15 +407,15 @@ namespace Sheet.Controller
         public void Delete(IBlock block)
         {
             FinishEdit();
-            _blockController.RemoveSelected(ContentSheet, ContentBlock, block);
+            _blockController.RemoveSelected(State.ContentSheet, State.ContentBlock, block);
         }
 
         public void Delete()
         {
-            if (_blockController.HaveSelected(SelectedBlock))
+            if (_blockController.HaveSelected(State.SelectedBlock))
             {
-                var copy = _blockController.ShallowCopy(SelectedBlock);
-                HistoryController.Register("Delete");
+                var copy = _blockController.ShallowCopy(State.SelectedBlock);
+                State.HistoryController.Register("Delete");
                 Delete(copy);
             }
         }
@@ -485,7 +426,7 @@ namespace Sheet.Controller
 
         public void SelecteAll()
         {
-            _blockController.SelectContent(SelectedBlock, ContentBlock);
+            _blockController.SelectContent(State.SelectedBlock, State.ContentBlock);
         }
 
         #endregion
@@ -494,7 +435,7 @@ namespace Sheet.Controller
 
         public void ToggleFill()
         {
-            switch(GetMode())
+            switch(State.Mode)
             {
                 case SheetMode.Line:
                     _lineMode.ToggleFill();
@@ -514,8 +455,8 @@ namespace Sheet.Controller
 
         private void InsertContent(BlockItem block, bool select)
         {
-            _blockController.DeselectContent(SelectedBlock);
-            _blockController.AddContents(ContentSheet, block, ContentBlock, SelectedBlock, select, Options.LineThickness / ZoomController.Zoom);
+            _blockController.DeselectContent(State.SelectedBlock);
+            _blockController.AddContents(State.ContentSheet, block, State.ContentBlock, State.SelectedBlock, select, State.Options.LineThickness / State.ZoomController.Zoom);
         }
 
         private BlockItem CreateBlock(string name, IBlock block)
@@ -536,46 +477,46 @@ namespace Sheet.Controller
 
         public void CreateBlock()
         {
-            if (_blockController.HaveSelected(SelectedBlock))
+            if (_blockController.HaveSelected(State.SelectedBlock))
             {
-                StoreTempMode();
-                SetMode(SheetMode.TextEditor);
+                State.TempMode = State.Mode;
+                State.Mode = SheetMode.TextEditor;
 
-                var tc = CreateTextEditor(new ImmutablePoint((EditorSheet.Width / 2) - (330 / 2), EditorSheet.Height / 2));
+                var tc = CreateTextEditor(new ImmutablePoint((State.EditorSheet.Width / 2) - (330 / 2), State.EditorSheet.Height / 2));
 
                 Action<string> ok = (name) =>
                 {
-                    var block = CreateBlock(name, SelectedBlock);
+                    var block = CreateBlock(name, State.SelectedBlock);
                     if (block != null)
                     {
                         AddToLibrary(block);
                     }
-                    EditorSheet.Remove(tc);
-                    View.Focus();
-                    RestoreTempMode();
+                    State.EditorSheet.Remove(tc);
+                    State.View.Focus();
+                    State.Mode = State.TempMode;
                 };
 
                 Action cancel = () =>
                 {
-                    EditorSheet.Remove(tc);
-                    View.Focus();
-                    RestoreTempMode();
+                    State.EditorSheet.Remove(tc);
+                    State.View.Focus();
+                    State.Mode = State.TempMode;
                 };
 
                 tc.Set(ok, cancel, "Create Block", "Name:", "BLOCK0");
-                EditorSheet.Add(tc);
+                State.EditorSheet.Add(tc);
             }
         }
 
         public async void BreakBlock()
         {
-            if (_blockController.HaveSelected(SelectedBlock))
+            if (_blockController.HaveSelected(State.SelectedBlock))
             {
-                var text = _itemSerializer.SerializeContents(_blockSerializer.SerializerContents(SelectedBlock, 0, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED"));
+                var text = _itemSerializer.SerializeContents(_blockSerializer.SerializerContents(State.SelectedBlock, 0, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED"));
                 var block = await Task.Run(() => _itemSerializer.DeserializeContents(text));
-                HistoryController.Register("Break Block");
+                State.HistoryController.Register("Break Block");
                 Delete();
-                _blockController.AddBroken(ContentSheet, block, ContentBlock, SelectedBlock, true, Options.LineThickness / ZoomController.Zoom);
+                _blockController.AddBroken(State.ContentSheet, block, State.ContentBlock, State.SelectedBlock, true, State.Options.LineThickness / State.ZoomController.Zoom);
             }
         }
 
@@ -585,25 +526,25 @@ namespace Sheet.Controller
 
         public IPoint InsertPoint(ImmutablePoint p, bool register, bool select)
         {
-            double thickness = Options.LineThickness / ZoomController.Zoom;
-            double x = _itemController.Snap(p.X, Options.SnapSize);
-            double y = _itemController.Snap(p.Y, Options.SnapSize);
+            double thickness = State.Options.LineThickness / State.ZoomController.Zoom;
+            double x = _itemController.Snap(p.X, State.Options.SnapSize);
+            double y = _itemController.Snap(p.Y, State.Options.SnapSize);
 
             var point = _blockFactory.CreatePoint(thickness, x, y, false);
 
             if (register)
             {
-                _blockController.DeselectContent(SelectedBlock);
-                HistoryController.Register("Insert Point");
+                _blockController.DeselectContent(State.SelectedBlock);
+                State.HistoryController.Register("Insert Point");
             }
 
-            ContentBlock.Points.Add(point);
-            ContentSheet.Add(point);
+            State.ContentBlock.Points.Add(point);
+            State.ContentSheet.Add(point);
 
             if (select)
             {
-                SelectedBlock.Points = new List<IPoint>();
-                SelectedBlock.Points.Add(point);
+                State.SelectedBlock.Points = new List<IPoint>();
+                State.SelectedBlock.Points.Add(point);
 
                 _blockController.Select(point);
             }
@@ -617,41 +558,41 @@ namespace Sheet.Controller
 
         private void Move(double x, double y)
         {
-            if (_blockController.HaveSelected(SelectedBlock))
+            if (_blockController.HaveSelected(State.SelectedBlock))
             {
-                IBlock moveBlock = _blockController.ShallowCopy(SelectedBlock);
+                IBlock moveBlock = _blockController.ShallowCopy(State.SelectedBlock);
                 FinishEdit();
-                HistoryController.Register("Move");
+                State.HistoryController.Register("Move");
                 _blockController.Select(moveBlock);
-                SelectedBlock = moveBlock;
-                _blockController.MoveDelta(x, y, SelectedBlock);
+                State.SelectedBlock = moveBlock;
+                _blockController.MoveDelta(x, y, State.SelectedBlock);
             }
         }
 
         public void MoveUp()
         {
-            Move(0.0, -Options.SnapSize);
+            Move(0.0, -State.Options.SnapSize);
         }
 
         public void MoveDown()
         {
-            Move(0.0, Options.SnapSize);
+            Move(0.0, State.Options.SnapSize);
         }
 
         public void MoveLeft()
         {
-            Move(-Options.SnapSize, 0.0);
+            Move(-State.Options.SnapSize, 0.0);
         }
 
         public void MoveRight()
         {
-            Move(Options.SnapSize, 0.0);
+            Move(State.Options.SnapSize, 0.0);
         }
 
         private bool CanInitMove(ImmutablePoint p)
         {
-            var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
-            _blockController.HitTestClick(ContentSheet, SelectedBlock, temp, p, Options.HitTestSize, false, true);
+            var temp = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "TEMP", null);
+            _blockController.HitTestClick(State.ContentSheet, State.SelectedBlock, temp, p, State.Options.HitTestSize, false, true);
             if (_blockController.HaveSelected(temp))
             {
                 return true;
@@ -661,45 +602,45 @@ namespace Sheet.Controller
 
         private void InitMove(ImmutablePoint p)
         {
-            IsFirstMove = true;
-            StoreTempMode();
-            SetMode(SheetMode.Move);
-            double x = _itemController.Snap(p.X, Options.SnapSize);
-            double y = _itemController.Snap(p.Y, Options.SnapSize);
-            PanStartPoint = new ImmutablePoint(x, y);
+            State.IsFirstMove = true;
+            State.TempMode = State.Mode;
+            State.Mode = SheetMode.Move;
+            double x = _itemController.Snap(p.X, State.Options.SnapSize);
+            double y = _itemController.Snap(p.Y, State.Options.SnapSize);
+            State.PanStartPoint = new ImmutablePoint(x, y);
             ResetOverlay();
-            OverlaySheet.Capture();
+            State.OverlaySheet.Capture();
         }
 
         private void Move(ImmutablePoint p)
         {
-            if (IsFirstMove)
+            if (State.IsFirstMove)
             {
-                IBlock moveBlock = _blockController.ShallowCopy(SelectedBlock);
-                HistoryController.Register("Move");
-                IsFirstMove = false;
-                CursorController.Set(SheetCursor.Move);
+                IBlock moveBlock = _blockController.ShallowCopy(State.SelectedBlock);
+                State.HistoryController.Register("Move");
+                State.IsFirstMove = false;
+                State.CursorController.Set(SheetCursor.Move);
                 _blockController.Select(moveBlock);
-                SelectedBlock = moveBlock;
+                State.SelectedBlock = moveBlock;
             }
 
-            double x = _itemController.Snap(p.X, Options.SnapSize);
-            double y = _itemController.Snap(p.Y, Options.SnapSize);
-            double dx = x - PanStartPoint.X;
-            double dy = y - PanStartPoint.Y;
+            double x = _itemController.Snap(p.X, State.Options.SnapSize);
+            double y = _itemController.Snap(p.Y, State.Options.SnapSize);
+            double dx = x - State.PanStartPoint.X;
+            double dy = y - State.PanStartPoint.Y;
 
             if (dx != 0.0 || dy != 0.0)
             {
-                _blockController.MoveDelta(dx, dy, SelectedBlock);
-                PanStartPoint = new ImmutablePoint(x, y);
+                _blockController.MoveDelta(dx, dy, State.SelectedBlock);
+                State.PanStartPoint = new ImmutablePoint(x, y);
             }
         }
 
         private void FinishMove()
         {
-            RestoreTempMode();
-            CursorController.Set(SheetCursor.Normal);
-            OverlaySheet.ReleaseCapture();
+            State.Mode = State.TempMode;
+            State.CursorController.Set(SheetCursor.Normal);
+            State.OverlaySheet.ReleaseCapture();
         }
 
         #endregion
@@ -708,70 +649,69 @@ namespace Sheet.Controller
 
         public void SetAutoFitSize(double finalWidth, double finalHeight)
         {
-            LastFinalWidth = finalWidth;
-            LastFinalHeight = finalHeight;
+            State.LastFinalWidth = finalWidth;
+            State.LastFinalHeight = finalHeight;
         }
 
         private void ZoomTo(double x, double y, int oldZoomIndex)
         {
             double oldZoom = GetZoom(oldZoomIndex);
-            double newZoom = GetZoom(ZoomController.ZoomIndex);
-            ZoomController.Zoom = newZoom;
+            double newZoom = GetZoom(State.ZoomController.ZoomIndex);
+            State.ZoomController.Zoom = newZoom;
 
-            ZoomController.PanX = (x * oldZoom + ZoomController.PanX) - x * newZoom;
-            ZoomController.PanY = (y * oldZoom + ZoomController.PanY) - y * newZoom;
+            State.ZoomController.PanX = (x * oldZoom + State.ZoomController.PanX) - x * newZoom;
+            State.ZoomController.PanY = (y * oldZoom + State.ZoomController.PanY) - y * newZoom;
         }
 
         private void ZoomTo(int delta, ImmutablePoint p)
         {
             if (delta > 0)
             {
-
-                if (ZoomController.ZoomIndex > -1 && ZoomController.ZoomIndex < Options.MaxZoomIndex)
+                if (State.ZoomController.ZoomIndex > -1 && State.ZoomController.ZoomIndex < State.Options.MaxZoomIndex)
                 {
-                    ZoomTo(p.X, p.Y, ZoomController.ZoomIndex++);
+                    ZoomTo(p.X, p.Y, State.ZoomController.ZoomIndex++);
                 }
             }
             else
             {
-                if (ZoomController.ZoomIndex > 0)
+                if (State.ZoomController.ZoomIndex > 0)
                 {
-                    ZoomTo(p.X, p.Y, ZoomController.ZoomIndex--);
+                    ZoomTo(p.X, p.Y, State.ZoomController.ZoomIndex--);
                 }
             }
         }
 
         private double GetZoom(int index)
         {
-            if (index >= 0 && index <= Options.MaxZoomIndex)
+            if (index >= 0 && index <= State.Options.MaxZoomIndex)
             {
-                return Options.ZoomFactors[index];
+                return State.Options.ZoomFactors[index];
             }
-            return ZoomController.Zoom;
+            return State.ZoomController.Zoom;
         }
 
         private void InitPan(ImmutablePoint p)
         {
-            StoreTempMode();
-            SetMode(SheetMode.Pan);
-            PanStartPoint = new ImmutablePoint(p.X, p.Y);
+            State.TempMode = State.Mode;
+            State.Mode = SheetMode.Pan;
+            State.PanStartPoint = new ImmutablePoint(p.X, p.Y);
             ResetOverlay();
-            CursorController.Set(SheetCursor.Pan);
-            OverlaySheet.Capture();
+            State.CursorController.Set(SheetCursor.Pan);
+            State.OverlaySheet.Capture();
         }
 
         private void Pan(ImmutablePoint p)
         {
-            ZoomController.PanX = ZoomController.PanX + p.X - PanStartPoint.X;
-            ZoomController.PanY = ZoomController.PanY + p.Y - PanStartPoint.Y;
-            PanStartPoint = new ImmutablePoint(p.X, p.Y);
+            State.ZoomController.PanX = State.ZoomController.PanX + p.X - State.PanStartPoint.X;
+            State.ZoomController.PanY = State.ZoomController.PanY + p.Y - State.PanStartPoint.Y;
+            State.PanStartPoint = new ImmutablePoint(p.X, p.Y);
         }
 
         private void FinishPan()
         {
-            RestoreTempMode();
-            CursorController.Set(SheetCursor.Normal);
-            OverlaySheet.ReleaseCapture();
+            State.Mode = State.TempMode;
+            State.CursorController.Set(SheetCursor.Normal);
+            State.OverlaySheet.ReleaseCapture();
         }
 
         private void AdjustThickness(IEnumerable<ILine> lines, double thickness)
@@ -815,28 +755,28 @@ namespace Sheet.Controller
 
         public void AdjustBackThickness(double zoom)
         {
-            double gridThicknessZoomed = Options.GridThickness / zoom;
-            double frameThicknessZoomed = Options.FrameThickness / zoom;
+            double gridThicknessZoomed = State.Options.GridThickness / zoom;
+            double frameThicknessZoomed = State.Options.FrameThickness / zoom;
 
-            AdjustThickness(GridBlock, gridThicknessZoomed);
-            AdjustThickness(FrameBlock, frameThicknessZoomed);
+            AdjustThickness(State.GridBlock, gridThicknessZoomed);
+            AdjustThickness(State.FrameBlock, frameThicknessZoomed);
         }
 
         public void AdjustPageThickness(double zoom)
         {
-            double lineThicknessZoomed = Options.LineThickness / zoom;
-            double selectionThicknessZoomed = Options.SelectionThickness / zoom;
+            double lineThicknessZoomed = State.Options.LineThickness / zoom;
+            double selectionThicknessZoomed = State.Options.SelectionThickness / zoom;
 
             AdjustBackThickness(zoom);
-            AdjustThickness(ContentBlock, lineThicknessZoomed);
+            AdjustThickness(State.ContentBlock, lineThicknessZoomed);
 
             _lineMode.Adjust(zoom);
             _rectangleMode.Adjust(zoom);
             _ellipseMode.Adjust(zoom);
 
-            if (TempSelectionRect != null)
+            if (State.TempSelectionRect != null)
             {
-                _blockHelper.SetStrokeThickness(TempSelectionRect, selectionThicknessZoomed);
+                _blockHelper.SetStrokeThickness(State.TempSelectionRect, selectionThicknessZoomed);
             }
         }
 
@@ -846,39 +786,39 @@ namespace Sheet.Controller
 
         private void InitSelectionRect(ImmutablePoint p)
         {
-            SelectionStartPoint = new ImmutablePoint(p.X, p.Y);
-            TempSelectionRect = _pageFactory.CreateSelectionRectangle(Options.SelectionThickness / ZoomController.Zoom, p.X, p.Y, 0.0, 0.0);
-            OverlaySheet.Add(TempSelectionRect);
-            OverlaySheet.Capture();
+            State.SelectionStartPoint = new ImmutablePoint(p.X, p.Y);
+            State.TempSelectionRect = _pageFactory.CreateSelectionRectangle(State.Options.SelectionThickness / State.ZoomController.Zoom, p.X, p.Y, 0.0, 0.0);
+            State.OverlaySheet.Add(State.TempSelectionRect);
+            State.OverlaySheet.Capture();
         }
 
         private void MoveSelectionRect(ImmutablePoint p)
         {
-            double sx = SelectionStartPoint.X;
-            double sy = SelectionStartPoint.Y;
+            double sx = State.SelectionStartPoint.X;
+            double sy = State.SelectionStartPoint.Y;
             double x = p.X;
             double y = p.Y;
             double width = Math.Abs(sx - x);
             double height = Math.Abs(sy - y);
-            _blockHelper.SetLeft(TempSelectionRect, Math.Min(sx, x));
-            _blockHelper.SetTop(TempSelectionRect, Math.Min(sy, y));
-            _blockHelper.SetWidth(TempSelectionRect, width);
-            _blockHelper.SetHeight(TempSelectionRect, height);
+            _blockHelper.SetLeft(State.TempSelectionRect, Math.Min(sx, x));
+            _blockHelper.SetTop(State.TempSelectionRect, Math.Min(sy, y));
+            _blockHelper.SetWidth(State.TempSelectionRect, width);
+            _blockHelper.SetHeight(State.TempSelectionRect, height);
         }
 
         private void FinishSelectionRect()
         {
-            double x = _blockHelper.GetLeft(TempSelectionRect);
-            double y = _blockHelper.GetTop(TempSelectionRect);
-            double width = _blockHelper.GetWidth(TempSelectionRect);
-            double height = _blockHelper.GetHeight(TempSelectionRect);
+            double x = _blockHelper.GetLeft(State.TempSelectionRect);
+            double y = _blockHelper.GetTop(State.TempSelectionRect);
+            double width = _blockHelper.GetWidth(State.TempSelectionRect);
+            double height = _blockHelper.GetHeight(State.TempSelectionRect);
 
             CancelSelectionRect();
 
             // get selected items
             bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
-            bool resetSelected = onlyCtrl && _blockController.HaveSelected(SelectedBlock) ? false : true;
-            _blockController.HitTestSelectionRect(ContentSheet, ContentBlock, SelectedBlock, new ImmutableRect(x, y, width, height), resetSelected);
+            bool resetSelected = onlyCtrl && _blockController.HaveSelected(State.SelectedBlock) ? false : true;
+            _blockController.HitTestSelectionRect(State.ContentSheet, State.ContentBlock, State.SelectedBlock, new ImmutableRect(x, y, width, height), resetSelected);
 
             // edit mode
             TryToEditSelected();
@@ -886,9 +826,9 @@ namespace Sheet.Controller
 
         private void CancelSelectionRect()
         {
-            OverlaySheet.ReleaseCapture();
-            OverlaySheet.Remove(TempSelectionRect);
-            TempSelectionRect = null;
+            State.OverlaySheet.ReleaseCapture();
+            State.OverlaySheet.Remove(State.TempSelectionRect);
+            State.TempSelectionRect = null;
         }
 
         #endregion
@@ -906,47 +846,47 @@ namespace Sheet.Controller
 
         private void CreateText(ImmutablePoint p)
         {
-            double x = _itemController.Snap(p.X, Options.SnapSize);
-            double y = _itemController.Snap(p.Y, Options.SnapSize);
-            HistoryController.Register("Create Text");
+            double x = _itemController.Snap(p.X, State.Options.SnapSize);
+            double y = _itemController.Snap(p.Y, State.Options.SnapSize);
+            State.HistoryController.Register("Create Text");
 
             var text = _blockFactory.CreateText("Text", x, y, 30.0, 15.0, (int)XHorizontalAlignment.Center, (int)XVerticalAlignment.Center, 11.0, ItemColors.Transparent, ItemColors.Black);
-            ContentBlock.Texts.Add(text);
-            ContentSheet.Add(text);
+            State.ContentBlock.Texts.Add(text);
+            State.ContentSheet.Add(text);
         }
 
         private bool TryToEditText(ImmutablePoint p)
         {
-            var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
-            _blockController.HitTestClick(ContentSheet, ContentBlock, temp, p, Options.HitTestSize, true, true);
+            var temp = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "TEMP", null);
+            _blockController.HitTestClick(State.ContentSheet, State.ContentBlock, temp, p, State.Options.HitTestSize, true, true);
 
             if (_blockController.HaveOneTextSelected(temp))
             {
                 var tb = WpfBlockHelper.GetTextBlock(temp.Texts[0]);
 
-                StoreTempMode();
-                SetMode(SheetMode.TextEditor);
+                State.TempMode = State.Mode;
+                State.Mode = SheetMode.TextEditor;
 
-                var tc = CreateTextEditor(new ImmutablePoint((EditorSheet.Width / 2) - (330 / 2), EditorSheet.Height / 2) /* p */);
+                var tc = CreateTextEditor(new ImmutablePoint((State.EditorSheet.Width / 2) - (330 / 2), State.EditorSheet.Height / 2) /* p */);
 
                 Action<string> ok = (text) =>
                 {
-                    HistoryController.Register("Edit Text");
+                    State.HistoryController.Register("Edit Text");
                     tb.Text = text;
-                    EditorSheet.Remove(tc);
-                    View.Focus();
-                    RestoreTempMode();
+                    State.EditorSheet.Remove(tc);
+                    State.View.Focus();
+                    State.Mode = State.TempMode;
                 };
 
                 Action cancel = () =>
                 {
-                    EditorSheet.Remove(tc);
-                    View.Focus();
-                    RestoreTempMode();
+                    State.EditorSheet.Remove(tc);
+                    State.View.Focus();
+                    State.Mode = State.TempMode;
                 };
 
                 tc.Set(ok, cancel, "Edit Text", "Text:", tb.Text);
-                EditorSheet.Add(tc);
+                State.EditorSheet.Add(tc);
 
                 _blockController.Deselect(temp);
                 return true;
@@ -984,11 +924,11 @@ namespace Sheet.Controller
         private void InsertImage(ImmutablePoint p, string path)
         {
             byte[] data = _base64.ReadAllBytes(path);
-            double x = _itemController.Snap(p.X, Options.SnapSize);
-            double y = _itemController.Snap(p.Y, Options.SnapSize);
+            double x = _itemController.Snap(p.X, State.Options.SnapSize);
+            double y = _itemController.Snap(p.Y, State.Options.SnapSize);
             var image = _blockFactory.CreateImage(x, y, 120.0, 90.0, data);
-            ContentBlock.Images.Add(image);
-            ContentSheet.Add(image);
+            State.ContentBlock.Images.Add(image);
+            State.ContentSheet.Add(image);
         }
 
         #endregion
@@ -997,27 +937,27 @@ namespace Sheet.Controller
 
         private bool TryToEditSelected()
         {
-            if (_blockController.HaveOneLineSelected(SelectedBlock))
+            if (_blockController.HaveOneLineSelected(State.SelectedBlock))
             {
                 InitLineEditor();
                 return true;
             }
-            else if (_blockController.HaveOneRectangleSelected(SelectedBlock))
+            else if (_blockController.HaveOneRectangleSelected(State.SelectedBlock))
             {
                 InitRectangleEditor();
                 return true;
             }
-            else if (_blockController.HaveOneEllipseSelected(SelectedBlock))
+            else if (_blockController.HaveOneEllipseSelected(State.SelectedBlock))
             {
                 InitEllipseEditor();
                 return true;
             }
-            else if (_blockController.HaveOneTextSelected(SelectedBlock))
+            else if (_blockController.HaveOneTextSelected(State.SelectedBlock))
             {
                 InitTextEditor();
                 return true;
             }
-            else if (_blockController.HaveOneImageSelected(SelectedBlock))
+            else if (_blockController.HaveOneImageSelected(State.SelectedBlock))
             {
                 InitImageEditor();
                 return true;
@@ -1027,7 +967,7 @@ namespace Sheet.Controller
 
         private void FinishEdit()
         {
-            switch (SelectedType)
+            switch (State.SelectedType)
             {
                 case ItemType.Line:
                     FinishLineEditor();
@@ -1051,8 +991,8 @@ namespace Sheet.Controller
             {
                 if (line.Start != null)
                 {
-                    double x = _itemController.Snap(line.Start.X + dx, Options.SnapSize);
-                    double y = _itemController.Snap(line.Start.Y + dy, Options.SnapSize);
+                    double x = _itemController.Snap(line.Start.X + dx, State.Options.SnapSize);
+                    double y = _itemController.Snap(line.Start.Y + dy, State.Options.SnapSize);
                     double sdx = x - line.Start.X;
                     double sdy = y - line.Start.Y;
                     _blockController.MoveDelta(sdx, sdy, line.Start);
@@ -1061,8 +1001,8 @@ namespace Sheet.Controller
                 }
                 else
                 {
-                    double x = _itemController.Snap(_blockHelper.GetX1(line) + dx, Options.SnapSize);
-                    double y = _itemController.Snap(_blockHelper.GetY1(line) + dy, Options.SnapSize);
+                    double x = _itemController.Snap(_blockHelper.GetX1(line) + dx, State.Options.SnapSize);
+                    double y = _itemController.Snap(_blockHelper.GetY1(line) + dy, State.Options.SnapSize);
                     _blockHelper.SetX1(line, x);
                     _blockHelper.SetY1(line, y);
                     _blockHelper.SetLeft(thumb, x);
@@ -1077,8 +1017,8 @@ namespace Sheet.Controller
             {
                 if (line.End != null)
                 {
-                    double x = _itemController.Snap(line.End.X + dx, Options.SnapSize);
-                    double y = _itemController.Snap(line.End.Y + dy, Options.SnapSize);
+                    double x = _itemController.Snap(line.End.X + dx, State.Options.SnapSize);
+                    double y = _itemController.Snap(line.End.Y + dy, State.Options.SnapSize);
                     double sdx = x - line.End.X;
                     double sdy = y - line.End.Y;
                     _blockController.MoveDelta(sdx, sdy, line.End);
@@ -1087,8 +1027,8 @@ namespace Sheet.Controller
                 }
                 else
                 {
-                    double x = _itemController.Snap(_blockHelper.GetX2(line) + dx, Options.SnapSize);
-                    double y = _itemController.Snap(_blockHelper.GetY2(line) + dy, Options.SnapSize);
+                    double x = _itemController.Snap(_blockHelper.GetX2(line) + dx, State.Options.SnapSize);
+                    double y = _itemController.Snap(_blockHelper.GetY2(line) + dy, State.Options.SnapSize);
                     _blockHelper.SetX2(line, x);
                     _blockHelper.SetY2(line, y);
                     _blockHelper.SetLeft(thumb, x);
@@ -1099,24 +1039,24 @@ namespace Sheet.Controller
 
         private void InitLineEditor()
         {
-            StoreTempMode();
-            SetMode(SheetMode.Edit);
+            State.TempMode = State.Mode;
+            State.Mode = SheetMode.Edit;
 
             try
             {
-                SelectedType = ItemType.Line;
-                SelectedLine = SelectedBlock.Lines.FirstOrDefault();
+                State.SelectedType = ItemType.Line;
+                State.SelectedLine = State.SelectedBlock.Lines.FirstOrDefault();
 
-                LineThumbStart = _blockFactory.CreateThumb(0.0, 0.0, SelectedLine, DragLineStart);
-                LineThumbEnd = _blockFactory.CreateThumb(0.0, 0.0, SelectedLine, DragLineEnd);
+                State.LineThumbStart = _blockFactory.CreateThumb(0.0, 0.0, State.SelectedLine, DragLineStart);
+                State.LineThumbEnd = _blockFactory.CreateThumb(0.0, 0.0, State.SelectedLine, DragLineEnd);
 
-                _blockHelper.SetLeft(LineThumbStart, _blockHelper.GetX1(SelectedLine));
-                _blockHelper.SetTop(LineThumbStart, _blockHelper.GetY1(SelectedLine));
-                _blockHelper.SetLeft(LineThumbEnd, _blockHelper.GetX2(SelectedLine));
-                _blockHelper.SetTop(LineThumbEnd, _blockHelper.GetY2(SelectedLine));
+                _blockHelper.SetLeft(State.LineThumbStart, _blockHelper.GetX1(State.SelectedLine));
+                _blockHelper.SetTop(State.LineThumbStart, _blockHelper.GetY1(State.SelectedLine));
+                _blockHelper.SetLeft(State.LineThumbEnd, _blockHelper.GetX2(State.SelectedLine));
+                _blockHelper.SetTop(State.LineThumbEnd, _blockHelper.GetY2(State.SelectedLine));
 
-                OverlaySheet.Add(LineThumbStart);
-                OverlaySheet.Add(LineThumbEnd);
+                State.OverlaySheet.Add(State.LineThumbStart);
+                State.OverlaySheet.Add(State.LineThumbEnd);
             }
             catch (Exception ex)
             {
@@ -1127,21 +1067,21 @@ namespace Sheet.Controller
 
         private void FinishLineEditor()
         {
-            RestoreTempMode();
+            State.Mode = State.TempMode;
 
-            SelectedType = ItemType.None;
-            SelectedLine = null;
+            State.SelectedType = ItemType.None;
+            State.SelectedLine = null;
 
-            if (LineThumbStart != null)
+            if (State.LineThumbStart != null)
             {
-                OverlaySheet.Remove(LineThumbStart);
-                LineThumbStart = null;
+                State.OverlaySheet.Remove(State.LineThumbStart);
+                State.LineThumbStart = null;
             }
 
-            if (LineThumbEnd != null)
+            if (State.LineThumbEnd != null)
             {
-                OverlaySheet.Remove(LineThumbEnd);
-                LineThumbEnd = null;
+                State.OverlaySheet.Remove(State.LineThumbEnd);
+                State.LineThumbEnd = null;
             }
         }
 
@@ -1156,14 +1096,14 @@ namespace Sheet.Controller
             var bl = rect.BottomLeft;
             var br = rect.BottomRight;
 
-            _blockHelper.SetLeft(ThumbTopLeft, tl.X);
-            _blockHelper.SetTop(ThumbTopLeft, tl.Y);
-            _blockHelper.SetLeft(ThumbTopRight, tr.X);
-            _blockHelper.SetTop(ThumbTopRight, tr.Y);
-            _blockHelper.SetLeft(ThumbBottomLeft, bl.X);
-            _blockHelper.SetTop(ThumbBottomLeft, bl.Y);
-            _blockHelper.SetLeft(ThumbBottomRight, br.X);
-            _blockHelper.SetTop(ThumbBottomRight, br.Y);
+            _blockHelper.SetLeft(State.ThumbTopLeft, tl.X);
+            _blockHelper.SetTop(State.ThumbTopLeft, tl.Y);
+            _blockHelper.SetLeft(State.ThumbTopRight, tr.X);
+            _blockHelper.SetTop(State.ThumbTopRight, tr.Y);
+            _blockHelper.SetLeft(State.ThumbBottomLeft, bl.X);
+            _blockHelper.SetTop(State.ThumbBottomLeft, bl.Y);
+            _blockHelper.SetLeft(State.ThumbBottomRight, br.X);
+            _blockHelper.SetTop(State.ThumbBottomRight, br.Y);
         }
 
         private void DragTopLeft(IElement element, IThumb thumb, double dx, double dy)
@@ -1176,8 +1116,8 @@ namespace Sheet.Controller
                 double height = _blockHelper.GetHeight(element);
 
                 var rect = new Rect(left, top, width, height);
-                rect.X = _itemController.Snap(rect.X + dx, Options.SnapSize);
-                rect.Y = _itemController.Snap(rect.Y + dy, Options.SnapSize);
+                rect.X = _itemController.Snap(rect.X + dx, State.Options.SnapSize);
+                rect.Y = _itemController.Snap(rect.Y + dy, State.Options.SnapSize);
                 rect.Width = Math.Max(0.0, rect.Width - (rect.X - left));
                 rect.Height = Math.Max(0.0, rect.Height - (rect.Y - top));
 
@@ -1200,8 +1140,8 @@ namespace Sheet.Controller
                 double height = _blockHelper.GetHeight(element);
 
                 var rect = new Rect(left, top, width, height);
-                rect.Width = Math.Max(0.0, _itemController.Snap(rect.Width + dx, Options.SnapSize));
-                rect.Y = _itemController.Snap(rect.Y + dy, Options.SnapSize);
+                rect.Width = Math.Max(0.0, _itemController.Snap(rect.Width + dx, State.Options.SnapSize));
+                rect.Y = _itemController.Snap(rect.Y + dy, State.Options.SnapSize);
                 rect.Height = Math.Max(0.0, rect.Height - (rect.Y - top));
 
                 _blockHelper.SetLeft(element, rect.X);
@@ -1223,8 +1163,8 @@ namespace Sheet.Controller
                 double height = _blockHelper.GetHeight(element);
 
                 var rect = new Rect(left, top, width, height);
-                rect.X = _itemController.Snap(rect.X + dx, Options.SnapSize);
-                rect.Height = Math.Max(0.0, _itemController.Snap(rect.Height + dy, Options.SnapSize));
+                rect.X = _itemController.Snap(rect.X + dx, State.Options.SnapSize);
+                rect.Height = Math.Max(0.0, _itemController.Snap(rect.Height + dy, State.Options.SnapSize));
                 rect.Width = Math.Max(0.0, rect.Width - (rect.X - left));
 
                 _blockHelper.SetLeft(element, rect.X);
@@ -1246,8 +1186,8 @@ namespace Sheet.Controller
                 double height = _blockHelper.GetHeight(element);
 
                 var rect = new Rect(left, top, width, height);
-                rect.Width = Math.Max(0.0, _itemController.Snap(rect.Width + dx, Options.SnapSize));
-                rect.Height = Math.Max(0.0, _itemController.Snap(rect.Height + dy, Options.SnapSize));
+                rect.Width = Math.Max(0.0, _itemController.Snap(rect.Width + dx, State.Options.SnapSize));
+                rect.Height = Math.Max(0.0, _itemController.Snap(rect.Height + dy, State.Options.SnapSize));
 
                 _blockHelper.SetLeft(element, rect.X);
                 _blockHelper.SetTop(element, rect.Y);
@@ -1260,60 +1200,60 @@ namespace Sheet.Controller
 
         private void InitFrameworkElementEditor()
         {
-            double left = _blockHelper.GetLeft(SelectedElement);
-            double top = _blockHelper.GetTop(SelectedElement);
-            double width = _blockHelper.GetWidth(SelectedElement);
-            double height = _blockHelper.GetHeight(SelectedElement);
+            double left = _blockHelper.GetLeft(State.SelectedElement);
+            double top = _blockHelper.GetTop(State.SelectedElement);
+            double width = _blockHelper.GetWidth(State.SelectedElement);
+            double height = _blockHelper.GetHeight(State.SelectedElement);
 
-            ThumbTopLeft = _blockFactory.CreateThumb(0.0, 0.0, SelectedElement, DragTopLeft);
-            ThumbTopRight = _blockFactory.CreateThumb(0.0, 0.0, SelectedElement, DragTopRight);
-            ThumbBottomLeft = _blockFactory.CreateThumb(0.0, 0.0, SelectedElement, DragBottomLeft);
-            ThumbBottomRight = _blockFactory.CreateThumb(0.0, 0.0, SelectedElement, DragBottomRight);
+            State.ThumbTopLeft = _blockFactory.CreateThumb(0.0, 0.0, State.SelectedElement, DragTopLeft);
+            State.ThumbTopRight = _blockFactory.CreateThumb(0.0, 0.0, State.SelectedElement, DragTopRight);
+            State.ThumbBottomLeft = _blockFactory.CreateThumb(0.0, 0.0, State.SelectedElement, DragBottomLeft);
+            State.ThumbBottomRight = _blockFactory.CreateThumb(0.0, 0.0, State.SelectedElement, DragBottomRight);
 
-            _blockHelper.SetLeft(ThumbTopLeft, left);
-            _blockHelper.SetTop(ThumbTopLeft, top);
-            _blockHelper.SetLeft(ThumbTopRight, left + width);
-            _blockHelper.SetTop(ThumbTopRight, top);
-            _blockHelper.SetLeft(ThumbBottomLeft, left);
-            _blockHelper.SetTop(ThumbBottomLeft, top + height);
-            _blockHelper.SetLeft(ThumbBottomRight, left + width);
-            _blockHelper.SetTop(ThumbBottomRight, top + height);
+            _blockHelper.SetLeft(State.ThumbTopLeft, left);
+            _blockHelper.SetTop(State.ThumbTopLeft, top);
+            _blockHelper.SetLeft(State.ThumbTopRight, left + width);
+            _blockHelper.SetTop(State.ThumbTopRight, top);
+            _blockHelper.SetLeft(State.ThumbBottomLeft, left);
+            _blockHelper.SetTop(State.ThumbBottomLeft, top + height);
+            _blockHelper.SetLeft(State.ThumbBottomRight, left + width);
+            _blockHelper.SetTop(State.ThumbBottomRight, top + height);
 
-            OverlaySheet.Add(ThumbTopLeft);
-            OverlaySheet.Add(ThumbTopRight);
-            OverlaySheet.Add(ThumbBottomLeft);
-            OverlaySheet.Add(ThumbBottomRight);
+            State.OverlaySheet.Add(State.ThumbTopLeft);
+            State.OverlaySheet.Add(State.ThumbTopRight);
+            State.OverlaySheet.Add(State.ThumbBottomLeft);
+            State.OverlaySheet.Add(State.ThumbBottomRight);
         }
 
         private void FinishFrameworkElementEditor()
         {
-            RestoreTempMode();
+            State.Mode = State.TempMode;
 
-            SelectedType = ItemType.None;
-            SelectedElement = null;
+            State.SelectedType = ItemType.None;
+            State.SelectedElement = null;
 
-            if (ThumbTopLeft != null)
+            if (State.ThumbTopLeft != null)
             {
-                OverlaySheet.Remove(ThumbTopLeft);
-                ThumbTopLeft = null;
+                State.OverlaySheet.Remove(State.ThumbTopLeft);
+                State.ThumbTopLeft = null;
             }
 
-            if (ThumbTopRight != null)
+            if (State.ThumbTopRight != null)
             {
-                OverlaySheet.Remove(ThumbTopRight);
-                ThumbTopRight = null;
+                State.OverlaySheet.Remove(State.ThumbTopRight);
+                State.ThumbTopRight = null;
             }
 
-            if (ThumbBottomLeft != null)
+            if (State.ThumbBottomLeft != null)
             {
-                OverlaySheet.Remove(ThumbBottomLeft);
-                ThumbBottomLeft = null;
+                State.OverlaySheet.Remove(State.ThumbBottomLeft);
+                State.ThumbBottomLeft = null;
             }
 
-            if (ThumbBottomRight != null)
+            if (State.ThumbBottomRight != null)
             {
-                OverlaySheet.Remove(ThumbBottomRight);
-                ThumbBottomRight = null;
+                State.OverlaySheet.Remove(State.ThumbBottomRight);
+                State.ThumbBottomRight = null;
             }
         }
 
@@ -1323,14 +1263,14 @@ namespace Sheet.Controller
 
         private void InitRectangleEditor()
         {
-            StoreTempMode();
-            SetMode(SheetMode.Edit);
+            State.TempMode = State.Mode;
+            State.Mode = SheetMode.Edit;
 
             try
             {
-                var rectangle = SelectedBlock.Rectangles.FirstOrDefault();
-                SelectedType = ItemType.Rectangle;
-                SelectedElement = rectangle;
+                var rectangle = State.SelectedBlock.Rectangles.FirstOrDefault();
+                State.SelectedType = ItemType.Rectangle;
+                State.SelectedElement = rectangle;
                 InitFrameworkElementEditor();
             }
             catch (Exception ex)
@@ -1346,14 +1286,14 @@ namespace Sheet.Controller
 
         private void InitEllipseEditor()
         {
-            StoreTempMode();
-            SetMode(SheetMode.Edit);
+            State.TempMode = State.Mode;
+            State.Mode = SheetMode.Edit;
 
             try
             {
-                var ellipse = SelectedBlock.Ellipses.FirstOrDefault();
-                SelectedType = ItemType.Ellipse;
-                SelectedElement = ellipse;
+                var ellipse = State.SelectedBlock.Ellipses.FirstOrDefault();
+                State.SelectedType = ItemType.Ellipse;
+                State.SelectedElement = ellipse;
                 InitFrameworkElementEditor();
             }
             catch (Exception ex)
@@ -1369,14 +1309,14 @@ namespace Sheet.Controller
 
         private void InitTextEditor()
         {
-            StoreTempMode();
-            SetMode(SheetMode.Edit);
+            State.TempMode = State.Mode;
+            State.Mode = SheetMode.Edit;
 
             try
             {
-                var text = SelectedBlock.Texts.FirstOrDefault();
-                SelectedType = ItemType.Text;
-                SelectedElement = text;
+                var text = State.SelectedBlock.Texts.FirstOrDefault();
+                State.SelectedType = ItemType.Text;
+                State.SelectedElement = text;
                 InitFrameworkElementEditor();
             }
             catch (Exception ex)
@@ -1392,14 +1332,14 @@ namespace Sheet.Controller
 
         private void InitImageEditor()
         {
-            StoreTempMode();
-            SetMode(SheetMode.Edit);
+            State.TempMode = State.Mode;
+            State.Mode = SheetMode.Edit;
 
             try
             {
-                var image = SelectedBlock.Images.FirstOrDefault();
-                SelectedType = ItemType.Image;
-                SelectedElement = image;
+                var image = State.SelectedBlock.Images.FirstOrDefault();
+                State.SelectedType = ItemType.Image;
+                State.SelectedElement = image;
                 InitFrameworkElementEditor();
             }
             catch (Exception ex)
@@ -1415,12 +1355,12 @@ namespace Sheet.Controller
 
         public bool BindDataToBlock(ImmutablePoint p, DataItem dataItem)
         {
-            var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
-            _blockController.HitTestForBlocks(ContentSheet, ContentBlock, temp, p, Options.HitTestSize);
+            var temp = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "TEMP", null);
+            _blockController.HitTestForBlocks(State.ContentSheet, State.ContentBlock, temp, p, State.Options.HitTestSize);
 
             if (_blockController.HaveOneBlockSelected(temp))
             {
-                HistoryController.Register("Bind Data");
+                State.HistoryController.Register("Bind Data");
                 var block = temp.Blocks[0];
                 var result = BindDataToBlock(block, dataItem);
                 _blockController.Deselect(temp);
@@ -1428,8 +1368,8 @@ namespace Sheet.Controller
                 if (result == true)
                 {
                     _blockController.Select(block);
-                    SelectedBlock.Blocks = new List<IBlock>();
-                    SelectedBlock.Blocks.Add(block);
+                    State.SelectedBlock.Blocks = new List<IBlock>();
+                    State.SelectedBlock.Blocks.Add(block);
                 }
 
                 return true;
@@ -1472,7 +1412,7 @@ namespace Sheet.Controller
             // if failed insert selected block from library and try again to bind
             if (!firstTryResult)
             {
-                var blockItem = LibraryController.GetSelected();
+                var blockItem = State.LibraryController.GetSelected();
                 if (blockItem != null)
                 {
                     var block = Insert(blockItem, p, false);
@@ -1480,16 +1420,16 @@ namespace Sheet.Controller
                     if (!secondTryResult)
                     {
                         // remove block if failed to bind
-                        var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
+                        var temp = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "TEMP", null);
                         temp.Init();
                         temp.Blocks.Add(block);
-                        _blockController.RemoveSelected(ContentSheet, ContentBlock, temp);
+                        _blockController.RemoveSelected(State.ContentSheet, State.ContentBlock, temp);
                     }
                     else
                     {
                         _blockController.Select(block);
-                        SelectedBlock.Blocks = new List<IBlock>();
-                        SelectedBlock.Blocks.Add(block);
+                        State.SelectedBlock.Blocks = new List<IBlock>();
+                        State.SelectedBlock.Blocks.Add(block);
                     }
                 }
             }
@@ -1501,10 +1441,10 @@ namespace Sheet.Controller
 
         public void NewPage()
         {
-            HistoryController.Register("New");
+            State.HistoryController.Register("New");
             ResetPage();
             CreatePage();
-            ZoomController.AutoFit();
+            State.ZoomController.AutoFit();
         }
 
         #endregion
@@ -1517,7 +1457,7 @@ namespace Sheet.Controller
             if (text != null)
             {
                 var page = await Task.Run(() => _itemSerializer.DeserializeContents(text));
-                HistoryController.Register("Open Text");
+                State.HistoryController.Register("Open Text");
                 ResetPage();
                 DeserializePage(page);
             }
@@ -1529,7 +1469,7 @@ namespace Sheet.Controller
             if (text != null)
             {
                 var page = await Task.Run(() => _jsonSerializer.Deerialize<BlockItem>(text));
-                HistoryController.Register("Open Json");
+                State.HistoryController.Register("Open Json");
                 ResetPage();
                 DeserializePage(page);
             }
@@ -1658,7 +1598,7 @@ namespace Sheet.Controller
             Task.Run(() =>
             {
                 var writer = new BlockPdfWriter();
-                writer.Create(fileName, Options.PageWidth, Options.PageHeight, pages);
+                writer.Create(fileName, State.Options.PageWidth, State.Options.PageHeight, pages);
                 Process.Start(fileName);
             });
         }
@@ -1681,7 +1621,7 @@ namespace Sheet.Controller
                     foreach (var page in pages)
                     {
                         string fileNameWithCounter = System.IO.Path.Combine(path, string.Concat(name, '-', counter.ToString("000"), extension));
-                        writer.Create(fileNameWithCounter, Options.PageWidth, Options.PageHeight, page);
+                        writer.Create(fileNameWithCounter, State.Options.PageWidth, State.Options.PageHeight, page);
                         counter++;
                     }
                 }
@@ -1690,7 +1630,7 @@ namespace Sheet.Controller
                     var page = pages.FirstOrDefault();
                     if (page != null)
                     {
-                        writer.Create(fileName, Options.PageWidth, Options.PageHeight, page);
+                        writer.Create(fileName, State.Options.PageWidth, State.Options.PageHeight, page);
                     }
                 }
             });
@@ -1748,7 +1688,7 @@ namespace Sheet.Controller
 
         public void ExportPage()
         {
-            var block = _blockSerializer.SerializerContents(ContentBlock, -1, ContentBlock.X, ContentBlock.Y, ContentBlock.Width, ContentBlock.Height, ContentBlock.DataId, "CONTENT");
+            var block = _blockSerializer.SerializerContents(State.ContentBlock, -1, State.ContentBlock.X, State.ContentBlock.Y, State.ContentBlock.Width, State.ContentBlock.Height, State.ContentBlock.DataId, "CONTENT");
             var blocks = ToSingle(block);
             Export(blocks);
         }
@@ -1759,30 +1699,30 @@ namespace Sheet.Controller
 
         public void Insert(ImmutablePoint p)
         {
-            if (LibraryController != null)
+            if (State.LibraryController != null)
             {
-                var blockItem = LibraryController.GetSelected() as BlockItem;
+                var blockItem = State.LibraryController.GetSelected() as BlockItem;
                 Insert(blockItem, p, true);
             }
         }
 
         public IBlock Insert(BlockItem blockItem, ImmutablePoint p, bool select)
         {
-            _blockController.DeselectContent(SelectedBlock);
-            double thickness = Options.LineThickness / ZoomController.Zoom;
+            _blockController.DeselectContent(State.SelectedBlock);
+            double thickness = State.Options.LineThickness / State.ZoomController.Zoom;
 
-            HistoryController.Register("Insert Block");
+            State.HistoryController.Register("Insert Block");
 
-            var block = _blockSerializer.Deserialize(ContentSheet, ContentBlock, blockItem, thickness);
+            var block = _blockSerializer.Deserialize(State.ContentSheet, State.ContentBlock, blockItem, thickness);
 
             if (select)
             {
                 _blockController.Select(block);
-                SelectedBlock.Blocks = new List<IBlock>();
-                SelectedBlock.Blocks.Add(block);
+                State.SelectedBlock.Blocks = new List<IBlock>();
+                State.SelectedBlock.Blocks.Add(block);
             }
 
-            _blockController.MoveDelta(_itemController.Snap(p.X, Options.SnapSize), _itemController.Snap(p.Y, Options.SnapSize), block);
+            _blockController.MoveDelta(_itemController.Snap(p.X, State.Options.SnapSize), _itemController.Snap(p.Y, State.Options.SnapSize), block);
 
             return block;
         }
@@ -1819,22 +1759,22 @@ namespace Sheet.Controller
 
         private async void InitLibrary(string text)
         {
-            if (LibraryController != null && text != null)
+            if (State.LibraryController != null && text != null)
             {
                 var block = await Task.Run(() => _itemSerializer.DeserializeContents(text));
-                LibraryController.SetSource(block.Blocks);
+                State.LibraryController.SetSource(block.Blocks);
             }
         }
 
         private void AddToLibrary(BlockItem blockItem)
         {
-            if (LibraryController != null && blockItem != null)
+            if (State.LibraryController != null && blockItem != null)
             {
-                var source = LibraryController.GetSource();
+                var source = State.LibraryController.GetSource();
                 var items = new List<BlockItem>(source);
-                _itemController.ResetPosition(blockItem, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight);
+                _itemController.ResetPosition(blockItem, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight);
                 items.Add(blockItem);
-                LibraryController.SetSource(items);
+                State.LibraryController.SetSource(items);
             }
         }
 
@@ -1865,8 +1805,8 @@ namespace Sheet.Controller
 
         public IPoint TryToFindPoint(ImmutablePoint p)
         {
-            var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
-            _blockController.HitTestClick(ContentSheet, GetContent(), temp, p, Options.HitTestSize, true, true);
+            var temp = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "TEMP", null);
+            _blockController.HitTestClick(State.ContentSheet, State.ContentBlock, temp, p, State.Options.HitTestSize, true, true);
 
             if (_blockController.HaveOnePointSelected(temp))
             {
@@ -1886,11 +1826,11 @@ namespace Sheet.Controller
         public void LeftDown(InputArgs args)
         {
             // edit mode
-            if (SelectedType != ItemType.None)
+            if (State.SelectedType != ItemType.None)
             {
                 if (args.SourceType != ItemType.Thumb)
                 {
-                    _blockController.DeselectContent(SelectedBlock);
+                    _blockController.DeselectContent(State.SelectedBlock);
                     FinishEdit();
                 }
                 else
@@ -1900,7 +1840,7 @@ namespace Sheet.Controller
             }
 
             // text editor
-            if (GetMode() == SheetMode.None || GetMode() == SheetMode.TextEditor)
+            if (State.Mode == SheetMode.None || State.Mode == SheetMode.TextEditor)
             {
                 return;
             }
@@ -1908,21 +1848,21 @@ namespace Sheet.Controller
             // move mode
             if (!args.OnlyControl)
             {
-                if (_blockController.HaveSelected(SelectedBlock) && CanInitMove(args.SheetPosition))
+                if (_blockController.HaveSelected(State.SelectedBlock) && CanInitMove(args.SheetPosition))
                 {
                     InitMove(args.SheetPosition);
                     return;
                 }
 
-                _blockController.DeselectContent(SelectedBlock);
+                _blockController.DeselectContent(State.SelectedBlock);
             }
 
-            bool resetSelected = args.OnlyControl && _blockController.HaveSelected(SelectedBlock) ? false : true;
+            bool resetSelected = args.OnlyControl && _blockController.HaveSelected(State.SelectedBlock) ? false : true;
 
-            if (GetMode() == SheetMode.Selection)
+            if (State.Mode == SheetMode.Selection)
             {
-                bool result = _blockController.HitTestClick(ContentSheet, ContentBlock, SelectedBlock, new ImmutablePoint(args.SheetPosition.X, args.SheetPosition.Y), Options.HitTestSize, false, resetSelected);
-                if ((args.OnlyControl || !_blockController.HaveSelected(SelectedBlock)) && !result)
+                bool result = _blockController.HitTestClick(State.ContentSheet, State.ContentBlock, State.SelectedBlock, new ImmutablePoint(args.SheetPosition.X, args.SheetPosition.Y), State.Options.HitTestSize, false, resetSelected);
+                if ((args.OnlyControl || !_blockController.HaveSelected(State.SelectedBlock)) && !result)
                 {
                     InitSelectionRect(args.SheetPosition);
                 }
@@ -1936,15 +1876,15 @@ namespace Sheet.Controller
                     }
                 }
             }
-            else if (GetMode() == SheetMode.Insert && !OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Insert && !State.OverlaySheet.IsCaptured)
             {
                 Insert(args.SheetPosition);
             }
-            else if (GetMode() == SheetMode.Point && !OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Point && !State.OverlaySheet.IsCaptured)
             {
                 InsertPoint(args.SheetPosition, true, true);
             }
-            else if (GetMode() == SheetMode.Line && !OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Line && !State.OverlaySheet.IsCaptured)
             {
                 // try to find point to connect line start
                 IPoint start = TryToFindPoint(args.SheetPosition);
@@ -1957,7 +1897,7 @@ namespace Sheet.Controller
 
                 _lineMode.Init(args.SheetPosition, start);
             }
-            else if (GetMode() == SheetMode.Line && OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Line && State.OverlaySheet.IsCaptured)
             {
                 // try to find point to connect line end
                 IPoint end = TryToFindPoint(args.SheetPosition);
@@ -1970,31 +1910,31 @@ namespace Sheet.Controller
 
                 _lineMode.Finish(end);
             }
-            else if (GetMode() == SheetMode.Rectangle && !OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Rectangle && !State.OverlaySheet.IsCaptured)
             {
                 _rectangleMode.Init(args.SheetPosition);
             }
-            else if (GetMode() == SheetMode.Rectangle && OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Rectangle && State.OverlaySheet.IsCaptured)
             {
                 _rectangleMode.Finish();
             }
-            else if (GetMode() == SheetMode.Ellipse && !OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Ellipse && !State.OverlaySheet.IsCaptured)
             {
                 _ellipseMode.Init(args.SheetPosition);
             }
-            else if (GetMode() == SheetMode.Ellipse && OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Ellipse && State.OverlaySheet.IsCaptured)
             {
                 _ellipseMode.Finish();
             }
-            else if (GetMode() == SheetMode.Pan && OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Pan && State.OverlaySheet.IsCaptured)
             {
                 FinishPan();
             }
-            else if (GetMode() == SheetMode.Text && !OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Text && !State.OverlaySheet.IsCaptured)
             {
                 CreateText(args.SheetPosition);
             }
-            else if (GetMode() == SheetMode.Image && !OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Image && !State.OverlaySheet.IsCaptured)
             {
                 Image(args.SheetPosition);
             }
@@ -2002,11 +1942,11 @@ namespace Sheet.Controller
 
         public void LeftUp(InputArgs args)
         {
-            if (GetMode() == SheetMode.Selection && OverlaySheet.IsCaptured)
+            if (State.Mode == SheetMode.Selection && State.OverlaySheet.IsCaptured)
             {
                 FinishSelectionRect();
             }
-            else if (GetMode() == SheetMode.Move && OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Move && State.OverlaySheet.IsCaptured)
             {
                 FinishMove();
             }
@@ -2014,43 +1954,43 @@ namespace Sheet.Controller
 
         public void Move(InputArgs args)
         {
-            if (GetMode() == SheetMode.Edit)
+            if (State.Mode == SheetMode.Edit)
             {
                 return;
             }
 
             // mouse over selection when holding Shift key
-            if (args.OnlyShift && TempSelectionRect == null && !OverlaySheet.IsCaptured)
+            if (args.OnlyShift && State.TempSelectionRect == null && !State.OverlaySheet.IsCaptured)
             {
-                if (_blockController.HaveSelected(SelectedBlock))
+                if (_blockController.HaveSelected(State.SelectedBlock))
                 {
-                    _blockController.DeselectContent(SelectedBlock);
+                    _blockController.DeselectContent(State.SelectedBlock);
                 }
 
-                _blockController.HitTestClick(ContentSheet, ContentBlock, SelectedBlock, args.SheetPosition, Options.HitTestSize, false, false);
+                _blockController.HitTestClick(State.ContentSheet, State.ContentBlock, State.SelectedBlock, args.SheetPosition, State.Options.HitTestSize, false, false);
             }
 
-            if (GetMode() == SheetMode.Selection && OverlaySheet.IsCaptured)
+            if (State.Mode == SheetMode.Selection && State.OverlaySheet.IsCaptured)
             {
                 MoveSelectionRect(args.SheetPosition);
             }
-            else if (GetMode() == SheetMode.Line && OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Line && State.OverlaySheet.IsCaptured)
             {
                 _lineMode.Move(args.SheetPosition);
             }
-            else if (GetMode() == SheetMode.Rectangle && OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Rectangle && State.OverlaySheet.IsCaptured)
             {
                 _rectangleMode.Move(args.SheetPosition);
             }
-            else if (GetMode() == SheetMode.Ellipse && OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Ellipse && State.OverlaySheet.IsCaptured)
             {
                 _ellipseMode.Move(args.SheetPosition);
             }
-            else if (GetMode() == SheetMode.Pan && OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Pan && State.OverlaySheet.IsCaptured)
             {
                 Pan(args.RootPosition);
             }
-            else if (GetMode() == SheetMode.Move && OverlaySheet.IsCaptured)
+            else if (State.Mode == SheetMode.Move && State.OverlaySheet.IsCaptured)
             {
                 Move(args.SheetPosition);
             }
@@ -2058,46 +1998,46 @@ namespace Sheet.Controller
 
         public void RightDown(InputArgs args)
         {
-            if (GetMode() == SheetMode.None || GetMode() == SheetMode.TextEditor)
+            if (State.Mode == SheetMode.None || State.Mode == SheetMode.TextEditor)
             {
                 return;
             }
 
             // edit mode
-            if (SelectedType != ItemType.None)
+            if (State.SelectedType != ItemType.None)
             {
-                _blockController.DeselectContent(SelectedBlock);
+                _blockController.DeselectContent(State.SelectedBlock);
                 FinishEdit();
                 return;
             }
 
             // text editor
-            if (GetMode() == SheetMode.Text && TryToEditText(args.SheetPosition))
+            if (State.Mode == SheetMode.Text && TryToEditText(args.SheetPosition))
             {
                 args.Handled(true);
                 return;
             }
             else
             {
-                _blockController.DeselectContent(SelectedBlock);
+                _blockController.DeselectContent(State.SelectedBlock);
 
-                if (GetMode() == SheetMode.Selection && OverlaySheet.IsCaptured)
+                if (State.Mode == SheetMode.Selection && State.OverlaySheet.IsCaptured)
                 {
                     CancelSelectionRect();
                 }
-                else if (GetMode() == SheetMode.Line && OverlaySheet.IsCaptured)
+                else if (State.Mode == SheetMode.Line && State.OverlaySheet.IsCaptured)
                 {
                     _lineMode.Cancel();
                 }
-                else if (GetMode() == SheetMode.Rectangle && OverlaySheet.IsCaptured)
+                else if (State.Mode == SheetMode.Rectangle && State.OverlaySheet.IsCaptured)
                 {
                     _rectangleMode.Cancel();
                 }
-                else if (GetMode() == SheetMode.Ellipse && OverlaySheet.IsCaptured)
+                else if (State.Mode == SheetMode.Ellipse && State.OverlaySheet.IsCaptured)
                 {
                     _ellipseMode.Cancel();
                 }
-                else if (!OverlaySheet.IsCaptured)
+                else if (!State.OverlaySheet.IsCaptured)
                 {
                     InitPan(args.RootPosition);
                 }
@@ -2106,7 +2046,7 @@ namespace Sheet.Controller
 
         public void RightUp(InputArgs args)
         {
-            if (GetMode() == SheetMode.Pan && OverlaySheet.IsCaptured)
+            if (State.Mode == SheetMode.Pan && State.OverlaySheet.IsCaptured)
             {
                 FinishPan();
             }
@@ -2125,11 +2065,11 @@ namespace Sheet.Controller
                 // Mouse Middle Double-Click to Auto Fit page to window size
                 if (args.OnlyControl)
                 {
-                    ZoomController.ActualSize();
+                    State.ZoomController.ActualSize();
                 }
                 else
                 {
-                    ZoomController.AutoFit();
+                    State.ZoomController.AutoFit();
                 }
             }
         }
@@ -2140,11 +2080,11 @@ namespace Sheet.Controller
 
         private void CreatePage()
         {
-            _pageFactory.CreateGrid(BackSheet, GridBlock, 330.0, 30.0, 600.0, 750.0, Options.GridSize, Options.GridThickness, ItemColors.LightGray);
-            _pageFactory.CreateFrame(BackSheet, FrameBlock, Options.GridSize, Options.GridThickness, ItemColors.DarkGray);
+            _pageFactory.CreateGrid(State.BackSheet, State.GridBlock, 330.0, 30.0, 600.0, 750.0, State.Options.GridSize, State.Options.GridThickness, ItemColors.LightGray);
+            _pageFactory.CreateFrame(State.BackSheet, State.FrameBlock, State.Options.GridSize, State.Options.GridThickness, ItemColors.DarkGray);
 
-            AdjustThickness(GridBlock, Options.GridThickness / GetZoom(ZoomController.ZoomIndex));
-            AdjustThickness(FrameBlock, Options.FrameThickness / GetZoom(ZoomController.ZoomIndex));
+            AdjustThickness(State.GridBlock, State.Options.GridThickness / GetZoom(State.ZoomController.ZoomIndex));
+            AdjustThickness(State.FrameBlock, State.Options.FrameThickness / GetZoom(State.ZoomController.ZoomIndex));
         }
 
         private BlockItem CreateGridBlock(IBlock gridBlock, bool adjustThickness, bool adjustColor)
@@ -2205,13 +2145,13 @@ namespace Sheet.Controller
 
             if (enableGrid)
             {
-                var grid = CreateGridBlock(GridBlock, true, false);
+                var grid = CreateGridBlock(State.GridBlock, true, false);
                 page.Blocks.Add(grid);
             }
 
             if (enableFrame)
             {
-                var frame = CreateFrameBlock(FrameBlock, true, true);
+                var frame = CreateFrameBlock(State.FrameBlock, true, true);
                 page.Blocks.Add(frame);
             }
 
@@ -2224,35 +2164,38 @@ namespace Sheet.Controller
 
         #region Plugins
 
+        private ISelectedBlockPlugin _invertedLineStartPlugin;
+        private ISelectedBlockPlugin _invertedLineEndPlugin;
+
         private void CreatePlugins()
         {
-            InvertLineStartPlugin = new InvertLineStartPlugin(_serviceLocator);
-            InvertLineEndPlugin = new InvertLineEndPlugin(_serviceLocator);
+            _invertedLineStartPlugin = new InvertLineStartPlugin(_serviceLocator);
+            _invertedLineEndPlugin = new InvertLineEndPlugin(_serviceLocator);
         }
 
         private void ProcessPlugin(ISelectedBlockPlugin plugin)
         {
-            if (plugin.CanProcess(ContentSheet, ContentBlock, SelectedBlock, Options))
+            if (plugin.CanProcess(State.ContentSheet, State.ContentBlock, State.SelectedBlock, State.Options))
             {
-                var selectedBlock = _blockController.ShallowCopy(SelectedBlock);
+                var selectedBlock = _blockController.ShallowCopy(State.SelectedBlock);
 
                 FinishEdit();
-                HistoryController.Register(plugin.Name);
+                State.HistoryController.Register(plugin.Name);
 
-                plugin.Process(ContentSheet, ContentBlock, selectedBlock, Options);
+                plugin.Process(State.ContentSheet, State.ContentBlock, selectedBlock, State.Options);
 
-                SelectedBlock = selectedBlock;
+                State.SelectedBlock = selectedBlock;
             }
         }
 
         public void InvertSelectedLineStart()
         {
-            ProcessPlugin(InvertLineStartPlugin);
+            ProcessPlugin(_invertedLineStartPlugin);
         }
 
         public void InvertSelectedLineEnd()
         {
-            ProcessPlugin(InvertLineEndPlugin);
+            ProcessPlugin(_invertedLineEndPlugin);
         }
 
         #endregion

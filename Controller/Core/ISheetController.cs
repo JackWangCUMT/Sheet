@@ -14,26 +14,7 @@ namespace Sheet.Controller.Core
     public interface ISheetController
     {
         // Properties
-        IHistoryController HistoryController { get; set; }
-        ILibraryController LibraryController { get; set; }
-        IZoomController ZoomController { get; set; }
-        ICursorController CursorController { get; set; }
-        SheetOptions Options { get; set; }
-        ISheet EditorSheet { get; set; }
-        ISheet BackSheet { get; set; }
-        ISheet ContentSheet { get; set; }
-        ISheet OverlaySheet { get; set; }
-        ISheetView View { get; set; }
-        double LastFinalWidth { get; set; }
-        double LastFinalHeight { get; set; }
-
-        // Blocks
-        IBlock GetSelected();
-        IBlock GetContent();
-
-        // Mode
-        SheetMode GetMode();
-        void SetMode(SheetMode mode);
+        SheetState State { get; set; }
 
         // Init
         void Init();

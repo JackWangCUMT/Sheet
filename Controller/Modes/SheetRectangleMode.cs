@@ -14,7 +14,6 @@ namespace Sheet.Controller.Modes
     {
         #region IoC
 
-        private readonly ISheetController _sheetController;
         private readonly IServiceLocator _serviceLocator;
         private readonly IBlockController _blockController;
         private readonly IBlockFactory _blockFactory;
@@ -22,15 +21,18 @@ namespace Sheet.Controller.Modes
         private readonly IItemController _itemController;
         private readonly IPointController _pointController;
 
-        public SheetRectangleMode(ISheetController sheetController, IServiceLocator serviceLocator)
+        private readonly SheetState _state;
+
+        public SheetRectangleMode(IServiceLocator serviceLocator, SheetState state)
         {
             this._serviceLocator = serviceLocator;
-            this._sheetController = sheetController;
             this._blockController = serviceLocator.GetInstance<IBlockController>();
             this._blockFactory = serviceLocator.GetInstance<IBlockFactory>();
             this._blockHelper = serviceLocator.GetInstance<IBlockHelper>();
             this._itemController = serviceLocator.GetInstance<IItemController>();
             this._pointController = serviceLocator.GetInstance<IPointController>();
+
+            this._state = state;
         }
 
         #endregion
@@ -46,20 +48,20 @@ namespace Sheet.Controller.Modes
 
         public void Init(ImmutablePoint p)
         {
-            double x = _itemController.Snap(p.X, _sheetController.Options.SnapSize);
-            double y = _itemController.Snap(p.Y, _sheetController.Options.SnapSize);
+            double x = _itemController.Snap(p.X, _state.Options.SnapSize);
+            double y = _itemController.Snap(p.Y, _state.Options.SnapSize);
             SelectionStartPoint = new ImmutablePoint(x, y);
-            TempRectangle = _blockFactory.CreateRectangle(_sheetController.Options.LineThickness / _sheetController.ZoomController.Zoom, x, y, 0.0, 0.0, false, ItemColors.Black, ItemColors.Transparent);
-            _sheetController.OverlaySheet.Add(TempRectangle);
-            _sheetController.OverlaySheet.Capture();
+            TempRectangle = _blockFactory.CreateRectangle(_state.Options.LineThickness / _state.ZoomController.Zoom, x, y, 0.0, 0.0, false, ItemColors.Black, ItemColors.Transparent);
+            _state.OverlaySheet.Add(TempRectangle);
+            _state.OverlaySheet.Capture();
         }
 
         public void Move(ImmutablePoint p)
         {
             double sx = SelectionStartPoint.X;
             double sy = SelectionStartPoint.Y;
-            double x = _itemController.Snap(p.X, _sheetController.Options.SnapSize);
-            double y = _itemController.Snap(p.Y, _sheetController.Options.SnapSize);
+            double x = _itemController.Snap(p.X, _state.Options.SnapSize);
+            double y = _itemController.Snap(p.Y, _state.Options.SnapSize);
             _blockHelper.SetLeft(TempRectangle, Math.Min(sx, x));
             _blockHelper.SetTop(TempRectangle, Math.Min(sy, y));
             _blockHelper.SetWidth(TempRectangle, Math.Abs(sx - x));
@@ -78,19 +80,19 @@ namespace Sheet.Controller.Modes
             }
             else
             {
-                _sheetController.OverlaySheet.ReleaseCapture();
-                _sheetController.OverlaySheet.Remove(TempRectangle);
-                _sheetController.HistoryController.Register("Create Rectangle");
-                _sheetController.GetContent().Rectangles.Add(TempRectangle);
-                _sheetController.ContentSheet.Add(TempRectangle);
+                _state.OverlaySheet.ReleaseCapture();
+                _state.OverlaySheet.Remove(TempRectangle);
+                _state.HistoryController.Register("Create Rectangle");
+                _state.ContentBlock.Rectangles.Add(TempRectangle);
+                _state.ContentSheet.Add(TempRectangle);
                 TempRectangle = null;
             }
         }
 
         public void Cancel()
         {
-            _sheetController.OverlaySheet.ReleaseCapture();
-            _sheetController.OverlaySheet.Remove(TempRectangle);
+            _state.OverlaySheet.ReleaseCapture();
+            _state.OverlaySheet.Remove(TempRectangle);
             TempRectangle = null;
         }
 
@@ -98,14 +100,14 @@ namespace Sheet.Controller.Modes
         {
             if (TempRectangle != null)
             {
-                _sheetController.OverlaySheet.Remove(TempRectangle);
+                _state.OverlaySheet.Remove(TempRectangle);
                 TempRectangle = null;
             }
         }
 
         public void Adjust(double zoom)
         {
-            double lineThicknessZoomed = _sheetController.Options.LineThickness / zoom;
+            double lineThicknessZoomed = _state.Options.LineThickness / zoom;
 
             if (TempRectangle != null)
             {

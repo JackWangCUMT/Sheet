@@ -14,7 +14,6 @@ namespace Sheet.Controller.Modes
     {
         #region IoC
 
-        private readonly ISheetController _sheetController;
         private readonly IServiceLocator _serviceLocator;
         private readonly IBlockController _blockController;
         private readonly IBlockFactory _blockFactory;
@@ -22,15 +21,18 @@ namespace Sheet.Controller.Modes
         private readonly IItemController _itemController;
         private readonly IPointController _pointController;
 
-        public SheetLineMode(ISheetController sheetController, IServiceLocator serviceLocator)
+        private readonly SheetState _state;
+
+        public SheetLineMode(IServiceLocator serviceLocator, SheetState state)
         {
             this._serviceLocator = serviceLocator;
-            this._sheetController = sheetController;
             this._blockController = serviceLocator.GetInstance<IBlockController>();
             this._blockFactory = serviceLocator.GetInstance<IBlockFactory>();
             this._blockHelper = serviceLocator.GetInstance<IBlockHelper>();
             this._itemController = serviceLocator.GetInstance<IItemController>();
             this._pointController = serviceLocator.GetInstance<IPointController>();
+
+            this._state = state;
         }
 
         #endregion
@@ -47,29 +49,29 @@ namespace Sheet.Controller.Modes
 
         public void Init(ImmutablePoint p, IPoint start)
         {
-            double x = _itemController.Snap(p.X, _sheetController.Options.SnapSize);
-            double y = _itemController.Snap(p.Y, _sheetController.Options.SnapSize);
+            double x = _itemController.Snap(p.X, _state.Options.SnapSize);
+            double y = _itemController.Snap(p.Y, _state.Options.SnapSize);
 
-            TempLine = _blockFactory.CreateLine(_sheetController.Options.LineThickness / _sheetController.ZoomController.Zoom, x, y, x, y, ItemColors.Black);
+            TempLine = _blockFactory.CreateLine(_state.Options.LineThickness / _state.ZoomController.Zoom, x, y, x, y, ItemColors.Black);
 
             if (start != null)
             {
                 TempLine.Start = start;
             }
 
-            TempStartEllipse = _blockFactory.CreateEllipse(_sheetController.Options.LineThickness / _sheetController.ZoomController.Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true, ItemColors.Black, ItemColors.Black);
-            TempEndEllipse = _blockFactory.CreateEllipse(_sheetController.Options.LineThickness / _sheetController.ZoomController.Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true, ItemColors.Black, ItemColors.Black);
+            TempStartEllipse = _blockFactory.CreateEllipse(_state.Options.LineThickness / _state.ZoomController.Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true, ItemColors.Black, ItemColors.Black);
+            TempEndEllipse = _blockFactory.CreateEllipse(_state.Options.LineThickness / _state.ZoomController.Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true, ItemColors.Black, ItemColors.Black);
 
-            _sheetController.OverlaySheet.Add(TempLine);
-            _sheetController.OverlaySheet.Add(TempStartEllipse);
-            _sheetController.OverlaySheet.Add(TempEndEllipse);
-            _sheetController.OverlaySheet.Capture();
+            _state.OverlaySheet.Add(TempLine);
+            _state.OverlaySheet.Add(TempStartEllipse);
+            _state.OverlaySheet.Add(TempEndEllipse);
+            _state.OverlaySheet.Capture();
         }
 
         public void Move(ImmutablePoint p)
         {
-            double x = _itemController.Snap(p.X, _sheetController.Options.SnapSize);
-            double y = _itemController.Snap(p.Y, _sheetController.Options.SnapSize);
+            double x = _itemController.Snap(p.X, _state.Options.SnapSize);
+            double y = _itemController.Snap(p.Y, _state.Options.SnapSize);
             double x2 = _blockHelper.GetX2(TempLine);
             double y2 = _blockHelper.GetY2(TempLine);
             if (Math.Round(x, 1) != Math.Round(x2, 1)
@@ -100,12 +102,12 @@ namespace Sheet.Controller.Modes
                     TempLine.End = end;
                 }
 
-                _sheetController.OverlaySheet.ReleaseCapture();
-                _sheetController.OverlaySheet.Remove(TempLine);
-                _sheetController.OverlaySheet.Remove(TempStartEllipse);
-                _sheetController.OverlaySheet.Remove(TempEndEllipse);
+                _state.OverlaySheet.ReleaseCapture();
+                _state.OverlaySheet.Remove(TempLine);
+                _state.OverlaySheet.Remove(TempStartEllipse);
+                _state.OverlaySheet.Remove(TempEndEllipse);
 
-                _sheetController.HistoryController.Register("Create Line");
+                _state.HistoryController.Register("Create Line");
 
                 if (TempLine.Start != null)
                 {
@@ -117,8 +119,8 @@ namespace Sheet.Controller.Modes
                     _pointController.ConnectEnd(TempLine.End, TempLine);
                 }
 
-                _sheetController.GetContent().Lines.Add(TempLine);
-                _sheetController.ContentSheet.Add(TempLine);
+                _state.ContentBlock.Lines.Add(TempLine);
+                _state.ContentSheet.Add(TempLine);
 
                 TempLine = null;
                 TempStartEllipse = null;
@@ -128,10 +130,10 @@ namespace Sheet.Controller.Modes
 
         public void Cancel()
         {
-            _sheetController.OverlaySheet.ReleaseCapture();
-            _sheetController.OverlaySheet.Remove(TempLine);
-            _sheetController.OverlaySheet.Remove(TempStartEllipse);
-            _sheetController.OverlaySheet.Remove(TempEndEllipse);
+            _state.OverlaySheet.ReleaseCapture();
+            _state.OverlaySheet.Remove(TempLine);
+            _state.OverlaySheet.Remove(TempStartEllipse);
+            _state.OverlaySheet.Remove(TempEndEllipse);
             TempLine = null;
             TempStartEllipse = null;
             TempEndEllipse = null;
@@ -141,26 +143,26 @@ namespace Sheet.Controller.Modes
         {
             if (TempLine != null)
             {
-                _sheetController.OverlaySheet.Remove(TempLine);
+                _state.OverlaySheet.Remove(TempLine);
                 TempLine = null;
             }
 
             if (TempStartEllipse != null)
             {
-                _sheetController.OverlaySheet.Remove(TempStartEllipse);
+                _state.OverlaySheet.Remove(TempStartEllipse);
                 TempLine = null;
             }
 
             if (TempEndEllipse != null)
             {
-                _sheetController.OverlaySheet.Remove(TempEndEllipse);
+                _state.OverlaySheet.Remove(TempEndEllipse);
                 TempEndEllipse = null;
             }
         }
 
         public void Adjust(double zoom)
         {
-            double lineThicknessZoomed = _sheetController.Options.LineThickness / zoom;
+            double lineThicknessZoomed = _state.Options.LineThickness / zoom;
 
             if (TempLine != null)
             {
