@@ -1,4 +1,6 @@
 ﻿using Sheet.Simulation.Core;
+using Sheet.Simulation.Elements;
+using Sheet.Simulation.Simulations;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

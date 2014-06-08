@@ -1,5 +1,6 @@
 ﻿using Sheet.Block.Core;
 using Sheet.Simulation.Core;
+using Sheet.Simulation.Elements;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

@@ -1,4 +1,5 @@
 ﻿using Sheet.Simulation.Core;
+using Sheet.Simulation.Elements;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,8 @@ namespace Sheet.Simulation.Tests
     public class TestSolutionRenamer : ISolutionRenamer
     {
         #region Fields
+
+        public const string CountersNamepsace = "Sheet.Simulation.Elements";
 
         private Dictionary<string, string> ShortElementNames = new Dictionary<string, string>()
         {
@@ -42,8 +45,6 @@ namespace Sheet.Simulation.Tests
         #endregion
 
         #region Counters
-
-        public const string CountersNamepsace = "Sheet.Simulation.Core";
 
         private Dictionary<string, int> GetCountersDictionary()
         {

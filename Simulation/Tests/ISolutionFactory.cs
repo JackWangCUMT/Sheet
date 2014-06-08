@@ -1,4 +1,5 @@
 using Sheet.Simulation.Core;
+using Sheet.Simulation.Elements;
 
 namespace Sheet.Simulation.Tests
 {

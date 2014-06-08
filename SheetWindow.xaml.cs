@@ -17,6 +17,7 @@ using System.Windows.Shapes;
 using Sheet.Simulation.Core;
 using Sheet.Simulation.Tests;
 using Sheet.Simulation.Binary;
+using Sheet.Simulation.Elements;
 
 namespace Sheet
 {
