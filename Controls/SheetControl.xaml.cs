@@ -20,6 +20,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Sheet.Block.Core;
 
 namespace Sheet
 {
@@ -230,9 +231,9 @@ namespace Sheet
             bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
             bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
             Point sheetPoint = e.GetPosition(_sheetController.OverlaySheet.GetParent() as FrameworkElement);
-            XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
+            ImmutablePoint sheetPosition = new ImmutablePoint(sheetPoint.X, sheetPoint.Y);
             Point rootPoint = e.GetPosition(this);
-            XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
+            ImmutablePoint rootPosition = new ImmutablePoint(rootPoint.X, rootPoint.Y);
 
             var args = new InputArgs()
             {
@@ -256,9 +257,9 @@ namespace Sheet
             bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
             bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
             Point sheetPoint = e.GetPosition(_sheetController.OverlaySheet.GetParent() as FrameworkElement);
-            XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
+            ImmutablePoint sheetPosition = new ImmutablePoint(sheetPoint.X, sheetPoint.Y);
             Point rootPoint = e.GetPosition(this);
-            XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
+            ImmutablePoint rootPosition = new ImmutablePoint(rootPoint.X, rootPoint.Y);
 
             var args = new InputArgs()
             {
@@ -282,9 +283,9 @@ namespace Sheet
             bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
             bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
             Point sheetPoint = e.GetPosition(_sheetController.OverlaySheet.GetParent() as FrameworkElement);
-            XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
+            ImmutablePoint sheetPosition = new ImmutablePoint(sheetPoint.X, sheetPoint.Y);
             Point rootPoint = e.GetPosition(this);
-            XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
+            ImmutablePoint rootPosition = new ImmutablePoint(rootPoint.X, rootPoint.Y);
 
             var args = new InputArgs()
             {
@@ -308,9 +309,9 @@ namespace Sheet
             bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
             bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
             Point sheetPoint = e.GetPosition(_sheetController.OverlaySheet.GetParent() as FrameworkElement);
-            XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
+            ImmutablePoint sheetPosition = new ImmutablePoint(sheetPoint.X, sheetPoint.Y);
             Point rootPoint = e.GetPosition(this);
-            XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
+            ImmutablePoint rootPosition = new ImmutablePoint(rootPoint.X, rootPoint.Y);
 
             var args = new InputArgs()
             {
@@ -334,9 +335,9 @@ namespace Sheet
             bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
             bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
             Point sheetPoint = e.GetPosition(_sheetController.OverlaySheet.GetParent() as FrameworkElement);
-            XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
+            ImmutablePoint sheetPosition = new ImmutablePoint(sheetPoint.X, sheetPoint.Y);
             Point rootPoint = e.GetPosition(this);
-            XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
+            ImmutablePoint rootPosition = new ImmutablePoint(rootPoint.X, rootPoint.Y);
 
             var args = new InputArgs()
             {
@@ -358,7 +359,7 @@ namespace Sheet
         {
             int d = e.Delta;
             var p = e.GetPosition(Layout);
-            _sheetController.Wheel(d, new XImmutablePoint(p.X, p.Y));
+            _sheetController.Wheel(d, new ImmutablePoint(p.X, p.Y));
         }
 
         private void Down(MouseButtonEventArgs e)
@@ -367,9 +368,9 @@ namespace Sheet
             bool onlyShift = Keyboard.Modifiers == ModifierKeys.Shift;
             bool sourceIsThumb = ((e.OriginalSource as FrameworkElement).TemplatedParent) is Thumb;
             Point sheetPoint = e.GetPosition(_sheetController.OverlaySheet.GetParent() as FrameworkElement);
-            XImmutablePoint sheetPosition = new XImmutablePoint(sheetPoint.X, sheetPoint.Y);
+            ImmutablePoint sheetPosition = new ImmutablePoint(sheetPoint.X, sheetPoint.Y);
             Point rootPoint = e.GetPosition(this);
-            XImmutablePoint rootPosition = new XImmutablePoint(rootPoint.X, rootPoint.Y);
+            ImmutablePoint rootPosition = new ImmutablePoint(rootPoint.X, rootPoint.Y);
 
             var args = new InputArgs()
             {
@@ -449,7 +450,7 @@ namespace Sheet
         private void UserControl_Drop(object sender, DragEventArgs e)
         {
             Point point = e.GetPosition(_sheetController.OverlaySheet.GetParent() as FrameworkElement);
-            XImmutablePoint position = new XImmutablePoint(point.X, point.Y);
+            ImmutablePoint position = new ImmutablePoint(point.X, point.Y);
 
             if (e.Data.GetDataPresent(BlockDropFormat))
             {

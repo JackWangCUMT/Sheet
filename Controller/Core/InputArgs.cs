@@ -1,4 +1,4 @@
-﻿using Sheet.Block.Model;
+﻿using Sheet.Block.Core;
 using Sheet.Item.Model;
 using System;
 using System.Collections.Generic;
@@ -14,8 +14,8 @@ namespace Sheet.Controller.Core
         public bool OnlyControl { get; set; }
         public bool OnlyShift { get; set; }
         public ItemType SourceType { get; set; }
-        public XImmutablePoint SheetPosition { get; set; }
-        public XImmutablePoint RootPosition { get; set; }
+        public ImmutablePoint SheetPosition { get; set; }
+        public ImmutablePoint RootPosition { get; set; }
         public Action<bool> Handled { get; set; }
         // Mouse Wheel
         public int Delta { get; set; }

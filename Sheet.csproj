@@ -116,14 +116,17 @@
     <Compile Include="Block\Model\XEllipse.cs" />
     <Compile Include="Block\Model\XHorizontalAlignment.cs" />
     <Compile Include="Block\Model\XImage.cs" />
-    <Compile Include="Block\Model\XImmutablePoint.cs" />
-    <Compile Include="Block\Model\XImmutableRect.cs" />
+    <Compile Include="Block\Core\ImmutablePoint.cs" />
+    <Compile Include="Block\Core\ImmutableRect.cs" />
     <Compile Include="Block\Model\XLine.cs" />
     <Compile Include="Block\Model\XPoint.cs" />
     <Compile Include="Block\Model\XRectangle.cs" />
     <Compile Include="Block\Model\XText.cs" />
     <Compile Include="Block\Model\XThumb.cs" />
     <Compile Include="Block\Model\XVerticalAlignment.cs" />
+    <Compile Include="Controller\Modes\SheetEllipseMode.cs" />
+    <Compile Include="Controller\Modes\SheetLineMode.cs" />
+    <Compile Include="Controller\Modes\SheetRectangleMode.cs" />
     <Compile Include="Controls\PropertiesControl.xaml.cs">
       <DependentUpon>PropertiesControl.xaml</DependentUpon>
     </Compile>

@@ -76,18 +76,18 @@ namespace Sheet.Block
         bool HaveOneImageSelected(IBlock selected);
         bool HaveOneBlockSelected(IBlock selected);
 
-        bool HitTest(IEnumerable<IPoint> points, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<ILine> lines, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select);
-        bool HitTest(IEnumerable<IRectangle> rectangles, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<IEllipse> ellipses, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<IText> texts, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<IImage> images, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<IBlock> blocks, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo);
-        bool HitTest(IBlock parent, IBlock selected, XImmutableRect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo);
+        bool HitTest(IEnumerable<IPoint> points, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<ILine> lines, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select);
+        bool HitTest(IEnumerable<IRectangle> rectangles, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<IEllipse> ellipses, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<IText> texts, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<IImage> images, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
+        bool HitTest(IEnumerable<IBlock> blocks, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo);
+        bool HitTest(IBlock parent, IBlock selected, ImmutableRect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo);
 
-        bool HitTestClick(ISheet sheet, IBlock parent, IBlock selected, XImmutablePoint p, double size, bool selectInsideBlock, bool resetSelected);
-        bool HitTestForBlocks(ISheet sheet, IBlock parent, IBlock selected, XImmutablePoint p, double size);
-        void HitTestSelectionRect(ISheet sheet, IBlock parent, IBlock selected, XImmutableRect rect, bool resetSelected);
+        bool HitTestClick(ISheet sheet, IBlock parent, IBlock selected, ImmutablePoint p, double size, bool selectInsideBlock, bool resetSelected);
+        bool HitTestForBlocks(ISheet sheet, IBlock parent, IBlock selected, ImmutablePoint p, double size);
+        void HitTestSelectionRect(ISheet sheet, IBlock parent, IBlock selected, ImmutableRect rect, bool resetSelected);
 
         void ToggleFill(IRectangle rectangle);
         void ToggleFill(IEllipse ellipse);

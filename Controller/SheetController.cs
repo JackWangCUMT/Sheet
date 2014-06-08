@@ -19,6 +19,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using Sheet.Controller.Modes;
 
 namespace Sheet.Controller
 {
@@ -39,6 +40,10 @@ namespace Sheet.Controller
         private readonly IPointController _pointController;
         private readonly IPageFactory _pageFactory;
 
+        private readonly SheetLineMode _lineMode;
+        private readonly SheetRectangleMode _rectangleMode;
+        private readonly SheetEllipseMode _ellipseMode;
+
         public SheetController(IServiceLocator serviceLocator)
         {
             this._serviceLocator = serviceLocator;
@@ -53,6 +58,10 @@ namespace Sheet.Controller
             this._base64 = serviceLocator.GetInstance<IBase64>();
             this._pointController = serviceLocator.GetInstance<IPointController>();
             this._pageFactory = serviceLocator.GetInstance<IPageFactory>();
+
+            this._lineMode = new SheetLineMode(this, serviceLocator);
+            this._rectangleMode = new SheetRectangleMode(this, serviceLocator);
+            this._ellipseMode = new SheetEllipseMode(this, serviceLocator);
         }
 
         #endregion
@@ -82,15 +91,10 @@ namespace Sheet.Controller
         private IBlock ContentBlock;
         private IBlock FrameBlock;
         private IBlock GridBlock;
-        private ILine TempLine;
-        private IEllipse TempStartEllipse;
-        private IEllipse TempEndEllipse;
-        private IRectangle TempRectangle;
-        private IEllipse TempEllipse;
         private IRectangle TempSelectionRect;
         private bool IsFirstMove = true;
-        private XImmutablePoint PanStartPoint;
-        private XImmutablePoint SelectionStartPoint;
+        private ImmutablePoint PanStartPoint;
+        private ImmutablePoint SelectionStartPoint;
         private ItemType SelectedType = ItemType.None;
         private ILine SelectedLine;
         private IThumb LineThumbStart;
@@ -434,35 +438,9 @@ namespace Sheet.Controller
 
         private void ResetOverlay()
         {
-            if (TempLine != null)
-            {
-                OverlaySheet.Remove(TempLine);
-                TempLine = null;
-            }
-
-            if (TempStartEllipse != null)
-            {
-                OverlaySheet.Remove(TempStartEllipse);
-                TempLine = null;
-            }
-
-            if (TempEndEllipse != null)
-            {
-                OverlaySheet.Remove(TempEndEllipse);
-                TempEndEllipse = null;
-            }
-
-            if (TempRectangle != null)
-            {
-                OverlaySheet.Remove(TempRectangle);
-                TempRectangle = null;
-            }
-
-            if (TempEllipse != null)
-            {
-                OverlaySheet.Remove(TempEllipse);
-                TempEllipse = null;
-            }
+            _lineMode.Reset();
+            _rectangleMode.Reset();
+            _ellipseMode.Reset();
 
             if (TempSelectionRect != null)
             {
@@ -516,14 +494,17 @@ namespace Sheet.Controller
 
         public void ToggleFill()
         {
-            if (TempRectangle != null)
+            switch(GetMode())
             {
-                _blockController.ToggleFill(TempRectangle);
-            }
-
-            if (TempEllipse != null)
-            {
-                _blockController.ToggleFill(TempEllipse);
+                case SheetMode.Line:
+                    _lineMode.ToggleFill();
+                    break;
+                case SheetMode.Rectangle:
+                    _rectangleMode.ToggleFill();
+                    break;
+                case SheetMode.Ellipse:
+                    _ellipseMode.ToggleFill();
+                    break;
             }
         }
 
@@ -560,7 +541,7 @@ namespace Sheet.Controller
                 StoreTempMode();
                 SetMode(SheetMode.TextEditor);
 
-                var tc = CreateTextEditor(new XImmutablePoint((EditorSheet.Width / 2) - (330 / 2), EditorSheet.Height / 2));
+                var tc = CreateTextEditor(new ImmutablePoint((EditorSheet.Width / 2) - (330 / 2), EditorSheet.Height / 2));
 
                 Action<string> ok = (name) =>
                 {
@@ -602,7 +583,7 @@ namespace Sheet.Controller
 
         #region Point Mode
 
-        public IPoint InsertPoint(XImmutablePoint p, bool register, bool select)
+        public IPoint InsertPoint(ImmutablePoint p, bool register, bool select)
         {
             double thickness = Options.LineThickness / ZoomController.Zoom;
             double x = _itemController.Snap(p.X, Options.SnapSize);
@@ -667,7 +648,7 @@ namespace Sheet.Controller
             Move(Options.SnapSize, 0.0);
         }
 
-        private bool CanInitMove(XImmutablePoint p)
+        private bool CanInitMove(ImmutablePoint p)
         {
             var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
             _blockController.HitTestClick(ContentSheet, SelectedBlock, temp, p, Options.HitTestSize, false, true);
@@ -678,19 +659,19 @@ namespace Sheet.Controller
             return false;
         }
 
-        private void InitMove(XImmutablePoint p)
+        private void InitMove(ImmutablePoint p)
         {
             IsFirstMove = true;
             StoreTempMode();
             SetMode(SheetMode.Move);
             double x = _itemController.Snap(p.X, Options.SnapSize);
             double y = _itemController.Snap(p.Y, Options.SnapSize);
-            PanStartPoint = new XImmutablePoint(x, y);
+            PanStartPoint = new ImmutablePoint(x, y);
             ResetOverlay();
             OverlaySheet.Capture();
         }
 
-        private void Move(XImmutablePoint p)
+        private void Move(ImmutablePoint p)
         {
             if (IsFirstMove)
             {
@@ -710,7 +691,7 @@ namespace Sheet.Controller
             if (dx != 0.0 || dy != 0.0)
             {
                 _blockController.MoveDelta(dx, dy, SelectedBlock);
-                PanStartPoint = new XImmutablePoint(x, y);
+                PanStartPoint = new ImmutablePoint(x, y);
             }
         }
 
@@ -741,7 +722,7 @@ namespace Sheet.Controller
             ZoomController.PanY = (y * oldZoom + ZoomController.PanY) - y * newZoom;
         }
 
-        private void ZoomTo(int delta, XImmutablePoint p)
+        private void ZoomTo(int delta, ImmutablePoint p)
         {
             if (delta > 0)
             {
@@ -769,21 +750,21 @@ namespace Sheet.Controller
             return ZoomController.Zoom;
         }
 
-        private void InitPan(XImmutablePoint p)
+        private void InitPan(ImmutablePoint p)
         {
             StoreTempMode();
             SetMode(SheetMode.Pan);
-            PanStartPoint = new XImmutablePoint(p.X, p.Y);
+            PanStartPoint = new ImmutablePoint(p.X, p.Y);
             ResetOverlay();
             CursorController.Set(SheetCursor.Pan);
             OverlaySheet.Capture();
         }
 
-        private void Pan(XImmutablePoint p)
+        private void Pan(ImmutablePoint p)
         {
             ZoomController.PanX = ZoomController.PanX + p.X - PanStartPoint.X;
             ZoomController.PanY = ZoomController.PanY + p.Y - PanStartPoint.Y;
-            PanStartPoint = new XImmutablePoint(p.X, p.Y);
+            PanStartPoint = new ImmutablePoint(p.X, p.Y);
         }
 
         private void FinishPan()
@@ -849,30 +830,9 @@ namespace Sheet.Controller
             AdjustBackThickness(zoom);
             AdjustThickness(ContentBlock, lineThicknessZoomed);
 
-            if (TempLine != null)
-            {
-                _blockHelper.SetStrokeThickness(TempLine, lineThicknessZoomed);
-            }
-
-            if (TempStartEllipse != null)
-            {
-                _blockHelper.SetStrokeThickness(TempStartEllipse, lineThicknessZoomed);
-            }
-
-            if (TempEndEllipse != null)
-            {
-                _blockHelper.SetStrokeThickness(TempEndEllipse, lineThicknessZoomed);
-            }
-
-            if (TempRectangle != null)
-            {
-                _blockHelper.SetStrokeThickness(TempRectangle, lineThicknessZoomed);
-            }
-
-            if (TempEllipse != null)
-            {
-                _blockHelper.SetStrokeThickness(TempEllipse, lineThicknessZoomed);
-            }
+            _lineMode.Adjust(zoom);
+            _rectangleMode.Adjust(zoom);
+            _ellipseMode.Adjust(zoom);
 
             if (TempSelectionRect != null)
             {
@@ -884,15 +844,15 @@ namespace Sheet.Controller
 
         #region Selection Mode
 
-        private void InitSelectionRect(XImmutablePoint p)
+        private void InitSelectionRect(ImmutablePoint p)
         {
-            SelectionStartPoint = new XImmutablePoint(p.X, p.Y);
+            SelectionStartPoint = new ImmutablePoint(p.X, p.Y);
             TempSelectionRect = _pageFactory.CreateSelectionRectangle(Options.SelectionThickness / ZoomController.Zoom, p.X, p.Y, 0.0, 0.0);
             OverlaySheet.Add(TempSelectionRect);
             OverlaySheet.Capture();
         }
 
-        private void MoveSelectionRect(XImmutablePoint p)
+        private void MoveSelectionRect(ImmutablePoint p)
         {
             double sx = SelectionStartPoint.X;
             double sy = SelectionStartPoint.Y;
@@ -918,7 +878,7 @@ namespace Sheet.Controller
             // get selected items
             bool onlyCtrl = Keyboard.Modifiers == ModifierKeys.Control;
             bool resetSelected = onlyCtrl && _blockController.HaveSelected(SelectedBlock) ? false : true;
-            _blockController.HitTestSelectionRect(ContentSheet, ContentBlock, SelectedBlock, new XImmutableRect(x, y, width, height), resetSelected);
+            _blockController.HitTestSelectionRect(ContentSheet, ContentBlock, SelectedBlock, new ImmutableRect(x, y, width, height), resetSelected);
 
             // edit mode
             TryToEditSelected();
@@ -933,229 +893,9 @@ namespace Sheet.Controller
 
         #endregion
 
-        #region Line Mode
-
-        private IPoint TryToFindPoint(XImmutablePoint p)
-        {
-            var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
-            _blockController.HitTestClick(ContentSheet, ContentBlock, temp, p, Options.HitTestSize, true, true);
-
-            if (_blockController.HaveOnePointSelected(temp))
-            {
-                var xpoint = temp.Points[0];
-                _blockController.Deselect(temp);
-                return xpoint;
-            }
-
-            _blockController.Deselect(temp);
-            return null;
-        }
-
-        private void InitTempLine(XImmutablePoint p, IPoint start)
-        {
-            double x = _itemController.Snap(p.X, Options.SnapSize);
-            double y = _itemController.Snap(p.Y, Options.SnapSize);
-
-            TempLine = _blockFactory.CreateLine(Options.LineThickness / ZoomController.Zoom, x, y, x, y, ItemColors.Black);
-
-            if (start != null)
-            {
-                TempLine.Start = start;
-            }
-
-            TempStartEllipse = _blockFactory.CreateEllipse(Options.LineThickness / ZoomController.Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true, ItemColors.Black, ItemColors.Black);
-            TempEndEllipse = _blockFactory.CreateEllipse(Options.LineThickness / ZoomController.Zoom, x - 4.0, y - 4.0, 8.0, 8.0, true, ItemColors.Black, ItemColors.Black);
-
-            OverlaySheet.Add(TempLine);
-            OverlaySheet.Add(TempStartEllipse);
-            OverlaySheet.Add(TempEndEllipse);
-            OverlaySheet.Capture();
-        }
-
-        private void MoveTempLine(XImmutablePoint p)
-        {
-            double x = _itemController.Snap(p.X, Options.SnapSize);
-            double y = _itemController.Snap(p.Y, Options.SnapSize);
-            double x2 = _blockHelper.GetX2(TempLine);
-            double y2 = _blockHelper.GetY2(TempLine);
-            if (Math.Round(x, 1) != Math.Round(x2, 1)
-                || Math.Round(y, 1) != Math.Round(y2, 1))
-            {
-                _blockHelper.SetX2(TempLine, x);
-                _blockHelper.SetY2(TempLine, y);
-                _blockHelper.SetLeft(TempEndEllipse, x - 4.0);
-                _blockHelper.SetTop(TempEndEllipse, y - 4.0);
-            }
-        }
-
-        private void FinishTempLine(IPoint end)
-        {
-            double x1 = _blockHelper.GetX1(TempLine);
-            double y1 = _blockHelper.GetY1(TempLine);
-            double x2 = _blockHelper.GetX2(TempLine);
-            double y2 = _blockHelper.GetY2(TempLine);
-
-            if (Math.Round(x1, 1) == Math.Round(x2, 1) && Math.Round(y1, 1) == Math.Round(y2, 1))
-            {
-                CancelTempLine();
-            }
-            else
-            {
-                if (end != null)
-                {
-                    TempLine.End = end;
-                }
-
-                OverlaySheet.ReleaseCapture();
-                OverlaySheet.Remove(TempLine);
-                OverlaySheet.Remove(TempStartEllipse);
-                OverlaySheet.Remove(TempEndEllipse);
-
-                HistoryController.Register("Create Line");
-
-                if (TempLine.Start != null)
-                {
-                    _pointController.ConnectStart(TempLine.Start, TempLine);
-                }
-
-                if (TempLine.End != null)
-                {
-                    _pointController.ConnectEnd(TempLine.End, TempLine);
-                }
-
-                ContentBlock.Lines.Add(TempLine);
-                ContentSheet.Add(TempLine);
-
-                TempLine = null;
-                TempStartEllipse = null;
-                TempEndEllipse = null;
-            }
-        }
-
-        private void CancelTempLine()
-        {
-            OverlaySheet.ReleaseCapture();
-            OverlaySheet.Remove(TempLine);
-            OverlaySheet.Remove(TempStartEllipse);
-            OverlaySheet.Remove(TempEndEllipse);
-            TempLine = null;
-            TempStartEllipse = null;
-            TempEndEllipse = null;
-        }
-
-        #endregion
-
-        #region Rectangle Mode
-
-        private void InitTempRect(XImmutablePoint p)
-        {
-            double x = _itemController.Snap(p.X, Options.SnapSize);
-            double y = _itemController.Snap(p.Y, Options.SnapSize);
-            SelectionStartPoint = new XImmutablePoint(x, y);
-            TempRectangle = _blockFactory.CreateRectangle(Options.LineThickness / ZoomController.Zoom, x, y, 0.0, 0.0, false, ItemColors.Black, ItemColors.Transparent);
-            OverlaySheet.Add(TempRectangle);
-            OverlaySheet.Capture();
-        }
-
-        private void MoveTempRect(XImmutablePoint p)
-        {
-            double sx = SelectionStartPoint.X;
-            double sy = SelectionStartPoint.Y;
-            double x = _itemController.Snap(p.X, Options.SnapSize);
-            double y = _itemController.Snap(p.Y, Options.SnapSize);
-            _blockHelper.SetLeft(TempRectangle, Math.Min(sx, x));
-            _blockHelper.SetTop(TempRectangle, Math.Min(sy, y));
-            _blockHelper.SetWidth(TempRectangle, Math.Abs(sx - x));
-            _blockHelper.SetHeight(TempRectangle, Math.Abs(sy - y));
-        }
-
-        private void FinishTempRect()
-        {
-            double x = _blockHelper.GetLeft(TempRectangle);
-            double y = _blockHelper.GetTop(TempRectangle);
-            double width = _blockHelper.GetWidth(TempRectangle);
-            double height = _blockHelper.GetHeight(TempRectangle);
-            if (width == 0.0 || height == 0.0)
-            {
-                CancelTempRect();
-            }
-            else
-            {
-                OverlaySheet.ReleaseCapture();
-                OverlaySheet.Remove(TempRectangle);
-                HistoryController.Register("Create Rectangle");
-                ContentBlock.Rectangles.Add(TempRectangle);
-                ContentSheet.Add(TempRectangle);
-                TempRectangle = null;
-            }
-        }
-
-        private void CancelTempRect()
-        {
-            OverlaySheet.ReleaseCapture();
-            OverlaySheet.Remove(TempRectangle);
-            TempRectangle = null;
-        }
-
-        #endregion
-
-        #region Ellipse Mode
-
-        private void InitTempEllipse(XImmutablePoint p)
-        {
-            double x = _itemController.Snap(p.X, Options.SnapSize);
-            double y = _itemController.Snap(p.Y, Options.SnapSize);
-            SelectionStartPoint = new XImmutablePoint(x, y);
-            TempEllipse = _blockFactory.CreateEllipse(Options.LineThickness / ZoomController.Zoom, x, y, 0.0, 0.0, false, ItemColors.Black, ItemColors.Transparent);
-            OverlaySheet.Add(TempEllipse);
-            OverlaySheet.Capture();
-        }
-
-        private void MoveTempEllipse(XImmutablePoint p)
-        {
-            double sx = SelectionStartPoint.X;
-            double sy = SelectionStartPoint.Y;
-            double x = _itemController.Snap(p.X, Options.SnapSize);
-            double y = _itemController.Snap(p.Y, Options.SnapSize);
-            _blockHelper.SetLeft(TempEllipse, Math.Min(sx, x));
-            _blockHelper.SetTop(TempEllipse, Math.Min(sy, y));
-            _blockHelper.SetWidth(TempEllipse, Math.Abs(sx - x));
-            _blockHelper.SetHeight(TempEllipse, Math.Abs(sy - y));
-        }
-
-        private void FinishTempEllipse()
-        {
-            double x = _blockHelper.GetLeft(TempEllipse);
-            double y = _blockHelper.GetTop(TempEllipse);
-            double width = _blockHelper.GetWidth(TempEllipse);
-            double height = _blockHelper.GetHeight(TempEllipse);
-            if (width == 0.0 || height == 0.0)
-            {
-                CancelTempEllipse();
-            }
-            else
-            {
-                OverlaySheet.ReleaseCapture();
-                OverlaySheet.Remove(TempEllipse);
-                HistoryController.Register("Create Ellipse");
-                ContentBlock.Ellipses.Add(TempEllipse);
-                ContentSheet.Add(TempEllipse);
-                TempEllipse = null;
-            }
-        }
-
-        private void CancelTempEllipse()
-        {
-            OverlaySheet.ReleaseCapture();
-            OverlaySheet.Remove(TempEllipse);
-            TempEllipse = null;
-        }
-
-        #endregion
-
         #region Text Mode
 
-        private TextControl CreateTextEditor(XImmutablePoint p)
+        private TextControl CreateTextEditor(ImmutablePoint p)
         {
             var tc = new TextControl() { Width = 330.0, Background = Brushes.WhiteSmoke };
             tc.RenderTransform = null;
@@ -1164,7 +904,7 @@ namespace Sheet.Controller
             return tc;
         }
 
-        private void CreateText(XImmutablePoint p)
+        private void CreateText(ImmutablePoint p)
         {
             double x = _itemController.Snap(p.X, Options.SnapSize);
             double y = _itemController.Snap(p.Y, Options.SnapSize);
@@ -1175,7 +915,7 @@ namespace Sheet.Controller
             ContentSheet.Add(text);
         }
 
-        private bool TryToEditText(XImmutablePoint p)
+        private bool TryToEditText(ImmutablePoint p)
         {
             var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
             _blockController.HitTestClick(ContentSheet, ContentBlock, temp, p, Options.HitTestSize, true, true);
@@ -1187,7 +927,7 @@ namespace Sheet.Controller
                 StoreTempMode();
                 SetMode(SheetMode.TextEditor);
 
-                var tc = CreateTextEditor(new XImmutablePoint((EditorSheet.Width / 2) - (330 / 2), EditorSheet.Height / 2) /* p */);
+                var tc = CreateTextEditor(new ImmutablePoint((EditorSheet.Width / 2) - (330 / 2), EditorSheet.Height / 2) /* p */);
 
                 Action<string> ok = (text) =>
                 {
@@ -1220,7 +960,7 @@ namespace Sheet.Controller
 
         #region Image Mode
 
-        private void Image(XImmutablePoint p)
+        private void Image(ImmutablePoint p)
         {
             var dlg = _serviceLocator.GetInstance<IOpenFileDialog>();
             dlg.Filter = FileDialogSettings.ImageFilter;
@@ -1241,7 +981,7 @@ namespace Sheet.Controller
             }
         }
 
-        private void InsertImage(XImmutablePoint p, string path)
+        private void InsertImage(ImmutablePoint p, string path)
         {
             byte[] data = _base64.ReadAllBytes(path);
             double x = _itemController.Snap(p.X, Options.SnapSize);
@@ -1673,7 +1413,7 @@ namespace Sheet.Controller
 
         #region Data Binding
 
-        public bool BindDataToBlock(XImmutablePoint p, DataItem dataItem)
+        public bool BindDataToBlock(ImmutablePoint p, DataItem dataItem)
         {
             var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
             _blockController.HitTestForBlocks(ContentSheet, ContentBlock, temp, p, Options.HitTestSize);
@@ -1724,7 +1464,7 @@ namespace Sheet.Controller
             return false;
         }
 
-        public void TryToBindData(XImmutablePoint p, DataItem dataItem)
+        public void TryToBindData(ImmutablePoint p, DataItem dataItem)
         {
             // first try binding to existing block
             bool firstTryResult = BindDataToBlock(p, dataItem);
@@ -2017,7 +1757,7 @@ namespace Sheet.Controller
 
         #region Library
 
-        public void Insert(XImmutablePoint p)
+        public void Insert(ImmutablePoint p)
         {
             if (LibraryController != null)
             {
@@ -2026,7 +1766,7 @@ namespace Sheet.Controller
             }
         }
 
-        public IBlock Insert(BlockItem blockItem, XImmutablePoint p, bool select)
+        public IBlock Insert(BlockItem blockItem, ImmutablePoint p, bool select)
         {
             _blockController.DeselectContent(SelectedBlock);
             double thickness = Options.LineThickness / ZoomController.Zoom;
@@ -2121,6 +1861,26 @@ namespace Sheet.Controller
 
         #endregion
 
+        #region Point
+
+        public IPoint TryToFindPoint(ImmutablePoint p)
+        {
+            var temp = _blockFactory.CreateBlock(-1, Options.PageOriginX, Options.PageOriginY, Options.PageWidth, Options.PageHeight, -1, "TEMP", null);
+            _blockController.HitTestClick(ContentSheet, GetContent(), temp, p, Options.HitTestSize, true, true);
+
+            if (_blockController.HaveOnePointSelected(temp))
+            {
+                var xpoint = temp.Points[0];
+                _blockController.Deselect(temp);
+                return xpoint;
+            }
+
+            _blockController.Deselect(temp);
+            return null;
+        } 
+
+        #endregion
+
         #region Input
 
         public void LeftDown(InputArgs args)
@@ -2161,7 +1921,7 @@ namespace Sheet.Controller
 
             if (GetMode() == SheetMode.Selection)
             {
-                bool result = _blockController.HitTestClick(ContentSheet, ContentBlock, SelectedBlock, new XImmutablePoint(args.SheetPosition.X, args.SheetPosition.Y), Options.HitTestSize, false, resetSelected);
+                bool result = _blockController.HitTestClick(ContentSheet, ContentBlock, SelectedBlock, new ImmutablePoint(args.SheetPosition.X, args.SheetPosition.Y), Options.HitTestSize, false, resetSelected);
                 if ((args.OnlyControl || !_blockController.HaveSelected(SelectedBlock)) && !result)
                 {
                     InitSelectionRect(args.SheetPosition);
@@ -2195,7 +1955,7 @@ namespace Sheet.Controller
                     start = InsertPoint(args.SheetPosition, true, false);
                 }
 
-                InitTempLine(args.SheetPosition, start);
+                _lineMode.Init(args.SheetPosition, start);
             }
             else if (GetMode() == SheetMode.Line && OverlaySheet.IsCaptured)
             {
@@ -2208,23 +1968,23 @@ namespace Sheet.Controller
                     end = InsertPoint(args.SheetPosition, true, false);
                 }
 
-                FinishTempLine(end);
+                _lineMode.Finish(end);
             }
             else if (GetMode() == SheetMode.Rectangle && !OverlaySheet.IsCaptured)
             {
-                InitTempRect(args.SheetPosition);
+                _rectangleMode.Init(args.SheetPosition);
             }
             else if (GetMode() == SheetMode.Rectangle && OverlaySheet.IsCaptured)
             {
-                FinishTempRect();
+                _rectangleMode.Finish();
             }
             else if (GetMode() == SheetMode.Ellipse && !OverlaySheet.IsCaptured)
             {
-                InitTempEllipse(args.SheetPosition);
+                _ellipseMode.Init(args.SheetPosition);
             }
             else if (GetMode() == SheetMode.Ellipse && OverlaySheet.IsCaptured)
             {
-                FinishTempEllipse();
+                _ellipseMode.Finish();
             }
             else if (GetMode() == SheetMode.Pan && OverlaySheet.IsCaptured)
             {
@@ -2276,15 +2036,15 @@ namespace Sheet.Controller
             }
             else if (GetMode() == SheetMode.Line && OverlaySheet.IsCaptured)
             {
-                MoveTempLine(args.SheetPosition);
+                _lineMode.Move(args.SheetPosition);
             }
             else if (GetMode() == SheetMode.Rectangle && OverlaySheet.IsCaptured)
             {
-                MoveTempRect(args.SheetPosition);
+                _rectangleMode.Move(args.SheetPosition);
             }
             else if (GetMode() == SheetMode.Ellipse && OverlaySheet.IsCaptured)
             {
-                MoveTempEllipse(args.SheetPosition);
+                _ellipseMode.Move(args.SheetPosition);
             }
             else if (GetMode() == SheetMode.Pan && OverlaySheet.IsCaptured)
             {
@@ -2327,15 +2087,15 @@ namespace Sheet.Controller
                 }
                 else if (GetMode() == SheetMode.Line && OverlaySheet.IsCaptured)
                 {
-                    CancelTempLine();
+                    _lineMode.Cancel();
                 }
                 else if (GetMode() == SheetMode.Rectangle && OverlaySheet.IsCaptured)
                 {
-                    CancelTempRect();
+                    _rectangleMode.Cancel();
                 }
                 else if (GetMode() == SheetMode.Ellipse && OverlaySheet.IsCaptured)
                 {
-                    CancelTempEllipse();
+                    _ellipseMode.Cancel();
                 }
                 else if (!OverlaySheet.IsCaptured)
                 {
@@ -2352,7 +2112,7 @@ namespace Sheet.Controller
             }
         }
 
-        public void Wheel(int delta, XImmutablePoint position)
+        public void Wheel(int delta, ImmutablePoint position)
         {
             ZoomTo(delta, position);
         }

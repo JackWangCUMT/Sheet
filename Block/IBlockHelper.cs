@@ -11,8 +11,8 @@ namespace Sheet.Block
 {
     public interface IBlockHelper
     {
-        bool HitTest(IElement element, XImmutableRect rect);
-        bool HitTest(IElement element, XImmutableRect rect, object relativeTo);
+        bool HitTest(IElement element, ImmutableRect rect);
+        bool HitTest(IElement element, ImmutableRect rect, object relativeTo);
 
         void SetIsSelected(IElement element, bool value);
         bool GetIsSelected(IElement element);

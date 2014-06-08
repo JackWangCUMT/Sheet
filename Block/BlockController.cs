@@ -1133,7 +1133,7 @@ namespace Sheet.Block
             }
         }
 
-        public bool HitTest(IEnumerable<IPoint> points, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<IPoint> points, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var point in points)
             {
@@ -1162,7 +1162,7 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IEnumerable<ILine> lines, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select)
+        public bool HitTest(IEnumerable<ILine> lines, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select)
         {
             foreach (var line in lines)
             {
@@ -1191,7 +1191,7 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IEnumerable<IRectangle> rectangles, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<IRectangle> rectangles, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var rectangle in rectangles)
             {
@@ -1220,7 +1220,7 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IEnumerable<IEllipse> ellipses, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<IEllipse> ellipses, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var ellipse in ellipses)
             {
@@ -1249,7 +1249,7 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IEnumerable<IText> texts, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<IText> texts, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var text in texts)
             {
@@ -1278,7 +1278,7 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IEnumerable<IImage> images, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<IImage> images, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
         {
             foreach (var image in images)
             {
@@ -1307,7 +1307,7 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IEnumerable<IBlock> blocks, IBlock selected, XImmutableRect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo)
+        public bool HitTest(IEnumerable<IBlock> blocks, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo)
         {
             foreach (var block in blocks)
             {
@@ -1338,7 +1338,7 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IBlock parent, IBlock selected, XImmutableRect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo)
+        public bool HitTest(IBlock parent, IBlock selected, ImmutableRect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo)
         {
             bool result = false;
 
@@ -1387,7 +1387,7 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTestClick(ISheet sheet, IBlock parent, IBlock selected, XImmutablePoint p, double size, bool selectInsideBlock, bool resetSelected)
+        public bool HitTestClick(ISheet sheet, IBlock parent, IBlock selected, ImmutablePoint p, double size, bool selectInsideBlock, bool resetSelected)
         {
             if (resetSelected)
             {
@@ -1398,7 +1398,7 @@ namespace Sheet.Block
                 selected.ReInit();
             }
 
-            var rect = new XImmutableRect(p.X - size, p.Y - size, 2 * size, 2 * size);
+            var rect = new ImmutableRect(p.X - size, p.Y - size, 2 * size, 2 * size);
 
             if (parent.Points != null)
             {
@@ -1474,11 +1474,11 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTestForBlocks(ISheet sheet, IBlock parent, IBlock selected, XImmutablePoint p, double size)
+        public bool HitTestForBlocks(ISheet sheet, IBlock parent, IBlock selected, ImmutablePoint p, double size)
         {
             selected.Init();
 
-            var rect = new XImmutableRect(p.X - size, p.Y - size, 2 * size, 2 * size);
+            var rect = new ImmutableRect(p.X - size, p.Y - size, 2 * size, 2 * size);
 
             if (parent.Blocks != null)
             {
@@ -1494,7 +1494,7 @@ namespace Sheet.Block
             return false;
         }
 
-        public void HitTestSelectionRect(ISheet sheet, IBlock parent, IBlock selected, XImmutableRect rect, bool resetSelected)
+        public void HitTestSelectionRect(ISheet sheet, IBlock parent, IBlock selected, ImmutableRect rect, bool resetSelected)
         {
             if (resetSelected)
             {

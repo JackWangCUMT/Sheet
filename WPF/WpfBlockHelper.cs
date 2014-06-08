@@ -39,7 +39,7 @@ namespace Sheet.WPF
 
         #region HitTest
 
-        public bool HitTest(IElement element, XImmutableRect rect)
+        public bool HitTest(IElement element, ImmutableRect rect)
         {
             var r = new Rect(rect.X, rect.Y, rect.Width, rect.Height);
             var bounds = WpfVisualHelper.GetContentBounds(element);
@@ -50,7 +50,7 @@ namespace Sheet.WPF
             return false;
         }
 
-        public bool HitTest(IElement element, XImmutableRect rect, object relativeTo)
+        public bool HitTest(IElement element, ImmutableRect rect, object relativeTo)
         {
             var r = new Rect(rect.X, rect.Y, rect.Width, rect.Height);
             var bounds = WpfVisualHelper.GetContentBounds(element, relativeTo);
