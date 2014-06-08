@@ -135,6 +135,24 @@
       <DependentUpon>DatabaseControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Core\Base64.cs" />
+    <Compile Include="Item\IItemController.cs" />
+    <Compile Include="Item\IItemSerializer.cs" />
+    <Compile Include="Item\ItemColors.cs" />
+    <Compile Include="Item\ItemController.cs" />
+    <Compile Include="Item\ItemSerializeOptions.cs" />
+    <Compile Include="Item\ItemSerializer.cs" />
+    <Compile Include="Item\Model\BlockItem.cs" />
+    <Compile Include="Item\Model\ChangeItem.cs" />
+    <Compile Include="Item\Model\DataItem.cs" />
+    <Compile Include="Item\Model\EllipseItem.cs" />
+    <Compile Include="Item\Model\ImageItem.cs" />
+    <Compile Include="Item\Model\Item.cs" />
+    <Compile Include="Item\Model\ItemColor.cs" />
+    <Compile Include="Item\Model\ItemType.cs" />
+    <Compile Include="Item\Model\LineItem.cs" />
+    <Compile Include="Item\Model\PointItem.cs" />
+    <Compile Include="Item\Model\RectangleItem.cs" />
+    <Compile Include="Item\Model\TextItem.cs" />
     <Compile Include="Simulation\Compiler.cs" />
     <Compile Include="Simulation\Connections.cs" />
     <Compile Include="Simulation\Elements\Gates\AndGate.cs" />
@@ -148,7 +166,6 @@
     <Compile Include="Core\Interfaces.cs" />
     <Compile Include="Core\Database.cs" />
     <Compile Include="Core\Entry.cs" />
-    <Compile Include="Core\Item.cs" />
     <Compile Include="Core\Json.cs" />
     <Compile Include="Core\Plugins.cs" />
     <Compile Include="Core\Point.cs" />

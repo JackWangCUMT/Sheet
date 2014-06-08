@@ -12,6 +12,7 @@ using Dxf.Tables;
 using Dxf.Blocks;
 using Dxf.Entities;
 using Dxf.Objects;
+using Sheet.Item.Model;
 
 namespace Sheet
 {

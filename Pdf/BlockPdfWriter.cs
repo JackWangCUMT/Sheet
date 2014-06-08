@@ -5,6 +5,7 @@ using System.Text;
 using PdfSharp;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
+using Sheet.Item.Model;
 
 namespace Sheet
 {

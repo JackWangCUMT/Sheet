@@ -1,5 +1,6 @@
 ﻿using Sheet.Block.Core;
 using Sheet.Block.Model;
+using Sheet.Item.Model;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -113,32 +114,6 @@ namespace Sheet
     {
         string Serialize(object value);
         T Deerialize<T>(string value);
-    }
-
-    #endregion
-
-    #region IItemSerializer
-
-    public interface IItemSerializer
-    {
-        string SerializeContents(BlockItem block, ItemSerializeOptions options);
-        string SerializeContents(BlockItem block);
-        BlockItem DeserializeContents(string model, ItemSerializeOptions options);
-        BlockItem DeserializeContents(string model);
-    }
-
-    #endregion
-
-    #region IItemController
-
-    public interface IItemController
-    {
-        Task<string> OpenText(string fileName);
-        void SaveText(string fileName, string text);
-
-        void ResetPosition(BlockItem block, double originX, double originY, double width, double height);
-
-        double Snap(double val, double snap);
     }
 
     #endregion
