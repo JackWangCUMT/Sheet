@@ -1,4 +1,8 @@
-﻿using System;
+﻿using Sheet.Item.Model;
+using Sheet.UI.Views;
+using Sheet.Util.Core;
+using Sheet.WPF;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;

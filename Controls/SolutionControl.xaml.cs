@@ -1,4 +1,8 @@
-﻿using System;
+﻿using Sheet.Entry;
+using Sheet.Entry.Model;
+using Sheet.Controller.Core;
+using Sheet.UI.Views;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;

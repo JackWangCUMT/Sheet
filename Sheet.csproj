@@ -92,6 +92,38 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Block\BlockController.cs" />
+    <Compile Include="Block\BlockSerializer.cs" />
+    <Compile Include="Block\Core\IArgbColor.cs" />
+    <Compile Include="Block\Core\IBlock.cs" />
+    <Compile Include="Block\Core\IDependency.cs" />
+    <Compile Include="Block\Core\IElement.cs" />
+    <Compile Include="Block\Core\IEllipse.cs" />
+    <Compile Include="Block\Core\IImage.cs" />
+    <Compile Include="Block\Core\ILine.cs" />
+    <Compile Include="Block\Core\IPoint.cs" />
+    <Compile Include="Block\Core\IRectangle.cs" />
+    <Compile Include="Block\Core\IText.cs" />
+    <Compile Include="Block\Core\IThumb.cs" />
+    <Compile Include="Block\IBlockController.cs" />
+    <Compile Include="Block\IBlockFactory.cs" />
+    <Compile Include="Block\IBlockHelper.cs" />
+    <Compile Include="Block\IBlockSerializer.cs" />
+    <Compile Include="Block\Model\XArgbColor.cs" />
+    <Compile Include="Block\Model\XBlock.cs" />
+    <Compile Include="Block\Model\XDependency.cs" />
+    <Compile Include="Block\Model\XElement.cs" />
+    <Compile Include="Block\Model\XEllipse.cs" />
+    <Compile Include="Block\Model\XHorizontalAlignment.cs" />
+    <Compile Include="Block\Model\XImage.cs" />
+    <Compile Include="Block\Model\XImmutablePoint.cs" />
+    <Compile Include="Block\Model\XImmutableRect.cs" />
+    <Compile Include="Block\Model\XLine.cs" />
+    <Compile Include="Block\Model\XPoint.cs" />
+    <Compile Include="Block\Model\XRectangle.cs" />
+    <Compile Include="Block\Model\XText.cs" />
+    <Compile Include="Block\Model\XThumb.cs" />
+    <Compile Include="Block\Model\XVerticalAlignment.cs" />
     <Compile Include="Controls\PropertiesControl.xaml.cs">
       <DependentUpon>PropertiesControl.xaml</DependentUpon>
     </Compile>
@@ -104,19 +136,87 @@
     <Compile Include="Controls\DatabaseControl.xaml.cs">
       <DependentUpon>DatabaseControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Core\Base64.cs" />
-    <Compile Include="Core\Block.cs" />
-    <Compile Include="Core\Simulation.cs" />
-    <Compile Include="Core\Test.cs" />
-    <Compile Include="Core\Interfaces.cs" />
-    <Compile Include="Core\Database.cs" />
-    <Compile Include="Core\Entry.cs" />
-    <Compile Include="Core\Item.cs" />
-    <Compile Include="Core\Json.cs" />
-    <Compile Include="Core\Plugins.cs" />
-    <Compile Include="Core\Point.cs" />
-    <Compile Include="Core\Sheet.cs" />
-    <Compile Include="Core\Wpf.cs" />
+    <Compile Include="Block\IPointController.cs" />
+    <Compile Include="Block\PointController.cs" />
+    <Compile Include="Plugins\InvertLineEndPlugin.cs" />
+    <Compile Include="Plugins\InvertLineStartPlugin.cs" />
+    <Compile Include="Plugins\ISelectedBlockPlugin.cs" />
+    <Compile Include="Controller\Core\ICursorController.cs" />
+    <Compile Include="Controller\Core\IHistoryController.cs" />
+    <Compile Include="Controller\Core\ILibraryController.cs" />
+    <Compile Include="Controller\Core\InputArgs.cs" />
+    <Compile Include="Controller\Core\InputButton.cs" />
+    <Compile Include="Controller\Core\IPageFactory.cs" />
+    <Compile Include="Controller\Core\ISheet.cs" />
+    <Compile Include="Controller\Core\ISheetController.cs" />
+    <Compile Include="Controller\Core\ITextController.cs" />
+    <Compile Include="Controller\Core\IZoomController.cs" />
+    <Compile Include="Controller\Core\SheetCursor.cs" />
+    <Compile Include="Controller\Core\SheetMode.cs" />
+    <Compile Include="Controller\Core\SheetOptions.cs" />
+    <Compile Include="Controller\FileDialogSettings.cs" />
+    <Compile Include="Controller\SheetController.cs" />
+    <Compile Include="Controller\SheetHistoryController.cs" />
+    <Compile Include="Controller\SheetPageFactory.cs" />
+    <Compile Include="Test\TestCursorController.cs" />
+    <Compile Include="Test\TestZoomController.cs" />
+    <Compile Include="Test\TestHistoryController.cs" />
+    <Compile Include="Test\TestLibraryController.cs" />
+    <Compile Include="UI\Core\IView.cs" />
+    <Compile Include="UI\Core\IWindow.cs" />
+    <Compile Include="UI\Views\IDatabaseView.cs" />
+    <Compile Include="UI\Views\ILibraryView.cs" />
+    <Compile Include="UI\Views\ISheetView.cs" />
+    <Compile Include="UI\Views\ISolutionView.cs" />
+    <Compile Include="UI\Views\ITextView.cs" />
+    <Compile Include="UI\Windows\IMainWindow.cs" />
+    <Compile Include="Util\Base64.cs" />
+    <Compile Include="Entry\EntryController.cs" />
+    <Compile Include="Entry\EntryFactory.cs" />
+    <Compile Include="Entry\EntrySerializer.cs" />
+    <Compile Include="Entry\IEntryController.cs" />
+    <Compile Include="Entry\IEntryFactory.cs" />
+    <Compile Include="Entry\IEntrySerializer.cs" />
+    <Compile Include="Entry\Model\DocumentEntry.cs" />
+    <Compile Include="Entry\Model\Entry.cs" />
+    <Compile Include="Entry\Model\PageEntry.cs" />
+    <Compile Include="Entry\Model\SolutionEntry.cs" />
+    <Compile Include="Item\IItemController.cs" />
+    <Compile Include="Item\IItemSerializer.cs" />
+    <Compile Include="Item\ItemColors.cs" />
+    <Compile Include="Item\ItemController.cs" />
+    <Compile Include="Item\ItemSerializeOptions.cs" />
+    <Compile Include="Item\ItemSerializer.cs" />
+    <Compile Include="Item\Model\BlockItem.cs" />
+    <Compile Include="Item\Model\ChangeItem.cs" />
+    <Compile Include="Item\Model\DataItem.cs" />
+    <Compile Include="Item\Model\EllipseItem.cs" />
+    <Compile Include="Item\Model\ImageItem.cs" />
+    <Compile Include="Item\Model\Item.cs" />
+    <Compile Include="Item\Model\ItemColor.cs" />
+    <Compile Include="Item\Model\ItemType.cs" />
+    <Compile Include="Item\Model\LineItem.cs" />
+    <Compile Include="Item\Model\PointItem.cs" />
+    <Compile Include="Item\Model\RectangleItem.cs" />
+    <Compile Include="Item\Model\TextItem.cs" />
+    <Compile Include="Simulation\Compiler.cs" />
+    <Compile Include="Simulation\Connections.cs" />
+    <Compile Include="Simulation\Elements\Gates\AndGate.cs" />
+    <Compile Include="Simulation\Simulations\AndGateSimulation.cs" />
+    <Compile Include="Simulation\Core\BoolState.cs" />
+    <Compile Include="Simulation\Elements\Gates\BufferGate.cs" />
+    <Compile Include="Simulation\Simulations\BufferGateSimulation.cs" />
+    <Compile Include="Simulation\Core\Clock.cs" />
+    <Compile Include="Simulation\Elements\Context.cs" />
+    <Compile Include="Util\Core\IBase64.cs" />
+    <Compile Include="Util\Core\IClipboard.cs" />
+    <Compile Include="Util\Core\IDatabaseController.cs" />
+    <Compile Include="Util\Core\IDataReader.cs" />
+    <Compile Include="Util\Core\IJsonSerializer.cs" />
+    <Compile Include="Util\Core\IOpenFileDialog.cs" />
+    <Compile Include="Util\Core\ISaveFileDialog.cs" />
+    <Compile Include="Util\CsvDatabaseController.cs" />
+    <Compile Include="Util\Json.cs" />
     <Compile Include="Controls\DatabasesControl.xaml.cs">
       <DependentUpon>DatabasesControl.xaml</DependentUpon>
     </Compile>
@@ -133,7 +233,73 @@
     <Compile Include="Controls\SolutionControl.xaml.cs">
       <DependentUpon>SolutionControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Core\Csv.cs" />
+    <Compile Include="Util\Csv.cs" />
+    <Compile Include="Simulation\Binary\BinaryCommandId.cs" />
+    <Compile Include="Simulation\Binary\BinarySolutionReader.cs" />
+    <Compile Include="Simulation\Binary\BinarySolutionWriter.cs" />
+    <Compile Include="Simulation\Binary\IBinarySolutionReader.cs" />
+    <Compile Include="Simulation\Binary\IBinarySolutionWriter.cs" />
+    <Compile Include="Simulation\Core\Element.cs" />
+    <Compile Include="Simulation\Core\IBoolState.cs" />
+    <Compile Include="Simulation\Core\IClock.cs" />
+    <Compile Include="Simulation\Core\ISimulation.cs" />
+    <Compile Include="Simulation\Core\IStateSimulation.cs" />
+    <Compile Include="Simulation\Core\ITimer.cs" />
+    <Compile Include="Simulation\Elements\Memory\MemoryResetPriority.cs" />
+    <Compile Include="Simulation\Simulations\MemoryResetPrioritySimulation.cs" />
+    <Compile Include="Simulation\Elements\Memory\MemorySetPriority.cs" />
+    <Compile Include="Simulation\Simulations\MemorySetPrioritySimulation.cs" />
+    <Compile Include="Simulation\Elements\Gates\NandGate.cs" />
+    <Compile Include="Simulation\Simulations\NandGateSimulation.cs" />
+    <Compile Include="Simulation\Elements\Gates\NorGate.cs" />
+    <Compile Include="Simulation\Simulations\NorGateSimulation.cs" />
+    <Compile Include="Simulation\Elements\Gates\NotGate.cs" />
+    <Compile Include="Simulation\Simulations\NotGateSimulation.cs" />
+    <Compile Include="Simulation\Elements\Gates\OrGate.cs" />
+    <Compile Include="Simulation\Simulations\OrGateSimulation.cs" />
+    <Compile Include="Simulation\Elements\Pin.cs" />
+    <Compile Include="Simulation\Elements\PinType.cs" />
+    <Compile Include="Simulation\Elements\Project.cs" />
+    <Compile Include="Simulation\Elements\TagProperty.cs" />
+    <Compile Include="Simulation\Elements\Signal.cs" />
+    <Compile Include="Simulation\ISimulationController.cs" />
+    <Compile Include="Simulation\Core\SimulationCache.cs" />
+    <Compile Include="Simulation\Core\SimulationContext.cs" />
+    <Compile Include="Simulation\SimulationController.cs" />
+    <Compile Include="Simulation\Core\SimulationSettings.cs" />
+    <Compile Include="Simulation\Elements\Solution.cs" />
+    <Compile Include="Simulation\Elements\Tag.cs" />
+    <Compile Include="Simulation\Simulations\TagSimulation.cs" />
+    <Compile Include="Simulation\Elements\Timers\TimerOff.cs" />
+    <Compile Include="Simulation\Simulations\TimerOffSimulation.cs" />
+    <Compile Include="Simulation\Elements\Timers\TimerOn.cs" />
+    <Compile Include="Simulation\Simulations\TimerOnSimulation.cs" />
+    <Compile Include="Simulation\Elements\Timers\TimerPulse.cs" />
+    <Compile Include="Simulation\Simulations\TimerPulseSimulation.cs" />
+    <Compile Include="Simulation\Core\TopologicalSort.cs" />
+    <Compile Include="Simulation\Elements\Wire.cs" />
+    <Compile Include="Simulation\Elements\Gates\XnorGate.cs" />
+    <Compile Include="Simulation\Simulations\XnorGateSimulation.cs" />
+    <Compile Include="Simulation\Elements\Gates\XorGate.cs" />
+    <Compile Include="Simulation\Simulations\XorGateSimulation.cs" />
+    <Compile Include="Simulation\Tests\ISolutionFactory.cs" />
+    <Compile Include="Simulation\Tests\ISolutionRenamer.cs" />
+    <Compile Include="Simulation\Tests\ISolutionSerializer.cs" />
+    <Compile Include="Simulation\Tests\ISolutionSimulationController.cs" />
+    <Compile Include="Simulation\Tests\ISolutionSimulationFactory.cs" />
+    <Compile Include="Simulation\Tests\TestFactory.cs" />
+    <Compile Include="Simulation\Tests\TestRenamer.cs" />
+    <Compile Include="Simulation\Tests\TestSimulation.cs" />
+    <Compile Include="Simulation\Tests\TestSolutionSimulationFactory.cs" />
+    <Compile Include="Simulation\Tests\TestSerializer.cs" />
+    <Compile Include="WPF\FrameworkElementProperties.cs" />
+    <Compile Include="WPF\WpfBlockFactory.cs" />
+    <Compile Include="WPF\WpfBlockHelper.cs" />
+    <Compile Include="WPF\WpfCanvasSheet.cs" />
+    <Compile Include="WPF\WpfClipboard.cs" />
+    <Compile Include="WPF\WpfOpenFileDialog.cs" />
+    <Compile Include="WPF\WpfSaveFileDialog.cs" />
+    <Compile Include="WPF\WpfVisualHelper.cs" />
     <Page Include="Controls\PropertiesControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -235,6 +401,7 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,5 +1,15 @@
 ﻿using Autofac;
-using Microsoft.Win32;
+using Sheet.Block;
+using Sheet.Controller;
+using Sheet.Controller.Core;
+using Sheet.Entry;
+using Sheet.Item;
+using Sheet.Test;
+using Sheet.UI.Views;
+using Sheet.UI.Windows;
+using Sheet.Util;
+using Sheet.Util.Core;
+using Sheet.WPF;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -11,98 +21,24 @@ using System.Windows;
 
 namespace Sheet
 {
-    #region OpenFileDialog
-    
-    public interface IOpenFileDialog
+    #region IServiceLocator
+
+    public interface IServiceLocator
     {
-        string Filter { get; set; }
-        string FileName { get; set; }
-        string[] FileNames{ get; set; }
-        int FilterIndex { get; set; }
-        bool ShowDialog();
+        T GetInstance<T>();
     }
-    
-    public class Win32OpenFileDialog : IOpenFileDialog
-    {
-        private readonly OpenFileDialog dlg;
-        
-        public Win32OpenFileDialog()
-        {
-            dlg = new OpenFileDialog();
-        }
-            
-        public string Filter { get; set; }
-        public string FileName { get; set; }
-        public string[] FileNames { get; set; }
-        public int FilterIndex { get; set; }
-            
-        public bool ShowDialog()
-        {
-            FileNames = null;
-            
-            dlg.Filter = Filter;
-            dlg.FilterIndex = FilterIndex;
-            dlg.FileName = FileName;
-            
-            var result = dlg.ShowDialog();
-            if (result.HasValue && result.Value == true)
-            {
-                FileName = dlg.FileName;
-                FileNames = dlg.FileNames;
-                FilterIndex = dlg.FilterIndex;
-                return true;
-            }
-            return false;
-        }
-    }
-    
+
     #endregion
 
-    #region SaveFileDialog
-    
-    public interface ISaveFileDialog
+    #region IScopeServiceLocator
+
+    public interface IScopeServiceLocator
     {
-        string Filter { get; set; }
-        string FileName { get; set; }
-        string[] FileNames { get; set; }
-        int FilterIndex { get; set; }
-        bool ShowDialog();
+        T GetInstance<T>();
+        void CreateScope();
+        void ReleaseScope();
     }
-    
-    public class Win32SaveFileDialog : ISaveFileDialog
-    {
-        private readonly SaveFileDialog dlg;
-        
-        public Win32SaveFileDialog()
-        {
-            dlg = new SaveFileDialog();
-        }
-            
-        public string Filter { get; set; }
-        public string FileName { get; set; }
-        public string[] FileNames { get; set; }
-        public int FilterIndex { get; set; }
-            
-        public bool ShowDialog()
-        {
-            FileNames = null;
-        
-            dlg.Filter = Filter;
-            dlg.FilterIndex = FilterIndex;
-            dlg.FileName = FileName;
-            
-            var result = dlg.ShowDialog();
-            if (result.HasValue && result.Value == true)
-            {
-                FileName = dlg.FileName;
-                FileNames = dlg.FileNames;
-                FilterIndex = dlg.FilterIndex;
-                return true;
-            }
-            return false;
-        }
-    }
-    
+
     #endregion
 
     #region AppServiceLocator
@@ -148,6 +84,15 @@ namespace Sheet
 
     #region Modules
 
+    public class UtilModule : Module
+    {
+        protected override void Load(ContainerBuilder builder)
+        {
+            builder.RegisterType<Base64>().As<IBase64>().SingleInstance();
+            builder.RegisterType<NewtonsoftJsonSerializer>().As<IJsonSerializer>().SingleInstance();
+        }
+    }
+
     public class EntryModule : Module
     {
         protected override void Load(ContainerBuilder builder)
@@ -164,6 +109,7 @@ namespace Sheet
         {
             builder.RegisterType<BlockController>().As<IBlockController>().SingleInstance();
             builder.RegisterType<BlockSerializer>().As<IBlockSerializer>().SingleInstance();
+            builder.RegisterType<PointController>().As<IPointController>().SingleInstance();
         }
     }
 
@@ -176,14 +122,23 @@ namespace Sheet
         }
     }
 
+    public class SheetModule : Module
+    {
+        protected override void Load(ContainerBuilder builder)
+        {
+            builder.RegisterType<SheetPageFactory>().As<IPageFactory>().SingleInstance();
+            builder.RegisterType<SheetController>().As<ISheetController>().InstancePerLifetimeScope();
+        }
+    }
+
     public class WpfModule : Module
     {
         protected override void Load(ContainerBuilder builder)
         {
             builder.RegisterType<WpfClipboard>().As<IClipboard>().SingleInstance();
             
-            builder.RegisterType<Win32OpenFileDialog>().As<IOpenFileDialog>().InstancePerDependency();
-            builder.RegisterType<Win32SaveFileDialog>().As<ISaveFileDialog>().InstancePerDependency();
+            builder.RegisterType<WpfOpenFileDialog>().As<IOpenFileDialog>().InstancePerDependency();
+            builder.RegisterType<WpfSaveFileDialog>().As<ISaveFileDialog>().InstancePerDependency();
             
             builder.RegisterType<WpfBlockFactory>().As<IBlockFactory>().SingleInstance();
             builder.RegisterType<WpfBlockHelper>().As<IBlockHelper>().SingleInstance();
@@ -219,6 +174,8 @@ namespace Sheet
 
     #endregion
 
+    #region App
+
     public partial class App : Application
     {
         #region Constructor
@@ -247,20 +204,19 @@ namespace Sheet
             builder.RegisterType<AppServiceLocator>().As<IServiceLocator>().SingleInstance();
             builder.RegisterType<AppScopeServiceLocator>().As<IScopeServiceLocator>().InstancePerDependency();
 
-            builder.RegisterType<Base64>().As<IBase64>().SingleInstance();
-            builder.RegisterType<NewtonsoftJsonSerializer>().As<IJsonSerializer>().SingleInstance();
-
+            builder.RegisterModule<UtilModule>();
             builder.RegisterModule<EntryModule>();
             builder.RegisterModule<BlockModule>();
             builder.RegisterModule<ItemModule>();
-
-            builder.RegisterType<PointController>().As<IPointController>().SingleInstance();
-            builder.RegisterType<SheetPageFactory>().As<IPageFactory>().SingleInstance();
-            builder.RegisterType<SheetController>().As<ISheetController>().InstancePerLifetimeScope();
-
+            builder.RegisterModule<SheetModule>();
             builder.RegisterModule<WpfModule>();
 
-            using(Container = builder.Build())
+            ShowMainWindow(builder);
+        }
+
+        private void ShowMainWindow(ContainerBuilder builder)
+        {
+            using (Container = builder.Build())
             {
                 using (Scope = Container.BeginLifetimeScope())
                 {
@@ -274,4 +230,6 @@ namespace Sheet
 
         #endregion
     }
+
+    #endregion
 }
