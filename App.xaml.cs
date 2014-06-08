@@ -20,17 +20,34 @@ using System.Windows;
 
 namespace Sheet
 {
-    #region OpenFileDialog
-    
+    #region IOpenFileDialog
+
     public interface IOpenFileDialog
     {
         string Filter { get; set; }
         string FileName { get; set; }
-        string[] FileNames{ get; set; }
+        string[] FileNames { get; set; }
         int FilterIndex { get; set; }
         bool ShowDialog();
     }
-    
+
+    #endregion
+
+    #region ISaveFileDialog
+
+    public interface ISaveFileDialog
+    {
+        string Filter { get; set; }
+        string FileName { get; set; }
+        string[] FileNames { get; set; }
+        int FilterIndex { get; set; }
+        bool ShowDialog();
+    }
+
+    #endregion
+
+    #region Win32OpenFileDialog
+
     public class Win32OpenFileDialog : IOpenFileDialog
     {
         private readonly OpenFileDialog dlg;
@@ -64,20 +81,11 @@ namespace Sheet
             return false;
         }
     }
-    
+
     #endregion
 
-    #region SaveFileDialog
-    
-    public interface ISaveFileDialog
-    {
-        string Filter { get; set; }
-        string FileName { get; set; }
-        string[] FileNames { get; set; }
-        int FilterIndex { get; set; }
-        bool ShowDialog();
-    }
-    
+    #region Win32SaveFileDialog
+
     public class Win32SaveFileDialog : ISaveFileDialog
     {
         private readonly SaveFileDialog dlg;
@@ -111,7 +119,27 @@ namespace Sheet
             return false;
         }
     }
-    
+
+    #endregion
+
+    #region IServiceLocator
+
+    public interface IServiceLocator
+    {
+        T GetInstance<T>();
+    }
+
+    #endregion
+
+    #region IScopeServiceLocator
+
+    public interface IScopeServiceLocator
+    {
+        T GetInstance<T>();
+        void CreateScope();
+        void ReleaseScope();
+    }
+
     #endregion
 
     #region AppServiceLocator
