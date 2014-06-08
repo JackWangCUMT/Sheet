@@ -1,11 +1,12 @@
 ﻿using Sheet.Block;
 using Sheet.Block.Core;
 using Sheet.Block.Model;
+using Sheet.Controller.Core;
+using Sheet.Controller.Modes;
 using Sheet.Entry.Model;
 using Sheet.Item;
 using Sheet.Item.Model;
 using Sheet.Plugins;
-using Sheet.Controller.Core;
 using Sheet.UI.Views;
 using Sheet.Util.Core;
 using Sheet.WPF;
@@ -19,7 +20,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using Sheet.Controller.Modes;
 
 namespace Sheet.Controller
 {
