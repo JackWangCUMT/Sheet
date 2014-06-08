@@ -20,6 +20,9 @@ using Sheet.Simulation.Binary;
 using Sheet.Simulation.Elements;
 using Sheet.Entry;
 using Sheet.Entry.Model;
+using Sheet.UI.Windows;
+using Sheet.UI.Views;
+using Sheet.Util;
 
 namespace Sheet
 {

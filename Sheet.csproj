@@ -136,7 +136,15 @@
     <Compile Include="Controls\DatabaseControl.xaml.cs">
       <DependentUpon>DatabaseControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Core\Base64.cs" />
+    <Compile Include="UI\Core\IView.cs" />
+    <Compile Include="UI\Core\IWindow.cs" />
+    <Compile Include="UI\Views\IDatabaseView.cs" />
+    <Compile Include="UI\Views\ILibraryView.cs" />
+    <Compile Include="UI\Views\ISheetView.cs" />
+    <Compile Include="UI\Views\ISolutionView.cs" />
+    <Compile Include="UI\Views\ITextView.cs" />
+    <Compile Include="UI\Windows\IMainWindow.cs" />
+    <Compile Include="Util\Base64.cs" />
     <Compile Include="Entry\EntryController.cs" />
     <Compile Include="Entry\EntryFactory.cs" />
     <Compile Include="Entry\EntrySerializer.cs" />
@@ -177,7 +185,11 @@
     <Compile Include="Core\Test.cs" />
     <Compile Include="Core\Interfaces.cs" />
     <Compile Include="Core\Database.cs" />
-    <Compile Include="Core\Json.cs" />
+    <Compile Include="Util\Core\IBase64.cs" />
+    <Compile Include="Util\Core\IClipboard.cs" />
+    <Compile Include="Util\Core\IDataReader.cs" />
+    <Compile Include="Util\Core\IJsonSerializer.cs" />
+    <Compile Include="Util\Json.cs" />
     <Compile Include="Core\Plugins.cs" />
     <Compile Include="Core\Point.cs" />
     <Compile Include="Core\Sheet.cs" />
@@ -198,7 +210,7 @@
     <Compile Include="Controls\SolutionControl.xaml.cs">
       <DependentUpon>SolutionControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Core\Csv.cs" />
+    <Compile Include="Util\Csv.cs" />
     <Compile Include="Simulation\Binary\BinaryCommandId.cs" />
     <Compile Include="Simulation\Binary\BinarySolutionReader.cs" />
     <Compile Include="Simulation\Binary\BinarySolutionWriter.cs" />

@@ -2,6 +2,7 @@
 using Sheet.Block.Model;
 using Sheet.Entry.Model;
 using Sheet.Item.Model;
+using Sheet.UI.Views;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,58 +13,6 @@ using System.Threading.Tasks;
 
 namespace Sheet
 {
-    #region IWindow
-
-    public interface IWindow : IDisposable
-    {
-        void Show();
-        bool? ShowDialog();
-    }
-
-    #endregion
-
-    #region IView
-
-    public interface IView : IDisposable
-    {
-        bool Focus();
-        bool IsFocused { get; }
-    }
-
-    #endregion
-
-    #region Windows
-
-    public interface IMainWindow : IWindow
-    {
-    }
-
-    #endregion
-
-    #region Views
-
-    public interface ISheetView : IView
-    {
-    }
-
-    public interface ILibraryView : IView
-    {
-    }
-
-    public interface ISolutionView : IView
-    {
-    }
-
-    public interface IDatabaseView : IView
-    {
-    }
-
-    public interface ITextView : IView
-    {
-    }
-
-    #endregion
-
     #region IServiceLocator
 
     public interface IServiceLocator
@@ -82,41 +31,6 @@ namespace Sheet
         void ReleaseScope();
     }
     
-    #endregion
-    
-    #region IClipboard
-
-    public interface IClipboard
-    {
-        void Set(string text);
-        string Get();
-    }
-
-    #endregion
-
-    #region IBase64
-
-    public interface IBase64
-    {
-        string ToBase64(byte[] bytes);
-        MemoryStream ToStream(byte[] bytes);
-        byte[] ToBytes(string base64);
-        MemoryStream ToStream(string base64);
-        byte[] ReadAllBytes(string path);
-        string FromFileToBase64(string path);
-        MemoryStream FromFileToStream(string path);
-    }
-
-    #endregion
-
-    #region IJsonSerializer
-
-    public interface IJsonSerializer
-    {
-        string Serialize(object value);
-        T Deerialize<T>(string value);
-    }
-
     #endregion
 
     #region IPointController
@@ -172,15 +86,6 @@ namespace Sheet
     {
         void Set(SheetCursor cursor);
         SheetCursor Get();
-    }
-
-    #endregion
-
-    #region IDataReader
-
-    public interface IDataReader
-    {
-        IEnumerable<string[]> Read(string path);
     }
 
     #endregion

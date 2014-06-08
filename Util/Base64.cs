@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Sheet.Util.Core;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sheet
+namespace Sheet.Util
 {
     #region Base64
 

@@ -4,6 +4,8 @@ using Sheet.Block.Model;
 using Sheet.Entry.Model;
 using Sheet.Item;
 using Sheet.Item.Model;
+using Sheet.UI.Views;
+using Sheet.Util.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
