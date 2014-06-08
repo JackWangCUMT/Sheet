@@ -193,7 +193,6 @@
     <Compile Include="Core\Plugins.cs" />
     <Compile Include="Core\Point.cs" />
     <Compile Include="Core\Sheet.cs" />
-    <Compile Include="Core\Wpf.cs" />
     <Compile Include="Controls\DatabasesControl.xaml.cs">
       <DependentUpon>DatabasesControl.xaml</DependentUpon>
     </Compile>
@@ -269,6 +268,12 @@
     <Compile Include="Simulation\Tests\TestSimulation.cs" />
     <Compile Include="Simulation\Tests\TestSolutionSimulationFactory.cs" />
     <Compile Include="Simulation\Tests\TestSerializer.cs" />
+    <Compile Include="WPF\FrameworkElementProperties.cs" />
+    <Compile Include="WPF\WpfBlockFactory.cs" />
+    <Compile Include="WPF\WpfBlockHelper.cs" />
+    <Compile Include="WPF\WpfCanvasSheet.cs" />
+    <Compile Include="WPF\WpfClipboard.cs" />
+    <Compile Include="WPF\WpfVisualHelper.cs" />
     <Page Include="Controls\PropertiesControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
