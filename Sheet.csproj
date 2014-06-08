@@ -138,6 +138,10 @@
     </Compile>
     <Compile Include="Block\IPointController.cs" />
     <Compile Include="Block\PointController.cs" />
+    <Compile Include="Test\TestCursorController.cs" />
+    <Compile Include="Test\TestZoomController.cs" />
+    <Compile Include="Test\TestHistoryController.cs" />
+    <Compile Include="Test\TestLibraryController.cs" />
     <Compile Include="UI\Core\IView.cs" />
     <Compile Include="UI\Core\IWindow.cs" />
     <Compile Include="UI\Views\IDatabaseView.cs" />
@@ -184,7 +188,6 @@
     <Compile Include="Simulation\Simulations\BufferGateSimulation.cs" />
     <Compile Include="Simulation\Core\Clock.cs" />
     <Compile Include="Simulation\Elements\Context.cs" />
-    <Compile Include="Core\Test.cs" />
     <Compile Include="Core\Interfaces.cs" />
     <Compile Include="Core\Database.cs" />
     <Compile Include="Util\Core\IBase64.cs" />
