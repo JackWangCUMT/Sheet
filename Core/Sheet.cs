@@ -4,6 +4,7 @@ using Sheet.Block.Model;
 using Sheet.Entry.Model;
 using Sheet.Item;
 using Sheet.Item.Model;
+using Sheet.Plugins;
 using Sheet.UI.Views;
 using Sheet.Util.Core;
 using Sheet.WPF;

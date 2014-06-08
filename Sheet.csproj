@@ -138,6 +138,9 @@
     </Compile>
     <Compile Include="Block\IPointController.cs" />
     <Compile Include="Block\PointController.cs" />
+    <Compile Include="Plugins\InvertLineEndPlugin.cs" />
+    <Compile Include="Plugins\InvertLineStartPlugin.cs" />
+    <Compile Include="Plugins\ISelectedBlockPlugin.cs" />
     <Compile Include="Test\TestCursorController.cs" />
     <Compile Include="Test\TestZoomController.cs" />
     <Compile Include="Test\TestHistoryController.cs" />
@@ -195,7 +198,6 @@
     <Compile Include="Util\Core\IDataReader.cs" />
     <Compile Include="Util\Core\IJsonSerializer.cs" />
     <Compile Include="Util\Json.cs" />
-    <Compile Include="Core\Plugins.cs" />
     <Compile Include="Core\Sheet.cs" />
     <Compile Include="Controls\DatabasesControl.xaml.cs">
       <DependentUpon>DatabasesControl.xaml</DependentUpon>
