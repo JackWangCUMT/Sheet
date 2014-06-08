@@ -141,6 +141,23 @@
     <Compile Include="Plugins\InvertLineEndPlugin.cs" />
     <Compile Include="Plugins\InvertLineStartPlugin.cs" />
     <Compile Include="Plugins\ISelectedBlockPlugin.cs" />
+    <Compile Include="Controller\Core\ICursorController.cs" />
+    <Compile Include="Controller\Core\IHistoryController.cs" />
+    <Compile Include="Controller\Core\ILibraryController.cs" />
+    <Compile Include="Controller\Core\InputArgs.cs" />
+    <Compile Include="Controller\Core\InputButton.cs" />
+    <Compile Include="Controller\Core\IPageFactory.cs" />
+    <Compile Include="Controller\Core\ISheet.cs" />
+    <Compile Include="Controller\Core\ISheetController.cs" />
+    <Compile Include="Controller\Core\ITextController.cs" />
+    <Compile Include="Controller\Core\IZoomController.cs" />
+    <Compile Include="Controller\Core\SheetCursor.cs" />
+    <Compile Include="Controller\Core\SheetMode.cs" />
+    <Compile Include="Controller\Core\SheetOptions.cs" />
+    <Compile Include="Controller\FileDialogSettings.cs" />
+    <Compile Include="Controller\SheetController.cs" />
+    <Compile Include="Controller\SheetHistoryController.cs" />
+    <Compile Include="Controller\SheetPageFactory.cs" />
     <Compile Include="Test\TestCursorController.cs" />
     <Compile Include="Test\TestZoomController.cs" />
     <Compile Include="Test\TestHistoryController.cs" />
@@ -191,7 +208,6 @@
     <Compile Include="Simulation\Simulations\BufferGateSimulation.cs" />
     <Compile Include="Simulation\Core\Clock.cs" />
     <Compile Include="Simulation\Elements\Context.cs" />
-    <Compile Include="Core\Interfaces.cs" />
     <Compile Include="Util\Core\IBase64.cs" />
     <Compile Include="Util\Core\IClipboard.cs" />
     <Compile Include="Util\Core\IDatabaseController.cs" />
@@ -201,7 +217,6 @@
     <Compile Include="Util\Core\ISaveFileDialog.cs" />
     <Compile Include="Util\CsvDatabaseController.cs" />
     <Compile Include="Util\Json.cs" />
-    <Compile Include="Core\Sheet.cs" />
     <Compile Include="Controls\DatabasesControl.xaml.cs">
       <DependentUpon>DatabasesControl.xaml</DependentUpon>
     </Compile>

@@ -5,35 +5,12 @@ using Sheet.Item.Model;
 using Sheet.UI.Views;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sheet
+namespace Sheet.Controller.Core
 {
-    #region ISheet
-
-    public interface ISheet
-    {
-        double Width { get; set; }
-        double Height { get; set; }
-        bool IsCaptured { get; }
-        object GetParent();
-        void SetParent(object parent);
-        void Add(IElement element);
-        void Remove(IElement element);
-        void Add(object element);
-        void Remove(object element);
-        void Capture();
-        void ReleaseCapture();
-    }
-
-    #endregion
-
-    #region ISheetController
-
     public interface ISheetController
     {
         // Properties
@@ -146,85 +123,4 @@ namespace Sheet
         void InvertSelectedLineStart();
         void InvertSelectedLineEnd();
     }
-
-    #endregion
-
-    #region IPageFactory
-
-    public interface IPageFactory
-    {
-        void CreateLine(ISheet sheet, IList<ILine> lines, double thickness, double x1, double y1, double x2, double y2, ItemColor stroke);
-        void CreateText(ISheet sheet, IList<IText> texts, string content, double x, double y, double width, double height, int halign, int valign, double size, ItemColor foreground);
-        void CreateFrame(ISheet sheet, IBlock block, double size, double thickness, ItemColor stroke);
-        void CreateGrid(ISheet sheet, IBlock block, double startX, double startY, double width, double height, double size, double thickness, ItemColor stroke);
-        
-        IRectangle CreateSelectionRectangle(double thickness, double x, double y, double width, double height);
-    }
-
-    #endregion
-
-    #region IZoomController
-
-    public interface IZoomController
-    {
-        int ZoomIndex { get; set; }
-        double Zoom { get; set; }
-        double PanX { get; set; }
-        double PanY { get; set; }
-        void AutoFit();
-        void ActualSize();
-    }
-
-    #endregion
-
-    #region ICursorController
-
-    public enum SheetCursor
-    {
-        Unknown,
-        Normal,
-        Move,
-        Pan
-    }
-
-    public interface ICursorController
-    {
-        void Set(SheetCursor cursor);
-        SheetCursor Get();
-    }
-
-    #endregion
-
-    #region IHistoryController
-
-    public interface IHistoryController
-    {
-        void Register(string message);
-        void Reset();
-        void Undo();
-        void Redo();
-    } 
-
-    #endregion
-
-    #region ILibraryController
-
-    public interface ILibraryController
-    {
-        BlockItem GetSelected();
-        void SetSelected(BlockItem block);
-        IEnumerable<BlockItem> GetSource();
-        void SetSource(IEnumerable<BlockItem> source);
-    } 
-
-    #endregion
-
-    #region ITextController
-
-    public interface ITextController
-    {
-        void Set(Action<string> ok, Action cancel, string title, string label, string text);
-    }
-
-    #endregion
 }
