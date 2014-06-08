@@ -106,6 +106,8 @@
     <Compile Include="Block\Core\IText.cs" />
     <Compile Include="Block\Core\IThumb.cs" />
     <Compile Include="Block\IBlockController.cs" />
+    <Compile Include="Block\IBlockFactory.cs" />
+    <Compile Include="Block\IBlockHelper.cs" />
     <Compile Include="Block\IBlockSerializer.cs" />
     <Compile Include="Block\Model\XArgbColor.cs" />
     <Compile Include="Block\Model\XBlock.cs" />
