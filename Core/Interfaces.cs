@@ -13,8 +13,6 @@ using System.Threading.Tasks;
 
 namespace Sheet
 {
-
-
     #region ISheet
 
     public interface ISheet

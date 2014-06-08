@@ -197,6 +197,8 @@
     <Compile Include="Util\Core\IDatabaseController.cs" />
     <Compile Include="Util\Core\IDataReader.cs" />
     <Compile Include="Util\Core\IJsonSerializer.cs" />
+    <Compile Include="Util\Core\IOpenFileDialog.cs" />
+    <Compile Include="Util\Core\ISaveFileDialog.cs" />
     <Compile Include="Util\CsvDatabaseController.cs" />
     <Compile Include="Util\Json.cs" />
     <Compile Include="Core\Sheet.cs" />
@@ -280,6 +282,8 @@
     <Compile Include="WPF\WpfBlockHelper.cs" />
     <Compile Include="WPF\WpfCanvasSheet.cs" />
     <Compile Include="WPF\WpfClipboard.cs" />
+    <Compile Include="WPF\WpfOpenFileDialog.cs" />
+    <Compile Include="WPF\WpfSaveFileDialog.cs" />
     <Compile Include="WPF\WpfVisualHelper.cs" />
     <Page Include="Controls\PropertiesControl.xaml">
       <SubType>Designer</SubType>
