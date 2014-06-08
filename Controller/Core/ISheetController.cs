@@ -72,9 +72,9 @@ namespace Sheet.Controller.Core
         void AdjustPageThickness(double zoom);
 
         // Data Binding
-        bool BindDataToBlock(XImmutablePoint p, DataItem dataItem);
+        bool BindDataToBlock(ImmutablePoint p, DataItem dataItem);
         bool BindDataToBlock(IBlock block, DataItem dataItem);
-        void TryToBindData(XImmutablePoint p, DataItem dataItem);
+        void TryToBindData(ImmutablePoint p, DataItem dataItem);
 
         // New Page
         void NewPage();
@@ -95,8 +95,8 @@ namespace Sheet.Controller.Core
         void ExportPage();
 
         // Library
-        void Insert(XImmutablePoint p);
-        IBlock Insert(BlockItem blockItem, XImmutablePoint p, bool select);
+        void Insert(ImmutablePoint p);
+        IBlock Insert(BlockItem blockItem, ImmutablePoint p, bool select);
         Task LoadLibrary(string path);
         void LoadLibrary();
 
@@ -106,7 +106,7 @@ namespace Sheet.Controller.Core
         void Move(InputArgs args);
         void RightDown(InputArgs args);
         void RightUp(InputArgs args);
-        void Wheel(int delta, XImmutablePoint position);
+        void Wheel(int delta, ImmutablePoint position);
         void Down(InputArgs args);
 
         // Page

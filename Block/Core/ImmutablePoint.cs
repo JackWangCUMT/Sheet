@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sheet.Block.Model
+namespace Sheet.Block.Core
 {
-    public struct XImmutablePoint
+    public struct ImmutablePoint
     {
         public double X { get; private set; }
         public double Y { get; private set; }
-        public XImmutablePoint(double x, double y)
+        public ImmutablePoint(double x, double y)
             : this()
         {
             X = x;

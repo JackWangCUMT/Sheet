@@ -4,15 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sheet.Block.Model
+namespace Sheet.Block.Core
 {
-    public struct XImmutableRect
+    public struct ImmutableRect
     {
         public double X { get; private set; }
         public double Y { get; private set; }
         public double Width { get; private set; }
         public double Height { get; private set; }
-        public XImmutableRect(double x, double y, double width, double height)
+        public ImmutableRect(double x, double y, double width, double height)
             : this()
         {
             X = x;
