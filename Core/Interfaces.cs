@@ -1,5 +1,6 @@
 ﻿using Sheet.Block.Core;
 using Sheet.Block.Model;
+using Sheet.Entry.Model;
 using Sheet.Item.Model;
 using System;
 using System.Collections.Generic;
@@ -114,51 +115,6 @@ namespace Sheet
     {
         string Serialize(object value);
         T Deerialize<T>(string value);
-    }
-
-    #endregion
-
-    #region IEntrySerializer
-
-    public interface IEntrySerializer
-    {
-        void CreateEmpty(string path);
-        void Serialize(SolutionEntry solution, string path);
-        SolutionEntry Deserialize(string path);
-    }
-
-    #endregion
-
-    #region IEntryController
-
-    public interface IEntryController
-    {
-        PageEntry AddPage(DocumentEntry document, string content);
-        PageEntry AddPageBefore(DocumentEntry document, PageEntry beofore, string content);
-        PageEntry AddPageAfter(DocumentEntry document, PageEntry after, string content);
-        void AddPageAfter(object item);
-        void AddPageBefore(object item);
-        void DuplicatePage(object item);
-        void RemovePage(object item);
-
-        DocumentEntry AddDocumentBefore(SolutionEntry solution, DocumentEntry after);
-        DocumentEntry AddDocumentAfter(SolutionEntry solution, DocumentEntry after);
-        DocumentEntry AddDocument(SolutionEntry solution);
-        void DocumentAddPage(object item);
-        void AddDocumentAfter(object item);
-        void AddDocumentBefore(object item);
-        void DulicateDocument(object item);
-        void RemoveDocument(object item);
-    }
-
-    #endregion
-
-    #region IEntryFactory
-
-    public interface IEntryFactory
-    {
-        PageEntry CreatePage(DocumentEntry document, string content, string name = null);
-        DocumentEntry CreateDocument(SolutionEntry solution, string name = null);
     }
 
     #endregion

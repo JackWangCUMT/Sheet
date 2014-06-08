@@ -1,6 +1,7 @@
 ﻿using Sheet.Block;
 using Sheet.Block.Core;
 using Sheet.Block.Model;
+using Sheet.Entry.Model;
 using Sheet.Item;
 using Sheet.Item.Model;
 using System;

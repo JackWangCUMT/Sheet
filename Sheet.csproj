@@ -137,6 +137,16 @@
       <DependentUpon>DatabaseControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Core\Base64.cs" />
+    <Compile Include="Entry\EntryController.cs" />
+    <Compile Include="Entry\EntryFactory.cs" />
+    <Compile Include="Entry\EntrySerializer.cs" />
+    <Compile Include="Entry\IEntryController.cs" />
+    <Compile Include="Entry\IEntryFactory.cs" />
+    <Compile Include="Entry\IEntrySerializer.cs" />
+    <Compile Include="Entry\Model\DocumentEntry.cs" />
+    <Compile Include="Entry\Model\Entry.cs" />
+    <Compile Include="Entry\Model\PageEntry.cs" />
+    <Compile Include="Entry\Model\SolutionEntry.cs" />
     <Compile Include="Item\IItemController.cs" />
     <Compile Include="Item\IItemSerializer.cs" />
     <Compile Include="Item\ItemColors.cs" />
@@ -167,7 +177,6 @@
     <Compile Include="Core\Test.cs" />
     <Compile Include="Core\Interfaces.cs" />
     <Compile Include="Core\Database.cs" />
-    <Compile Include="Core\Entry.cs" />
     <Compile Include="Core\Json.cs" />
     <Compile Include="Core\Plugins.cs" />
     <Compile Include="Core\Point.cs" />
