@@ -6,7 +6,7 @@ namespace Sheet.Simulation.Tests
     {
         Clock Clock { get; }
         bool IsSimulationRunning { get; }
-        SimulationFactory SimulationFactory { get; }
+        SimulationController SimulationController { get; }
         Solution Solution { get; }
 
         void Start();

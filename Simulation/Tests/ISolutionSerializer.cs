@@ -1,3 +1,4 @@
+using Sheet.Block.Core;
 using Sheet.Simulation.Core;
 
 namespace Sheet.Simulation.Tests

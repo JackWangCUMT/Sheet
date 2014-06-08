@@ -92,6 +92,36 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Block\BlockController.cs" />
+    <Compile Include="Block\BlockSerializer.cs" />
+    <Compile Include="Block\Core\IArgbColor.cs" />
+    <Compile Include="Block\Core\IBlock.cs" />
+    <Compile Include="Block\Core\IDependency.cs" />
+    <Compile Include="Block\Core\IElement.cs" />
+    <Compile Include="Block\Core\IEllipse.cs" />
+    <Compile Include="Block\Core\IImage.cs" />
+    <Compile Include="Block\Core\ILine.cs" />
+    <Compile Include="Block\Core\IPoint.cs" />
+    <Compile Include="Block\Core\IRectangle.cs" />
+    <Compile Include="Block\Core\IText.cs" />
+    <Compile Include="Block\Core\IThumb.cs" />
+    <Compile Include="Block\IBlockController.cs" />
+    <Compile Include="Block\IBlockSerializer.cs" />
+    <Compile Include="Block\Model\XArgbColor.cs" />
+    <Compile Include="Block\Model\XBlock.cs" />
+    <Compile Include="Block\Model\XDependency.cs" />
+    <Compile Include="Block\Model\XElement.cs" />
+    <Compile Include="Block\Model\XEllipse.cs" />
+    <Compile Include="Block\Model\XHorizontalAlignment.cs" />
+    <Compile Include="Block\Model\XImage.cs" />
+    <Compile Include="Block\Model\XImmutablePoint.cs" />
+    <Compile Include="Block\Model\XImmutableRect.cs" />
+    <Compile Include="Block\Model\XLine.cs" />
+    <Compile Include="Block\Model\XPoint.cs" />
+    <Compile Include="Block\Model\XRectangle.cs" />
+    <Compile Include="Block\Model\XText.cs" />
+    <Compile Include="Block\Model\XThumb.cs" />
+    <Compile Include="Block\Model\XVerticalAlignment.cs" />
     <Compile Include="Controls\PropertiesControl.xaml.cs">
       <DependentUpon>PropertiesControl.xaml</DependentUpon>
     </Compile>
@@ -105,7 +135,6 @@
       <DependentUpon>DatabaseControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Core\Base64.cs" />
-    <Compile Include="Core\Block.cs" />
     <Compile Include="Simulation\Compiler.cs" />
     <Compile Include="Simulation\Connections.cs" />
     <Compile Include="Simulation\Core\Elements\Gates\AndGate.cs" />
@@ -170,10 +199,10 @@
     <Compile Include="Simulation\Core\Solution\Project.cs" />
     <Compile Include="Simulation\Core\Elements\Basic\TagProperty.cs" />
     <Compile Include="Simulation\Core\Elements\Basic\Signal.cs" />
-    <Compile Include="Simulation\Simulation.cs" />
+    <Compile Include="Simulation\ISimulationController.cs" />
     <Compile Include="Simulation\Core\SimulationCache.cs" />
     <Compile Include="Simulation\Core\SimulationContext.cs" />
-    <Compile Include="Simulation\SimulationFactory.cs" />
+    <Compile Include="Simulation\SimulationController.cs" />
     <Compile Include="Simulation\Core\SimulationSettings.cs" />
     <Compile Include="Simulation\Core\Solution\Solution.cs" />
     <Compile Include="Simulation\Core\Elements\Basic\Tag.cs" />

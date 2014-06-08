@@ -14,7 +14,7 @@ namespace Sheet.Simulation.Tests
 
         private Solution _solution;
         private Clock _clock;
-        private SimulationFactory _factory;
+        private SimulationController _factory;
         private int _periodInMillisencods;
         private bool _isSimulationRunning = false;
 
@@ -24,7 +24,7 @@ namespace Sheet.Simulation.Tests
 
         public Solution Solution { get { return _solution; } }
         public Clock Clock { get { return _clock; } }
-        public SimulationFactory SimulationFactory { get { return _factory; } }
+        public SimulationController SimulationController { get { return _factory; } }
         public bool IsSimulationRunning { get { return _isSimulationRunning; } }
 
         #endregion
@@ -117,11 +117,11 @@ namespace Sheet.Simulation.Tests
 
         private void Initialize()
         {
-            _factory = new SimulationFactory();
+            _factory = new SimulationController();
             _clock = new Clock();
 
             // create simulation context
-            _factory.CurrentSimulationContext = new SimulationContext()
+            _factory.SimulationContext = new SimulationContext()
             {
                 Cache = null,
                 SimulationClock = _clock
@@ -139,7 +139,7 @@ namespace Sheet.Simulation.Tests
         public void Start()
         {
             // simulation is already running
-            if (_factory.CurrentSimulationContext.SimulationTimer != null)
+            if (_factory.SimulationContext.SimulationTimer != null)
                 return;
 
             if (_solution == null)
@@ -196,7 +196,7 @@ namespace Sheet.Simulation.Tests
 
         public void Stop()
         {
-            if (_factory.CurrentSimulationContext.SimulationTimer != null)
+            if (_factory.SimulationContext.SimulationTimer != null)
             {
                 // stop simulation
                 _factory.Stop();
