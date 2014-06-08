@@ -172,6 +172,8 @@ namespace Sheet
 
     #endregion
 
+    #region App
+
     public partial class App : Application
     {
         #region Constructor
@@ -226,4 +228,6 @@ namespace Sheet
 
         #endregion
     }
+
+    #endregion
 }
