@@ -1,13 +1,12 @@
-﻿using System;
+﻿using Sheet.Util.Core;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Sheet
+namespace Sheet.Util
 {
-    #region Database Controller
-
     public class CsvDatabaseController : IDatabaseController
     {
         #region Properties
@@ -84,6 +83,4 @@ namespace Sheet
 
         #endregion
     }
-
-    #endregion
 }

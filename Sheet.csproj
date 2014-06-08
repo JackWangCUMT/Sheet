@@ -192,11 +192,12 @@
     <Compile Include="Simulation\Core\Clock.cs" />
     <Compile Include="Simulation\Elements\Context.cs" />
     <Compile Include="Core\Interfaces.cs" />
-    <Compile Include="Core\Database.cs" />
     <Compile Include="Util\Core\IBase64.cs" />
     <Compile Include="Util\Core\IClipboard.cs" />
+    <Compile Include="Util\Core\IDatabaseController.cs" />
     <Compile Include="Util\Core\IDataReader.cs" />
     <Compile Include="Util\Core\IJsonSerializer.cs" />
+    <Compile Include="Util\CsvDatabaseController.cs" />
     <Compile Include="Util\Json.cs" />
     <Compile Include="Core\Sheet.cs" />
     <Compile Include="Controls\DatabasesControl.xaml.cs">

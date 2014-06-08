@@ -14,7 +14,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using Sheet.Simulation.Core;
 using Sheet.Simulation.Tests;
 using Sheet.Simulation.Binary;
 using Sheet.Simulation.Elements;
@@ -23,6 +22,7 @@ using Sheet.Entry.Model;
 using Sheet.UI.Windows;
 using Sheet.UI.Views;
 using Sheet.Util;
+using Sheet.Util.Core;
 
 namespace Sheet
 {
