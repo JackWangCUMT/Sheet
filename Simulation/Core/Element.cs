@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Sheet.Block.Core;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -23,5 +24,6 @@ namespace Sheet.Simulation.Core
         public Element Parent { get; set; }
         public ObservableCollection<Element> Children { get; set; }
         public Element SimulationParent { get; set; }
+        public IBlock Block { get; set; }
     }
 }
