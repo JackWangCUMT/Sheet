@@ -162,6 +162,7 @@
     <Compile Include="Controller\SheetController.cs" />
     <Compile Include="Controller\SheetHistoryController.cs" />
     <Compile Include="Controller\SheetPageFactory.cs" />
+    <Compile Include="Simulation\Tests\IBlockSimulationHelper.cs" />
     <Compile Include="Test\TestCursorController.cs" />
     <Compile Include="Test\TestZoomController.cs" />
     <Compile Include="Test\TestHistoryController.cs" />
