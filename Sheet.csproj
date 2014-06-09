@@ -299,6 +299,7 @@
     <Compile Include="WPF\FrameworkElementProperties.cs" />
     <Compile Include="WPF\WpfBlockFactory.cs" />
     <Compile Include="WPF\WpfBlockHelper.cs" />
+    <Compile Include="WPF\WpfBlockSimulationHelper.cs" />
     <Compile Include="WPF\WpfCanvasSheet.cs" />
     <Compile Include="WPF\WpfClipboard.cs" />
     <Compile Include="WPF\WpfOpenFileDialog.cs" />
