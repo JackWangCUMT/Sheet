@@ -1,11 +1,13 @@
 ﻿using Sheet.Simulation.Core;
 using Sheet.Simulation.Elements;
+using Sheet.WPF;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace Sheet.Simulation.Tests
 {
@@ -137,6 +139,65 @@ namespace Sheet.Simulation.Tests
             SimulationSettings.EnableLog = false;
         }
 
+        private void UpdateBlocksState(Signal[] signals, WpfBlockSimulationHelper helper)
+        {
+            bool update = false;
+
+            // check for changes after 1st cycle
+            if (_clock.Cycle > 1)
+            {
+                foreach(var signal in signals)
+                {
+                    var tag = signal.Tag;
+                    if (tag != null && tag.Simulation != null && tag.Simulation.State.State != tag.Simulation.State.PreviousState)
+                    {
+                        update = true;
+                        helper.SeState(signal.Block, tag.Simulation.State);
+                    }
+                }
+
+                if (update == false)
+                {
+                    return;
+                }
+            }
+            // init all states in 1st cycle
+            else
+            {
+                foreach (var signal in signals)
+                {
+                    var tag = signal.Tag;
+                    if (tag != null && tag.Simulation != null)
+                    {
+                        helper.SeState(signal.Block, tag.Simulation.State);
+                    }
+                }
+            }
+
+            // set signal previous state
+            foreach (var signal in signals)
+            {
+                var tag = signal.Tag;
+                if (tag != null)
+                {
+                    tag.Simulation.State.PreviousState = tag.Simulation.State.State;
+                }
+            }
+        }
+
+        private Action GetUpdateAction(List<Context> contexts)
+        {
+            var signals = contexts.SelectMany(x => x.Children).Where(y => y is Signal).Cast<Signal>().ToArray();
+            var dispatcher = Dispatcher.CurrentDispatcher;
+
+            var helper = new WpfBlockSimulationHelper();
+
+            var update = new Action(() => UpdateBlocksState(signals, helper));
+            var updateOnUIThread = new Action(() => dispatcher.BeginInvoke(update));
+
+            return updateOnUIThread;
+        }
+
         public void Start()
         {
             // simulation is already running
@@ -185,7 +246,7 @@ namespace Sheet.Simulation.Tests
             _factory.Reset(true);
 
             // run simulation
-            _factory.Run(contexts, _solution.Tags, period, () => { });
+            _factory.Run(contexts, _solution.Tags, period, GetUpdateAction(contexts));
             _isSimulationRunning = true;
 
             // reset simulation parent
