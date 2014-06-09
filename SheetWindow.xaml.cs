@@ -791,6 +791,8 @@ namespace Sheet
 
         private void StartSimulation()
         {
+            _sheetController.DeselectAll();
+
             try
             {
                 if (demo == null)
@@ -854,6 +856,8 @@ namespace Sheet
                 Debug.Print(ex.Message);
                 Debug.Print(ex.StackTrace);
             }
+
+            _sheetController.DeselectAll();
         }
         
         private void RestartSimulation()

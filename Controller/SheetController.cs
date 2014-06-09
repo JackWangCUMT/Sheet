@@ -431,6 +431,16 @@ namespace Sheet.Controller
 
         #endregion
 
+        #region Deselect All
+
+        public void DeselectAll()
+        {
+            _blockController.DeselectContent(State.SelectedBlock);
+            _blockController.Deselect(State.ContentBlock);
+        } 
+
+        #endregion
+
         #region Toggle Fill
 
         public void ToggleFill()

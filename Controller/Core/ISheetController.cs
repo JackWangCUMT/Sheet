@@ -34,6 +34,9 @@ namespace Sheet.Controller.Core
         // Select All
         void SelecteAll();
 
+        // Deselect All
+        void DeselectAll();
+
         // Toggle Fill
         void ToggleFill();
 
