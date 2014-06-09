@@ -127,7 +127,8 @@ namespace Sheet.Simulation.Tests
                 X = block.X,
                 Y = block.Y,
                 Tag = tag,
-                Parent = context
+                Parent = context,
+                Block = block
             };
 
             context.Children.Add(element);
@@ -152,7 +153,8 @@ namespace Sheet.Simulation.Tests
                 Id = Guid.NewGuid().ToString(),
                 X = block.X,
                 Y = block.Y,
-                Parent = context
+                Parent = context,
+                Block = block
             };
 
             context.Children.Add(element);
@@ -183,7 +185,8 @@ namespace Sheet.Simulation.Tests
                 Id = Guid.NewGuid().ToString(),
                 X = block.X,
                 Y = block.Y,
-                Parent = context
+                Parent = context,
+                Block = block
             };
 
             context.Children.Add(element);
@@ -215,7 +218,8 @@ namespace Sheet.Simulation.Tests
                 X = block.X,
                 Y = block.Y,
                 Parent = context,
-                Delay = 1.0f
+                Delay = 1.0f,
+                Block = block
             };
 
             context.Children.Add(element);
@@ -247,7 +251,8 @@ namespace Sheet.Simulation.Tests
                 X = block.X,
                 Y = block.Y,
                 Parent = context,
-                Delay = 1.0f
+                Delay = 1.0f,
+                Block = block
             };
 
             context.Children.Add(element);
@@ -279,7 +284,8 @@ namespace Sheet.Simulation.Tests
                 X = block.X,
                 Y = block.Y,
                 Parent = context,
-                Delay = 1.0f
+                Delay = 1.0f,
+                Block = block
             };
 
             context.Children.Add(element);
