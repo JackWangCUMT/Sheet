@@ -865,8 +865,14 @@ namespace Sheet.Controller
         {
             var temp = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "TEMP", null);
             _blockController.HitTest(State.ContentSheet, State.ContentBlock, p, State.Options.HitTestSize, temp, true, true);
-
-            if (_blockController.HaveOnlyOneTextSelected(temp))
+            
+            // check if one text is selected and ignore selected blocks
+            if (temp.Points.Count == 0
+                && temp.Lines.Count == 0
+                && temp.Rectangles.Count == 0
+                && temp.Ellipses.Count == 0
+                && temp.Texts.Count == 1
+                && temp.Images.Count == 0)
             {
                 var tb = WpfBlockHelper.GetTextBlock(temp.Texts[0]);
 
