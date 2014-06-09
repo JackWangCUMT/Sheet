@@ -59,14 +59,6 @@ namespace Sheet.Plugins
             var ellipse = _blockFactory.CreateEllipse(options.LineThickness / options.Zoom, x, y, width, height, false, ItemColors.Black, ItemColors.Transparent);
             contentBlock.Ellipses.Add(ellipse);
             contentSheet.Add(ellipse);
-
-            // select ellipse
-            _blockController.Select(ellipse);
-            if (selectedBlock.Ellipses == null)
-            {
-                selectedBlock.Ellipses = new List<IEllipse>();
-            }
-            selectedBlock.Ellipses.Add(ellipse);
         }
 
         private void InvertSelectedLineStart(ISheet contentSheet, IBlock contentBlock, IBlock selectedBlock, SheetOptions options)
@@ -74,11 +66,7 @@ namespace Sheet.Plugins
             // add for horizontal or vertical line start ellipse and shorten line
             if (_blockController.HaveSelected(selectedBlock) && selectedBlock.Lines != null && selectedBlock.Lines.Count > 0)
             {
-                var block = _blockController.ShallowCopy(selectedBlock);
-
-                _blockController.DeselectContent(selectedBlock);
-
-                foreach (var line in block.Lines)
+                foreach (var line in selectedBlock.Lines)
                 {
                     double x1 = _blockHelper.GetX1(line);
                     double y1 = _blockHelper.GetY1(line);
@@ -119,14 +107,6 @@ namespace Sheet.Plugins
                             _blockHelper.SetX2(line, x2 + invertedEllipseWidth);
                         }
                     }
-
-                    // select line
-                    _blockController.Select(line);
-                    if (selectedBlock.Lines == null)
-                    {
-                        selectedBlock.Lines = new List<ILine>();
-                    }
-                    selectedBlock.Lines.Add(line);
                 }
             }
         }

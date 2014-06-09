@@ -22,7 +22,5 @@ namespace Sheet.Block.Core
         IList<IText> Texts { get; set; }
         IList<IImage> Images { get; set; }
         IList<IBlock> Blocks { get; set; }
-        void Init();
-        void ReInit();
     }
 }

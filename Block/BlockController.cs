@@ -752,67 +752,44 @@ namespace Sheet.Block
 
         public void Select(IBlock parent)
         {
-            if (parent.Points != null)
+            foreach (var point in parent.Points)
             {
-                foreach (var point in parent.Points)
-                {
-                    Select(point);
-                }
+                Select(point);
             }
 
-            if (parent.Lines != null)
+            foreach (var line in parent.Lines)
             {
-                foreach (var line in parent.Lines)
-                {
-                    Select(line);
-                }
+                Select(line);
             }
 
-            if (parent.Rectangles != null)
+            foreach (var rectangle in parent.Rectangles)
             {
-                foreach (var rectangle in parent.Rectangles)
-                {
-                    Select(rectangle);
-                }
+                Select(rectangle);
             }
 
-            if (parent.Ellipses != null)
+            foreach (var ellipse in parent.Ellipses)
             {
-                foreach (var ellipse in parent.Ellipses)
-                {
-                    Select(ellipse);
-                }
+                Select(ellipse);
             }
 
-            if (parent.Texts != null)
+            foreach (var text in parent.Texts)
             {
-                foreach (var text in parent.Texts)
-                {
-                    Select(text);
-                }
+                Select(text);
             }
 
-            if (parent.Images != null)
+            foreach (var image in parent.Images)
             {
-                foreach (var image in parent.Images)
-                {
-                    Select(image);
-                }
+                Select(image);
             }
 
-            if (parent.Blocks != null)
+            foreach (var block in parent.Blocks)
             {
-                foreach (var block in parent.Blocks)
-                {
-                    Select(block);
-                }
+                Select(block);
             }
         }
 
-        public void SelectContent(IBlock selected, IBlock content)
+        public void SelectAndAdd(IBlock content, IBlock selected)
         {
-            selected.Init();
-
             foreach (var point in content.Points)
             {
                 Select(point);
@@ -890,204 +867,95 @@ namespace Sheet.Block
             }
         }
 
-        public void DeselectContent(IBlock selected)
-        {
-            if (selected.Points != null)
-            {
-                foreach (var point in selected.Points)
-                {
-                    Deselect(point);
-                }
+        #endregion
 
-                selected.Points = null;
-            }
-
-            if (selected.Lines != null)
-            {
-                foreach (var line in selected.Lines)
-                {
-                    Deselect(line);
-                }
-
-                selected.Lines = null;
-            }
-
-            if (selected.Rectangles != null)
-            {
-                foreach (var rectangle in selected.Rectangles)
-                {
-                    Deselect(rectangle);
-                }
-
-                selected.Rectangles = null;
-            }
-
-            if (selected.Ellipses != null)
-            {
-                foreach (var ellipse in selected.Ellipses)
-                {
-                    Deselect(ellipse);
-                }
-
-                selected.Ellipses = null;
-            }
-
-            if (selected.Texts != null)
-            {
-                foreach (var text in selected.Texts)
-                {
-                    Deselect(text);
-                }
-
-                selected.Texts = null;
-            }
-
-            if (selected.Images != null)
-            {
-                foreach (var image in selected.Images)
-                {
-                    Deselect(image);
-                }
-
-                selected.Images = null;
-            }
-
-            if (selected.Blocks != null)
-            {
-                foreach (var parent in selected.Blocks)
-                {
-                    foreach (var point in parent.Points)
-                    {
-                        Deselect(point);
-                    }
-
-                    foreach (var line in parent.Lines)
-                    {
-                        Deselect(line);
-                    }
-
-                    foreach (var rectangle in parent.Rectangles)
-                    {
-                        Deselect(rectangle);
-                    }
-
-                    foreach (var ellipse in parent.Ellipses)
-                    {
-                        Deselect(ellipse);
-                    }
-
-                    foreach (var text in parent.Texts)
-                    {
-                        Deselect(text);
-                    }
-
-                    foreach (var image in parent.Images)
-                    {
-                        Deselect(image);
-                    }
-
-                    foreach (var block in parent.Blocks)
-                    {
-                        Deselect(block);
-                    }
-                }
-
-                selected.Blocks = null;
-            }
-        }
+        #region HaveSelected
 
         public bool HaveSelected(IBlock selected)
         {
-            return (selected.Points != null
-                || selected.Lines != null
-                || selected.Rectangles != null
-                || selected.Ellipses != null
-                || selected.Texts != null
-                || selected.Images != null
-                || selected.Blocks != null);
+            return (selected.Points.Count > 0
+                || selected.Lines.Count > 0
+                || selected.Rectangles.Count > 0
+                || selected.Ellipses.Count > 0
+                || selected.Texts.Count > 0
+                || selected.Images.Count > 0
+                || selected.Blocks.Count > 0);
         }
 
         public bool HaveOnePointSelected(IBlock selected)
         {
-            return (selected.Points != null
-                && selected.Points.Count == 1
-                && selected.Lines == null
-                && selected.Rectangles == null
-                && selected.Ellipses == null
-                && selected.Texts == null
-                && selected.Images == null
-                && selected.Blocks == null);
+            return (selected.Points.Count == 1
+                && selected.Lines.Count == 0
+                && selected.Rectangles.Count == 0
+                && selected.Ellipses.Count == 0
+                && selected.Texts.Count == 0
+                && selected.Images.Count == 0
+                && selected.Blocks.Count == 0);
         }
 
         public bool HaveOneLineSelected(IBlock selected)
         {
-            return (selected.Points == null
-                && selected.Lines != null
+            return (selected.Points.Count == 0
                 && selected.Lines.Count == 1
-                && selected.Rectangles == null
-                && selected.Ellipses == null
-                && selected.Texts == null
-                && selected.Images == null
-                && selected.Blocks == null);
+                && selected.Rectangles.Count == 0
+                && selected.Ellipses.Count == 0
+                && selected.Texts.Count == 0
+                && selected.Images.Count == 0
+                && selected.Blocks.Count == 0);
         }
 
         public bool HaveOneRectangleSelected(IBlock selected)
         {
-            return (selected.Points == null
-                && selected.Lines == null
-                && selected.Rectangles != null
+            return (selected.Points.Count == 0
+                && selected.Lines.Count == 0
                 && selected.Rectangles.Count == 1
-                && selected.Ellipses == null
-                && selected.Texts == null
-                && selected.Images == null
-                && selected.Blocks == null);
+                && selected.Ellipses.Count == 0
+                && selected.Texts.Count == 0
+                && selected.Images.Count == 0
+                && selected.Blocks.Count == 0);
         }
 
         public bool HaveOneEllipseSelected(IBlock selected)
         {
-            return (selected.Points == null
-                && selected.Lines == null
-                && selected.Rectangles == null
-                && selected.Ellipses != null
+            return (selected.Points.Count == 0
+                && selected.Lines.Count == 0
+                && selected.Rectangles.Count == 0
                 && selected.Ellipses.Count == 1
-                && selected.Texts == null
-                && selected.Images == null
-                && selected.Blocks == null);
+                && selected.Texts.Count == 0
+                && selected.Images.Count == 0
+                && selected.Blocks.Count == 0);
         }
 
         public bool HaveOneTextSelected(IBlock selected)
         {
-            return (selected.Points == null
-                && selected.Lines == null
-                && selected.Rectangles == null
-                && selected.Ellipses == null
-                && selected.Texts != null
+            return (selected.Points.Count == 0
+                && selected.Lines.Count == 0
+                && selected.Rectangles.Count == 0
+                && selected.Ellipses.Count == 0
                 && selected.Texts.Count == 1
-                && selected.Images == null
-                && selected.Blocks == null);
+                && selected.Images.Count == 0
+                && selected.Blocks.Count == 0);
         }
 
         public bool HaveOneImageSelected(IBlock selected)
         {
-            return (selected.Points == null
-                && selected.Lines == null
-                && selected.Rectangles == null
-                && selected.Ellipses == null
-                && selected.Texts == null
-                && selected.Images != null
+            return (selected.Points.Count == 0
+                && selected.Lines.Count == 0
+                && selected.Rectangles.Count == 0
+                && selected.Ellipses.Count == 0
+                && selected.Texts.Count == 0
                 && selected.Images.Count == 1
-                && selected.Blocks == null);
+                && selected.Blocks.Count == 0);
         }
 
         public bool HaveOneBlockSelected(IBlock selected)
         {
-            return (selected.Points == null
-                && selected.Lines == null
-                && selected.Rectangles == null
-                && selected.Ellipses == null
-                && selected.Texts == null
-                && selected.Images == null
-                && selected.Blocks != null
+            return (selected.Points.Count == 0
+                && selected.Lines.Count == 0
+                && selected.Rectangles.Count == 0
+                && selected.Ellipses.Count == 0
+                && selected.Texts.Count == 0
+                && selected.Images.Count == 0
                 && selected.Blocks.Count == 1);
         }
 
@@ -1095,65 +963,18 @@ namespace Sheet.Block
 
         #region HitTest
 
-        private void HitTestClean(IBlock selected)
-        {
-            if (selected.Points != null && selected.Points.Count == 0)
-            {
-                selected.Points = null;
-            }
-
-            if (selected.Lines != null && selected.Lines.Count == 0)
-            {
-                selected.Lines = null;
-            }
-
-            if (selected.Rectangles != null && selected.Rectangles.Count == 0)
-            {
-                selected.Rectangles = null;
-            }
-
-            if (selected.Ellipses != null && selected.Ellipses.Count == 0)
-            {
-                selected.Ellipses = null;
-            }
-
-            if (selected.Texts != null && selected.Texts.Count == 0)
-            {
-                selected.Texts = null;
-            }
-
-            if (selected.Images != null && selected.Images.Count == 0)
-            {
-                selected.Images = null;
-            }
-
-            if (selected.Blocks != null && selected.Blocks.Count == 0)
-            {
-                selected.Blocks = null;
-            }
-        }
-
-        public bool HitTest(IEnumerable<IPoint> points, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<IPoint> points, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne)
         {
             foreach (var point in points)
             {
                 if (_blockHelper.HitTest(point, rect, relativeTo))
                 {
-                    if (select)
+                    if (selected != null)
                     {
-                        if (!_blockHelper.GetIsSelected(point))
-                        {
-                            Select(point);
-                            selected.Points.Add(point);
-                        }
-                        else
-                        {
-                            Deselect(point);
-                            selected.Points.Remove(point);
-                        }
+                        selected.Points.Add(point);
                     }
 
-                    if (onlyFirst)
+                    if (findOnlyOne)
                     {
                         return true;
                     }
@@ -1162,27 +983,18 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IEnumerable<ILine> lines, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select)
+        public bool HitTest(IEnumerable<ILine> lines, ImmutableRect rect, IBlock selected, bool findOnlyOne)
         {
             foreach (var line in lines)
             {
                 if (_blockHelper.HitTest(line, rect))
                 {
-                    if (select)
+                    if (selected != null)
                     {
-                        if (_blockHelper.IsSelected(line))
-                        {
-                            Select(line);
-                            selected.Lines.Add(line);
-                        }
-                        else
-                        {
-                            Deselect(line);
-                            selected.Lines.Remove(line);
-                        }
+                        selected.Lines.Add(line);
                     }
 
-                    if (onlyFirst)
+                    if (findOnlyOne)
                     {
                         return true;
                     }
@@ -1191,27 +1003,18 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IEnumerable<IRectangle> rectangles, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<IRectangle> rectangles, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne)
         {
             foreach (var rectangle in rectangles)
             {
                 if (_blockHelper.HitTest(rectangle, rect, relativeTo))
                 {
-                    if (select)
+                    if (selected != null)
                     {
-                        if (_blockHelper.IsSelected(rectangle))
-                        {
-                            Select(rectangle);
-                            selected.Rectangles.Add(rectangle);
-                        }
-                        else
-                        {
-                            Deselect(rectangle);
-                            selected.Rectangles.Remove(rectangle);
-                        }
+                        selected.Rectangles.Add(rectangle);
                     }
 
-                    if (onlyFirst)
+                    if (findOnlyOne)
                     {
                         return true;
                     }
@@ -1220,27 +1023,18 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IEnumerable<IEllipse> ellipses, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<IEllipse> ellipses, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne)
         {
             foreach (var ellipse in ellipses)
             {
                 if (_blockHelper.HitTest(ellipse, rect, relativeTo))
                 {
-                    if (select)
+                    if (selected != null)
                     {
-                        if (_blockHelper.IsSelected(ellipse))
-                        {
-                            Select(ellipse);
-                            selected.Ellipses.Add(ellipse);
-                        }
-                        else
-                        {
-                            Deselect(ellipse);
-                            selected.Ellipses.Remove(ellipse);
-                        }
+                        selected.Ellipses.Add(ellipse);
                     }
 
-                    if (onlyFirst)
+                    if (findOnlyOne)
                     {
                         return true;
                     }
@@ -1249,27 +1043,18 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IEnumerable<IText> texts, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<IText> texts, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne)
         {
             foreach (var text in texts)
             {
                 if (_blockHelper.HitTest(text, rect, relativeTo))
                 {
-                    if (select)
+                    if (selected != null)
                     {
-                        if (_blockHelper.IsSelected(text))
-                        {
-                            Select(text);
-                            selected.Texts.Add(text);
-                        }
-                        else
-                        {
-                            Deselect(text);
-                            selected.Texts.Remove(text);
-                        }
+                        selected.Texts.Add(text);
                     }
 
-                    if (onlyFirst)
+                    if (findOnlyOne)
                     {
                         return true;
                     }
@@ -1278,27 +1063,18 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IEnumerable<IImage> images, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo)
+        public bool HitTest(IEnumerable<IImage> images, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne)
         {
             foreach (var image in images)
             {
                 if (_blockHelper.HitTest(image, rect, relativeTo))
                 {
-                    if (select)
+                    if (selected != null)
                     {
-                        if (_blockHelper.IsSelected(image))
-                        {
-                            Select(image);
-                            selected.Images.Add(image);
-                        }
-                        else
-                        {
-                            Deselect(image);
-                            selected.Images.Remove(image);
-                        }
+                        selected.Images.Add(image);
                     }
 
-                    if (onlyFirst)
+                    if (findOnlyOne)
                     {
                         return true;
                     }
@@ -1307,29 +1083,18 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IEnumerable<IBlock> blocks, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo)
+        public bool HitTest(IEnumerable<IBlock> blocks, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne)
         {
             foreach (var block in blocks)
             {
-                bool result = HitTest(block, selected, rect, true, selectInsideBlock, relativeTo);
-
-                if (result)
+                if (HitTest(block, rect, relativeTo, null, true))
                 {
-                    if (select && !selectInsideBlock)
+                    if (selected != null)
                     {
-                        if (!selected.Blocks.Contains(block))
-                        {
-                            selected.Blocks.Add(block);
-                            Select(block);
-                        }
-                        else
-                        {
-                            selected.Blocks.Remove(block);
-                            Deselect(block);
-                        }
+                        selected.Blocks.Add(block);
                     }
 
-                    if (onlyFirst)
+                    if (findOnlyOne)
                     {
                         return true;
                     }
@@ -1338,209 +1103,131 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IBlock parent, IBlock selected, ImmutableRect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo)
+        public bool HitTest(IBlock block, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne)
         {
-            bool result = false;
-
-            result = HitTest(parent.Points, selected, rect, onlyFirst, selectInsideBlock, relativeTo);
-            if (result && onlyFirst)
+            if (HitTest(block.Points, rect, relativeTo, selected, findOnlyOne))
             {
-                return true;
+                if (findOnlyOne)
+                {
+                    return true;
+                }
             }
 
-            result = HitTest(parent.Texts, selected, rect, onlyFirst, selectInsideBlock, relativeTo);
-            if (result && onlyFirst)
+            if (HitTest(block.Texts, rect, relativeTo, selected, findOnlyOne))
             {
-                return true;
+                if (findOnlyOne)
+                {
+                    return true;
+                }
             }
 
-            result = HitTest(parent.Images, selected, rect, onlyFirst, selectInsideBlock, relativeTo);
-            if (result && onlyFirst)
+            if (HitTest(block.Images, rect, relativeTo, selected, findOnlyOne))
             {
-                return true;
+                if (findOnlyOne)
+                {
+                    return true;
+                }
             }
 
-            result = HitTest(parent.Lines, selected, rect, onlyFirst, selectInsideBlock);
-            if (result && onlyFirst)
+            if (HitTest(block.Lines, rect, selected, findOnlyOne))
             {
-                return true;
+                if (findOnlyOne)
+                {
+                    return true;
+                }
             }
 
-            result = HitTest(parent.Rectangles, selected, rect, onlyFirst, selectInsideBlock, relativeTo);
-            if (result && onlyFirst)
+            if (HitTest(block.Rectangles, rect, relativeTo, selected, findOnlyOne))
             {
-                return true;
+                if (findOnlyOne)
+                {
+                    return true;
+                }
             }
 
-            result = HitTest(parent.Ellipses, selected, rect, onlyFirst, selectInsideBlock, relativeTo);
-            if (result && onlyFirst)
+            if (HitTest(block.Ellipses, rect, relativeTo, selected, findOnlyOne))
             {
-                return true;
+                if (findOnlyOne)
+                {
+                    return true;
+                }
             }
 
-            result = HitTest(parent.Blocks, selected, rect, onlyFirst, false, selectInsideBlock, relativeTo);
-            if (result && onlyFirst)
+            if (HitTest(block.Blocks, rect, relativeTo, selected, findOnlyOne))
             {
-                return true;
+                if (findOnlyOne)
+                {
+                    return true;
+                }
             }
 
             return false;
         }
 
-        public bool HitTestClick(ISheet sheet, IBlock parent, IBlock selected, ImmutablePoint p, double size, bool selectInsideBlock, bool resetSelected)
+        public bool HitTest(ISheet sheet, IBlock block, ImmutableRect rect, IBlock selected, bool findOnlyOne)
         {
-            if (resetSelected)
+            if (HitTest(block.Points, rect, sheet.GetParent(), selected, findOnlyOne))
             {
-                selected.Init();
-            }
-            else
-            {
-                selected.ReInit();
-            }
-
-            var rect = new ImmutableRect(p.X - size, p.Y - size, 2 * size, 2 * size);
-
-            if (parent.Points != null)
-            {
-                bool result = HitTest(parent.Points, selected, rect, true, true, sheet.GetParent());
-                if (result)
+                if (findOnlyOne)
                 {
-                    HitTestClean(selected);
                     return true;
                 }
             }
 
-            if (parent.Texts != null)
+            if (HitTest(block.Texts, rect, sheet.GetParent(), selected, findOnlyOne))
             {
-                bool result = HitTest(parent.Texts, selected, rect, true, true, sheet.GetParent());
-                if (result)
+                if (findOnlyOne)
                 {
-                    HitTestClean(selected);
                     return true;
                 }
             }
 
-            if (parent.Images != null)
+            if (HitTest(block.Images, rect, sheet.GetParent(), selected, findOnlyOne))
             {
-                bool result = HitTest(parent.Images, selected, rect, true, true, sheet.GetParent());
-                if (result)
+                if (findOnlyOne)
                 {
-                    HitTestClean(selected);
                     return true;
                 }
             }
 
-            if (parent.Lines != null)
+            if (HitTest(block.Lines, rect, selected, findOnlyOne))
             {
-                bool result = HitTest(parent.Lines, selected, rect, true, true);
-                if (result)
+                if (findOnlyOne)
                 {
-                    HitTestClean(selected);
                     return true;
                 }
             }
 
-            if (parent.Rectangles != null)
+            if (HitTest(block.Rectangles, rect, sheet.GetParent(), selected, findOnlyOne))
             {
-                bool result = HitTest(parent.Rectangles, selected, rect, true, true, sheet.GetParent());
-                if (result)
+                if (findOnlyOne)
                 {
-                    HitTestClean(selected);
                     return true;
                 }
             }
 
-            if (parent.Ellipses != null)
+            if (HitTest(block.Ellipses, rect, sheet.GetParent(), selected, findOnlyOne))
             {
-                bool result = HitTest(parent.Ellipses, selected, rect, true, true, sheet.GetParent());
-                if (result)
+                if (findOnlyOne)
                 {
-                    HitTestClean(selected);
                     return true;
                 }
             }
 
-            if (parent.Blocks != null)
+            if (HitTest(block.Blocks, rect, sheet.GetParent(), selected, findOnlyOne))
             {
-                bool result = HitTest(parent.Blocks, selected, rect, true, true, selectInsideBlock, sheet.GetParent());
-                if (result)
+                if (findOnlyOne)
                 {
-                    HitTestClean(selected);
                     return true;
                 }
             }
 
-            HitTestClean(selected);
             return false;
         }
 
-        public bool HitTestForBlocks(ISheet sheet, IBlock parent, IBlock selected, ImmutablePoint p, double size)
+        public bool HitTest(ISheet sheet, IBlock block, ImmutablePoint p, double size, IBlock selected, bool findOnlyOne)
         {
-            selected.Init();
-
-            var rect = new ImmutableRect(p.X - size, p.Y - size, 2 * size, 2 * size);
-
-            if (parent.Blocks != null)
-            {
-                bool result = HitTest(parent.Blocks, selected, rect, true, true, false, sheet.GetParent());
-                if (result)
-                {
-                    HitTestClean(selected);
-                    return true;
-                }
-            }
-
-            HitTestClean(selected);
-            return false;
-        }
-
-        public void HitTestSelectionRect(ISheet sheet, IBlock parent, IBlock selected, ImmutableRect rect, bool resetSelected)
-        {
-            if (resetSelected)
-            {
-                selected.Init();
-            }
-            else
-            {
-                selected.ReInit();
-            }
-
-            if (parent.Points != null)
-            {
-                HitTest(parent.Points, selected, rect, false, true, sheet.GetParent());
-            }
-
-            if (parent.Lines != null)
-            {
-                HitTest(parent.Lines, selected, rect, false, true);
-            }
-
-            if (parent.Rectangles != null)
-            {
-                HitTest(parent.Rectangles, selected, rect, false, true, sheet.GetParent());
-            }
-
-            if (parent.Ellipses != null)
-            {
-                HitTest(parent.Ellipses, selected, rect, false, true, sheet.GetParent());
-            }
-
-            if (parent.Texts != null)
-            {
-                HitTest(parent.Texts, selected, rect, false, true, sheet.GetParent());
-            }
-
-            if (parent.Images != null)
-            {
-                HitTest(parent.Images, selected, rect, false, true, sheet.GetParent());
-            }
-
-            if (parent.Blocks != null)
-            {
-                HitTest(parent.Blocks, selected, rect, false, true, false, sheet.GetParent());
-            }
-
-            HitTestClean(selected);
+            return HitTest(sheet, block, new ImmutableRect(p.X - size, p.Y - size, 2 * size, 2 * size), selected, findOnlyOne);
         }
 
         #endregion

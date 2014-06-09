@@ -977,6 +977,11 @@ namespace Sheet
             _sheetController.SelecteAll();
         }
 
+        private void EditDeselectAll_Click(object sender, RoutedEventArgs e)
+        {
+            _sheetController.DeselectAll();
+        }
+
         private void EditCreateBlock_Click(object sender, RoutedEventArgs e)
         {
             _sheetController.CreateBlock();

@@ -23,17 +23,7 @@ namespace Sheet.Block.Model
         public IList<IText> Texts { get; set; }
         public IList<IImage> Images { get; set; }
         public IList<IBlock> Blocks { get; set; }
-        public XBlock(int id, double x, double y, double width, double height, int dataId, string name)
-        {
-            Id = id;
-            X = x;
-            Y = y;
-            Width = width;
-            Height = height;
-            DataId = dataId;
-            Name = name;
-        }
-        public void Init()
+        public XBlock()
         {
             Backgroud = new XArgbColor(0, 0, 0, 0);
             Points = new List<IPoint>();
@@ -44,42 +34,15 @@ namespace Sheet.Block.Model
             Images = new List<IImage>();
             Blocks = new List<IBlock>();
         }
-        public void ReInit()
+        public XBlock(int id, double x, double y, double width, double height, int dataId, string name) : this()
         {
-            if (Points == null)
-            {
-                Points = new List<IPoint>();
-            }
-
-            if (Lines == null)
-            {
-                Lines = new List<ILine>();
-            }
-
-            if (Rectangles == null)
-            {
-                Rectangles = new List<IRectangle>();
-            }
-
-            if (Ellipses == null)
-            {
-                Ellipses = new List<IEllipse>();
-            }
-
-            if (Texts == null)
-            {
-                Texts = new List<IText>();
-            }
-
-            if (Images == null)
-            {
-                Images = new List<IImage>();
-            }
-
-            if (Blocks == null)
-            {
-                Blocks = new List<IBlock>();
-            }
+            Id = id;
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+            DataId = dataId;
+            Name = name;
         }
     }
 }

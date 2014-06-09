@@ -495,7 +495,6 @@ namespace Sheet.Block
         public IBlock Deserialize(ISheet sheet, IBlock parent, BlockItem blockItem, double thickness)
         {
             var block = _blockFactory.CreateBlock(blockItem.Id, blockItem.X, blockItem.Y, blockItem.Width, blockItem.Height, blockItem.DataId, blockItem.Name, blockItem.Backgroud);
-            block.Init();
 
             foreach (var textItem in blockItem.Texts)
             {

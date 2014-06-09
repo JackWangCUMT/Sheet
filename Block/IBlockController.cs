@@ -64,8 +64,7 @@ namespace Sheet.Block
         void Select(IImage image);
         void Select(IBlock parent);
 
-        void SelectContent(IBlock selected, IBlock content);
-        void DeselectContent(IBlock selected);
+        void SelectAndAdd(IBlock content, IBlock selected);
 
         bool HaveSelected(IBlock selected);
         bool HaveOnePointSelected(IBlock selected);
@@ -76,18 +75,16 @@ namespace Sheet.Block
         bool HaveOneImageSelected(IBlock selected);
         bool HaveOneBlockSelected(IBlock selected);
 
-        bool HitTest(IEnumerable<IPoint> points, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<ILine> lines, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select);
-        bool HitTest(IEnumerable<IRectangle> rectangles, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<IEllipse> ellipses, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<IText> texts, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<IImage> images, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, object relativeTo);
-        bool HitTest(IEnumerable<IBlock> blocks, IBlock selected, ImmutableRect rect, bool onlyFirst, bool select, bool selectInsideBlock, object relativeTo);
-        bool HitTest(IBlock parent, IBlock selected, ImmutableRect rect, bool onlyFirst, bool selectInsideBlock, object relativeTo);
-
-        bool HitTestClick(ISheet sheet, IBlock parent, IBlock selected, ImmutablePoint p, double size, bool selectInsideBlock, bool resetSelected);
-        bool HitTestForBlocks(ISheet sheet, IBlock parent, IBlock selected, ImmutablePoint p, double size);
-        void HitTestSelectionRect(ISheet sheet, IBlock parent, IBlock selected, ImmutableRect rect, bool resetSelected);
+        bool HitTest(IEnumerable<IPoint> points, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne);
+        bool HitTest(IEnumerable<ILine> lines, ImmutableRect rect, IBlock selected, bool findOnlyOne);
+        bool HitTest(IEnumerable<IRectangle> rectangles, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne);
+        bool HitTest(IEnumerable<IEllipse> ellipses, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne);
+        bool HitTest(IEnumerable<IText> texts, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne);
+        bool HitTest(IEnumerable<IImage> images, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne);
+        bool HitTest(IEnumerable<IBlock> blocks, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne);
+        bool HitTest(IBlock block, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne);
+        bool HitTest(ISheet sheet, IBlock block, ImmutableRect rect, IBlock selected, bool findOnlyOne);
+        bool HitTest(ISheet sheet, IBlock block, ImmutablePoint p, double size, IBlock selected, bool findOnlyOne);
 
         void ToggleFill(IRectangle rectangle);
         void ToggleFill(IEllipse ellipse);

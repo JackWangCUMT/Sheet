@@ -69,9 +69,10 @@
                 <MenuItem x:Name="EditReset" Header="R_eset" InputGestureText="Ctrl+Del" Click="EditReset_Click"/>
                 <Separator/>
                 <MenuItem x:Name="EditSelectAll" Header="_Select All" InputGestureText="Ctrl+A" Click="EditSelectAll_Click"/>
+                <MenuItem x:Name="EditDeselectAll" Header="Deselect A_ll" InputGestureText="" Click="EditDeselectAll_Click"/>
                 <Separator/>
                 <MenuItem x:Name="EditCreateBlock" Header="Create _Block..." InputGestureText="B" Click="EditCreateBlock_Click"/>
-                <MenuItem x:Name="EditBreakBlock" Header="Break B_lock" InputGestureText="Ctrl+B" Click="EditBreakBlock_Click"/>
+                <MenuItem x:Name="EditBreakBlock" Header="Break Bl_ock" InputGestureText="Ctrl+B" Click="EditBreakBlock_Click"/>
                 <Separator/>
                 <MenuItem x:Name="EditMoveUp" Header="Move U_p" InputGestureText="Up" Click="EditMoveUp_Click"/>
                 <MenuItem x:Name="EditMoveDown" Header="Move Do_wn" InputGestureText="Down" Click="EditMoveDown_Click"/>
