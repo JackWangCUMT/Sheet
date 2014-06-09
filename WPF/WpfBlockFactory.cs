@@ -80,6 +80,16 @@ namespace Sheet.WPF
             return null;
         }
 
+        private SolidColorBrush ToSolidColorBrush(ItemColor color)
+        {
+            return new SolidColorBrush(Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue));
+        }
+
+        private SolidColorBrush ToSolidColorBrush(IArgbColor color)
+        {
+            return new SolidColorBrush(Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue));
+        }
+
         #endregion
 
         #region Create
@@ -137,8 +147,8 @@ namespace Sheet.WPF
 
         public ILine CreateLine(double thickness, double x1, double y1, double x2, double y2, ItemColor stroke)
         {
-            var strokeBrush = new SolidColorBrush(Color.FromArgb(stroke.Alpha, stroke.Red, stroke.Green, stroke.Blue));
-
+            var strokeBrush = ToSolidColorBrush(stroke);
+            
             strokeBrush.Freeze();
 
             var line = new Line()
@@ -168,8 +178,8 @@ namespace Sheet.WPF
 
         public IRectangle CreateRectangle(double thickness, double x, double y, double width, double height, bool isFilled, ItemColor stroke, ItemColor fill)
         {
-            var strokeBrush = new SolidColorBrush(Color.FromArgb(stroke.Alpha, stroke.Red, stroke.Green, stroke.Blue));
-            var fillBrush = new SolidColorBrush(Color.FromArgb(fill.Alpha, fill.Red, fill.Green, fill.Blue));
+            var strokeBrush = ToSolidColorBrush(stroke);
+            var fillBrush = ToSolidColorBrush(fill);
 
             strokeBrush.Freeze();
             fillBrush.Freeze();
@@ -195,8 +205,8 @@ namespace Sheet.WPF
 
         public IEllipse CreateEllipse(double thickness, double x, double y, double width, double height, bool isFilled, ItemColor stroke, ItemColor fill)
         {
-            var strokeBrush = new SolidColorBrush(Color.FromArgb(stroke.Alpha, stroke.Red, stroke.Green, stroke.Blue));
-            var fillBrush = new SolidColorBrush(Color.FromArgb(fill.Alpha, fill.Red, fill.Green, fill.Blue));
+            var strokeBrush = ToSolidColorBrush(stroke);
+            var fillBrush = ToSolidColorBrush(fill);
 
             strokeBrush.Freeze();
             fillBrush.Freeze();
@@ -222,8 +232,8 @@ namespace Sheet.WPF
 
         public IText CreateText(string text, double x, double y, double width, double height, int halign, int valign, double fontSize, ItemColor backgroud, ItemColor foreground)
         {
-            var backgroundBrush = new SolidColorBrush(Color.FromArgb(backgroud.Alpha, backgroud.Red, backgroud.Green, backgroud.Blue));
-            var foregroundBrush = new SolidColorBrush(Color.FromArgb(foreground.Alpha, foreground.Red, foreground.Green, foreground.Blue));
+            var backgroundBrush = ToSolidColorBrush(backgroud);
+            var foregroundBrush = ToSolidColorBrush(foreground);
 
             backgroundBrush.Freeze();
             foregroundBrush.Freeze();
