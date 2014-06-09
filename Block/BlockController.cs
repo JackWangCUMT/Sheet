@@ -882,7 +882,7 @@ namespace Sheet.Block
                 || selected.Blocks.Count > 0);
         }
 
-        public bool HaveOnePointSelected(IBlock selected)
+        public bool HaveOnlyOnePointSelected(IBlock selected)
         {
             return (selected.Points.Count == 1
                 && selected.Lines.Count == 0
@@ -893,7 +893,7 @@ namespace Sheet.Block
                 && selected.Blocks.Count == 0);
         }
 
-        public bool HaveOneLineSelected(IBlock selected)
+        public bool HaveOnlyOneLineSelected(IBlock selected)
         {
             return (selected.Points.Count == 0
                 && selected.Lines.Count == 1
@@ -904,7 +904,7 @@ namespace Sheet.Block
                 && selected.Blocks.Count == 0);
         }
 
-        public bool HaveOneRectangleSelected(IBlock selected)
+        public bool HaveOnlyOneRectangleSelected(IBlock selected)
         {
             return (selected.Points.Count == 0
                 && selected.Lines.Count == 0
@@ -915,7 +915,7 @@ namespace Sheet.Block
                 && selected.Blocks.Count == 0);
         }
 
-        public bool HaveOneEllipseSelected(IBlock selected)
+        public bool HaveOnlyOneEllipseSelected(IBlock selected)
         {
             return (selected.Points.Count == 0
                 && selected.Lines.Count == 0
@@ -926,7 +926,7 @@ namespace Sheet.Block
                 && selected.Blocks.Count == 0);
         }
 
-        public bool HaveOneTextSelected(IBlock selected)
+        public bool HaveOnlyOneTextSelected(IBlock selected)
         {
             return (selected.Points.Count == 0
                 && selected.Lines.Count == 0
@@ -937,7 +937,7 @@ namespace Sheet.Block
                 && selected.Blocks.Count == 0);
         }
 
-        public bool HaveOneImageSelected(IBlock selected)
+        public bool HaveOnlyOneImageSelected(IBlock selected)
         {
             return (selected.Points.Count == 0
                 && selected.Lines.Count == 0
@@ -948,7 +948,7 @@ namespace Sheet.Block
                 && selected.Blocks.Count == 0);
         }
 
-        public bool HaveOneBlockSelected(IBlock selected)
+        public bool HaveOnlyOneBlockSelected(IBlock selected)
         {
             return (selected.Points.Count == 0
                 && selected.Lines.Count == 0
@@ -1083,11 +1083,11 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IEnumerable<IBlock> blocks, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne)
+        public bool HitTest(IEnumerable<IBlock> blocks, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne, bool findInsideBlock)
         {
             foreach (var block in blocks)
             {
-                if (HitTest(block, rect, relativeTo, null, true))
+                if (HitTest(block, rect, relativeTo, findInsideBlock ? selected : null, true, false))
                 {
                     if (selected != null)
                     {
@@ -1103,7 +1103,7 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(IBlock block, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne)
+        public bool HitTest(IBlock block, ImmutableRect rect, object relativeTo, IBlock selected, bool findOnlyOne, bool findInsideBlock)
         {
             if (HitTest(block.Points, rect, relativeTo, selected, findOnlyOne))
             {
@@ -1153,7 +1153,7 @@ namespace Sheet.Block
                 }
             }
 
-            if (HitTest(block.Blocks, rect, relativeTo, selected, findOnlyOne))
+            if (HitTest(block.Blocks, rect, relativeTo, selected, findOnlyOne, findInsideBlock))
             {
                 if (findOnlyOne)
                 {
@@ -1164,7 +1164,7 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(ISheet sheet, IBlock block, ImmutableRect rect, IBlock selected, bool findOnlyOne)
+        public bool HitTest(ISheet sheet, IBlock block, ImmutableRect rect, IBlock selected, bool findOnlyOne, bool findInsideBlock)
         {
             if (HitTest(block.Points, rect, sheet.GetParent(), selected, findOnlyOne))
             {
@@ -1214,7 +1214,7 @@ namespace Sheet.Block
                 }
             }
 
-            if (HitTest(block.Blocks, rect, sheet.GetParent(), selected, findOnlyOne))
+            if (HitTest(block.Blocks, rect, sheet.GetParent(), selected, findOnlyOne, findInsideBlock))
             {
                 if (findOnlyOne)
                 {
@@ -1225,9 +1225,9 @@ namespace Sheet.Block
             return false;
         }
 
-        public bool HitTest(ISheet sheet, IBlock block, ImmutablePoint p, double size, IBlock selected, bool findOnlyOne)
+        public bool HitTest(ISheet sheet, IBlock block, ImmutablePoint p, double size, IBlock selected, bool findOnlyOne, bool findInsideBlock)
         {
-            return HitTest(sheet, block, new ImmutableRect(p.X - size, p.Y - size, 2 * size, 2 * size), selected, findOnlyOne);
+            return HitTest(sheet, block, new ImmutableRect(p.X - size, p.Y - size, 2 * size, 2 * size), selected, findOnlyOne, findInsideBlock);
         }
 
         #endregion
