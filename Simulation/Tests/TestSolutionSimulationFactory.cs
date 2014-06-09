@@ -116,37 +116,16 @@ namespace Sheet.Simulation.Tests
 
         #endregion
 
-        #region Simulation
+        #region Update
 
-        private void Initialize()
-        {
-            _factory = new SimulationController();
-            _clock = new Clock();
-
-            // create simulation context
-            _factory.SimulationContext = new SimulationContext()
-            {
-                Cache = null,
-                SimulationClock = _clock
-            };
-
-            _factory.IsConsole = false;
-
-            // disable Console debug output
-            SimulationSettings.EnableDebug = false;
-
-            // disable Log for Run()
-            SimulationSettings.EnableLog = false;
-        }
-
-        private void UpdateBlocksState(Signal[] signals, WpfBlockSimulationHelper helper)
+        private void UpdateSignalBlockStates(Signal[] signals, IBlockSimulationHelper helper)
         {
             bool update = false;
 
             // check for changes after 1st cycle
             if (_clock.Cycle > 1)
             {
-                foreach(var signal in signals)
+                foreach (var signal in signals)
                 {
                     var tag = signal.Tag;
                     if (tag != null && tag.Simulation != null && tag.Simulation.State.State != tag.Simulation.State.PreviousState)
@@ -189,13 +168,37 @@ namespace Sheet.Simulation.Tests
         {
             var signals = contexts.SelectMany(x => x.Children).Where(y => y is Signal).Cast<Signal>().ToArray();
             var dispatcher = Dispatcher.CurrentDispatcher;
-
             var helper = new WpfBlockSimulationHelper();
 
-            var update = new Action(() => UpdateBlocksState(signals, helper));
+            var update = new Action(() => UpdateSignalBlockStates(signals, helper));
             var updateOnUIThread = new Action(() => dispatcher.BeginInvoke(update));
 
             return updateOnUIThread;
+        }
+
+        #endregion
+
+        #region Simulation
+
+        private void Initialize()
+        {
+            _factory = new SimulationController();
+            _clock = new Clock();
+
+            // create simulation context
+            _factory.SimulationContext = new SimulationContext()
+            {
+                Cache = null,
+                SimulationClock = _clock
+            };
+
+            _factory.IsConsole = false;
+
+            // disable Console debug output
+            SimulationSettings.EnableDebug = false;
+
+            // disable Log for Run()
+            SimulationSettings.EnableLog = false;
         }
 
         public void Start()
