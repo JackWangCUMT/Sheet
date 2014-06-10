@@ -285,7 +285,8 @@ namespace Sheet.Controller
             {
                 if (_blockController.HaveSelected(State.SelectedBlock))
                 {
-                    var copy = _blockController.ShallowCopy(State.SelectedBlock);
+                    var copy = _blockFactory.CreateBlock(State.SelectedBlock.Id, State.SelectedBlock.X, State.SelectedBlock.Y, State.SelectedBlock.Width, State.SelectedBlock.Height, State.SelectedBlock.DataId, State.SelectedBlock.Name, null);
+                    _blockController.ShallowCopy(State.SelectedBlock, copy);
                     State.HistoryController.Register("Cut");
                     CopyText(copy);
                     Delete(copy);
@@ -343,7 +344,8 @@ namespace Sheet.Controller
             {
                 if (_blockController.HaveSelected(State.SelectedBlock))
                 {
-                    var copy = _blockController.ShallowCopy(State.SelectedBlock);
+                    var copy = _blockFactory.CreateBlock(State.SelectedBlock.Id, State.SelectedBlock.X, State.SelectedBlock.Y, State.SelectedBlock.Width, State.SelectedBlock.Height, State.SelectedBlock.DataId, State.SelectedBlock.Name, null);
+                    _blockController.ShallowCopy(State.SelectedBlock, copy);
                     State.HistoryController.Register("Cut");
                     CopyJson(copy);
                     Delete(copy);
@@ -436,7 +438,8 @@ namespace Sheet.Controller
         {
             if (_blockController.HaveSelected(State.SelectedBlock))
             {
-                var copy = _blockController.ShallowCopy(State.SelectedBlock);
+                var copy = _blockFactory.CreateBlock(State.SelectedBlock.Id, State.SelectedBlock.X, State.SelectedBlock.Y, State.SelectedBlock.Width, State.SelectedBlock.Height, State.SelectedBlock.DataId, State.SelectedBlock.Name, null);
+                _blockController.ShallowCopy(State.SelectedBlock, copy);
                 State.HistoryController.Register("Delete");
                 Delete(copy);
             }
@@ -596,11 +599,12 @@ namespace Sheet.Controller
         {
             if (_blockController.HaveSelected(State.SelectedBlock))
             {
-                IBlock moveBlock = _blockController.ShallowCopy(State.SelectedBlock);
+                var copy = _blockFactory.CreateBlock(State.SelectedBlock.Id, State.SelectedBlock.X, State.SelectedBlock.Y, State.SelectedBlock.Width, State.SelectedBlock.Height, State.SelectedBlock.DataId, State.SelectedBlock.Name, null);
+                _blockController.ShallowCopy(State.SelectedBlock, copy);
                 FinishEdit();
                 State.HistoryController.Register("Move");
-                _blockController.Select(moveBlock);
-                State.SelectedBlock = moveBlock;
+                _blockController.Select(copy);
+                State.SelectedBlock = copy;
                 _blockController.MoveDelta(x, y, State.SelectedBlock);
             }
         }
@@ -652,12 +656,13 @@ namespace Sheet.Controller
         {
             if (State.IsFirstMove)
             {
-                IBlock moveBlock = _blockController.ShallowCopy(State.SelectedBlock);
+                var copy = _blockFactory.CreateBlock(State.SelectedBlock.Id, State.SelectedBlock.X, State.SelectedBlock.Y, State.SelectedBlock.Width, State.SelectedBlock.Height, State.SelectedBlock.DataId, State.SelectedBlock.Name, null);
+                _blockController.ShallowCopy(State.SelectedBlock, copy);
                 State.HistoryController.Register("Move");
                 State.IsFirstMove = false;
                 State.CursorController.Set(SheetCursor.Move);
-                _blockController.Select(moveBlock);
-                State.SelectedBlock = moveBlock;
+                _blockController.Select(copy);
+                State.SelectedBlock = copy;
             }
 
             double x = _itemController.Snap(p.X, State.Options.SnapSize);
@@ -2234,7 +2239,8 @@ namespace Sheet.Controller
         {
             if (plugin.CanProcess(State.ContentSheet, State.ContentBlock, State.SelectedBlock, State.Options))
             {
-                var selectedBlock = _blockController.ShallowCopy(State.SelectedBlock);
+                var copy = _blockFactory.CreateBlock(State.SelectedBlock.Id, State.SelectedBlock.X, State.SelectedBlock.Y, State.SelectedBlock.Width, State.SelectedBlock.Height, State.SelectedBlock.DataId, State.SelectedBlock.Name, null);
+                _blockController.ShallowCopy(State.SelectedBlock, copy);
 
                 _blockController.Deselect(State.SelectedBlock);
                 State.SelectedBlock = CreateSelectedBlock();
@@ -2242,9 +2248,9 @@ namespace Sheet.Controller
                 FinishEdit();
                 State.HistoryController.Register(plugin.Name);
 
-                plugin.Process(State.ContentSheet, State.ContentBlock, selectedBlock, State.Options);
+                plugin.Process(State.ContentSheet, State.ContentBlock, copy, State.Options);
 
-                State.SelectedBlock = selectedBlock;
+                State.SelectedBlock = copy;
             }
         }
 

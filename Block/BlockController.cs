@@ -1,5 +1,4 @@
 ﻿using Sheet.Block.Core;
-using Sheet.Block.Model;
 using Sheet.Item.Model;
 using Sheet.Controller.Core;
 using System;
@@ -17,7 +16,6 @@ namespace Sheet.Block
         private readonly IServiceLocator _serviceLocator;
         private readonly IBlockHelper _blockHelper;
         private readonly IBlockSerializer _blockSerializer;
-        private readonly IBlockFactory _blockFactory;
         private readonly IPointController _pointController;
 
         public BlockController(IServiceLocator serviceLocator)
@@ -25,7 +23,6 @@ namespace Sheet.Block
             this._serviceLocator = serviceLocator;
             this._blockHelper = serviceLocator.GetInstance<IBlockHelper>();
             this._blockSerializer = serviceLocator.GetInstance<IBlockSerializer>();
-            this._blockFactory = serviceLocator.GetInstance<IBlockFactory>();
             this._pointController = serviceLocator.GetInstance<IPointController>();
         }
 
@@ -1028,15 +1025,6 @@ namespace Sheet.Block
         #endregion
 
         #region Shallow Copy
-
-        public IBlock ShallowCopy(IBlock original)
-        {
-            var copy = _blockFactory.CreateBlock(original.Id, original.X, original.Y, original.Width, original.Height, original.DataId, original.Name, null);
-
-            ShallowCopy(original, copy);
-
-            return copy;
-        }
 
         public void ShallowCopy(IBlock original, IBlock copy)
         {
