@@ -3,6 +3,7 @@ using Sheet.Block.Core;
 using Sheet.Block.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,20 +31,14 @@ namespace Sheet.Block
         {
             foreach (var block in blocks)
             {
-                if (block.Points != null)
+                foreach (var point in block.Points)
                 {
-                    foreach (var point in block.Points)
-                    {
-                        yield return new KeyValuePair<int, IPoint>(point.Id, point);
-                    }
+                    yield return new KeyValuePair<int, IPoint>(point.Id, point);
                 }
 
-                if (block.Blocks != null)
+                foreach (var kvp in GetAllPoints(block.Blocks))
                 {
-                    foreach (var kvp in GetAllPoints(block.Blocks))
-                    {
-                        yield return kvp;
-                    }
+                    yield return kvp;
                 }
             }
         }
@@ -52,20 +47,14 @@ namespace Sheet.Block
         {
             foreach (var block in blocks)
             {
-                if (block.Lines != null)
+                foreach (var line in block.Lines)
                 {
-                    foreach (var line in block.Lines)
-                    {
-                        yield return line;
-                    }
+                    yield return line;
                 }
 
-                if (block.Blocks != null)
+                foreach (var line in GetAllLines(block.Blocks))
                 {
-                    foreach (var line in GetAllLines(block.Blocks))
-                    {
-                        yield return line;
-                    }
+                    yield return line;
                 }
             }
         }
@@ -81,8 +70,7 @@ namespace Sheet.Block
                 _blockHelper.SetX1(element as ILine, p.X);
                 _blockHelper.SetY1(element as ILine, p.Y);
             };
-            var dependecy = new XDependency(line, update);
-            point.Connected.Add(dependecy);
+            point.Connected.Add(new XDependency(line, update));
         }
 
         public void ConnectEnd(IPoint point, ILine line)
@@ -92,8 +80,7 @@ namespace Sheet.Block
                 _blockHelper.SetX2(element as ILine, p.X);
                 _blockHelper.SetY2(element as ILine, p.Y);
             };
-            var dependecy = new XDependency(line, update);
-            point.Connected.Add(dependecy);
+            point.Connected.Add(new XDependency(line, update));
         }
 
         #endregion
@@ -102,7 +89,6 @@ namespace Sheet.Block
 
         public void UpdateDependencies(List<IBlock> blocks, List<IPoint> points, List<ILine> lines)
         {
-            // get all points
             var ps = GetAllPoints(blocks).ToDictionary(x => x.Key, x => x.Value);
 
             foreach (var point in points)
@@ -110,7 +96,6 @@ namespace Sheet.Block
                 ps.Add(point.Id, point);
             }
 
-            // get all lines
             var ls = GetAllLines(blocks).ToList();
 
             foreach (var line in lines)
@@ -118,21 +103,34 @@ namespace Sheet.Block
                 ls.Add(line);
             }
 
-            // update point dependencies
             foreach (var line in ls)
             {
                 if (line.StartId >= 0)
                 {
-                    var point = ps[line.StartId];
-                    line.Start = point;
-                    ConnectStart(line.Start, line);
+                    IPoint point;
+                    if (ps.TryGetValue(line.StartId, out point))
+                    {
+                        line.Start = point;
+                        ConnectStart(line.Start, line);
+                    }
+                    else
+                    {
+                        Debug.Print("Invalid line Start point Id.");
+                    }
                 }
 
                 if (line.EndId >= 0)
                 {
-                    var point = ps[line.EndId];
-                    line.End = point;
-                    ConnectEnd(line.End, line);
+                    IPoint point;
+                    if (ps.TryGetValue(line.EndId, out point))
+                    {
+                        line.End = point;
+                        ConnectEnd(line.End, line);
+                    }
+                    else
+                    {
+                        Debug.Print("Invalid line End point Id.");
+                    }
                 }
             }
         }
