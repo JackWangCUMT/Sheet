@@ -1257,47 +1257,17 @@ namespace Sheet.Block
         {
             var copy = _blockFactory.CreateBlock(original.Id, original.X, original.Y, original.Width, original.Height, original.DataId, original.Name, null);
 
+            System.Diagnostics.Debug.Print("ShallowCopy");
+
             copy.Backgroud = original.Backgroud;
-
-            if (original.Points != null)
-            {
-                copy.Points = new List<IPoint>(original.Points);
-            }
-
-            if (original.Lines != null)
-            {
-                copy.Lines = new List<ILine>(original.Lines);
-            }
-
-            if (original.Rectangles != null)
-            {
-                copy.Rectangles = new List<IRectangle>(original.Rectangles);
-            }
-
-            if (original.Ellipses != null)
-            {
-                copy.Ellipses = new List<IEllipse>(original.Ellipses);
-            }
-
-            if (original.Texts != null)
-            {
-                copy.Texts = new List<IText>(original.Texts);
-            }
-
-            if (original.Images != null)
-            {
-                copy.Images = new List<IImage>(original.Images);
-            }
-
-            if (original.Blocks != null)
-            {
-                copy.Blocks = new List<IBlock>(original.Blocks);
-            }
-
-            if (original.Points != null)
-            {
-                copy.Points = new List<IPoint>(original.Points);
-            }
+            copy.Points = new List<IPoint>(original.Points);
+            copy.Lines = new List<ILine>(original.Lines);
+            copy.Rectangles = new List<IRectangle>(original.Rectangles);
+            copy.Ellipses = new List<IEllipse>(original.Ellipses);
+            copy.Texts = new List<IText>(original.Texts);
+            copy.Images = new List<IImage>(original.Images);
+            copy.Blocks = new List<IBlock>(original.Blocks);
+            copy.Points = new List<IPoint>(original.Points);
 
             return copy;
         }
