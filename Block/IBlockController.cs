@@ -64,8 +64,6 @@ namespace Sheet.Block
         void Select(IImage image);
         void Select(IBlock parent);
 
-        void SelectAndAdd(IBlock content, IBlock selected);
-
         bool HaveSelected(IBlock selected);
         bool HaveOnlyOnePointSelected(IBlock selected);
         bool HaveOnlyOneLineSelected(IBlock selected);

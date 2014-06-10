@@ -643,51 +643,6 @@ namespace Sheet.Block
             }
         }
 
-        public void SelectAndAdd(IBlock content, IBlock selected)
-        {
-            foreach (var point in content.Points)
-            {
-                Select(point);
-                selected.Points.Add(point);
-            }
-
-            foreach (var line in content.Lines)
-            {
-                Select(line);
-                selected.Lines.Add(line);
-            }
-
-            foreach (var rectangle in content.Rectangles)
-            {
-                Select(rectangle);
-                selected.Rectangles.Add(rectangle);
-            }
-
-            foreach (var ellipse in content.Ellipses)
-            {
-                Select(ellipse);
-                selected.Ellipses.Add(ellipse);
-            }
-
-            foreach (var text in content.Texts)
-            {
-                Select(text);
-                selected.Texts.Add(text);
-            }
-
-            foreach (var image in content.Images)
-            {
-                Select(image);
-                selected.Images.Add(image);
-            }
-
-            foreach (var block in content.Blocks)
-            {
-                Select(block);
-                selected.Blocks.Add(block);
-            }
-        }
-
         #endregion
 
         #region HaveSelected
