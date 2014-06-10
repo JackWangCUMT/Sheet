@@ -441,8 +441,7 @@ namespace Sheet.Item
 
         private BlockItem DeserializeRootBlock(string[] lines, int length, ref int end, string name, int id, double x, double y, double width, double height, int dataId, ItemSerializeOptions options)
         {
-            var root = new BlockItem();
-            root.Init(id, x, y, width, height, dataId, name);
+            var root = new BlockItem(id, x, y, width, height, dataId, name);
 
             for (; end < length; end++)
             {

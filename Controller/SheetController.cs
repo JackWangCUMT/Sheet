@@ -135,10 +135,39 @@ namespace Sheet.Controller
 
         private void CreateBlocks()
         {
-            State.ContentBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "CONTENT", null);
-            State.FrameBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "FRAME", null);
-            State.GridBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "GRID", null);
-            State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+            State.ContentBlock = CreateContentBlock();
+            State.FrameBlock = CreateFrameBlock();
+            State.GridBlock = CreateGridBlock();
+            State.SelectedBlock = CreateSelectedBlock();
+        }
+
+        #endregion
+
+        #region Blocks
+
+        private IBlock CreateContentBlock()
+        {
+            return _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "CONTENT", null);
+        }
+
+        private IBlock CreateFrameBlock()
+        {
+            return _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "FRAME", null);
+        }
+
+        private IBlock CreateGridBlock()
+        {
+            return _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "GRID", null);
+        }
+
+        private IBlock CreateSelectedBlock()
+        {
+            return _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+        }
+
+        private IBlock CreateTempBlock()
+        {
+            return _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "TEMP", null);
         }
 
         #endregion
@@ -192,15 +221,13 @@ namespace Sheet.Controller
         public BlockItem SerializePage()
         {
             _blockController.Deselect(State.SelectedBlock);
-            State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+            State.SelectedBlock = CreateSelectedBlock();
 
             var grid = _blockSerializer.SerializerContents(State.GridBlock, -1, State.GridBlock.X, State.GridBlock.Y, State.GridBlock.Width, State.GridBlock.Height, -1, "GRID");
             var frame = _blockSerializer.SerializerContents(State.FrameBlock, -1, State.FrameBlock.X, State.FrameBlock.Y, State.FrameBlock.Width, State.FrameBlock.Height, -1, "FRAME");
             var content = _blockSerializer.SerializerContents(State.ContentBlock, -1, State.ContentBlock.X, State.ContentBlock.Y, State.ContentBlock.Width, State.ContentBlock.Height, -1, "CONTENT");
 
-            var page = new BlockItem();
-            page.Init(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "PAGE");
-
+            var page = new BlockItem(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "PAGE");
             page.Blocks.Add(grid);
             page.Blocks.Add(frame);
             page.Blocks.Add(content);
@@ -421,7 +448,7 @@ namespace Sheet.Controller
 
         public void SelecteAll()
         {
-            State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+            State.SelectedBlock = CreateSelectedBlock();
             _blockController.SelectAndAdd(State.ContentBlock, State.SelectedBlock);
         }
 
@@ -431,7 +458,7 @@ namespace Sheet.Controller
 
         public void DeselectAll()
         {
-            State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+            State.SelectedBlock = CreateSelectedBlock();
             _blockController.Deselect(State.ContentBlock);
         } 
 
@@ -462,7 +489,7 @@ namespace Sheet.Controller
         private void InsertContent(BlockItem block, bool select)
         {
             _blockController.Deselect(State.SelectedBlock);
-            State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+            State.SelectedBlock = CreateSelectedBlock();
             _blockController.AddContents(State.ContentSheet, block, State.ContentBlock, State.SelectedBlock, select, State.Options.LineThickness / State.ZoomController.Zoom);
         }
 
@@ -542,7 +569,7 @@ namespace Sheet.Controller
             if (register)
             {
                 _blockController.Deselect(State.SelectedBlock);
-                State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+                State.SelectedBlock = CreateSelectedBlock();
                 State.HistoryController.Register("Insert Point");
             }
 
@@ -599,7 +626,7 @@ namespace Sheet.Controller
 
         private bool CanInitMove(ImmutablePoint p)
         {
-            var temp = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "TEMP", null);
+            var temp = CreateTempBlock();
             _blockController.HitTest(State.ContentSheet, State.SelectedBlock, p, State.Options.HitTestSize, temp, false, false);
             if (_blockController.HaveSelected(temp))
             {
@@ -823,7 +850,7 @@ namespace Sheet.Controller
 
             CancelSelectionRect();
 
-            State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+            State.SelectedBlock = CreateSelectedBlock();
             _blockController.HitTest(State.ContentSheet, State.ContentBlock, new ImmutableRect(x, y, width, height), State.SelectedBlock, false, false);
             _blockController.Select(State.SelectedBlock);
 
@@ -863,7 +890,7 @@ namespace Sheet.Controller
 
         private bool TryToEditText(ImmutablePoint p)
         {
-            var temp = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "TEMP", null);
+            var temp = CreateTempBlock();
             _blockController.HitTest(State.ContentSheet, State.ContentBlock, p, State.Options.HitTestSize, temp, true, true);
             
             // check if one text is selected and ignore selected blocks
@@ -1367,7 +1394,7 @@ namespace Sheet.Controller
 
         public bool BindDataToBlock(ImmutablePoint p, DataItem dataItem)
         {
-            var temp = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "TEMP", null);
+            var temp = CreateTempBlock();
             _blockController.HitTest(State.ContentSheet, State.ContentBlock, p, State.Options.HitTestSize, temp, true, false);
 
             if (_blockController.HaveOnlyOneBlockSelected(temp))
@@ -1432,7 +1459,7 @@ namespace Sheet.Controller
                     if (!secondTryResult)
                     {
                         // remove block if failed to bind
-                        var temp = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "TEMP", null);
+                        var temp = CreateTempBlock();
                         temp.Blocks.Add(block);
                         _blockController.RemoveSelected(State.ContentSheet, State.ContentBlock, temp);
                     }
@@ -1720,7 +1747,7 @@ namespace Sheet.Controller
         public IBlock Insert(BlockItem blockItem, ImmutablePoint p, bool select)
         {
             _blockController.Deselect(State.SelectedBlock);
-            State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+            State.SelectedBlock = CreateSelectedBlock();
 
             double thickness = State.Options.LineThickness / State.ZoomController.Zoom;
 
@@ -1818,7 +1845,7 @@ namespace Sheet.Controller
 
         public IPoint TryToFindPoint(ImmutablePoint p)
         {
-            var temp = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "TEMP", null);
+            var temp = CreateTempBlock();
             _blockController.HitTest(State.ContentSheet, State.ContentBlock, p, State.Options.HitTestSize, temp, true, true);
 
             // check if one point is selected and ignore selected blocks
@@ -1850,7 +1877,7 @@ namespace Sheet.Controller
                 if (args.SourceType != ItemType.Thumb)
                 {
                     _blockController.Deselect(State.SelectedBlock);
-                    State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+                    State.SelectedBlock = CreateSelectedBlock();
                     FinishEdit();
                 }
                 else
@@ -1875,7 +1902,7 @@ namespace Sheet.Controller
                 }
 
                 _blockController.Deselect(State.SelectedBlock);
-                State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+                State.SelectedBlock = CreateSelectedBlock();
             }
 
             bool resetSelected = args.OnlyControl && _blockController.HaveSelected(State.SelectedBlock) ? false : true;
@@ -1884,7 +1911,7 @@ namespace Sheet.Controller
             {
                 _blockController.Deselect(State.ContentBlock);
 
-                State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+                State.SelectedBlock = CreateSelectedBlock();
                 bool result = _blockController.HitTest(State.ContentSheet, State.ContentBlock, new ImmutablePoint(args.SheetPosition.X, args.SheetPosition.Y), State.Options.HitTestSize, State.SelectedBlock, true, false);
 
                 if ((args.OnlyControl || !_blockController.HaveSelected(State.SelectedBlock)) && !result)
@@ -1992,7 +2019,7 @@ namespace Sheet.Controller
                 if (_blockController.HaveSelected(State.SelectedBlock))
                 {
                     _blockController.Deselect(State.SelectedBlock);
-                    State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+                    State.SelectedBlock = CreateSelectedBlock();
                 }
 
                 _blockController.HitTest(State.ContentSheet, State.ContentBlock, args.SheetPosition, State.Options.HitTestSize, State.SelectedBlock, true, false);
@@ -2035,7 +2062,7 @@ namespace Sheet.Controller
             if (State.SelectedType != ItemType.None)
             {
                 _blockController.Deselect(State.SelectedBlock);
-                State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+                State.SelectedBlock = CreateSelectedBlock();
                 FinishEdit();
                 return;
             }
@@ -2049,7 +2076,7 @@ namespace Sheet.Controller
             else
             {
                 _blockController.Deselect(State.SelectedBlock);
-                State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+                State.SelectedBlock = CreateSelectedBlock();
 
                 if (State.Mode == SheetMode.Selection && State.OverlaySheet.IsCaptured)
                 {
@@ -2170,8 +2197,7 @@ namespace Sheet.Controller
 
         private BlockItem CreatePage(BlockItem content, bool enableFrame, bool enableGrid)
         {
-            var page = new BlockItem();
-            page.Init(-1, 0.0, 0.0, 0.0, 0.0, -1, "PAGE");
+            var page = new BlockItem(-1, 0.0, 0.0, 0.0, 0.0, -1, "PAGE");
 
             if (enableGrid)
             {
@@ -2210,7 +2236,7 @@ namespace Sheet.Controller
                 var selectedBlock = _blockController.ShallowCopy(State.SelectedBlock);
 
                 _blockController.Deselect(State.SelectedBlock);
-                State.SelectedBlock = _blockFactory.CreateBlock(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "SELECTED", null);
+                State.SelectedBlock = CreateSelectedBlock();
 
                 FinishEdit();
                 State.HistoryController.Register(plugin.Name);

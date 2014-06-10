@@ -73,20 +73,28 @@ namespace Sheet.WPF
 
         private IArgbColor ToArgbColor(ItemColor color)
         {
-            if (color != null)
+            if (color == null)
             {
-                return new XArgbColor(color.Alpha, color.Red, color.Green, color.Blue);
+                throw new ArgumentNullException("color");
             }
-            return null;
+            return new XArgbColor(color.Alpha, color.Red, color.Green, color.Blue);
         }
 
         private SolidColorBrush ToSolidColorBrush(ItemColor color)
         {
+            if (color == null)
+            {
+                throw new ArgumentNullException("color");
+            }
             return new SolidColorBrush(Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue));
         }
 
         private SolidColorBrush ToSolidColorBrush(IArgbColor color)
         {
+            if (color == null)
+            {
+                throw new ArgumentNullException("color");
+            }
             return new SolidColorBrush(Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue));
         }
 
@@ -297,10 +305,11 @@ namespace Sheet.WPF
 
         public IBlock CreateBlock(int id, double x, double y, double width, double height, int dataId, string name, ItemColor backgroud)
         {
-            var xblock = new XBlock(id, x, y, width, height, dataId, name)
+            var xblock = new XBlock(id, x, y, width, height, dataId, name);
+            if (backgroud != null)
             {
-                Backgroud = ToArgbColor(backgroud)
-            };
+                xblock.Backgroud = ToArgbColor(backgroud);
+            }
             return xblock;
         }
 

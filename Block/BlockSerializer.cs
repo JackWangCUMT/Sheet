@@ -214,8 +214,7 @@ namespace Sheet.Block
 
         public BlockItem Serialize(IBlock parent)
         {
-            var blockItem = new BlockItem();
-            blockItem.Init(parent.Id, parent.X, parent.Y, parent.Width, parent.Height, parent.DataId, parent.Name);
+            var blockItem = new BlockItem(parent.Id, parent.X, parent.Y, parent.Width, parent.Height, parent.DataId, parent.Name);
             blockItem.Backgroud = ToItemColor(parent.Backgroud);
 
             if (parent.Points != null)
@@ -289,8 +288,8 @@ namespace Sheet.Block
 
             SetId(parent, id + 1);
 
-            var sheet = new BlockItem() { Backgroud = ToItemColor(parent.Backgroud) };
-            sheet.Init(id, x, y, width, height, dataId, name);
+            var sheet = new BlockItem(id, x, y, width, height, dataId, name);
+            sheet.Backgroud = ToItemColor(parent.Backgroud);
 
             if (points != null)
             {

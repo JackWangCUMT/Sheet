@@ -22,7 +22,7 @@ namespace Sheet.Item.Model
         public List<TextItem> Texts { get; set; }
         public List<ImageItem> Images { get; set; }
         public List<BlockItem> Blocks { get; set; }
-        public void Init(int id, double x, double y, double widht, double height, int dataId, string name)
+        public BlockItem(int id, double x, double y, double widht, double height, int dataId, string name)
         {
             X = x;
             Y = y;
