@@ -681,44 +681,10 @@ namespace Sheet.Block
                 selected.Images.Add(image);
             }
 
-            foreach (var parent in content.Blocks)
+            foreach (var block in content.Blocks)
             {
-                foreach (var point in parent.Points)
-                {
-                    Select(point);
-                }
-
-                foreach (var line in parent.Lines)
-                {
-                    Select(line);
-                }
-
-                foreach (var rectangle in parent.Rectangles)
-                {
-                    Select(rectangle);
-                }
-
-                foreach (var ellipse in parent.Ellipses)
-                {
-                    Select(ellipse);
-                }
-
-                foreach (var text in parent.Texts)
-                {
-                    Select(text);
-                }
-
-                foreach (var image in parent.Images)
-                {
-                    Select(image);
-                }
-
-                foreach (var block in parent.Blocks)
-                {
-                    Select(block);
-                }
-
-                selected.Blocks.Add(parent);
+                Select(block);
+                selected.Blocks.Add(block);
             }
         }
 
@@ -1087,7 +1053,7 @@ namespace Sheet.Block
 
         #endregion
 
-        #region Fill
+        #region Toggle Fill
 
         public void ToggleFill(IRectangle rectangle)
         {
@@ -1106,7 +1072,7 @@ namespace Sheet.Block
 
         #endregion
 
-        #region Copy
+        #region Shallow Copy
 
         public IBlock ShallowCopy(IBlock original)
         {
