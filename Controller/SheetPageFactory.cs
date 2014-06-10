@@ -90,6 +90,11 @@ namespace Sheet.Controller
 
             if (frameShowRows)
             {
+                // frame headers
+                CreateText(sheet, block.Texts, "I N P U T S", padding, padding, 330.0 - padding, 30.0 - padding, (int)XHorizontalAlignment.Center, (int)XVerticalAlignment.Center, 16.0, stroke);
+                CreateText(sheet, block.Texts, "F U N C T I O N", 330.0, padding, 600.0, 30.0 - padding, (int)XHorizontalAlignment.Center, (int)XVerticalAlignment.Center, 16.0, stroke);
+                CreateText(sheet, block.Texts, "O U T P U T S", 930.0, padding, 330.0 - padding, 30.0 - padding, (int)XHorizontalAlignment.Center, (int)XVerticalAlignment.Center, 16.0, stroke);
+
                 // frame left rows
                 int leftRowNumber = 1;
                 for (double y = rowsStart; y < rowsEnd; y += size)
