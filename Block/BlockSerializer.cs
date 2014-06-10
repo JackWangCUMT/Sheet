@@ -30,61 +30,40 @@ namespace Sheet.Block
 
         private int SetId(IBlock parent, int nextId)
         {
-            if (parent.Points != null)
+            foreach (var point in parent.Points)
             {
-                foreach (var point in parent.Points)
-                {
-                    point.Id = nextId++;
-                }
+                point.Id = nextId++;
             }
 
-            if (parent.Lines != null)
+            foreach (var line in parent.Lines)
             {
-                foreach (var line in parent.Lines)
-                {
-                    line.Id = nextId++;
-                }
+                line.Id = nextId++;
             }
 
-            if (parent.Rectangles != null)
+            foreach (var rectangle in parent.Rectangles)
             {
-                foreach (var rectangle in parent.Rectangles)
-                {
-                    rectangle.Id = nextId++;
-                }
+                rectangle.Id = nextId++;
             }
 
-            if (parent.Ellipses != null)
+            foreach (var ellipse in parent.Ellipses)
             {
-                foreach (var ellipse in parent.Ellipses)
-                {
-                    ellipse.Id = nextId++;
-                }
+                ellipse.Id = nextId++;
             }
 
-            if (parent.Texts != null)
+            foreach (var text in parent.Texts)
             {
-                foreach (var text in parent.Texts)
-                {
-                    text.Id = nextId++;
-                }
+                text.Id = nextId++;
             }
 
-            if (parent.Images != null)
+            foreach (var image in parent.Images)
             {
-                foreach (var image in parent.Images)
-                {
-                    image.Id = nextId++;
-                }
+                image.Id = nextId++;
             }
 
-            if (parent.Blocks != null)
+            foreach (var block in parent.Blocks)
             {
-                foreach (var block in parent.Blocks)
-                {
-                    block.Id = nextId++;
-                    nextId = SetId(block, nextId);
-                }
+                block.Id = nextId++;
+                nextId = SetId(block, nextId);
             }
 
             return nextId;
@@ -107,17 +86,17 @@ namespace Sheet.Block
 
         private ItemColor ToItemColor(IArgbColor color)
         {
-            if (color != null)
+            if (color == null)
             {
-                return new ItemColor()
-                {
-                    Alpha = color.Alpha,
-                    Red = color.Red,
-                    Green = color.Green,
-                    Blue = color.Blue
-                };
+                throw new ArgumentNullException("color");
             }
-            return null;
+            return new ItemColor()
+            {
+                Alpha = color.Alpha,
+                Red = color.Red,
+                Green = color.Green,
+                Blue = color.Blue
+            };
         }
 
         public PointItem Serialize(IPoint point)
@@ -217,60 +196,39 @@ namespace Sheet.Block
             var blockItem = new BlockItem(parent.Id, parent.X, parent.Y, parent.Width, parent.Height, parent.DataId, parent.Name);
             blockItem.Backgroud = ToItemColor(parent.Backgroud);
 
-            if (parent.Points != null)
+            foreach (var point in parent.Points)
             {
-                foreach (var point in parent.Points)
-                {
-                    blockItem.Points.Add(Serialize(point));
-                }
+                blockItem.Points.Add(Serialize(point));
             }
 
-            if (parent.Lines != null)
+            foreach (var line in parent.Lines)
             {
-                foreach (var line in parent.Lines)
-                {
-                    blockItem.Lines.Add(Serialize(line));
-                }
+                blockItem.Lines.Add(Serialize(line));
             }
 
-            if (parent.Rectangles != null)
+            foreach (var rectangle in parent.Rectangles)
             {
-                foreach (var rectangle in parent.Rectangles)
-                {
-                    blockItem.Rectangles.Add(Serialize(rectangle));
-                }
+                blockItem.Rectangles.Add(Serialize(rectangle));
             }
 
-            if (parent.Ellipses != null)
+            foreach (var ellipse in parent.Ellipses)
             {
-                foreach (var ellipse in parent.Ellipses)
-                {
-                    blockItem.Ellipses.Add(Serialize(ellipse));
-                }
+                blockItem.Ellipses.Add(Serialize(ellipse));
             }
 
-            if (parent.Texts != null)
+            foreach (var text in parent.Texts)
             {
-                foreach (var text in parent.Texts)
-                {
-                    blockItem.Texts.Add(Serialize(text));
-                }
+                blockItem.Texts.Add(Serialize(text));
             }
 
-            if (parent.Images != null)
+            foreach (var image in parent.Images)
             {
-                foreach (var image in parent.Images)
-                {
-                    blockItem.Images.Add(Serialize(image));
-                }
+                blockItem.Images.Add(Serialize(image));
             }
 
-            if (parent.Blocks != null)
+            foreach (var block in parent.Blocks)
             {
-                foreach (var block in parent.Blocks)
-                {
-                    blockItem.Blocks.Add(Serialize(block));
-                }
+                blockItem.Blocks.Add(Serialize(block));
             }
 
             return blockItem;
@@ -291,60 +249,39 @@ namespace Sheet.Block
             var sheet = new BlockItem(id, x, y, width, height, dataId, name);
             sheet.Backgroud = ToItemColor(parent.Backgroud);
 
-            if (points != null)
+            foreach (var point in points)
             {
-                foreach (var point in points)
-                {
-                    sheet.Points.Add(Serialize(point));
-                }
+                sheet.Points.Add(Serialize(point));
             }
 
-            if (lines != null)
+            foreach (var line in lines)
             {
-                foreach (var line in lines)
-                {
-                    sheet.Lines.Add(Serialize(line));
-                }
+                sheet.Lines.Add(Serialize(line));
             }
 
-            if (rectangles != null)
+            foreach (var rectangle in rectangles)
             {
-                foreach (var rectangle in rectangles)
-                {
-                    sheet.Rectangles.Add(Serialize(rectangle));
-                }
+                sheet.Rectangles.Add(Serialize(rectangle));
             }
 
-            if (ellipses != null)
+            foreach (var ellipse in ellipses)
             {
-                foreach (var ellipse in ellipses)
-                {
-                    sheet.Ellipses.Add(Serialize(ellipse));
-                }
+                sheet.Ellipses.Add(Serialize(ellipse));
             }
 
-            if (texts != null)
+            foreach (var text in texts)
             {
-                foreach (var text in texts)
-                {
-                    sheet.Texts.Add(Serialize(text));
-                }
+                sheet.Texts.Add(Serialize(text));
             }
 
-            if (images != null)
+            foreach (var image in images)
             {
-                foreach (var image in images)
-                {
-                    sheet.Images.Add(Serialize(image));
-                }
+                sheet.Images.Add(Serialize(image));
             }
 
-            if (blocks != null)
+            foreach (var block in blocks)
             {
-                foreach (var block in blocks)
-                {
-                    sheet.Blocks.Add(Serialize(block));
-                }
+                sheet.Blocks.Add(Serialize(block));
             }
 
             return sheet;
@@ -360,15 +297,8 @@ namespace Sheet.Block
 
             point.Id = pointItem.Id;
 
-            if (parent != null)
-            {
-                parent.Points.Add(point);
-            }
-
-            if (sheet != null)
-            {
-                sheet.Add(point);
-            }
+            parent.Points.Add(point);
+            sheet.Add(point);
 
             return point;
         }
@@ -381,15 +311,8 @@ namespace Sheet.Block
             line.StartId = lineItem.StartId;
             line.EndId = lineItem.EndId;
 
-            if (parent != null)
-            {
-                parent.Lines.Add(line);
-            }
-
-            if (sheet != null)
-            {
-                sheet.Add(line);
-            }
+            parent.Lines.Add(line);
+            sheet.Add(line);
 
             return line;
         }
@@ -407,15 +330,8 @@ namespace Sheet.Block
 
             rectangle.Id = rectangleItem.Id;
 
-            if (parent != null)
-            {
-                parent.Rectangles.Add(rectangle);
-            }
-
-            if (sheet != null)
-            {
-                sheet.Add(rectangle);
-            }
+            parent.Rectangles.Add(rectangle);
+            sheet.Add(rectangle);
 
             return rectangle;
         }
@@ -433,15 +349,8 @@ namespace Sheet.Block
 
             ellipse.Id = ellipseItem.Id;
 
-            if (parent != null)
-            {
-                parent.Ellipses.Add(ellipse);
-            }
-
-            if (sheet != null)
-            {
-                sheet.Add(ellipse);
-            }
+            parent.Ellipses.Add(ellipse);
+            sheet.Add(ellipse);
 
             return ellipse;
         }
@@ -459,15 +368,8 @@ namespace Sheet.Block
 
             text.Id = textItem.Id;
 
-            if (parent != null)
-            {
-                parent.Texts.Add(text);
-            }
-
-            if (sheet != null)
-            {
-                sheet.Add(text);
-            }
+            parent.Texts.Add(text);
+            sheet.Add(text);
 
             return text;
         }
@@ -478,15 +380,8 @@ namespace Sheet.Block
 
             image.Id = imageItem.Id;
 
-            if (parent != null)
-            {
-                parent.Images.Add(image);
-            }
-
-            if (sheet != null)
-            {
-                sheet.Add(image);
-            }
+            parent.Images.Add(image);
+            sheet.Add(image);
 
             return image;
         }
