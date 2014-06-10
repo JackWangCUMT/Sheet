@@ -37,11 +37,6 @@ namespace Sheet.Block
         {
             var points = new List<IPoint>();
 
-            if (select)
-            {
-                selected.Points = new List<IPoint>();
-            }
-
             foreach (var pointItem in pointItems)
             {
                 var point = _blockSerializer.Deserialize(sheet, parent, pointItem, thickness);
@@ -61,11 +56,6 @@ namespace Sheet.Block
         public List<ILine> Add(ISheet sheet, IEnumerable<LineItem> lineItems, IBlock parent, IBlock selected, bool select, double thickness)
         {
             var lines = new List<ILine>();
-
-            if (select)
-            {
-                selected.Lines = new List<ILine>();
-            }
 
             foreach (var lineItem in lineItems)
             {
@@ -87,11 +77,6 @@ namespace Sheet.Block
         {
             var rectangles = new List<IRectangle>();
 
-            if (select)
-            {
-                selected.Rectangles = new List<IRectangle>();
-            }
-
             foreach (var rectangleItem in rectangleItems)
             {
                 var rectangle = _blockSerializer.Deserialize(sheet, parent, rectangleItem, thickness);
@@ -111,11 +96,6 @@ namespace Sheet.Block
         public List<IEllipse> Add(ISheet sheet, IEnumerable<EllipseItem> ellipseItems, IBlock parent, IBlock selected, bool select, double thickness)
         {
             var ellipses = new List<IEllipse>();
-
-            if (select)
-            {
-                selected.Ellipses = new List<IEllipse>();
-            }
 
             foreach (var ellipseItem in ellipseItems)
             {
@@ -137,11 +117,6 @@ namespace Sheet.Block
         {
             var texts = new List<IText>();
 
-            if (select)
-            {
-                selected.Texts = new List<IText>();
-            }
-
             foreach (var textItem in textItems)
             {
                 var text = _blockSerializer.Deserialize(sheet, parent, textItem);
@@ -162,11 +137,6 @@ namespace Sheet.Block
         {
             var images = new List<IImage>();
 
-            if (select)
-            {
-                selected.Images = new List<IImage>();
-            }
-
             foreach (var imageItem in imageItems)
             {
                 var image = _blockSerializer.Deserialize(sheet, parent, imageItem);
@@ -186,11 +156,6 @@ namespace Sheet.Block
         public List<IBlock> Add(ISheet sheet, IEnumerable<BlockItem> blockItems, IBlock parent, IBlock selected, bool select, double thickness)
         {
             var blocks = new List<IBlock>();
-
-            if (select)
-            {
-                selected.Blocks = new List<IBlock>();
-            }
 
             foreach (var blockItem in blockItems)
             {
@@ -253,78 +218,57 @@ namespace Sheet.Block
 
         public void Remove(ISheet sheet, IEnumerable<IPoint> points)
         {
-            if (points != null)
+            foreach (var point in points)
             {
-                foreach (var point in points)
-                {
-                    sheet.Remove(point);
-                }
+                sheet.Remove(point);
             }
         }
 
         public void Remove(ISheet sheet, IEnumerable<ILine> lines)
         {
-            if (lines != null)
+            foreach (var line in lines)
             {
-                foreach (var line in lines)
-                {
-                    sheet.Remove(line);
-                }
+                sheet.Remove(line);
             }
         }
 
         public void Remove(ISheet sheet, IEnumerable<IRectangle> rectangles)
         {
-            if (rectangles != null)
+            foreach (var rectangle in rectangles)
             {
-                foreach (var rectangle in rectangles)
-                {
-                    sheet.Remove(rectangle);
-                }
+                sheet.Remove(rectangle);
             }
         }
 
         public void Remove(ISheet sheet, IEnumerable<IEllipse> ellipses)
         {
-            if (ellipses != null)
+            foreach (var ellipse in ellipses)
             {
-                foreach (var ellipse in ellipses)
-                {
-                    sheet.Remove(ellipse);
-                }
+                sheet.Remove(ellipse);
             }
         }
 
         public void Remove(ISheet sheet, IEnumerable<IText> texts)
         {
-            if (texts != null)
+            foreach (var text in texts)
             {
-                foreach (var text in texts)
-                {
-                    sheet.Remove(text);
-                }
+                sheet.Remove(text);
             }
         }
 
         public void Remove(ISheet sheet, IEnumerable<IImage> images)
         {
-            if (images != null)
+            foreach (var image in images)
             {
-                foreach (var image in images)
-                {
-                    sheet.Remove(image);
-                }
+                sheet.Remove(image);
             }
         }
 
         public void Remove(ISheet sheet, IEnumerable<IBlock> blocks)
         {
-            if (blocks != null)
+            foreach (var block in blocks)
             {
-                foreach (var block in blocks)
-                {
-                    Remove(sheet, block);
-                }
+                Remove(sheet, block);
             }
         }
 
@@ -341,94 +285,53 @@ namespace Sheet.Block
 
         public void RemoveSelected(ISheet sheet, IBlock parent, IBlock selected)
         {
-            if (selected.Points != null)
+            Remove(sheet, selected.Points);
+            foreach (var point in selected.Points)
             {
-                Remove(sheet, selected.Points);
-
-                foreach (var point in selected.Points)
-                {
-                    parent.Points.Remove(point);
-                }
-
-                selected.Points = null;
+                parent.Points.Remove(point);
             }
 
-            if (selected.Lines != null)
+            Remove(sheet, selected.Lines);
+            foreach (var line in selected.Lines)
             {
-                Remove(sheet, selected.Lines);
-
-                foreach (var line in selected.Lines)
-                {
-                    parent.Lines.Remove(line);
-                }
-
-                selected.Lines = null;
+                parent.Lines.Remove(line);
             }
 
-            if (selected.Rectangles != null)
+            Remove(sheet, selected.Rectangles);
+            foreach (var rectangle in selected.Rectangles)
             {
-                Remove(sheet, selected.Rectangles);
-
-                foreach (var rectangle in selected.Rectangles)
-                {
-                    parent.Rectangles.Remove(rectangle);
-                }
-
-                selected.Rectangles = null;
+                parent.Rectangles.Remove(rectangle);
             }
 
-            if (selected.Ellipses != null)
+            Remove(sheet, selected.Ellipses);
+            foreach (var ellipse in selected.Ellipses)
             {
-                Remove(sheet, selected.Ellipses);
-
-                foreach (var ellipse in selected.Ellipses)
-                {
-                    parent.Ellipses.Remove(ellipse);
-                }
-
-                selected.Ellipses = null;
+                parent.Ellipses.Remove(ellipse);
             }
 
-            if (selected.Texts != null)
+            Remove(sheet, selected.Texts);
+            foreach (var text in selected.Texts)
             {
-                Remove(sheet, selected.Texts);
-
-                foreach (var text in selected.Texts)
-                {
-                    parent.Texts.Remove(text);
-                }
-
-                selected.Texts = null;
+                parent.Texts.Remove(text);
             }
 
-            if (selected.Images != null)
+            Remove(sheet, selected.Images);
+            foreach (var image in selected.Images)
             {
-                Remove(sheet, selected.Images);
-
-                foreach (var image in selected.Images)
-                {
-                    parent.Images.Remove(image);
-                }
-
-                selected.Images = null;
+                parent.Images.Remove(image);
             }
 
-            if (selected.Blocks != null)
+            foreach (var block in selected.Blocks)
             {
-                foreach (var block in selected.Blocks)
-                {
-                    Remove(sheet, block.Points);
-                    Remove(sheet, block.Lines);
-                    Remove(sheet, block.Rectangles);
-                    Remove(sheet, block.Ellipses);
-                    Remove(sheet, block.Texts);
-                    Remove(sheet, block.Images);
-                    Remove(sheet, block.Blocks);
+                Remove(sheet, block.Points);
+                Remove(sheet, block.Lines);
+                Remove(sheet, block.Rectangles);
+                Remove(sheet, block.Ellipses);
+                Remove(sheet, block.Texts);
+                Remove(sheet, block.Images);
+                Remove(sheet, block.Blocks);
 
-                    parent.Blocks.Remove(block);
-                }
-
-                selected.Blocks = null;
+                parent.Blocks.Remove(block);
             }
         }
 
@@ -564,40 +467,13 @@ namespace Sheet.Block
 
         public void MoveDelta(double dx, double dy, IBlock block)
         {
-            if (block.Points != null)
-            {
-                MoveDelta(dx, dy, block.Points);
-            }
-
-            if (block.Lines != null)
-            {
-                MoveDelta(dx, dy, block.Lines);
-            }
-
-            if (block.Rectangles != null)
-            {
-                MoveDelta(dx, dy, block.Rectangles);
-            }
-
-            if (block.Ellipses != null)
-            {
-                MoveDelta(dx, dy, block.Ellipses);
-            }
-
-            if (block.Texts != null)
-            {
-                MoveDelta(dx, dy, block.Texts);
-            }
-
-            if (block.Images != null)
-            {
-                MoveDelta(dx, dy, block.Images);
-            }
-
-            if (block.Blocks != null)
-            {
-                MoveDelta(dx, dy, block.Blocks);
-            }
+            MoveDelta(dx, dy, block.Points);
+            MoveDelta(dx, dy, block.Lines);
+            MoveDelta(dx, dy, block.Rectangles);
+            MoveDelta(dx, dy, block.Ellipses);
+            MoveDelta(dx, dy, block.Texts);
+            MoveDelta(dx, dy, block.Images);
+            MoveDelta(dx, dy, block.Blocks);
         }
 
         public void MoveDelta(double dx, double dy, IEnumerable<IBlock> blocks)
@@ -658,60 +534,39 @@ namespace Sheet.Block
 
         public void Deselect(IBlock parent)
         {
-            if (parent.Points != null)
+            foreach (var point in parent.Points)
             {
-                foreach (var point in parent.Points)
-                {
-                    Deselect(point);
-                }
+                Deselect(point);
             }
 
-            if (parent.Lines != null)
+            foreach (var line in parent.Lines)
             {
-                foreach (var line in parent.Lines)
-                {
-                    Deselect(line);
-                }
+                Deselect(line);
             }
 
-            if (parent.Rectangles != null)
+            foreach (var rectangle in parent.Rectangles)
             {
-                foreach (var rectangle in parent.Rectangles)
-                {
-                    Deselect(rectangle);
-                }
+                Deselect(rectangle);
             }
 
-            if (parent.Ellipses != null)
+            foreach (var ellipse in parent.Ellipses)
             {
-                foreach (var ellipse in parent.Ellipses)
-                {
-                    Deselect(ellipse);
-                }
+                Deselect(ellipse);
             }
 
-            if (parent.Texts != null)
+            foreach (var text in parent.Texts)
             {
-                foreach (var text in parent.Texts)
-                {
-                    Deselect(text);
-                }
+                Deselect(text);
             }
 
-            if (parent.Images != null)
+            foreach (var image in parent.Images)
             {
-                foreach (var image in parent.Images)
-                {
-                    Deselect(image);
-                }
+                Deselect(image);
             }
 
-            if (parent.Blocks != null)
+            foreach (var block in parent.Blocks)
             {
-                foreach (var block in parent.Blocks)
-                {
-                    Deselect(block);
-                }
+                Deselect(block);
             }
         }
 
@@ -1256,8 +1111,6 @@ namespace Sheet.Block
         public IBlock ShallowCopy(IBlock original)
         {
             var copy = _blockFactory.CreateBlock(original.Id, original.X, original.Y, original.Width, original.Height, original.DataId, original.Name, null);
-
-            System.Diagnostics.Debug.Print("ShallowCopy");
 
             copy.Backgroud = original.Backgroud;
             copy.Points = new List<IPoint>(original.Points);
