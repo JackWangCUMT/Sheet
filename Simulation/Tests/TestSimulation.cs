@@ -62,7 +62,7 @@ namespace Sheet.Simulation.Tests
             var factory = new TestFactory();
 
             // create solution
-            var solution = new Solution() { Id = Guid.NewGuid().ToString(), Name = "solution", DefaultTag = factory.CreateSignalTag("tag", "", "", "") };
+            var solution = new Solution() { Id = Guid.NewGuid().ToString(), Name = "solution" };
 
             var project = new Project() { Id = Guid.NewGuid().ToString(), Name = "project", Parent = solution };
             solution.Children.Add(project);

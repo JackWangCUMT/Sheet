@@ -13,6 +13,5 @@ namespace Sheet.Simulation.Elements
     {
         public Solution() : base() { Tags = new ObservableCollection<Tag>(); }
         public ObservableCollection<Tag> Tags { get; set; }
-        public Tag DefaultTag { get; set; }
     }
 }

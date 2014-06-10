@@ -375,8 +375,7 @@ namespace Sheet.Simulation.Tests
             var solution = new Solution() 
             { 
                 Id = Guid.NewGuid().ToString(), 
-                Name = "solution", 
-                DefaultTag = null 
+                Name = "solution"
             };
 
             var project = new Project()
