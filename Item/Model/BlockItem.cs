@@ -22,7 +22,7 @@ namespace Sheet.Item.Model
         public List<TextItem> Texts { get; set; }
         public List<ImageItem> Images { get; set; }
         public List<BlockItem> Blocks { get; set; }
-        public BlockItem(int id, double x, double y, double widht, double height, int dataId, string name)
+        public BlockItem(int id, double x, double y, double widht, double height, int dataId, string name, ItemColor background)
         {
             X = x;
             Y = y;
@@ -31,7 +31,7 @@ namespace Sheet.Item.Model
             Name = name;
             Width = widht;
             Height = height;
-            Backgroud = new ItemColor() { Alpha = 0, Red = 0, Green = 0, Blue = 0 };
+            Backgroud = background;
             Points = new List<PointItem>();
             Lines = new List<LineItem>();
             Rectangles = new List<RectangleItem>();

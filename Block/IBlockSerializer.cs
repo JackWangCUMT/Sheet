@@ -18,7 +18,7 @@ namespace Sheet.Block
         TextItem Serialize(IText text);
         ImageItem Serialize(IImage image);
         BlockItem Serialize(IBlock parent);
-        BlockItem SerializerContents(IBlock parent, int id, double x, double y, double width, double height, int dataId, string name);
+        BlockItem SerializerAndSetId(IBlock parent, int id, double x, double y, double width, double height, int dataId, string name);
         IPoint Deserialize(ISheet sheet, IBlock parent, PointItem pointItem, double thickness);
         ILine Deserialize(ISheet sheet, IBlock parent, LineItem lineItem, double thickness);
         IRectangle Deserialize(ISheet sheet, IBlock parent, RectangleItem rectangleItem, double thickness);

@@ -223,11 +223,11 @@ namespace Sheet.Controller
             _blockController.Deselect(State.SelectedBlock);
             State.SelectedBlock = CreateSelectedBlock();
 
-            var grid = _blockSerializer.SerializerContents(State.GridBlock, -1, State.GridBlock.X, State.GridBlock.Y, State.GridBlock.Width, State.GridBlock.Height, -1, "GRID");
-            var frame = _blockSerializer.SerializerContents(State.FrameBlock, -1, State.FrameBlock.X, State.FrameBlock.Y, State.FrameBlock.Width, State.FrameBlock.Height, -1, "FRAME");
-            var content = _blockSerializer.SerializerContents(State.ContentBlock, -1, State.ContentBlock.X, State.ContentBlock.Y, State.ContentBlock.Width, State.ContentBlock.Height, -1, "CONTENT");
+            var grid = _blockSerializer.SerializerAndSetId(State.GridBlock, -1, State.GridBlock.X, State.GridBlock.Y, State.GridBlock.Width, State.GridBlock.Height, -1, "GRID");
+            var frame = _blockSerializer.SerializerAndSetId(State.FrameBlock, -1, State.FrameBlock.X, State.FrameBlock.Y, State.FrameBlock.Width, State.FrameBlock.Height, -1, "FRAME");
+            var content = _blockSerializer.SerializerAndSetId(State.ContentBlock, -1, State.ContentBlock.X, State.ContentBlock.Y, State.ContentBlock.Width, State.ContentBlock.Height, -1, "CONTENT");
 
-            var page = new BlockItem(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "PAGE");
+            var page = new BlockItem(-1, State.Options.PageOriginX, State.Options.PageOriginY, State.Options.PageWidth, State.Options.PageHeight, -1, "PAGE", new ItemColor() { Alpha = 0, Red = 0, Green = 0, Blue = 0 });
             page.Blocks.Add(grid);
             page.Blocks.Add(frame);
             page.Blocks.Add(content);
@@ -302,7 +302,7 @@ namespace Sheet.Controller
         {
             try
             {
-                var selected = _blockSerializer.SerializerContents(block, -1, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED");
+                var selected = _blockSerializer.SerializerAndSetId(block, -1, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED");
                 var text = _itemSerializer.SerializeContents(selected);
                 _clipboard.Set(text);
             }
@@ -360,7 +360,7 @@ namespace Sheet.Controller
         {
             try
             {
-                var selected = _blockSerializer.SerializerContents(block, -1, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED");
+                var selected = _blockSerializer.SerializerAndSetId(block, -1, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED");
                 string json = _jsonSerializer.Serialize(selected);
                 _clipboard.Set(json);
             }
@@ -546,7 +546,7 @@ namespace Sheet.Controller
         {
             if (_blockController.HaveSelected(State.SelectedBlock))
             {
-                var text = _itemSerializer.SerializeContents(_blockSerializer.SerializerContents(State.SelectedBlock, 0, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED"));
+                var text = _itemSerializer.SerializeContents(_blockSerializer.SerializerAndSetId(State.SelectedBlock, 0, 0.0, 0.0, 0.0, 0.0, -1, "SELECTED"));
                 var block = await Task.Run(() => _itemSerializer.DeserializeContents(text));
                 State.HistoryController.Register("Break Block");
                 Delete();
@@ -1726,7 +1726,7 @@ namespace Sheet.Controller
 
         public void ExportPage()
         {
-            var block = _blockSerializer.SerializerContents(State.ContentBlock, -1, State.ContentBlock.X, State.ContentBlock.Y, State.ContentBlock.Width, State.ContentBlock.Height, State.ContentBlock.DataId, "CONTENT");
+            var block = _blockSerializer.SerializerAndSetId(State.ContentBlock, -1, State.ContentBlock.X, State.ContentBlock.Y, State.ContentBlock.Width, State.ContentBlock.Height, State.ContentBlock.DataId, "CONTENT");
             var blocks = ToSingle(block);
             Export(blocks);
         }
@@ -2146,7 +2146,7 @@ namespace Sheet.Controller
 
         private BlockItem CreateGridBlock(IBlock gridBlock, bool adjustThickness, bool adjustColor)
         {
-            var grid = _blockSerializer.SerializerContents(gridBlock, -1, 0.0, 0.0, 0.0, 0.0, -1, "GRID");
+            var grid = _blockSerializer.SerializerAndSetId(gridBlock, -1, 0.0, 0.0, 0.0, 0.0, -1, "GRID");
 
             // lines
             foreach (var lineItem in grid.Lines)
@@ -2167,7 +2167,7 @@ namespace Sheet.Controller
 
         private BlockItem CreateFrameBlock(IBlock frameBlock, bool adjustThickness, bool adjustColor)
         {
-            var frame = _blockSerializer.SerializerContents(frameBlock, -1, 0.0, 0.0, 0.0, 0.0, -1, "FRAME");
+            var frame = _blockSerializer.SerializerAndSetId(frameBlock, -1, 0.0, 0.0, 0.0, 0.0, -1, "FRAME");
 
             // texts
             foreach (var textItem in frame.Texts)
@@ -2197,7 +2197,7 @@ namespace Sheet.Controller
 
         private BlockItem CreatePage(BlockItem content, bool enableFrame, bool enableGrid)
         {
-            var page = new BlockItem(-1, 0.0, 0.0, 0.0, 0.0, -1, "PAGE");
+            var page = new BlockItem(-1, 0.0, 0.0, 0.0, 0.0, -1, "PAGE", new ItemColor() { Alpha = 0, Red = 0, Green = 0, Blue = 0 });
 
             if (enableGrid)
             {

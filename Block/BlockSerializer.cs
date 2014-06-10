@@ -86,10 +86,6 @@ namespace Sheet.Block
 
         private ItemColor ToItemColor(IArgbColor color)
         {
-            if (color == null)
-            {
-                throw new ArgumentNullException("color");
-            }
             return new ItemColor()
             {
                 Alpha = color.Alpha,
@@ -101,100 +97,93 @@ namespace Sheet.Block
 
         public PointItem Serialize(IPoint point)
         {
-            var pointItem = new PointItem();
-
-            pointItem.Id = point.Id;
-            pointItem.X = _blockHelper.GetLeft(point);
-            pointItem.Y = _blockHelper.GetTop(point);
-
-            return pointItem;
+            return new PointItem()
+            {
+                Id = point.Id,
+                X = _blockHelper.GetLeft(point),
+                Y = _blockHelper.GetTop(point)
+            };
         }
 
         public LineItem Serialize(ILine line)
         {
-            var lineItem = new LineItem();
-
-            lineItem.Id = line.Id;
-            lineItem.X1 = _blockHelper.GetX1(line);
-            lineItem.Y1 = _blockHelper.GetY1(line);
-            lineItem.X2 = _blockHelper.GetX2(line);
-            lineItem.Y2 = _blockHelper.GetY2(line);
-            lineItem.Stroke = _blockHelper.GetStroke(line);
-            lineItem.StartId = line.Start == null ? -1 : line.Start.Id;
-            lineItem.EndId = line.End == null ? -1 : line.End.Id;
-
-            return lineItem;
+            return new LineItem()
+            {
+                Id = line.Id,
+                X1 = _blockHelper.GetX1(line),
+                Y1 = _blockHelper.GetY1(line),
+                X2 = _blockHelper.GetX2(line),
+                Y2 = _blockHelper.GetY2(line),
+                Stroke = _blockHelper.GetStroke(line),
+                StartId = line.Start == null ? -1 : line.Start.Id,
+                EndId = line.End == null ? -1 : line.End.Id
+            };
         }
 
         public RectangleItem Serialize(IRectangle rectangle)
         {
-            var rectangleItem = new RectangleItem();
-
-            rectangleItem.Id = rectangle.Id;
-            rectangleItem.X = _blockHelper.GetLeft(rectangle);
-            rectangleItem.Y = _blockHelper.GetTop(rectangle);
-            rectangleItem.Width = _blockHelper.GetWidth(rectangle);
-            rectangleItem.Height = _blockHelper.GetHeight(rectangle);
-            rectangleItem.IsFilled = _blockHelper.IsTransparent(rectangle);
-            rectangleItem.Stroke = _blockHelper.GetStroke(rectangle);
-            rectangleItem.Fill = _blockHelper.GetFill(rectangle);
-
-            return rectangleItem;
+            return new RectangleItem()
+            {
+                Id = rectangle.Id,
+                X = _blockHelper.GetLeft(rectangle),
+                Y = _blockHelper.GetTop(rectangle),
+                Width = _blockHelper.GetWidth(rectangle),
+                Height = _blockHelper.GetHeight(rectangle),
+                IsFilled = _blockHelper.IsTransparent(rectangle),
+                Stroke = _blockHelper.GetStroke(rectangle),
+                Fill = _blockHelper.GetFill(rectangle)
+            };
         }
 
         public EllipseItem Serialize(IEllipse ellipse)
         {
-            var ellipseItem = new EllipseItem();
-
-            ellipseItem.Id = ellipse.Id;
-            ellipseItem.X = _blockHelper.GetLeft(ellipse);
-            ellipseItem.Y = _blockHelper.GetTop(ellipse);
-            ellipseItem.Width = _blockHelper.GetWidth(ellipse);
-            ellipseItem.Height = _blockHelper.GetHeight(ellipse);
-            ellipseItem.IsFilled = _blockHelper.IsTransparent(ellipse);
-            ellipseItem.Stroke = _blockHelper.GetStroke(ellipse);
-            ellipseItem.Fill = _blockHelper.GetFill(ellipse);
-
-            return ellipseItem;
+            return new EllipseItem()
+            {
+                Id = ellipse.Id,
+                X = _blockHelper.GetLeft(ellipse),
+                Y = _blockHelper.GetTop(ellipse),
+                Width = _blockHelper.GetWidth(ellipse),
+                Height = _blockHelper.GetHeight(ellipse),
+                IsFilled = _blockHelper.IsTransparent(ellipse),
+                Stroke = _blockHelper.GetStroke(ellipse),
+                Fill = _blockHelper.GetFill(ellipse)
+            };
         }
 
         public TextItem Serialize(IText text)
         {
-            var textItem = new TextItem();
-
-            textItem.Id = text.Id;
-            textItem.X = _blockHelper.GetLeft(text);
-            textItem.Y = _blockHelper.GetTop(text);
-            textItem.Width = _blockHelper.GetWidth(text);
-            textItem.Height = _blockHelper.GetHeight(text);
-            textItem.Text = _blockHelper.GetText(text);
-            textItem.HAlign = _blockHelper.GetHAlign(text);
-            textItem.VAlign = _blockHelper.GetVAlign(text);
-            textItem.Size = _blockHelper.GetSize(text);
-            textItem.Backgroud = _blockHelper.GetBackground(text);
-            textItem.Foreground = _blockHelper.GetForeground(text);
-
-            return textItem;
+            return new TextItem()
+            {
+                Id = text.Id,
+                X = _blockHelper.GetLeft(text),
+                Y = _blockHelper.GetTop(text),
+                Width = _blockHelper.GetWidth(text),
+                Height = _blockHelper.GetHeight(text),
+                Text = _blockHelper.GetText(text),
+                HAlign = _blockHelper.GetHAlign(text),
+                VAlign = _blockHelper.GetVAlign(text),
+                Size = _blockHelper.GetSize(text),
+                Backgroud = _blockHelper.GetBackground(text),
+                Foreground = _blockHelper.GetForeground(text)
+            };
         }
 
         public ImageItem Serialize(IImage image)
         {
-            var imageItem = new ImageItem();
-
-            imageItem.Id = image.Id;
-            imageItem.X = _blockHelper.GetLeft(image);
-            imageItem.Y = _blockHelper.GetTop(image);
-            imageItem.Width = _blockHelper.GetWidth(image);
-            imageItem.Height = _blockHelper.GetHeight(image);
-            imageItem.Data = _blockHelper.GetData(image);
-
-            return imageItem;
+            return new ImageItem()
+            {
+                Id = image.Id,
+                X = _blockHelper.GetLeft(image),
+                Y = _blockHelper.GetTop(image),
+                Width = _blockHelper.GetWidth(image),
+                Height = _blockHelper.GetHeight(image),
+                Data = _blockHelper.GetData(image)
+            };
         }
 
-        public BlockItem Serialize(IBlock parent)
+        private BlockItem Serialize(IBlock parent, int id, double x, double y, double width, double height, int dataId, string name, IArgbColor backgroud)
         {
-            var blockItem = new BlockItem(parent.Id, parent.X, parent.Y, parent.Width, parent.Height, parent.DataId, parent.Name);
-            blockItem.Backgroud = ToItemColor(parent.Backgroud);
+            var blockItem = new BlockItem(id, x, y, width, height, dataId, name, ToItemColor(backgroud));
 
             foreach (var point in parent.Points)
             {
@@ -234,57 +223,15 @@ namespace Sheet.Block
             return blockItem;
         }
 
-        public BlockItem SerializerContents(IBlock parent, int id, double x, double y, double width, double height, int dataId, string name)
+        public BlockItem Serialize(IBlock parent)
         {
-            var points = parent.Points;
-            var lines = parent.Lines;
-            var rectangles = parent.Rectangles;
-            var ellipses = parent.Ellipses;
-            var texts = parent.Texts;
-            var images = parent.Images;
-            var blocks = parent.Blocks;
+            return Serialize(parent, parent.Id, parent.X, parent.Y, parent.Width, parent.Height, parent.DataId, parent.Name, parent.Backgroud);
+        }
 
+        public BlockItem SerializerAndSetId(IBlock parent, int id, double x, double y, double width, double height, int dataId, string name)
+        {
             SetId(parent, id + 1);
-
-            var sheet = new BlockItem(id, x, y, width, height, dataId, name);
-            sheet.Backgroud = ToItemColor(parent.Backgroud);
-
-            foreach (var point in points)
-            {
-                sheet.Points.Add(Serialize(point));
-            }
-
-            foreach (var line in lines)
-            {
-                sheet.Lines.Add(Serialize(line));
-            }
-
-            foreach (var rectangle in rectangles)
-            {
-                sheet.Rectangles.Add(Serialize(rectangle));
-            }
-
-            foreach (var ellipse in ellipses)
-            {
-                sheet.Ellipses.Add(Serialize(ellipse));
-            }
-
-            foreach (var text in texts)
-            {
-                sheet.Texts.Add(Serialize(text));
-            }
-
-            foreach (var image in images)
-            {
-                sheet.Images.Add(Serialize(image));
-            }
-
-            foreach (var block in blocks)
-            {
-                sheet.Blocks.Add(Serialize(block));
-            }
-
-            return sheet;
+            return Serialize(parent, id, x, y, width, height, dataId, name, parent.Backgroud);
         }
 
         #endregion
@@ -376,7 +323,11 @@ namespace Sheet.Block
 
         public IImage Deserialize(ISheet sheet, IBlock parent, ImageItem imageItem)
         {
-            var image = _blockFactory.CreateImage(imageItem.X, imageItem.Y, imageItem.Width, imageItem.Height, imageItem.Data);
+            var image = _blockFactory.CreateImage(imageItem.X, 
+                imageItem.Y, 
+                imageItem.Width, 
+                imageItem.Height, 
+                imageItem.Data);
 
             image.Id = imageItem.Id;
 
@@ -388,7 +339,14 @@ namespace Sheet.Block
 
         public IBlock Deserialize(ISheet sheet, IBlock parent, BlockItem blockItem, double thickness)
         {
-            var block = _blockFactory.CreateBlock(blockItem.Id, blockItem.X, blockItem.Y, blockItem.Width, blockItem.Height, blockItem.DataId, blockItem.Name, blockItem.Backgroud);
+            var block = _blockFactory.CreateBlock(blockItem.Id, 
+                blockItem.X, 
+                blockItem.Y, 
+                blockItem.Width, 
+                blockItem.Height, 
+                blockItem.DataId, 
+                blockItem.Name, 
+                blockItem.Backgroud);
 
             foreach (var textItem in blockItem.Texts)
             {
@@ -425,10 +383,7 @@ namespace Sheet.Block
                 Deserialize(sheet, block, pointItem, thickness);
             }
 
-            if (parent != null)
-            {
-                parent.Blocks.Add(block);
-            }
+            parent.Blocks.Add(block);
 
             return block;
         }

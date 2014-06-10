@@ -441,7 +441,7 @@ namespace Sheet.Item
 
         private BlockItem DeserializeRootBlock(string[] lines, int length, ref int end, string name, int id, double x, double y, double width, double height, int dataId, ItemSerializeOptions options)
         {
-            var root = new BlockItem(id, x, y, width, height, dataId, name);
+            var root = new BlockItem(id, x, y, width, height, dataId, name, new ItemColor() { Alpha = 0, Red = 0, Green = 0, Blue = 0 });
 
             for (; end < length; end++)
             {
