@@ -449,7 +449,8 @@ namespace Sheet.Controller
         public void SelecteAll()
         {
             State.SelectedBlock = CreateSelectedBlock();
-            _blockController.SelectAndAdd(State.ContentBlock, State.SelectedBlock);
+            _blockController.ShallowCopy(State.ContentBlock, State.SelectedBlock);
+            _blockController.Select(State.ContentBlock);
         }
 
         #endregion
