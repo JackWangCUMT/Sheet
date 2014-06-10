@@ -91,5 +91,6 @@ namespace Sheet.Block
         void ToggleFill(IPoint point);
 
         IBlock ShallowCopy(IBlock original);
+        void ShallowCopy(IBlock original, IBlock copy);
     }
 }

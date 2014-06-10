@@ -1078,6 +1078,13 @@ namespace Sheet.Block
         {
             var copy = _blockFactory.CreateBlock(original.Id, original.X, original.Y, original.Width, original.Height, original.DataId, original.Name, null);
 
+            ShallowCopy(original, copy);
+
+            return copy;
+        }
+
+        public void ShallowCopy(IBlock original, IBlock copy)
+        {
             copy.Backgroud = original.Backgroud;
             copy.Points = new List<IPoint>(original.Points);
             copy.Lines = new List<ILine>(original.Lines);
@@ -1087,8 +1094,6 @@ namespace Sheet.Block
             copy.Images = new List<IImage>(original.Images);
             copy.Blocks = new List<IBlock>(original.Blocks);
             copy.Points = new List<IPoint>(original.Points);
-
-            return copy;
         }
 
         #endregion
