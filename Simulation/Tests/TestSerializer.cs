@@ -33,28 +33,19 @@ namespace Sheet.Simulation.Tests
 
         private int SetId(IBlock parent, int nextId)
         {
-            if (parent.Points != null)
+            foreach (var point in parent.Points)
             {
-                foreach (var point in parent.Points)
-                {
-                    point.Id = nextId++;
-                }
+                point.Id = nextId++;
             }
 
-            if (parent.Lines != null)
+            foreach (var line in parent.Lines)
             {
-                foreach (var line in parent.Lines)
-                {
-                    line.Id = nextId++;
-                }
+                line.Id = nextId++;
             }
 
-            if (parent.Blocks != null)
+            foreach (var block in parent.Blocks)
             {
-                foreach (var block in parent.Blocks)
-                {
-                    block.Id = nextId++;
-                }
+                block.Id = nextId++;
             }
 
             return nextId;
@@ -355,7 +346,7 @@ namespace Sheet.Simulation.Tests
             }
             else
             {
-                throw new Exception("Unsupported block Name");
+                throw new Exception("Unsupported block name.");
             }
         }
 
@@ -363,39 +354,47 @@ namespace Sheet.Simulation.Tests
         {
             SetId(root, 1);
 
-            if (root.Blocks != null)
+            foreach (var block in root.Blocks)
             {
-                foreach (var block in root.Blocks)
-                {
-                    Serialize(context, block);
-                }
+                Serialize(context, block);
             }
 
-            if (root.Points != null)
+            foreach (var point in root.Points)
             {
-                foreach (var point in root.Points)
-                {
-                    Serialize(context, point);
-                }
+                Serialize(context, point);
             }
 
-            if (root.Lines != null)
+            foreach (var line in root.Lines)
             {
-                foreach (var line in root.Lines)
-                {
-                    Serialize(context, line);
-                }
+                Serialize(context, line);
             }
         }
 
         public Solution Serialize(IBlock root)
         {
-            var solution = new Solution() { Id = Guid.NewGuid().ToString(), Name = "solution", DefaultTag = null };
+            var solution = new Solution() 
+            { 
+                Id = Guid.NewGuid().ToString(), 
+                Name = "solution", 
+                DefaultTag = null 
+            };
 
-            var project = new Project() { Id = Guid.NewGuid().ToString(), Name = "project", Parent = solution };
+            var project = new Project()
+            { 
+                Id = Guid.NewGuid().ToString(), 
+                Name = "project", 
+                Parent = solution 
+            };
+
             solution.Children.Add(project);
 
-            var context = new Context() { Id = Guid.NewGuid().ToString(), Name = "context", Parent = project };
+            var context = new Context() 
+            { 
+                Id = Guid.NewGuid().ToString(), 
+                Name = "context", 
+                Parent = project 
+            };
+
             project.Children.Add(context);
 
             map = new Dictionary<int, Pin>();
