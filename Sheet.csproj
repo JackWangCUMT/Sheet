@@ -142,7 +142,7 @@
       <DependentUpon>DatabaseControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Sheet\Plugins.cs" />
-    <Compile Include="Sheet\Controller.cs" />
+    <Compile Include="Sheet\Sheet.cs" />
     <Compile Include="Sheet\UI.cs" />
     <Compile Include="Sheet\Util.cs" />
     <Compile Include="Sheet\Entry.cs" />
