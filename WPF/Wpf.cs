@@ -2,8 +2,7 @@
 using Sheet.Block;
 using Sheet.Controller;
 using Sheet.Item;
-using Sheet.Simulation.Core;
-using Sheet.Simulation.Wpf;
+using Sheet.Simulation;
 using Sheet.Util;
 using Splat;
 using System;

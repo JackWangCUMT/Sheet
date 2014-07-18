@@ -147,7 +147,6 @@
     <Compile Include="Sheet\Util.cs" />
     <Compile Include="Sheet\Entry.cs" />
     <Compile Include="Sheet\Item.cs" />
-    <Compile Include="Simulation\Simulation.cs" />
     <Compile Include="WPF\Controls\DatabasesControl.xaml.cs">
       <DependentUpon>DatabasesControl.xaml</DependentUpon>
     </Compile>
@@ -162,11 +161,7 @@
     <Compile Include="WPF\Controls\SolutionControl.xaml.cs">
       <DependentUpon>SolutionControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Simulation\Binary.cs" />
-    <Compile Include="Simulation\Core.cs" />
-    <Compile Include="Simulation\Elements.cs" />
-    <Compile Include="Simulation\Simulations.cs" />
-    <Compile Include="Simulation\Wpf.cs" />
+    <Compile Include="Sheet\Simulation.cs" />
     <Compile Include="WPF\Wpf.cs" />
     <Page Include="WPF\Controls\PropertiesControl.xaml">
       <SubType>Designer</SubType>

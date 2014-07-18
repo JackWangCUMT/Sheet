@@ -1,4 +1,9 @@
-﻿using System;
+﻿using Sheet.Controller;
+using Sheet.Entry;
+using Sheet.Simulation;
+using Sheet.UI;
+using Sheet.Util;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -14,13 +19,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using Sheet.Simulation.Wpf;
-using Sheet.Simulation.Binary;
-using Sheet.Entry;
-using Sheet.UI;
-using Sheet.Util;
-using Sheet.Controller;
-using Sheet.Simulation.Elements;
 
 namespace Sheet
 {
