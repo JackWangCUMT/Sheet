@@ -3562,11 +3562,11 @@ namespace Sheet.Simulation
         void SeState(IBlock parent, IBoolState state);
     }
 
-    public class TestSerializer : ISolutionSerializer
+    public class SolutionSerializer : ISolutionSerializer
     {
         #region Fields
 
-        private TestFactory _factory = new TestFactory();
+        private SolutionFactory _factory = new SolutionFactory();
         private ObservableCollection<Tag> tags = null;
         private Dictionary<int, Pin> map = null;
 
@@ -3961,21 +3961,21 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public class TestSolutionSimulationController : ISolutionSimulationController
+    public class SolutionSimulationController : ISolutionSimulationController
     {
         #region Fields
 
         private Solution _solution;
-        private TestSolutionSimulationFactory _simulation;
+        private SolutionSimulationFactory _simulationFactory;
 
         #endregion
 
         #region Constructor
 
-        public TestSolutionSimulationController(Solution solution, int period)
+        public SolutionSimulationController(Solution solution, int period)
         {
             _solution = solution;
-            _simulation = new TestSolutionSimulationFactory(_solution, period);
+            _simulationFactory = new SolutionSimulationFactory(_solution, period);
         }
 
         #endregion
@@ -3998,12 +3998,12 @@ namespace Sheet.Simulation
 
         public void Start()
         {
-            _simulation.Start();
+            _simulationFactory.Start();
         }
 
         public void Stop()
         {
-            _simulation.Stop();
+            _simulationFactory.Stop();
         }
 
         #endregion
@@ -4012,7 +4012,7 @@ namespace Sheet.Simulation
 
         public static Solution CreateDemoSolution()
         {
-            var factory = new TestFactory();
+            var factory = new SolutionFactory();
 
             // create solution
             var solution = new Solution() { Id = Guid.NewGuid().ToString(), Name = "solution" };
@@ -4061,7 +4061,7 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public class TestSolutionSimulationFactory : ISolutionSimulationFactory
+    public class SolutionSimulationFactory : ISolutionSimulationFactory
     {
         #region Fields
 
@@ -4084,7 +4084,7 @@ namespace Sheet.Simulation
 
         #region Constructor
 
-        public TestSolutionSimulationFactory(Solution solution, int periodInMillisencods = 100)
+        public SolutionSimulationFactory(Solution solution, int periodInMillisencods = 100)
         {
             _solution = solution;
             _periodInMillisencods = periodInMillisencods;
@@ -4328,7 +4328,7 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public class TestSolutionRenamer : ISolutionRenamer
+    public class SolutionRenamer : ISolutionRenamer
     {
         #region Fields
 
@@ -4516,7 +4516,7 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public class TestFactory : ISolutionFactory
+    public class SolutionFactory : ISolutionFactory
     {
         #region Create
 

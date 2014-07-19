@@ -761,24 +761,24 @@ namespace Sheet
 
         #region Simulation
         
-        private TestSolutionSimulationController demo = null;
+        private SolutionSimulationController controller = null;
         
         private void CreateDemoSimulation()
         {
-            var solution = TestSolutionSimulationController.CreateDemoSolution();
-            demo = new TestSolutionSimulationController(solution, 100);
-            demo.EnableDebug(false);
-            demo.EnableLog(false);
-            demo.Start();
+            var solution = SolutionSimulationController.CreateDemoSolution();
+            controller = new SolutionSimulationController(solution, 100);
+            controller.EnableDebug(false);
+            controller.EnableLog(false);
+            controller.Start();
         }
 
         private Solution GetSolution()
         {
             var block = _sheetController.State.ContentBlock;
-            var serializer = new TestSerializer();
+            var serializer = new SolutionSerializer();
             var solution = serializer.Serialize(block);
 
-            var renamer = new TestSolutionRenamer();
+            var renamer = new SolutionRenamer();
             renamer.Rename(solution);
             return solution;
         }
@@ -789,17 +789,17 @@ namespace Sheet
 
             try
             {
-                if (demo == null)
+                if (controller == null)
                 {
                     var solution = GetSolution();
 
                     //var binarySolution = TestSolutionBinaryReaderWriter(solution);
                     //solution = binarySolution;
 
-                    demo = new TestSolutionSimulationController(solution, 100);
-                    demo.EnableDebug(false);
-                    demo.EnableLog(false);
-                    demo.Start();
+                    controller = new SolutionSimulationController(solution, 100);
+                    controller.EnableDebug(false);
+                    controller.EnableLog(false);
+                    controller.Start();
 
                     var window = new Window() { Title = "Tags", Width = 300, Height = 500, WindowStartupLocation = WindowStartupLocation.CenterScreen };
                     window.Owner = this;
@@ -823,7 +823,7 @@ namespace Sheet
             IBinarySolutionReader reader = new BinarySolutionReader();
             var binarySolution = reader.Open("test.bin");
 
-            ISolutionFactory factory = new TestFactory();
+            ISolutionFactory factory = new SolutionFactory();
             var signals = (binarySolution.Children[0].Children[0] as Context).Children.Where(c => c is Signal).Cast<Signal>();
             foreach (var signal in signals)
             {
@@ -839,10 +839,10 @@ namespace Sheet
         {
             try
             {
-                if (demo != null)
+                if (controller != null)
                 {
-                    demo.Stop();
-                    demo = null;
+                    controller.Stop();
+                    controller = null;
                 }
             }
             catch(Exception ex)
