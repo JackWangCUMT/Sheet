@@ -3489,17 +3489,6 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public interface ISolutionSimulationFactory
-    {
-        Clock Clock { get; }
-        bool IsSimulationRunning { get; }
-        SimulationController SimulationController { get; }
-        Solution Solution { get; }
-
-        void Start();
-        void Stop();
-    }
-
     public interface ISolutionRenamer
     {
         void Rename(Solution solution);
@@ -4038,7 +4027,7 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public class SolutionSimulationFactory : ISolutionSimulationFactory
+    public class SolutionSimulationFactory
     {
         #region Fields
 
