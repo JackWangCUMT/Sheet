@@ -2495,17 +2495,7 @@ namespace Sheet.Simulation
         public const UInt16 Connect = 10;
     }
 
-    public interface IBinarySolutionReader
-    {
-        Solution Open(string path);
-    }
-
-    public interface IBinarySolutionWriter
-    {
-        void Save(string path, Solution solution);
-    }
-
-    public class BinarySolutionReader : IBinarySolutionReader
+    public class BinarySolutionReader
     {
         #region Fields
 
@@ -3018,7 +3008,7 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public class BinarySolutionWriter : IBinarySolutionWriter
+    public class BinarySolutionWriter
     {
         #region Fields
 

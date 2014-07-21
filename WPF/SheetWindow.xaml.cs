@@ -817,10 +817,10 @@ namespace Sheet
 
         private Solution TestSolutionBinaryReaderWriter(Solution solution)
         {
-            IBinarySolutionWriter writer = new BinarySolutionWriter();
+            var writer = new BinarySolutionWriter();
             writer.Save("test.bin", solution);
 
-            IBinarySolutionReader reader = new BinarySolutionReader();
+            var reader = new BinarySolutionReader();
             var binarySolution = reader.Open("test.bin");
 
             ISolutionFactory factory = new SolutionFactory();
