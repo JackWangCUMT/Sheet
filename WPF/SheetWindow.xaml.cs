@@ -823,7 +823,7 @@ namespace Sheet
             var reader = new BinarySolutionReader();
             var binarySolution = reader.Open("test.bin");
 
-            ISolutionFactory factory = new SolutionFactory();
+            var factory = new SolutionFactory();
             var signals = (binarySolution.Children[0].Children[0] as Context).Children.Where(c => c is Signal).Cast<Signal>();
             foreach (var signal in signals)
             {
