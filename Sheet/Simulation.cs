@@ -1563,8 +1563,6 @@ namespace Sheet.Simulation
 
     public class TopologicalSort<T> where T : class
     {
-        #region Sort
-
         public IEnumerable<T> Sort(IEnumerable<T> source, Func<T, IEnumerable<T>> dependencies, bool ignoreDependencyCycles)
         {
             var sorted = new List<T>();
@@ -1587,10 +1585,6 @@ namespace Sheet.Simulation
 
             return sorted;
         }
-
-        #endregion
-
-        #region Visit
 
         private void Visit(T item, HashSet<T> visited, List<T> sorted, Func<T, IEnumerable<T>> dependencies, bool ignoreDependencyCycles)
         {
@@ -1624,8 +1618,6 @@ namespace Sheet.Simulation
                 Debug.Print("Invalid dependency cycle: {0}", (item as Element).Name);
             }
         }
-
-        #endregion
     }
 
     public class Compiler
