@@ -100,7 +100,7 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public class NotifyObject : INotifyPropertyChanged
+    public abstract class NotifyObject : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
