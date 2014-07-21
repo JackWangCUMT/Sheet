@@ -3489,11 +3489,6 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public interface ISolutionSerializer
-    {
-        Solution Serialize(IBlock root);
-    }
-
     public interface ISolutionSimulationController
     {
         void EnableDebug(bool enable);
@@ -3552,7 +3547,7 @@ namespace Sheet.Simulation
         void SeState(IBlock parent, IBoolState state);
     }
 
-    public class SolutionSerializer : ISolutionSerializer
+    public class SolutionSerializer
     {
         #region Fields
 
