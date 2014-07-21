@@ -2378,20 +2378,20 @@ namespace Sheet.Simulation
 
         #endregion
     }
-
-    public static class BinaryCommandId
+    
+    public enum BinaryCommandId : ushort
     {
-        public const UInt16 Solution = 0;
-        public const UInt16 Project = 1;
-        public const UInt16 Context = 2;
-        public const UInt16 Pin = 3;
-        public const UInt16 Signal = 4;
-        public const UInt16 AndGate = 5;
-        public const UInt16 OrGate = 6;
-        public const UInt16 TimerOn = 7;
-        public const UInt16 TimerOff = 8;
-        public const UInt16 TimerPulse = 9;
-        public const UInt16 Connect = 10;
+        Solution = 0,
+        Project = 1,
+        Context = 2,
+        Pin = 3,
+        Signal = 4,
+        AndGate = 5,
+        OrGate = 6,
+        TimerOn = 7,
+        TimerOff = 8,
+        TimerPulse = 9,
+        Connect = 10
     }
 
     public class BinarySolutionReader
@@ -2431,7 +2431,7 @@ namespace Sheet.Simulation
             using (var reader = new BinaryReader(ms))
             {
                 UInt32 totalElements = 0;
-                UInt16 commandId = 0;
+                BinaryCommandId commandId = 0;
 
                 long size = ms.Length;
                 long dataSize = size - SizeOfTotalElements;
@@ -2448,7 +2448,7 @@ namespace Sheet.Simulation
 
                 while (ms.Position < dataSize)
                 {
-                    commandId = reader.ReadUInt16();
+                    commandId = (BinaryCommandId)reader.ReadUInt16();
 
                     switch (commandId)
                     {
@@ -2918,7 +2918,7 @@ namespace Sheet.Simulation
         private UInt32 ElementId;
 
         // command id
-        private UInt16 CommandId;
+        private BinaryCommandId CommandId;
 
         // bool true Byte value
         private const Byte TrueByte = 0x01;
@@ -3080,7 +3080,7 @@ namespace Sheet.Simulation
         private void WriteDummySolution(BinaryWriter writer)
         {
             CommandId = BinaryCommandId.Solution;
-            writer.Write(CommandId);
+            writer.Write((ushort)CommandId);
             writer.Write(ElementId);
             ElementId++;
         }
@@ -3088,7 +3088,7 @@ namespace Sheet.Simulation
         private void WriteDummyProject(BinaryWriter writer)
         {
             CommandId = BinaryCommandId.Project;
-            writer.Write(CommandId);
+            writer.Write((ushort)CommandId);
             writer.Write(ElementId);
             ElementId++;
         }
@@ -3096,7 +3096,7 @@ namespace Sheet.Simulation
         private void WriteSolution(Solution solution, BinaryWriter writer)
         {
             CommandId = BinaryCommandId.Solution;
-            writer.Write(CommandId);
+            writer.Write((ushort)CommandId);
             writer.Write(ElementId);
             Ids.Add(solution.Id, ElementId);
             ElementId++;
@@ -3105,7 +3105,7 @@ namespace Sheet.Simulation
         private void WriteProject(Project project, BinaryWriter writer)
         {
             CommandId = BinaryCommandId.Project;
-            writer.Write(CommandId);
+            writer.Write((ushort)CommandId);
             writer.Write(ElementId);
             Ids.Add(project.Id, ElementId);
             ElementId++;
@@ -3114,7 +3114,7 @@ namespace Sheet.Simulation
         private void WriteContext(Context context, BinaryWriter writer)
         {
             CommandId = BinaryCommandId.Context;
-            writer.Write(CommandId);
+            writer.Write((ushort)CommandId);
             writer.Write(ElementId);
             Ids.Add(context.Id, ElementId);
             ElementId++;
@@ -3126,7 +3126,7 @@ namespace Sheet.Simulation
             {
                 // pin id
                 CommandId = BinaryCommandId.Pin;
-                writer.Write(CommandId);
+                writer.Write((ushort)CommandId);
                 writer.Write(ElementId);
                 Ids.Add(element.Id, ElementId);
                 ElementId++;
@@ -3137,7 +3137,7 @@ namespace Sheet.Simulation
         {
             // signal id
             CommandId = BinaryCommandId.Signal;
-            writer.Write(CommandId);
+            writer.Write((ushort)CommandId);
             writer.Write(ElementId);
             Ids.Add(element.Id, ElementId);
             ElementId++;
@@ -3161,7 +3161,7 @@ namespace Sheet.Simulation
         {
             // andgate id
             CommandId = BinaryCommandId.AndGate;
-            writer.Write(CommandId);
+            writer.Write((ushort)CommandId);
             writer.Write(ElementId);
             Ids.Add(element.Id, ElementId);
             ElementId++;
@@ -3199,7 +3199,7 @@ namespace Sheet.Simulation
         {
             // orgate id
             CommandId = BinaryCommandId.OrGate;
-            writer.Write(CommandId);
+            writer.Write((ushort)CommandId);
             writer.Write(ElementId);
             Ids.Add(element.Id, ElementId);
             ElementId++;
@@ -3237,7 +3237,7 @@ namespace Sheet.Simulation
         {
             // timeron id
             CommandId = BinaryCommandId.TimerOn;
-            writer.Write(CommandId);
+            writer.Write((ushort)CommandId);
             writer.Write(ElementId);
             Ids.Add(element.Id, ElementId);
             ElementId++;
@@ -3278,7 +3278,7 @@ namespace Sheet.Simulation
         {
             // timeroff id
             CommandId = BinaryCommandId.TimerOff;
-            writer.Write(CommandId);
+            writer.Write((ushort)CommandId);
             writer.Write(ElementId);
             Ids.Add(element.Id, ElementId);
             ElementId++;
@@ -3319,7 +3319,7 @@ namespace Sheet.Simulation
         {
             // timerpulse id
             CommandId = BinaryCommandId.TimerPulse;
-            writer.Write(CommandId);
+            writer.Write((ushort)CommandId);
             writer.Write(ElementId);
             Ids.Add(element.Id, ElementId);
             ElementId++;
@@ -3371,7 +3371,7 @@ namespace Sheet.Simulation
 
             // connect id
             CommandId = BinaryCommandId.Connect;
-            writer.Write(CommandId);
+            writer.Write((ushort)CommandId);
             writer.Write(ElementId);
             Ids.Add(wire.Id, ElementId);
             ElementId++;
@@ -4168,7 +4168,7 @@ namespace Sheet.Simulation
     {
         #region Fields
 
-        public const string CountersNamepsace = "Sheet.Simulation.Elements";
+        public const string CountersNamepsace = "Sheet.Simulation";
 
         private Dictionary<string, string> ShortElementNames = new Dictionary<string, string>()
         {
