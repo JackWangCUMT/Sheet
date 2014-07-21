@@ -100,10 +100,8 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public class BoolState : IBoolState, INotifyPropertyChanged
+    public class NotifyObject : INotifyPropertyChanged
     {
-        #region INotifyPropertyChanged
-
         public event PropertyChangedEventHandler PropertyChanged;
 
         public virtual void Notify(string propertyName)
@@ -114,11 +112,10 @@ namespace Sheet.Simulation
                 handler(this, new PropertyChangedEventArgs(propertyName));
             }
         }
+    }
 
-        #endregion
-
-        #region Properties
-
+    public class BoolState : NotifyObject, IBoolState
+    {
         public bool? previousState;
         public bool? PreviousState
         {
@@ -146,8 +143,6 @@ namespace Sheet.Simulation
                 }
             }
         }
-
-        #endregion
     }
 
     public enum PinType
