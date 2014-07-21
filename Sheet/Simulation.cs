@@ -2130,20 +2130,7 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public interface ISimulationController
-    {
-        Compiler Compiler { get; }
-        SimulationContext SimulationContext { get; set; }
-        bool IsConsole { get; set; }
-
-        void Run(List<Context> contexts, IEnumerable<Tag> tags);
-        void Run(List<Context> contexts, IEnumerable<Tag> tags, int period, Action update);
-        void Stop();
-        void Reset(bool collect);
-        void ResetTimerAndClock();
-    }
-
-    public class SimulationController : ISimulationController
+    public class SimulationController
     {
         #region Properties
 
