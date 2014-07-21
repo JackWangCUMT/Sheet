@@ -3489,7 +3489,7 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public interface IBlockSimulationHelper
+    public interface IBlockStateUpdate
     {
         void SeState(ILine line, IBoolState state);
         void SeState(IRectangle rectangle, IBoolState state);
@@ -4105,7 +4105,7 @@ namespace Sheet.Simulation
 
         #region Update
 
-        private void UpdateSignalBlockStates(Signal[] signals, IBlockSimulationHelper helper)
+        private void UpdateSignalBlockStates(Signal[] signals, IBlockStateUpdate helper)
         {
             bool update = false;
 
@@ -4155,7 +4155,7 @@ namespace Sheet.Simulation
         {
             var signals = contexts.SelectMany(x => x.Children).Where(y => y is Signal).Cast<Signal>().ToArray();
             var dispatcher = Dispatcher.CurrentDispatcher;
-            var helper = new WpfBlockSimulationHelper();
+            var helper = new WpfBlockStateUpdate();
 
             var update = new Action(() => UpdateSignalBlockStates(signals, helper));
             var updateOnUIThread = new Action(() => dispatcher.BeginInvoke(update));

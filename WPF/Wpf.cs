@@ -896,7 +896,7 @@ namespace Sheet.WPF
         #endregion
     }
 
-    public class WpfBlockSimulationHelper : IBlockSimulationHelper
+    public class WpfBlockStateUpdate : IBlockStateUpdate
     {
         #region Fields
 
@@ -908,7 +908,7 @@ namespace Sheet.WPF
 
         #region Contructor
 
-        public WpfBlockSimulationHelper()
+        public WpfBlockStateUpdate()
         {
             NullBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0x66, 0x66, 0x66));
             NullBrush.Freeze();
