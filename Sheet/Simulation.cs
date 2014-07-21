@@ -9,11 +9,26 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace Sheet.Simulation
 {
+    public abstract class NotifyObject : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public virtual void Notify(string propertyName)
+        {
+            var handler = PropertyChanged;
+            if (handler != null)
+            {
+                handler(this, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+    }
+
     public interface IClock
     {
         long Cycle { get; set; }
@@ -98,20 +113,6 @@ namespace Sheet.Simulation
         public int Resolution { get; set; }
 
         #endregion
-    }
-
-    public abstract class NotifyObject : INotifyPropertyChanged
-    {
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        public virtual void Notify(string propertyName)
-        {
-            var handler = PropertyChanged;
-            if (handler != null)
-            {
-                handler(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
     }
 
     public class BoolState : NotifyObject, IBoolState
@@ -1521,7 +1522,7 @@ namespace Sheet.Simulation
 
     public class SimulationContext
     {
-        public System.Threading.Timer SimulationTimer { get; set; }
+        public Timer SimulationTimer { get; set; }
         public object SimulationTimerSync { get; set; }
         public IClock SimulationClock { get; set; }
         public SimulationCache Cache { get; set; }
