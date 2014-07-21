@@ -3489,13 +3489,6 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public interface ISolutionRenamer
-    {
-        void Rename(Solution solution);
-        void Rename(Project project);
-        void Rename(Context context);
-    }
-
     public interface ISolutionFactory
     {
         AndGate CreateAndGate(Context context, double x, double y, string name);
@@ -4294,7 +4287,7 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public class SolutionRenamer : ISolutionRenamer
+    public class SolutionRenamer
     {
         #region Fields
 
