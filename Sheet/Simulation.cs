@@ -3489,14 +3489,6 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public interface ISolutionSimulationController
-    {
-        void EnableDebug(bool enable);
-        void EnableLog(bool enable);
-        void Start();
-        void Stop();
-    }
-
     public interface ISolutionSimulationFactory
     {
         Clock Clock { get; }
@@ -3946,7 +3938,7 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public class SolutionSimulationController : ISolutionSimulationController
+    public class SolutionSimulationController
     {
         #region Fields
 
