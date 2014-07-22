@@ -1706,10 +1706,10 @@ namespace Sheet.Simulation
         private Dictionary<UInt32, List<Tuple<Pin, bool>>> MapPinsToWires(
             Element[] elements)
         {
-            int lenght = elements.Length;
+            int length = elements.Length;
             var dict = new Dictionary<UInt32, List<Tuple<Pin, bool>>>();
 
-            for (int i = 0; i < lenght; i++)
+            for (int i = 0; i < length; i++)
             {
                 var element = elements[i];
                 if (element is Wire)
@@ -1718,7 +1718,6 @@ namespace Sheet.Simulation
                     var start = wire.Start;
                     var end = wire.End;
                     bool inverted = wire.InvertStart | wire.InvertEnd;
-
                     var startId = start.ElementId;
                     var endId = end.ElementId;
 
@@ -1750,7 +1749,13 @@ namespace Sheet.Simulation
             Dictionary<UInt32, List<Tuple<Pin, bool>>> pinToWireDict, 
             int level)
         {
-            var connectedPins = pinToWireDict[pin.ElementId].Where(x => x.Item1 != pin && x.Item1 != root && connections.ContainsKey(x.Item1.ElementId) == false);
+            var connectedPins = pinToWireDict[pin.ElementId]
+                .Where(x => 
+                {
+                    return x.Item1 != pin 
+                        && x.Item1 != root 
+                        && connections.ContainsKey(x.Item1.ElementId) == false;
+                });
 
             foreach (var p in connectedPins)
             {
@@ -1758,7 +1763,8 @@ namespace Sheet.Simulation
 
                 if (SimulationSettings.EnableDebug)
                 {
-                    Debug.Print("{0}    Pin: {1} | Inverted: {2} | SimulationParent: {3} | Type: {4}",
+                    Debug.Print(
+                        "{0}    Pin: {1} | Inverted: {2} | SimulationParent: {3} | Type: {4}",
                         new string(' ', level),
                         p.Item1.ElementId,
                         p.Item2,
@@ -1766,9 +1772,15 @@ namespace Sheet.Simulation
                         p.Item1.Type);
                 }
 
-                if (p.Item1.Type == PinType.Undefined && pinToWireDict.ContainsKey(pin.ElementId) == true)
+                if (p.Item1.Type == PinType.Undefined 
+                    && pinToWireDict.ContainsKey(pin.ElementId) == true)
                 {
-                    Find(root, p.Item1, connections, pinToWireDict, level + 4);
+                    Find(
+                        root, 
+                        p.Item1, 
+                        connections, 
+                        pinToWireDict, 
+                        level + 4);
                 }
             }
         }
@@ -3031,7 +3043,9 @@ namespace Sheet.Simulation
         private void ResetTags()
         {
             if (_solution == null || _solution.Tags == null)
+            {
                 return;
+            }
 
             // clear Tags children
             foreach (var tag in _solution.Tags)
@@ -3042,14 +3056,21 @@ namespace Sheet.Simulation
                 }
 
                 if (tag.Children != null)
+                {
                     tag.Children.Clear();
+                }
             }
         }
 
         private void MapSignalToTag(Signal signal, Tag tag)
         {
-            if (signal == null || signal.Children == null || tag == null || tag.Children == null)
+            if (signal == null
+                || signal.Children == null
+                || tag == null
+                || tag.Children == null)
+            {
                 return;
+            }
 
             foreach (var pin in signal.Children.Cast<Pin>())
             {
@@ -3076,7 +3097,11 @@ namespace Sheet.Simulation
 
         private void MapTags(List<Context> contexts)
         {
-            var signals = contexts.SelectMany(x => x.Children).Where(y => y is Signal).Cast<Signal>().ToList();
+            var signals = contexts
+                .SelectMany(x => x.Children)
+                .Where(y => y is Signal)
+                .Cast<Signal>()
+                .ToList();
 
             ResetTags();
 
@@ -3085,11 +3110,9 @@ namespace Sheet.Simulation
 
         private void DebugPrintTagMap()
         {
-            // print debug
             foreach (var tag in _solution.Tags)
             {
                 Debug.Print("{0}", tag.Properties["Designation"].Data);
-
                 foreach (var pin in tag.Children.Cast<Pin>())
                 {
                     Debug.Print("    -> pin type: {0}, parent: {1}, id: {2}", pin.Type, pin.Parent.Name, pin.Id);
@@ -3097,7 +3120,9 @@ namespace Sheet.Simulation
             }
         }
 
-        private void UpdateSignalBlockStates(Signal[] signals, IBlockStateUpdate helper)
+        private void UpdateSignalBlockStates(
+            Signal[] signals, 
+            IBlockStateUpdate state)
         {
             bool update = false;
 
@@ -3107,10 +3132,12 @@ namespace Sheet.Simulation
                 foreach (var signal in signals)
                 {
                     var tag = signal.Tag;
-                    if (tag != null && tag.Simulation != null && tag.Simulation.State.State != tag.Simulation.State.PreviousState)
+                    if (tag != null 
+                        && tag.Simulation != null 
+                        && tag.Simulation.State.State != tag.Simulation.State.PreviousState)
                     {
                         update = true;
-                        helper.SeState(signal.Block, tag.Simulation.State);
+                        state.SeState(signal.Block, tag.Simulation.State);
                     }
                 }
 
@@ -3125,9 +3152,10 @@ namespace Sheet.Simulation
                 foreach (var signal in signals)
                 {
                     var tag = signal.Tag;
-                    if (tag != null && tag.Simulation != null)
+                    if (tag != null 
+                        && tag.Simulation != null)
                     {
-                        helper.SeState(signal.Block, tag.Simulation.State);
+                        state.SeState(signal.Block, tag.Simulation.State);
                     }
                 }
             }
@@ -3145,7 +3173,12 @@ namespace Sheet.Simulation
 
         private Action GetUpdateAction(List<Context> contexts)
         {
-            var signals = contexts.SelectMany(x => x.Children).Where(y => y is Signal).Cast<Signal>().ToArray();
+            var signals = contexts
+                .SelectMany(x => x.Children)
+                .Where(y => y is Signal)
+                .Cast<Signal>()
+                .ToArray();
+
             var dispatcher = Dispatcher.CurrentDispatcher;
             var helper = new WpfBlockStateUpdate();
 
@@ -3159,18 +3192,26 @@ namespace Sheet.Simulation
         {
             // simulation is already running
             if (_controller.SimulationContext.SimulationTimer != null)
+            {
                 return;
+            }
 
             if (_solution == null)
+            {
                 return;
+            }
 
             var projects = _solution.Children.Cast<Project>();
             if (projects == null)
+            {
                 return;
+            }
 
             var contexts = projects.SelectMany(x => x.Children).Cast<Context>().ToList();
             if (contexts == null)
+            {
                 return;
+            }
 
             // map tags
             MapTags(contexts);
@@ -3203,7 +3244,11 @@ namespace Sheet.Simulation
             _controller.Reset(true);
 
             // run simulation
-            _controller.Run(contexts, _solution.Tags, period, GetUpdateAction(contexts));
+            _controller.Run(
+                contexts, 
+                _solution.Tags, 
+                period, 
+                GetUpdateAction(contexts));
 
             // reset simulation parent
             foreach (var element in elements)
