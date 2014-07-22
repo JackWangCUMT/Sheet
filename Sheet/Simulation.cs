@@ -530,12 +530,12 @@ namespace Sheet.Simulation
 
         private bool? CalculateState(Tuple<IBoolState, bool>[] states)
         {
-            int lenght = states.Length;
-            if (lenght == 1)
+            int length = states.Length;
+            if (length == 1)
                 return null;
 
             bool? result = null;
-            for (int i = 0; i < lenght; i++)
+            for (int i = 0; i < length; i++)
             {
                 var item = states[i];
                 var state = item.Item1.State;
@@ -647,12 +647,12 @@ namespace Sheet.Simulation
 
         private bool? CalculateState(Tuple<IBoolState, bool>[] states)
         {
-            int lenght = states.Length;
-            if (lenght == 1)
+            int length = states.Length;
+            if (length == 1)
                 return null;
 
             bool? result = null;
-            for (int i = 0; i < lenght; i++)
+            for (int i = 0; i < length; i++)
             {
                 var item = states[i];
                 var state = item.Item1.State;
@@ -1540,9 +1540,9 @@ namespace Sheet.Simulation
 
             if (cache.Simulations != null)
             {
-                var lenght = cache.Simulations.Length;
+                var length = cache.Simulations.Length;
 
-                for (int i = 0; i < lenght; i++)
+                for (int i = 0; i < length; i++)
                 {
                     var simulation = cache.Simulations[i];
                     simulation.Reset();
@@ -1571,10 +1571,17 @@ namespace Sheet.Simulation
             {
                 if (SimulationSettings.EnableDebug)
                 {
-                    Debug.Print("+ {0} depends on:", (item as ISimulation).Element.Name);
+                    Debug.Print(
+                        "+ {0} depends on:", 
+                        (item as ISimulation).Element.Name);
                 }
 
-                Visit(item, visited, sorted, dependencies, ignoreDependencyCycles);
+                Visit(
+                    item, 
+                    visited, 
+                    sorted, 
+                    dependencies, 
+                    ignoreDependencyCycles);
 
                 if (SimulationSettings.EnableDebug)
                 {
@@ -1597,17 +1604,23 @@ namespace Sheet.Simulation
                 visited.Add(item);
 
                 var dependsOn = dependencies(item);
-
                 if (dependsOn != null)
                 {
                     foreach (var dep in dependsOn)
                     {
                         if (SimulationSettings.EnableDebug)
                         {
-                            Debug.Print("|     {0}", (dep as ISimulation).Element.Name);
+                            Debug.Print(
+                                "|     {0}", 
+                                (dep as ISimulation).Element.Name);
                         }
 
-                        Visit(dep, visited, sorted, dependencies, ignoreDependencyCycles);
+                        Visit(
+                            dep, 
+                            visited, 
+                            sorted, 
+                            dependencies, 
+                            ignoreDependencyCycles);
                     }
 
                     // add items with simulation dependencies
@@ -1619,7 +1632,9 @@ namespace Sheet.Simulation
             }
             else if (!ignoreDependencyCycles && !sorted.Contains(item))
             {
-                Debug.Print("Invalid dependency cycle: {0}", (item as Element).Name);
+                Debug.Print(
+                    "Invalid dependency cycle: {0}", 
+                    (item as Element).Name);
             }
         }
     }
@@ -1802,9 +1817,9 @@ namespace Sheet.Simulation
                                .Where(p => (p.Type == PinType.Undefined || p.Type == PinType.Input) && pinToWireDict.ContainsKey(p.ElementId))
                                .ToArray();
 
-            var lenght = pins.Length;
+            var length = pins.Length;
 
-            for (int i = 0; i < lenght; i++)
+            for (int i = 0; i < length; i++)
             {
                 var pin = pins[i];
 
@@ -1862,9 +1877,9 @@ namespace Sheet.Simulation
         private void ProcessInput(Pin input, string level)
         {
             var connections = input.Connections;
-            var lenght = connections.Length;
+            var length = connections.Length;
 
-            for (int i = 0; i < lenght; i++)
+            for (int i = 0; i < length; i++)
             {
                 var connection = connections[i];
 
@@ -1935,13 +1950,13 @@ namespace Sheet.Simulation
                                       .Where(p => p.Connections != null && p.Type == PinType.Input && p.Connections.Length > 0 && p.Connections.Any(i => i.Item1.Type == PinType.Undefined))
                                       .ToArray();
 
-            var lenght = connections.Length;
+            var length = connections.Length;
 
-            if (lenght == 0)
+            if (length == 0)
                 return;
 
             // process all input connections
-            for (int i = 0; i < lenght; i++)
+            for (int i = 0; i < length; i++)
             {
                 var connection = connections[i];
                 var simulation = connection.SimulationParent as IStateSimulation;
@@ -1962,9 +1977,9 @@ namespace Sheet.Simulation
 
         private void InitializeStates(List<ISimulation> simulations)
         {
-            var lenght = simulations.Count;
+            var length = simulations.Count;
 
-            for (int i = 0; i < lenght; i++)
+            for (int i = 0; i < length; i++)
             {
                 var state = new BoolState();
                 var simulation = simulations[i];
@@ -1990,9 +2005,9 @@ namespace Sheet.Simulation
                 return;
             }
 
-            var lenght = simulations.Count;
+            var length = simulations.Count;
 
-            for (int i = 0; i < lenght; i++)
+            for (int i = 0; i < length; i++)
             {
                 if (SimulationSettings.EnableDebug)
                 {
@@ -2027,8 +2042,8 @@ namespace Sheet.Simulation
             // -- step 2: initialize IStateSimulation simulation
             var simulations = new List<ISimulation>();
 
-            var lenght = elements.Length;
-            for (int i = 0; i < lenght; i++)
+            var length = elements.Length;
+            for (int i = 0; i < length; i++)
             {
                 var element = elements[i];
                 if (element is IStateSimulation)
@@ -2176,9 +2191,15 @@ namespace Sheet.Simulation
                 // get total number of elements for simulation
                 var elements = contexts.SelectMany(x => x.Children).Concat(tags);
 
-                Debug.Print("Simulation for {0} contexts, elements: {1}", contexts.Count(), elements.Count());
-                Debug.Print("Debug Simulation Enabled: {0}", SimulationSettings.EnableDebug);
-                Debug.Print("Have Cache: {0}", SimulationContext.Cache == null ? false : SimulationContext.Cache.HaveCache);
+                Debug.Print(
+                    "Simulation for {0} contexts, elements: {1}", 
+                    contexts.Count(), elements.Count());
+                Debug.Print(
+                    "Debug Simulation Enabled: {0}", 
+                    SimulationSettings.EnableDebug);
+                Debug.Print(
+                    "Have Cache: {0}", 
+                    SimulationContext.Cache == null ? false : SimulationContext.Cache.HaveCache);
             }
 
             if (SimulationContext.Cache == null || SimulationContext.Cache.HaveCache == false)
@@ -2198,7 +2219,6 @@ namespace Sheet.Simulation
         {
             SimulationContext.SimulationClock.Cycle = 0;
             SimulationContext.SimulationClock.Resolution = (int)period.TotalMilliseconds;
-
             SimulationContext.SimulationTimerSync = new object();
 
             var virtualTime = new TimeSpan(0);
@@ -2217,27 +2237,26 @@ namespace Sheet.Simulation
                         action(s);
                         sw.Stop();
 
-                        if (IsConsole)
+                        if (SimulationSettings.EnableDebug)
                         {
-                            Console.Title = string.Format("Cycle {0} | {1}ms | vt:{2} rt:{3} dt:{4} id:{5}",
+                            var debug = string.Format(
+                                "Cycle {0} | {1}ms | vt:{2} rt:{3} dt:{4} id:{5}",
                                 SimulationContext.SimulationClock.Cycle,
                                 sw.Elapsed.TotalMilliseconds,
                                 virtualTime.TotalMilliseconds,
                                 realTime.Elapsed.TotalMilliseconds,
                                 DateTime.Now - dt,
                                 System.Threading.Thread.CurrentThread.ManagedThreadId);
-                        }
 
-                        //if (SimulationSettings.EnableDebug)
-                        //{
-                        Debug.Print("Cycle {0} | {1}ms | vt:{2} rt:{3} dt:{4} id:{5}",
-                            SimulationContext.SimulationClock.Cycle,
-                            sw.Elapsed.TotalMilliseconds,
-                            virtualTime.TotalMilliseconds,
-                            realTime.Elapsed.TotalMilliseconds,
-                            DateTime.Now - dt,
-                            System.Threading.Thread.CurrentThread.ManagedThreadId);
-                        //}
+                            if (IsConsole)
+                            {
+                                Console.Title = debug;
+                            }
+                            else
+                            {
+                                Debug.Print(debug);
+                            }
+                        }
                     }
                 },
                 contexts,
@@ -2310,11 +2329,10 @@ namespace Sheet.Simulation
                     Debug.Print("--- warning: no ISimulation elements ---");
                     Debug.Print("");
                 }
-
                 return;
             }
 
-            var lenght = simulations.Length;
+            var length = simulations.Length;
 
             if (SimulationSettings.EnableDebug)
             {
@@ -2323,11 +2341,14 @@ namespace Sheet.Simulation
 
             var sw = System.Diagnostics.Stopwatch.StartNew();
 
-            for (int i = 0; i < lenght; i++)
+            for (int i = 0; i < length; i++)
             {
                 if (SimulationSettings.EnableDebug)
                 {
-                    Debug.Print("--- simulation: {0} | Type: {1} ---", simulations[i].Element.ElementId, simulations[i].GetType());
+                    Debug.Print(
+                        "--- simulation: {0} | Type: {1} ---", 
+                        simulations[i].Element.ElementId, 
+                        simulations[i].GetType());
                     Debug.Print("");
                 }
 
@@ -2338,7 +2359,9 @@ namespace Sheet.Simulation
 
             if (SimulationSettings.EnableDebug)
             {
-                Debug.Print("Calculate() done in: {0}ms | {1} elements", sw.Elapsed.TotalMilliseconds, lenght);
+                Debug.Print(
+                    "Calculate() done in: {0}ms | {1} elements", 
+                    sw.Elapsed.TotalMilliseconds, length);
             }
         }
 
@@ -2356,8 +2379,8 @@ namespace Sheet.Simulation
 
         public void Stop()
         {
-            if (SimulationContext != null &&
-            SimulationContext.SimulationTimer != null)
+            if (SimulationContext != null 
+                && SimulationContext.SimulationTimer != null)
             {
                 SimulationContext.SimulationTimer.Dispose();
             }
