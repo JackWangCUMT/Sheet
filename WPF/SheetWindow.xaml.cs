@@ -806,26 +806,6 @@ namespace Sheet
             }
         }
 
-        private Solution TestSolutionBinaryReaderWriter(Solution solution)
-        {
-            var writer = new SolutionBinarySerializer();
-            writer.Save("test.bin", solution);
-
-            var reader = new SolutionBinarySerializer();
-            var binarySolution = reader.Open("test.bin");
-
-            var factory = new SolutionFactory();
-            var signals = (binarySolution.Children[0].Children[0] as Context).Children.Where(c => c is Signal).Cast<Signal>();
-            foreach (var signal in signals)
-            {
-                var tag = factory.CreateSignalTag(signal.ElementId.ToString(), "", "", "");
-                binarySolution.Tags.Add(tag);
-                signal.Tag = tag;
-            }
-
-            return binarySolution;
-        }
-
         private void StopSimulation()
         {
             try

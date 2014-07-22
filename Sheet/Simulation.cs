@@ -3408,7 +3408,6 @@ namespace Sheet.Simulation
     {
         #region Fields
 
-        private SolutionFactory _factory = new SolutionFactory();
         private ObservableCollection<Tag> tags = null;
         private Dictionary<int, Pin> map = null;
 
