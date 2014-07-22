@@ -4136,9 +4136,9 @@ namespace Sheet.Simulation
     {
         #region Fields
 
-        public const string CountersNamepsace = "Sheet.Simulation";
+        private static string CountersNamepsace = "Sheet.Simulation";
 
-        private Dictionary<string, string> ShortElementNames 
+        private static Dictionary<string, string> ShortElementNames 
             = new Dictionary<string, string>()
         {
             // Solution
@@ -4174,10 +4174,11 @@ namespace Sheet.Simulation
         private Dictionary<string, int> GetCountersDictionary()
         {
             // element counters based on type
-            var types = System.Reflection.Assembly.GetAssembly(typeof(Solution))
-                                                  .GetTypes()
-                                                  .Where(x => x.IsClass && x.Namespace == CountersNamepsace)
-                                                  .Select(y => y.ToString().Split('.').Last());
+            var types = System.Reflection.Assembly
+                .GetAssembly(typeof(Solution))
+                .GetTypes()                      
+                .Where(x => x.IsClass && x.Namespace == CountersNamepsace)
+                .Select(y => y.ToString().Split('.').Last());
 
             // counters: key = element Type, value = element counter
             var counters = new Dictionary<string, int>();
@@ -4185,7 +4186,6 @@ namespace Sheet.Simulation
             {
                 counters.Add(type, 0);
             }
-
             return counters;
         }
 
@@ -4217,7 +4217,8 @@ namespace Sheet.Simulation
             foreach (var project in projects)
             {
                 // rename project
-                string project_name = string.Format("{0}{1}",
+                string project_name = string.Format(
+                    "{0}{1}",
                     ShortElementNames["Project"],
                     ++counters["Project"]);
 
@@ -4268,7 +4269,10 @@ namespace Sheet.Simulation
             Rename(context, counters, ids);
         }
 
-        private void Rename(IEnumerable<Context> contexts, Dictionary<string, int> counters, Dictionary<string, string> ids)
+        private void Rename(
+            IEnumerable<Context> contexts, 
+            Dictionary<string, int> counters, 
+            Dictionary<string, string> ids)
         {
             foreach (var context in contexts)
             {
@@ -4276,7 +4280,10 @@ namespace Sheet.Simulation
             }
         }
 
-        private void Rename(Context context, Dictionary<string, int> counters, Dictionary<string, string> ids)
+        private void Rename(
+            Context context, 
+            Dictionary<string, int> counters, 
+            Dictionary<string, string> ids)
         {
             string context_name = string.Format("{0}{1}",
                 ShortElementNames["Context"],
