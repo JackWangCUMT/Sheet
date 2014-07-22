@@ -884,8 +884,8 @@ namespace Dxf.Tables
         public DxfLtypeStandardFlags LtypeStandardFlags { get; set; }
         public string Description { get; set; }
         public int DashLengthItems { get; set; }
-        public double TotalPatternLenght { get; set; }
-        public double[] DashLenghts { get; set; }
+        public double TotalPatternLength { get; set; }
+        public double[] DashLengths { get; set; }
 
         public DxfLtype(DxfAcadVer version, int id)
             : base(version, id)
@@ -898,8 +898,8 @@ namespace Dxf.Tables
             LtypeStandardFlags = DxfLtypeStandardFlags.Default;
             Description = string.Empty;
             DashLengthItems = 0;
-            TotalPatternLenght = 0.0;
-            DashLenghts = null;
+            TotalPatternLength = 0.0;
+            DashLengths = null;
 
             return this;
         }
@@ -921,14 +921,14 @@ namespace Dxf.Tables
             Add(72, 65); // alignment code; value is always 65, the ASCII code for A
 
             Add(73, DashLengthItems);
-            Add(40, TotalPatternLenght);
+            Add(40, TotalPatternLength);
 
-            if (DashLenghts != null)
+            if (DashLengths != null)
             {
                 // dash length 0,1,2...n-1 = DashLengthItems
-                foreach (var lenght in DashLenghts)
+                foreach (var length in DashLengths)
                 {
-                    Add(49, lenght);
+                    Add(49, length);
                 }
             }
 
@@ -1330,9 +1330,9 @@ namespace Dxf.Tables
                     OrthographicOrigin != null &&
                     OrthographicType.Length == OrthographicOrigin.Length)
                 {
-                    int lenght = OrthographicType.Length;
+                    int length = OrthographicType.Length;
 
-                    for (int i = 0; i < lenght; i++)
+                    for (int i = 0; i < length; i++)
                     {
                         Add(71, (int)OrthographicType[i]);
                         Add(13, OrthographicOrigin[i].X);
@@ -1412,9 +1412,9 @@ namespace Dxf.Tables
             return this;
         }
 
-        public DxfView LensLenght(double lenght)
+        public DxfView LensLength(double length)
         {
-            Add(42, lenght);
+            Add(42, length);
             return this;
         }
 
@@ -3802,8 +3802,8 @@ namespace Sheet
                 LtypeStandardFlags = DxfLtypeStandardFlags.Default,
                 Description = "ByLayer",
                 DashLengthItems = 0,
-                TotalPatternLenght = 0,
-                DashLenghts = null,
+                TotalPatternLength = 0,
+                DashLengths = null,
             }.Create());
 
             // ByBlock
@@ -3813,8 +3813,8 @@ namespace Sheet
                 LtypeStandardFlags = DxfLtypeStandardFlags.Default,
                 Description = "ByBlock",
                 DashLengthItems = 0,
-                TotalPatternLenght = 0,
-                DashLenghts = null,
+                TotalPatternLength = 0,
+                DashLengths = null,
             }.Create());
 
             // Continuous
@@ -3824,8 +3824,8 @@ namespace Sheet
                 LtypeStandardFlags = DxfLtypeStandardFlags.Default,
                 Description = "Solid line",
                 DashLengthItems = 0,
-                TotalPatternLenght = 0,
-                DashLenghts = null,
+                TotalPatternLength = 0,
+                DashLengths = null,
             }.Create());
 
             return ltypes;
