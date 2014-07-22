@@ -4138,7 +4138,8 @@ namespace Sheet.Simulation
 
         public const string CountersNamepsace = "Sheet.Simulation";
 
-        private Dictionary<string, string> ShortElementNames = new Dictionary<string, string>()
+        private Dictionary<string, string> ShortElementNames 
+            = new Dictionary<string, string>()
         {
             // Solution
             { "Solution", "sln" },
