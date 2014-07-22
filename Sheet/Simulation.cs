@@ -2387,28 +2387,47 @@ namespace Sheet.Simulation
 
         #endregion
     }
-    
-    public enum BinaryCommandId : ushort
-    {
-        Solution = 0,
-        Project = 1,
-        Context = 2,
-        Pin = 3,
-        Signal = 4,
-        AndGate = 5,
-        OrGate = 6,
-        TimerOn = 7,
-        TimerOff = 8,
-        TimerPulse = 9,
-        Connect = 10
-    }
 
-    public class BinarySolutionReader
+    public class SolutionBinarySerializer
     {
+        #region BinaryCommandId
+
+        public enum BinaryCommandId : ushort
+        {
+            Solution = 0,
+            Project = 1,
+            Context = 2,
+            Pin = 3,
+            Signal = 4,
+            AndGate = 5,
+            OrGate = 6,
+            TimerOn = 7,
+            TimerOff = 8,
+            TimerPulse = 9,
+            Connect = 10
+        } 
+
+        #endregion
+
         #region Fields
 
         public static int SizeOfCommandId = Marshal.SizeOf(typeof(UInt16));
         public static int SizeOfTotalElements = Marshal.SizeOf(typeof(UInt32));
+
+        // dict: key = element Id, value = generated element id for simulation
+        private Dictionary<string, UInt32> Ids;
+
+        // generated element id
+        private UInt32 ElementId;
+
+        // command id
+        private BinaryCommandId CommandId;
+
+        // bool true Byte value
+        private const Byte TrueByte = 0x01;
+
+        // bool false Byte value
+        private const Byte FalseByte = 0x00;
 
         #endregion
 
@@ -2912,28 +2931,6 @@ namespace Sheet.Simulation
 
             return solution;
         }
-
-        #endregion
-    }
-
-    public class BinarySolutionWriter
-    {
-        #region Fields
-
-        // dict: key = element Id, value = generated element id for simulation
-        private Dictionary<string, UInt32> Ids;
-
-        // generated element id
-        private UInt32 ElementId;
-
-        // command id
-        private BinaryCommandId CommandId;
-
-        // bool true Byte value
-        private const Byte TrueByte = 0x01;
-
-        // bool false Byte value
-        private const Byte FalseByte = 0x00;
 
         #endregion
 
