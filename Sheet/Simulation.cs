@@ -15,6 +15,12 @@ using System.Windows.Threading;
 
 namespace Sheet.Simulation
 {
+    internal static class SimulationSettings
+    {
+        public static bool EnableDebug { get; set; }
+        public static bool EnableLog { get; set; }
+    }
+
     public abstract class NotifyObject : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -91,33 +97,15 @@ namespace Sheet.Simulation
 
     public class Clock : IClock
     {
-        #region Constructor
-
-        public Clock()
-            : base()
-        {
-        }
-
-        public Clock(long cycle, int resolution)
-            : this()
-        {
-            this.Cycle = cycle;
-            this.Resolution = resolution;
-        }
-
-        #endregion
-
-        #region Properties
-
         public long Cycle { get; set; }
         public int Resolution { get; set; }
-
-        #endregion
     }
 
     public class BoolState : NotifyObject, IBoolState
     {
         public bool? previousState;
+        public bool? state;
+
         public bool? PreviousState
         {
             get { return previousState; }
@@ -131,7 +119,6 @@ namespace Sheet.Simulation
             }
         }
 
-        public bool? state;
         public bool? State
         {
             get { return state; }
@@ -1556,12 +1543,6 @@ namespace Sheet.Simulation
         }
 
         #endregion
-    }
-
-    public static class SimulationSettings
-    {
-        public static bool EnableDebug { get; set; }
-        public static bool EnableLog { get; set; }
     }
 
     public class SimulationContext
