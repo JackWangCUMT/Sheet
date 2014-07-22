@@ -216,22 +216,6 @@ namespace Sheet.Simulation
         public ISimulation Simulation { get; set; }
     }
 
-    public class Context : Element
-    {
-        public Context() : base() { }
-    }
-
-    public class Project : Element
-    {
-        public Project() : base() { }
-    }
-
-    public class Solution : Element
-    {
-        public Solution() : base() { Tags = new ObservableCollection<Tag>(); }
-        public ObservableCollection<Tag> Tags { get; set; }
-    }
-
     public class AndGate : Element, IStateSimulation
     {
         public AndGate() : base() { }
@@ -241,42 +225,6 @@ namespace Sheet.Simulation
     public class OrGate : Element, IStateSimulation
     {
         public OrGate() : base() { }
-        public ISimulation Simulation { get; set; }
-    }
-
-    public class BufferGate : Element, IStateSimulation
-    {
-        public BufferGate() : base() { }
-        public ISimulation Simulation { get; set; }
-    }
-
-    public class NotGate : Element, IStateSimulation
-    {
-        public NotGate() : base() { }
-        public ISimulation Simulation { get; set; }
-    }
-
-    public class NorGate : Element, IStateSimulation
-    {
-        public NorGate() : base() { }
-        public ISimulation Simulation { get; set; }
-    }
-
-    public class XorGate : Element, IStateSimulation
-    {
-        public XorGate() : base() { }
-        public ISimulation Simulation { get; set; }
-    }
-
-    public class XnorGate : Element, IStateSimulation
-    {
-        public XnorGate() : base() { }
-        public ISimulation Simulation { get; set; }
-    }
-
-    public class NandGate : Element, IStateSimulation
-    {
-        public NandGate() : base() { }
         public ISimulation Simulation { get; set; }
     }
 
@@ -301,18 +249,6 @@ namespace Sheet.Simulation
         public TimerPulse() : base() { }
         public float Delay { get; set; }
         public string Unit { get; set; }
-        public ISimulation Simulation { get; set; }
-    }
-
-    public class MemoryResetPriority : Element, IStateSimulation
-    {
-        public MemoryResetPriority() : base() { }
-        public ISimulation Simulation { get; set; }
-    }
-
-    public class MemorySetPriority : Element, IStateSimulation
-    {
-        public MemorySetPriority() : base() { }
         public ISimulation Simulation { get; set; }
     }
 
@@ -701,264 +637,6 @@ namespace Sheet.Simulation
             StatesCache = null;
             State = null;
             Clock = null;
-        }
-
-        #endregion
-    }
-
-    public class NotGateSimulation : ISimulation
-    {
-        #region Constructor
-
-        public NotGateSimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }
-
-    public class BufferGateSimulation : ISimulation
-    {
-        #region Constructor
-
-        public BufferGateSimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }
-
-    public class XorGateSimulation : ISimulation
-    {
-        #region Constructor
-
-        public XorGateSimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }
-
-    public class NorGateSimulation : ISimulation
-    {
-        #region Constructor
-
-        public NorGateSimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }
-
-    public class NandGateSimulation : ISimulation
-    {
-        #region Constructor
-
-        public NandGateSimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
-    }
-
-    public class XnorGateSimulation : ISimulation
-    {
-        #region Constructor
-
-        public XnorGateSimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
         }
 
         #endregion
@@ -1459,90 +1137,20 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public class MemoryResetPrioritySimulation : ISimulation
+    public class Context : Element
     {
-        #region Constructor
-
-        public MemoryResetPrioritySimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
+        public Context() : base() { }
     }
 
-    public class MemorySetPrioritySimulation : ISimulation
+    public class Project : Element
     {
-        #region Constructor
+        public Project() : base() { }
+    }
 
-        public MemorySetPrioritySimulation()
-            : base()
-        {
-            this.InitialState = null;
-        }
-
-        #endregion
-
-        #region ISimulation
-
-        public Element Element { get; set; }
-
-        public IClock Clock { get; set; }
-
-        public IBoolState State { get; set; }
-        public bool? InitialState { get; set; }
-        public Tuple<IBoolState, bool>[] StatesCache { get; set; }
-        public bool HaveCache { get; set; }
-
-        public Element[] DependsOn { get; set; }
-
-        public void Compile()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Calculate()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Reset()
-        {
-            throw new NotImplementedException();
-        }
-
-        #endregion
+    public class Solution : Element
+    {
+        public Solution() : base() { Tags = new ObservableCollection<Tag>(); }
+        public ObservableCollection<Tag> Tags { get; set; }
     }
 
     public class SimulationContext
