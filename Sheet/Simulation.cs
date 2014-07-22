@@ -3517,7 +3517,7 @@ namespace Sheet.Simulation
 
         private Signal CreateSignal(Context context, IBlock block)
         {
-            var tag = _factory.CreateSignalTag("tag" + block.Id.ToString(), "", "", "");
+            var tag = CreateSignalTag("tag" + block.Id.ToString(), "", "", "");
             tags.Add(tag);
 
             var element = new Signal()
