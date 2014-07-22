@@ -784,15 +784,19 @@ namespace Sheet
                 {
                     var solution = GetSolution();
 
-                    //var binarySolution = TestSolutionBinaryReaderWriter(solution);
-                    //solution = binarySolution;
-
                     controller = new SolutionSimulation(solution, 100);
                     controller.EnableDebug(false);
                     controller.EnableLog(false);
                     controller.Start();
 
-                    var window = new Window() { Title = "Tags", Width = 300, Height = 500, WindowStartupLocation = WindowStartupLocation.CenterScreen };
+                    var window = new Window() 
+                    {
+                        Title = "Tags", 
+                        Width = 300, 
+                        Height = 500, 
+                        WindowStartupLocation = WindowStartupLocation.CenterScreen 
+                    };
+
                     window.Owner = this;
                     window.Content = new TagsControl();
                     window.DataContext = solution.Tags;
