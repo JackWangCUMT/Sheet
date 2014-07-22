@@ -4001,79 +4001,38 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public class SolutionSimulationController
+    public class SolutionSimulation
     {
-        #region Fields
-
-        private SolutionSimulationContext _context;
-
-        #endregion
-
-        #region Constructor
-
-        public SolutionSimulationController(
-            Solution solution, 
-            int period)
-        {
-            _context = new SolutionSimulationContext(solution, period);
-        }
-
-        #endregion
-
-        #region Simulation Settings
-
-        public void EnableDebug(bool enable)
-        {
-            SimulationSettings.EnableDebug = enable;
-        }
-
-        public void EnableLog(bool enable)
-        {
-            SimulationSettings.EnableLog = enable;
-        }
-
-        #endregion
-
-        #region Simulation
-
-        public void Start()
-        {
-            _context.Start();
-        }
-
-        public void Stop()
-        {
-            _context.Stop();
-        }
-
-        #endregion
-    }
-
-    public class SolutionSimulationContext
-    {
-        #region Fields
-
         private Solution _solution;
         private Clock _clock;
         private SimulationController _controller;
         private int _periodInMillisencods;
 
-        #endregion
-
-        #region Constructor
-
-        public SolutionSimulationContext(
+        public SolutionSimulation(
             Solution solution, 
-            int periodInMillisencods = 100)
+            int periodInMillisencods)
         {
             _solution = solution;
             _periodInMillisencods = periodInMillisencods;
-            Initialize();
+
+            _controller = new SimulationController();
+            _clock = new Clock();
+
+            // create simulation context
+            _controller.SimulationContext = new SimulationContext()
+            {
+                Cache = null,
+                SimulationClock = _clock
+            };
+
+            _controller.IsConsole = false;
+
+            // disable Console debug output
+            SimulationSettings.EnableDebug = false;
+
+            // disable Log for Run()
+            SimulationSettings.EnableLog = false;
         }
-
-        #endregion
-
-        #region Tags
 
         private void ResetTags()
         {
@@ -4144,10 +4103,6 @@ namespace Sheet.Simulation
             }
         }
 
-        #endregion
-
-        #region Update
-
         private void UpdateSignalBlockStates(Signal[] signals, IBlockStateUpdate helper)
         {
             bool update = false;
@@ -4204,31 +4159,6 @@ namespace Sheet.Simulation
             var updateOnUIThread = new Action(() => dispatcher.BeginInvoke(update));
 
             return updateOnUIThread;
-        }
-
-        #endregion
-
-        #region Simulation
-
-        private void Initialize()
-        {
-            _controller = new SimulationController();
-            _clock = new Clock();
-
-            // create simulation context
-            _controller.SimulationContext = new SimulationContext()
-            {
-                Cache = null,
-                SimulationClock = _clock
-            };
-
-            _controller.IsConsole = false;
-
-            // disable Console debug output
-            SimulationSettings.EnableDebug = false;
-
-            // disable Log for Run()
-            SimulationSettings.EnableLog = false;
         }
 
         public void Start()
@@ -4302,6 +4232,14 @@ namespace Sheet.Simulation
             }
         }
 
-        #endregion
+        public void EnableDebug(bool enable)
+        {
+            SimulationSettings.EnableDebug = enable;
+        }
+
+        public void EnableLog(bool enable)
+        {
+            SimulationSettings.EnableLog = enable;
+        }
     }
 }

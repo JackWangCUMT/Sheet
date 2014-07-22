@@ -761,7 +761,7 @@ namespace Sheet
 
         #region Simulation
         
-        private SolutionSimulationController controller = null;
+        private SolutionSimulation controller = null;
 
         private Solution GetSolution()
         {
@@ -787,7 +787,7 @@ namespace Sheet
                     //var binarySolution = TestSolutionBinaryReaderWriter(solution);
                     //solution = binarySolution;
 
-                    controller = new SolutionSimulationController(solution, 100);
+                    controller = new SolutionSimulation(solution, 100);
                     controller.EnableDebug(false);
                     controller.EnableLog(false);
                     controller.Start();
