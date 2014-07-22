@@ -3871,24 +3871,16 @@ namespace Sheet.Simulation
 
         private Solution _solution;
         private Clock _clock;
-        private SimulationController _factory;
+        private SimulationController _controller;
         private int _periodInMillisencods;
-        private bool _isSimulationRunning = false;
-
-        #endregion
-
-        #region Properties
-
-        public Solution Solution { get { return _solution; } }
-        public Clock Clock { get { return _clock; } }
-        public SimulationController SimulationController { get { return _factory; } }
-        public bool IsSimulationRunning { get { return _isSimulationRunning; } }
 
         #endregion
 
         #region Constructor
 
-        public SolutionSimulationFactory(Solution solution, int periodInMillisencods = 100)
+        public SolutionSimulationFactory(
+            Solution solution, 
+            int periodInMillisencods = 100)
         {
             _solution = solution;
             _periodInMillisencods = periodInMillisencods;
@@ -4036,17 +4028,17 @@ namespace Sheet.Simulation
 
         private void Initialize()
         {
-            _factory = new SimulationController();
+            _controller = new SimulationController();
             _clock = new Clock();
 
             // create simulation context
-            _factory.SimulationContext = new SimulationContext()
+            _controller.SimulationContext = new SimulationContext()
             {
                 Cache = null,
                 SimulationClock = _clock
             };
 
-            _factory.IsConsole = false;
+            _controller.IsConsole = false;
 
             // disable Console debug output
             SimulationSettings.EnableDebug = false;
@@ -4058,7 +4050,7 @@ namespace Sheet.Simulation
         public void Start()
         {
             // simulation is already running
-            if (_factory.SimulationContext.SimulationTimer != null)
+            if (_controller.SimulationContext.SimulationTimer != null)
                 return;
 
             if (_solution == null)
@@ -4100,11 +4092,10 @@ namespace Sheet.Simulation
             int period = _periodInMillisencods;
 
             // reset previous simulation cache
-            _factory.Reset(true);
+            _controller.Reset(true);
 
             // run simulation
-            _factory.Run(contexts, _solution.Tags, period, GetUpdateAction(contexts));
-            _isSimulationRunning = true;
+            _controller.Run(contexts, _solution.Tags, period, GetUpdateAction(contexts));
 
             // reset simulation parent
             foreach (var element in elements)
@@ -4115,15 +4106,13 @@ namespace Sheet.Simulation
 
         public void Stop()
         {
-            if (_factory.SimulationContext.SimulationTimer != null)
+            if (_controller.SimulationContext.SimulationTimer != null)
             {
                 // stop simulation
-                _factory.Stop();
-
-                _isSimulationRunning = false;
+                _controller.Stop();
 
                 // reset previous simulation cache
-                _factory.Reset(true);
+                _controller.Reset(true);
 
                 ResetTags();
             }
