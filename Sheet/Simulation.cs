@@ -3452,7 +3452,11 @@ namespace Sheet.Simulation
 
         #region Create
 
-        private Tag CreateSignalTag(string designation, string description, string signal, string condition)
+        private Tag CreateSignalTag(
+            string designation, 
+            string description, 
+            string signal, 
+            string condition)
         {
             var tag = new Tag() { Id = Guid.NewGuid().ToString() };
             tag.Properties.Add("Designation", new TagProperty(designation));
@@ -3462,7 +3466,10 @@ namespace Sheet.Simulation
             return tag;
         }
 
-        private Wire CreateWire(Context context, Pin start, Pin end)
+        private Wire CreateWire(
+            Context context, 
+            Pin start, 
+            Pin end)
         {
             var element = new Wire()
             {
@@ -3479,7 +3486,15 @@ namespace Sheet.Simulation
             return element;
         }
 
-        private Pin CreatePin(Context context, double x, double y, Element parent, string name = "", string factoryName = "", PinType type = PinType.Undefined, bool pinTypeUndefined = true)
+        private Pin CreatePin(
+            Context context, 
+            double x, 
+            double y, 
+            Element parent, 
+            string name = "", 
+            string factoryName = "", 
+            PinType type = PinType.Undefined, 
+            bool pinTypeUndefined = true)
         {
             var element = new Pin()
             {
@@ -4365,7 +4380,11 @@ namespace Sheet.Simulation
     {
         #region Create
 
-        public Tag CreateSignalTag(string designation, string description, string signal, string condition)
+        public Tag CreateSignalTag(
+            string designation, 
+            string description, 
+            string signal, 
+            string condition)
         {
             var tag = new Tag() { Id = Guid.NewGuid().ToString() };
             tag.Properties.Add("Designation", new TagProperty(designation));
