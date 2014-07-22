@@ -3821,17 +3821,17 @@ namespace Sheet.Simulation
     {
         #region Fields
 
-        private Solution _solution;
-        private SolutionSimulationFactory _simulationFactory;
+        private SolutionSimulationContext _context;
 
         #endregion
 
         #region Constructor
 
-        public SolutionSimulationController(Solution solution, int period)
+        public SolutionSimulationController(
+            Solution solution, 
+            int period)
         {
-            _solution = solution;
-            _simulationFactory = new SolutionSimulationFactory(_solution, period);
+            _context = new SolutionSimulationContext(solution, period);
         }
 
         #endregion
@@ -3854,18 +3854,18 @@ namespace Sheet.Simulation
 
         public void Start()
         {
-            _simulationFactory.Start();
+            _context.Start();
         }
 
         public void Stop()
         {
-            _simulationFactory.Stop();
+            _context.Stop();
         }
 
         #endregion
     }
 
-    public class SolutionSimulationFactory
+    public class SolutionSimulationContext
     {
         #region Fields
 
@@ -3878,7 +3878,7 @@ namespace Sheet.Simulation
 
         #region Constructor
 
-        public SolutionSimulationFactory(
+        public SolutionSimulationContext(
             Solution solution, 
             int periodInMillisencods = 100)
         {
