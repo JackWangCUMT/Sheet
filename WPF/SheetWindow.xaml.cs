@@ -762,15 +762,6 @@ namespace Sheet
         #region Simulation
         
         private SolutionSimulationController controller = null;
-        
-        private void CreateDemoSimulation()
-        {
-            var solution = SolutionSimulationController.CreateDemoSolution();
-            controller = new SolutionSimulationController(solution, 100);
-            controller.EnableDebug(false);
-            controller.EnableLog(false);
-            controller.Start();
-        }
 
         private Solution GetSolution()
         {
