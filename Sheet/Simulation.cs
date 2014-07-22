@@ -5,12 +5,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace Sheet.Simulation
@@ -142,7 +138,10 @@ namespace Sheet.Simulation
 
     public class Pin : Element
     {
-        public Pin() : base() { }
+        public Pin() 
+            : base() 
+        { 
+        }
         public bool IsPinTypeUndefined { get; set; }
         public PinType Type { get; set; }
         public Tuple<Pin, bool>[] Connections { get; set; } // bool is flag for Inverted
@@ -198,20 +197,34 @@ namespace Sheet.Simulation
 
     public class Signal : Element
     {
-        public Signal() : base() { }
+        public Signal() 
+            : base() 
+        {
+        }
         public Tag Tag { get; set; }
     }
 
     public class TagProperty
     {
-        public TagProperty() : base() { }
-        public TagProperty(object data) : this() { Data = data; }
+        public TagProperty() 
+            : base() 
+        { 
+        }
+        public TagProperty(object data) 
+            : this() 
+        { 
+            Data = data; 
+        }
         public object Data { get; set; }
     }
 
     public class Tag : Element, IStateSimulation
     {
-        public Tag() : base() { Properties = new Dictionary<string, TagProperty>(); }
+        public Tag() 
+            : base() 
+        { 
+            Properties = new Dictionary<string, TagProperty>(); 
+        }
         public IDictionary<string, TagProperty> Properties { get; set; }
         public ISimulation Simulation { get; set; }
     }
@@ -296,7 +309,11 @@ namespace Sheet.Simulation
                         && x.Connections.Length > 0;
                 })
                 .FirstOrDefault();
-            //IEnumerable<Pin> outputs = tag.Children.Cast<Pin>().Where(x => x.Type == PinType.Output);
+
+            //IEnumerable<Pin> outputs = tag
+            //    .Children
+            //    .Cast<Pin>()
+            //    .Where(x => x.Type == PinType.Output);
 
             if (input == null 
                 || input.Connections == null 
@@ -314,7 +331,9 @@ namespace Sheet.Simulation
             }
 
             // get all connected inputs with possible state
-            var connections = input.Connections.Where(x => x.Item1.Type == PinType.Output);
+            var connections = input
+                .Connections
+                .Where(x => x.Item1.Type == PinType.Output);
 
             // set ISimulation dependencies (used for topological sort)
             DependsOn = connections
@@ -369,7 +388,10 @@ namespace Sheet.Simulation
 
                 if (SimulationSettings.EnableDebug)
                 {
-                    Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
+                    Debug.Print(
+                        "Id: {0} | State: {1}", 
+                        Element.ElementId, 
+                        State.State);
                     Debug.Print("");
                 }
             }
@@ -414,7 +436,8 @@ namespace Sheet.Simulation
                 Reset();
 
             // get all connected inputs with possible state
-            var connections = Element.Children
+            var connections = Element
+                .Children
                 .Cast<Pin>()
                 .Where(pin => pin.Connections != null && pin.Type == PinType.Input)
                 .SelectMany(pin => pin.Connections)
@@ -542,7 +565,8 @@ namespace Sheet.Simulation
                 Reset();
 
             // get all connected inputs with possible state
-            var connections = Element.Children
+            var connections = Element
+                .Children
                 .Cast<Pin>()
                 .Where(pin => pin.Connections != null && pin.Type == PinType.Input)
                 .SelectMany(pin => pin.Connections)
@@ -670,7 +694,10 @@ namespace Sheet.Simulation
                 Reset();
 
             // only one input is allowed for timer
-            var inputs = Element.Children.Cast<Pin>().Where(pin => pin.Connections != null && pin.Type == PinType.Input);
+            var inputs = Element
+                .Children
+                .Cast<Pin>()
+                .Where(pin => pin.Connections != null && pin.Type == PinType.Input);
 
             if (inputs == null || inputs.Count() != 1)
             {
@@ -686,10 +713,17 @@ namespace Sheet.Simulation
             }
 
             // get all connected inputs with possible state
-            var connections = inputs.First().Connections.Where(x => x.Item1.Type == PinType.Output);
+            var connections = inputs
+                .First()
+                .Connections
+                .Where(x => x.Item1.Type == PinType.Output);
 
             // set ISimulation dependencies (used for topological sort)
-            DependsOn = connections.Where(x => x.Item1 != null).Select(y => y.Item1.SimulationParent).Take(1).ToArray();
+            DependsOn = connections
+                .Where(x => x.Item1 != null)
+                .Select(y => y.Item1.SimulationParent)
+                .Take(1)
+                .ToArray();
 
             if (SimulationSettings.EnableDebug)
             {
@@ -705,7 +739,14 @@ namespace Sheet.Simulation
             }
 
             // get all connected inputs with state
-            var states = connections.Select(x => new Tuple<IBoolState, bool>((x.Item1.SimulationParent as IStateSimulation).Simulation.State, x.Item2)).ToArray();
+            var states = connections
+                .Select(x => 
+                {
+                    return new Tuple<IBoolState, bool>(
+                        (x.Item1.SimulationParent as IStateSimulation).Simulation.State, 
+                        x.Item2);
+                })
+                .ToArray();
 
             if (states.Length == 1)
             {
@@ -777,7 +818,10 @@ namespace Sheet.Simulation
 
                 if (SimulationSettings.EnableDebug)
                 {
-                    Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
+                    Debug.Print(
+                        "Id: {0} | State: {1}", 
+                        Element.ElementId, 
+                        State.State);
                     Debug.Print("");
                 }
             }
@@ -822,7 +866,10 @@ namespace Sheet.Simulation
                 Reset();
 
             // only one input is allowed for timer
-            var inputs = Element.Children.Cast<Pin>().Where(pin => pin.Connections != null && pin.Type == PinType.Input);
+            var inputs = Element
+                .Children
+                .Cast<Pin>()
+                .Where(pin => pin.Connections != null && pin.Type == PinType.Input);
 
             if (inputs == null || inputs.Count() != 1)
             {
@@ -838,10 +885,17 @@ namespace Sheet.Simulation
             }
 
             // get all connected inputs with possible state
-            var connections = inputs.First().Connections.Where(x => x.Item1.Type == PinType.Output);
+            var connections = inputs
+                .First()
+                .Connections
+                .Where(x => x.Item1.Type == PinType.Output);
 
             // set ISimulation dependencies (used for topological sort)
-            DependsOn = connections.Where(x => x.Item1 != null).Select(y => y.Item1.SimulationParent).Take(1).ToArray();
+            DependsOn = connections
+                .Where(x => x.Item1 != null).
+                Select(y => y.Item1.SimulationParent)
+                .Take(1)
+                .ToArray();
 
             if (SimulationSettings.EnableDebug)
             {
@@ -857,7 +911,14 @@ namespace Sheet.Simulation
             }
 
             // get all connected inputs with state
-            var states = connections.Select(x => new Tuple<IBoolState, bool>((x.Item1.SimulationParent as IStateSimulation).Simulation.State, x.Item2)).ToArray();
+            var states = connections
+                .Select(x => 
+                {
+                    return new Tuple<IBoolState, bool>(
+                        (x.Item1.SimulationParent as IStateSimulation).Simulation.State, 
+                        x.Item2);
+                })
+                .ToArray();
 
             if (states.Length == 1)
             {
@@ -944,7 +1005,10 @@ namespace Sheet.Simulation
 
                 if (SimulationSettings.EnableDebug)
                 {
-                    Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
+                    Debug.Print(
+                        "Id: {0} | State: {1}", 
+                        Element.ElementId, 
+                        State.State);
                     Debug.Print("");
                 }
             }
@@ -989,7 +1053,10 @@ namespace Sheet.Simulation
                 Reset();
 
             // only one input is allowed for timer
-            var inputs = Element.Children.Cast<Pin>().Where(pin => pin.Connections != null && pin.Type == PinType.Input);
+            var inputs = Element
+                .Children
+                .Cast<Pin>()
+                .Where(pin => pin.Connections != null && pin.Type == PinType.Input);
 
             if (inputs == null || inputs.Count() != 1)
             {
@@ -1005,10 +1072,17 @@ namespace Sheet.Simulation
             }
 
             // get all connected inputs with possible state
-            var connections = inputs.First().Connections.Where(x => x.Item1.Type == PinType.Output);
+            var connections = inputs
+                .First()
+                .Connections
+                .Where(x => x.Item1.Type == PinType.Output);
 
             // set ISimulation dependencies (used for topological sort)
-            DependsOn = connections.Where(x => x.Item1 != null).Select(y => y.Item1.SimulationParent).Take(1).ToArray();
+            DependsOn = connections
+                .Where(x => x.Item1 != null)
+                .Select(y => y.Item1.SimulationParent)
+                .Take(1)
+                .ToArray();
 
             if (SimulationSettings.EnableDebug)
             {
@@ -1024,7 +1098,14 @@ namespace Sheet.Simulation
             }
 
             // get all connected inputs with state
-            var states = connections.Select(x => new Tuple<IBoolState, bool>((x.Item1.SimulationParent as IStateSimulation).Simulation.State, x.Item2)).ToArray();
+            var states = connections
+                .Select(x => 
+                {
+                    return new Tuple<IBoolState, bool>(
+                        (x.Item1.SimulationParent as IStateSimulation).Simulation.State, 
+                        x.Item2);
+                })
+                .ToArray();
 
             if (states.Length == 1)
             {
@@ -1438,7 +1519,9 @@ namespace Sheet.Simulation
             if (SimulationSettings.EnableDebug)
             {
                 Debug.Print("");
-                Debug.Print("--- FindConnections(), elements.Count: {0}", elements.Count());
+                Debug.Print(
+                    "--- FindConnections(), elements.Count: {0}", 
+                    elements.Count());
                 Debug.Print("");
             }
 
@@ -1458,7 +1541,8 @@ namespace Sheet.Simulation
 
                 if (SimulationSettings.EnableDebug)
                 {
-                    Debug.Print("Pin  {0} | SimulationParent: {1} | Type: {2}",
+                    Debug.Print(
+                        "Pin  {0} | SimulationParent: {1} | Type: {2}",
                         pin.ElementId,
                         (pin.SimulationParent != null) ? pin.SimulationParent.ElementId : UInt32.MaxValue,
                         pin.Type);
@@ -1466,7 +1550,12 @@ namespace Sheet.Simulation
 
                 var connections = new Dictionary<UInt32, Tuple<Pin, bool>>();
 
-                Find(pin, pin, connections, pinToWireDict, 0);
+                Find(
+                    pin, 
+                    pin, 
+                    connections, 
+                    pinToWireDict, 
+                    0);
 
                 if (connections.Count > 0)
                 {
@@ -1515,33 +1604,40 @@ namespace Sheet.Simulation
             for (int i = 0; i < length; i++)
             {
                 var connection = connections[i];
-
                 bool isUndefined = connection.Item1.Type == PinType.Undefined;
 
                 if (!(connection.Item1.SimulationParent is Context) && isUndefined)
                 {
                     if (!(connection.Item1.SimulationParent is Tag))
                     {
-                        var simulation = connection.Item1.SimulationParent as IStateSimulation;
-
                         connection.Item1.Type = PinType.Output;
 
                         if (SimulationSettings.EnableDebug)
                         {
-                            Debug.Print("{0}{1} -> {2}", level, connection.Item1.ElementId, connection.Item1.Type);
+                            Debug.Print(
+                                "{0}{1} -> {2}", 
+                                level, 
+                                connection.Item1.ElementId, 
+                                connection.Item1.Type);
                         }
                     }
                     else
                     {
                         if (SimulationSettings.EnableDebug)
                         {
-                            Debug.Print("{0}(*) {1} -> {2}", level, connection.Item1.ElementId, connection.Item1.Type);
+                            Debug.Print(
+                                "{0}(*) {1} -> {2}", 
+                                level, 
+                                connection.Item1.ElementId, 
+                                connection.Item1.Type);
                         }
                     }
 
                     if (connection.Item1.SimulationParent != null && isUndefined)
                     {
-                        ProcessOutput(connection.Item1, string.Concat(level, "    "));
+                        ProcessOutput(
+                            connection.Item1, 
+                            string.Concat(level, "    "));
                     }
                 }
             }
@@ -1549,25 +1645,34 @@ namespace Sheet.Simulation
 
         private void ProcessOutput(Pin output, string level)
         {
-            var pins = output.SimulationParent.Children.Where(p => p != output).Cast<Pin>();
+            var pins = output.SimulationParent
+                .Children
+                .Where(p => p != output)
+                .Cast<Pin>();
 
             foreach (var pin in pins)
             {
                 bool isUndefined = pin.Type == PinType.Undefined;
 
-                if (!(pin.SimulationParent is Context) && !(pin.SimulationParent is Tag) && isUndefined)
+                if (!(pin.SimulationParent is Context)
+                    && !(pin.SimulationParent is Tag) 
+                    && isUndefined)
                 {
-                    var simulation = pin.SimulationParent as IStateSimulation;
-
                     pin.Type = PinType.Input;
 
                     if (SimulationSettings.EnableDebug)
                     {
-                        Debug.Print("{0}{1} -> {2}", level, pin.ElementId, pin.Type);
+                        Debug.Print(
+                            "{0}{1} -> {2}", 
+                            level, 
+                            pin.ElementId, 
+                            pin.Type);
                     }
                 }
 
-                if (pin.Connections != null && pin.Connections.Length > 0 && isUndefined)
+                if (pin.Connections != null 
+                    && pin.Connections.Length > 0 
+                    && isUndefined)
                 {
                     ProcessInput(pin, level);
                 }
@@ -1577,16 +1682,24 @@ namespace Sheet.Simulation
         private void FindPinTypes(IEnumerable<Element> elements)
         {
             // find input connections
-            var connections = elements.Where(x => x.Children != null)
-                                      .SelectMany(x => x.Children)
-                                      .Cast<Pin>()
-                                      .Where(p => p.Connections != null && p.Type == PinType.Input && p.Connections.Length > 0 && p.Connections.Any(i => i.Item1.Type == PinType.Undefined))
-                                      .ToArray();
+            var connections = elements
+                .Where(x => x.Children != null)
+                .SelectMany(x => x.Children)
+                .Cast<Pin>()
+                .Where(p => 
+                {
+                    return p.Connections != null 
+                        && p.Type == PinType.Input 
+                        && p.Connections.Length > 0 
+                        && p.Connections.Any(i => i.Item1.Type == PinType.Undefined);
+                })
+                .ToArray();
 
             var length = connections.Length;
-
             if (length == 0)
+            {
                 return;
+            }
 
             // process all input connections
             for (int i = 0; i < length; i++)
@@ -1596,7 +1709,10 @@ namespace Sheet.Simulation
 
                 if (SimulationSettings.EnableDebug)
                 {
-                    Debug.Print("+ {0} -> {1}", connection.ElementId, connection.Type);
+                    Debug.Print(
+                        "+ {0} -> {1}", 
+                        connection.ElementId, 
+                        connection.Type);
                 }
 
                 ProcessInput(connection, "  ");
