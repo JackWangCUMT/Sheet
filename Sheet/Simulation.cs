@@ -1624,7 +1624,7 @@ namespace Sheet.Simulation
         }
     }
 
-    public class Compiler
+    public class SimulationCompiler
     {
         #region StateSimulationDict
 
@@ -2139,7 +2139,7 @@ namespace Sheet.Simulation
     {
         #region Properties
 
-        public Compiler Compiler { get; private set; }
+        public SimulationCompiler Compiler { get; private set; }
         public SimulationContext SimulationContext { get; set; }
         public bool IsConsole { get; set; }
 
@@ -2149,7 +2149,7 @@ namespace Sheet.Simulation
 
         public SimulationController()
         {
-            Compiler = new Compiler();
+            Compiler = new SimulationCompiler();
         }
 
         #endregion
