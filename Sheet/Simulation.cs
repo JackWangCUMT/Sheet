@@ -285,23 +285,13 @@ namespace Sheet.Simulation
 
     public class TagSimulation : ISimulation
     {
-        #region Constructor
-
-        public TagSimulation()
+        public TagSimulation(bool? initialState = false)
             : base()
         {
-            this.InitialState = false;
+            this.InitialState = initialState;
         }
 
-        #endregion
-
-        #region Properties
-
         public Element Element { get; set; }
-
-        #endregion
-
-        #region ISimulation
 
         public IClock Clock { get; set; }
         public IBoolState State { get; set; }
@@ -422,23 +412,15 @@ namespace Sheet.Simulation
             State = null;
             Clock = null;
         }
-
-        #endregion
     }
 
     public class AndGateSimulation : ISimulation
     {
-        #region Constructor
-
-        public AndGateSimulation()
+        public AndGateSimulation(bool? initialState = null)
             : base()
         {
-            this.InitialState = null;
+            this.InitialState = initialState;
         }
-
-        #endregion
-
-        #region ISimulation
 
         public Element Element { get; set; }
         public IClock Clock { get; set; }
@@ -551,23 +533,15 @@ namespace Sheet.Simulation
             State = null;
             Clock = null;
         }
-
-        #endregion
     }
 
     public class OrGateSimulation : ISimulation
     {
-        #region Constructor
-
-        public OrGateSimulation()
+        public OrGateSimulation(bool? initialState = null)
             : base()
         {
-            this.InitialState = null;
+            this.InitialState = initialState;
         }
-
-        #endregion
-
-        #region ISimulation
 
         public Element Element { get; set; }
         public IClock Clock { get; set; }
@@ -680,23 +654,15 @@ namespace Sheet.Simulation
             State = null;
             Clock = null;
         }
-
-        #endregion
     }
 
     public class TimerOnSimulation : ISimulation
     {
-        #region Constructor
-
-        public TimerOnSimulation()
+        public TimerOnSimulation(bool? initialState = false)
             : base()
         {
-            this.InitialState = false;
+            this.InitialState = initialState;
         }
-
-        #endregion
-
-        #region ISimulation
 
         public Element Element { get; set; }
         public IClock Clock { get; set; }
@@ -852,23 +818,15 @@ namespace Sheet.Simulation
             State = null;
             Clock = null;
         }
-
-        #endregion
     }
 
     public class TimerOffSimulation : ISimulation
     {
-        #region Constructor
-
-        public TimerOffSimulation()
+        public TimerOffSimulation(bool? initialState = false)
             : base()
         {
-            this.InitialState = false;
+            this.InitialState = initialState;
         }
-
-        #endregion
-
-        #region ISimulation
 
         public Element Element { get; set; }
         public IClock Clock { get; set; }
@@ -1039,23 +997,15 @@ namespace Sheet.Simulation
             State = null;
             Clock = null;
         }
-
-        #endregion
     }
 
     public class TimerPulseSimulation : ISimulation
     {
-        #region Constructor
-
-        public TimerPulseSimulation()
+        public TimerPulseSimulation(bool? initialState = false)
             : base()
         {
-            this.InitialState = false;
+            this.InitialState = initialState;
         }
-
-        #endregion
-
-        #region ISimulation
 
         public Element Element { get; set; }
         public IClock Clock { get; set; }
@@ -1235,8 +1185,6 @@ namespace Sheet.Simulation
             State = null;
             Clock = null;
         }
-
-        #endregion
     }
 
     public class Context : Element
