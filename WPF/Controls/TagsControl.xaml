@@ -16,8 +16,11 @@
         <DataTemplate x:Key="TagListDataTemplateKey">
             <Border Margin="4" Padding="2" BorderThickness="1,0,0,0" BorderBrush="LightGray">
                 <StackPanel>
-                    <local:PropertiesControl/>
-                    <CheckBox Margin="4,2,2,2" IsChecked="{Binding Simulation.State.State, FallbackValue=False, Mode=TwoWay}" Content="{Binding Simulation.State.State, FallbackValue=False, Mode=TwoWay}" IsThreeState="False"/>
+                    <!--<local:PropertiesControl/>-->
+                    <CheckBox Margin="4,2,2,2" 
+                              IsChecked="{Binding Simulation.State.State, FallbackValue=False, Mode=TwoWay}" 
+                              Content="{Binding Simulation.State.State, FallbackValue=False, Mode=TwoWay}" 
+                              IsThreeState="False"/>
                 </StackPanel>
             </Border>
         </DataTemplate>
