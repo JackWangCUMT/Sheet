@@ -1333,8 +1333,6 @@ namespace Sheet.Simulation
 
     public class SimulationCompiler
     {
-        #region StateSimulationDict
-
         public Dictionary<Type, Func<Element, ISimulation>> StateSimulationDict 
             = new Dictionary<Type, Func<Element, ISimulation>>()
         {
@@ -1405,10 +1403,6 @@ namespace Sheet.Simulation
                 }
             }
         };
-
-        #endregion
-
-        #region Connections
 
         private Dictionary<UInt32, List<Tuple<Pin, bool>>> MapPinsToWires(
             Element[] elements)
@@ -1574,10 +1568,6 @@ namespace Sheet.Simulation
                 }
             }
         }
-
-        #endregion
-
-        #region Compile
 
         private void ProcessInput(Pin input, string level)
         {
@@ -1902,30 +1892,18 @@ namespace Sheet.Simulation
 
             return cache;
         }
-
-        #endregion
     }
 
     public class SimulationController
     {
-        #region Properties
-
         public SimulationCompiler Compiler { get; private set; }
         public SimulationContext SimulationContext { get; set; }
         public bool IsConsole { get; set; }
-
-        #endregion
-
-        #region Constructor
 
         public SimulationController()
         {
             Compiler = new SimulationCompiler();
         }
-
-        #endregion
-
-        #region Run
 
         private void Run(IEnumerable<Context> contexts, IEnumerable<Tag> tags, bool showInfo)
         {
@@ -2117,10 +2095,6 @@ namespace Sheet.Simulation
             Run(cache.Simulations);
         }
 
-        #endregion
-
-        #region Stop
-
         public void Stop()
         {
             if (SimulationContext != null 
@@ -2129,10 +2103,6 @@ namespace Sheet.Simulation
                 SimulationContext.SimulationTimer.Dispose();
             }
         }
-
-        #endregion
-
-        #region Reset
 
         public void Reset(bool collect)
         {
@@ -2163,29 +2133,17 @@ namespace Sheet.Simulation
             SimulationContext.SimulationClock.Cycle = 0;
             SimulationContext.SimulationClock.Resolution = 0;
         }
-
-        #endregion
     }
 
     public class SolutionSerializer
     {
-        #region Fields
-
         private ObservableCollection<Tag> tags = null;
         private Dictionary<int, Pin> map = null;
-
-        #endregion
-
-        #region Compare
 
         private bool Compare(string strA, string strB)
         {
             return string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase) == 0;
         }
-
-        #endregion
-
-        #region Ids
 
         private int SetId(IBlock parent, int nextId)
         {
@@ -2206,10 +2164,6 @@ namespace Sheet.Simulation
 
             return nextId;
         }
-
-        #endregion
-
-        #region Create
 
         private Tag CreateSignalTag(
             string designation, 
@@ -2470,10 +2424,6 @@ namespace Sheet.Simulation
             return element;
         }
 
-        #endregion
-
-        #region Serialize
-
         private Pin Serialize(Context context, IPoint point)
         {
             var pin = CreatePin(context, point.X, point.Y, context, "pin" + point.Id.ToString());
@@ -2576,8 +2526,6 @@ namespace Sheet.Simulation
 
             return solution;
         }
-
-        #endregion
     }
 
     public interface IUpdateState
