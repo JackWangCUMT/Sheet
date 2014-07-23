@@ -768,9 +768,6 @@ namespace Sheet
             var block = _sheetController.State.ContentBlock;
             var serializer = new SolutionSerializer();
             var solution = serializer.Serialize(block);
-
-            var renamer = new SolutionRenamer();
-            renamer.Rename(solution);
             return solution;
         }
 
