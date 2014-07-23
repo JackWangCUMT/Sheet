@@ -13,7 +13,6 @@ namespace Sheet.Simulation
     internal static class SimulationSettings
     {
         public static bool EnableDebug { get; set; }
-        public static bool EnableLog { get; set; }
     }
 
     public abstract class NotifyObject : INotifyPropertyChanged
@@ -2297,18 +2296,39 @@ namespace Sheet.Simulation
         }
     }
 
-    public class Controller
+    public class Simulation
     {
-        public Compiler Compiler { get; private set; }
-        public SimulationContext SimulationContext { get; set; }
-        public bool IsConsole { get; set; }
+        private Compiler _compiler;
+        private SimulationContext _context;
+        private Solution _solution;
+        private IClock _clock;
+        private int _periodInMillisencods;
 
-        public Controller()
+        public Simulation(
+            Solution solution, 
+            int periodInMillisencods)
         {
-            Compiler = new Compiler();
+            _solution = solution;
+            _periodInMillisencods = periodInMillisencods;
+
+            _compiler = new Compiler();
+            _clock = new Clock();
+
+            // create simulation context
+            _context = new SimulationContext()
+            {
+                Cache = null,
+                SimulationClock = _clock
+            };
+
+            // disable debug output
+            SimulationSettings.EnableDebug = false;
         }
 
-        private void Run(IEnumerable<Context> contexts, IEnumerable<Tag> tags, bool showInfo)
+        private void Run(
+            IEnumerable<Context> contexts, 
+            IEnumerable<Tag> tags, 
+            bool showInfo)
         {
             // print simulation info
             if (showInfo)
@@ -2324,38 +2344,45 @@ namespace Sheet.Simulation
                     SimulationSettings.EnableDebug);
                 Debug.Print(
                     "Have Cache: {0}",
-                    SimulationContext.Cache == null ? false : SimulationContext.Cache.HaveCache);
+                    _context.Cache == null ? false : _context.Cache.HaveCache);
             }
 
-            if (SimulationContext.Cache == null || SimulationContext.Cache.HaveCache == false)
+            if (_context.Cache == null || _context.Cache.HaveCache == false)
             {
                 // compile simulation for contexts
-                SimulationContext.Cache = Compiler.Compile(contexts, tags, SimulationContext.SimulationClock);
+                _context.Cache = _compiler.Compile(
+                    contexts, 
+                    tags, 
+                    _context.SimulationClock);
             }
 
-            if (SimulationContext.Cache != null || SimulationContext.Cache.HaveCache == true)
+            if (_context.Cache != null || _context.Cache.HaveCache == true)
             {
                 // run simulation for contexts
-                Run(SimulationContext.Cache);
+                Run(_context.Cache);
             }
         }
 
-        private void Run(Action<object> action, object contexts, object tags, TimeSpan period)
+        private void Run(
+            Action<object> action, 
+            object contexts, 
+            object tags, 
+            TimeSpan period)
         {
-            SimulationContext.SimulationClock.Cycle = 0;
-            SimulationContext.SimulationClock.Resolution = (int)period.TotalMilliseconds;
-            SimulationContext.SimulationTimerSync = new object();
+            _context.SimulationClock.Cycle = 0;
+            _context.SimulationClock.Resolution = (int)period.TotalMilliseconds;
+            _context.SimulationTimerSync = new object();
 
             var virtualTime = new TimeSpan(0);
             var realTime = System.Diagnostics.Stopwatch.StartNew();
             var dt = DateTime.Now;
 
-            SimulationContext.SimulationTimer = new System.Threading.Timer(
+            _context.SimulationTimer = new System.Threading.Timer(
                 (s) =>
                 {
-                    lock (SimulationContext.SimulationTimerSync)
+                    lock (_context.SimulationTimerSync)
                     {
-                        SimulationContext.SimulationClock.Cycle++;
+                        _context.SimulationClock.Cycle++;
                         virtualTime = virtualTime.Add(period);
 
                         var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -2364,23 +2391,14 @@ namespace Sheet.Simulation
 
                         if (SimulationSettings.EnableDebug)
                         {
-                            var debug = string.Format(
+                            Debug.Print(
                                 "Cycle {0} | {1}ms | vt:{2} rt:{3} dt:{4} id:{5}",
-                                SimulationContext.SimulationClock.Cycle,
+                                _context.SimulationClock.Cycle,
                                 sw.Elapsed.TotalMilliseconds,
                                 virtualTime.TotalMilliseconds,
                                 realTime.Elapsed.TotalMilliseconds,
                                 DateTime.Now - dt,
                                 System.Threading.Thread.CurrentThread.ManagedThreadId);
-
-                            if (IsConsole)
-                            {
-                                Console.Title = debug;
-                            }
-                            else
-                            {
-                                Debug.Print(debug);
-                            }
                         }
                     }
                 },
@@ -2389,65 +2407,38 @@ namespace Sheet.Simulation
                 period);
         }
 
-        private void RunWithLogEnabled(Action run, string message)
-        {
-            string logPath = string.Format("run-{0:yyyy-MM-dd_HH-mm-ss-fff}.log", DateTime.Now);
-            var consoleOut = Console.Out;
-
-            Debug.Print("{1}: {0}", message, logPath);
-            try
-            {
-                using (var writer = new System.IO.StreamWriter(logPath))
-                {
-                    Console.SetOut(writer);
-                    run();
-                }
-            }
-            finally
-            {
-                Console.SetOut(consoleOut);
-            }
-            Debug.Print("Done {0}.", message);
-        }
-
-        public void Run(List<Context> contexts, IEnumerable<Tag> tags, int period, Action update)
+        public void Run(
+            List<Context> contexts, 
+            IEnumerable<Tag> tags, 
+            int period, 
+            Action update)
         {
             ResetTimerAndClock();
-
-            var action = new Action(() =>
-            {
-                Run(contexts, tags, false);
-                Run((state) =>
+            Run(contexts, tags, false);
+            Run(
+                (state) =>
                 {
                     Run(state as List<Context>, tags, false);
                     update();
-                }, contexts, tags, TimeSpan.FromMilliseconds(period));
-            });
-
-            if (SimulationSettings.EnableLog)
-                RunWithLogEnabled(action, "Run");
-            else
-                action();
+                },
+                contexts,
+                tags,
+                TimeSpan.FromMilliseconds(period));
         }
 
-        public void Run(List<Context> contexts, IEnumerable<Tag> tags)
+        public void Run(SimulationCache cache)
         {
-            ResetTimerAndClock();
+            if (cache == null || cache.HaveCache == false)
+            {
+                return;
+            }
 
-            if (SimulationSettings.EnableLog)
-                RunWithLogEnabled(() => Run(contexts, tags, true), "Run");
-            else
-                Run(contexts, tags, true);
-        }
-
-        public void Run(ISimulation[] simulations)
-        {
             if (SimulationSettings.EnableDebug)
             {
                 Debug.Print("");
             }
 
-            if (simulations == null)
+            if (cache.Simulations == null)
             {
                 if (SimulationSettings.EnableDebug)
                 {
@@ -2457,7 +2448,7 @@ namespace Sheet.Simulation
                 return;
             }
 
-            var length = simulations.Length;
+            var length = cache.Simulations.Length;
 
             if (SimulationSettings.EnableDebug)
             {
@@ -2472,12 +2463,12 @@ namespace Sheet.Simulation
                 {
                     Debug.Print(
                         "--- simulation: {0} | Type: {1} ---",
-                        simulations[i].Element.ElementId,
-                        simulations[i].GetType());
+                        cache.Simulations[i].Element.ElementId,
+                        cache.Simulations[i].GetType());
                     Debug.Print("");
                 }
 
-                simulations[i].Calculate();
+                cache.Simulations[i].Calculate();
             }
 
             sw.Stop();
@@ -2490,31 +2481,13 @@ namespace Sheet.Simulation
             }
         }
 
-        public void Run(SimulationCache cache)
-        {
-            if (cache == null || cache.HaveCache == false)
-                return;
-
-            Run(cache.Simulations);
-        }
-
-        public void Stop()
-        {
-            if (SimulationContext != null
-                && SimulationContext.SimulationTimer != null)
-            {
-                SimulationContext.SimulationTimer.Dispose();
-            }
-        }
-
-        public void Reset(bool collect)
+        public void ResetCache(bool collect)
         {
             // reset simulation cache
-            if (SimulationContext.Cache != null)
+            if (_context.Cache != null)
             {
-                SimulationCache.Reset(SimulationContext.Cache);
-
-                SimulationContext.Cache = null;
+                SimulationCache.Reset(_context.Cache);
+                _context.Cache = null;
             }
 
             // collect memory
@@ -2527,48 +2500,14 @@ namespace Sheet.Simulation
         public void ResetTimerAndClock()
         {
             // stop simulation timer
-            if (SimulationContext.SimulationTimer != null)
+            if (_context.SimulationTimer != null)
             {
-                SimulationContext.SimulationTimer.Dispose();
+                _context.SimulationTimer.Dispose();
             }
 
             // reset simulation clock
-            SimulationContext.SimulationClock.Cycle = 0;
-            SimulationContext.SimulationClock.Resolution = 0;
-        }
-    }
-
-    public class Simulation
-    {
-        private Solution _solution;
-        private Clock _clock;
-        private Controller _controller;
-        private int _periodInMillisencods;
-
-        public Simulation(
-            Solution solution, 
-            int periodInMillisencods)
-        {
-            _solution = solution;
-            _periodInMillisencods = periodInMillisencods;
-
-            _controller = new Controller();
-            _clock = new Clock();
-
-            // create simulation context
-            _controller.SimulationContext = new SimulationContext()
-            {
-                Cache = null,
-                SimulationClock = _clock
-            };
-
-            _controller.IsConsole = false;
-
-            // disable Console debug output
-            SimulationSettings.EnableDebug = false;
-
-            // disable Log for Run()
-            SimulationSettings.EnableLog = false;
+            _context.SimulationClock.Cycle = 0;
+            _context.SimulationClock.Resolution = 0;
         }
 
         private void ResetTags()
@@ -2725,7 +2664,7 @@ namespace Sheet.Simulation
         public void Start(IUpdate state)
         {
             // simulation is already running
-            if (_controller.SimulationContext.SimulationTimer != null)
+            if (_context.SimulationTimer != null)
             {
                 return;
             }
@@ -2775,10 +2714,10 @@ namespace Sheet.Simulation
             int period = _periodInMillisencods;
 
             // reset previous simulation cache
-            _controller.Reset(true);
+            ResetCache(true);
 
             // run simulation
-            _controller.Run(
+            Run(
                 contexts, 
                 _solution.Tags, 
                 period, 
@@ -2793,13 +2732,16 @@ namespace Sheet.Simulation
 
         public void Stop()
         {
-            if (_controller.SimulationContext.SimulationTimer != null)
+            if (_context.SimulationTimer != null)
             {
                 // stop simulation
-                _controller.Stop();
+                if (_context != null)
+                {
+                    _context.SimulationTimer.Dispose();
+                }
 
                 // reset previous simulation cache
-                _controller.Reset(true);
+                ResetCache(true);
 
                 ResetTags();
             }
@@ -2808,11 +2750,6 @@ namespace Sheet.Simulation
         public void EnableDebug(bool enable)
         {
             SimulationSettings.EnableDebug = enable;
-        }
-
-        public void EnableLog(bool enable)
-        {
-            SimulationSettings.EnableLog = enable;
         }
     }
 }

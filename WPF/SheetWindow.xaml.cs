@@ -777,7 +777,6 @@ namespace Sheet
 
                     simulation = new Simulation.Simulation(solution, 100);
                     simulation.EnableDebug(false);
-                    simulation.EnableLog(false);
                     simulation.Start(new WpfUpdate());
 
                     var window = new Window() 
