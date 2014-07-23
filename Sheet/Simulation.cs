@@ -1213,6 +1213,409 @@ namespace Sheet.Simulation
         public ObservableCollection<Tag> Tags { get; set; }
     }
 
+    public class Serializer
+    {
+        private ObservableCollection<Tag> tags = null;
+        private Dictionary<int, Pin> map = null;
+
+        private bool Compare(string strA, string strB)
+        {
+            return string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase) == 0;
+        }
+
+        private int SetId(IBlock parent, int nextId)
+        {
+            foreach (var point in parent.Points)
+            {
+                point.Id = nextId++;
+            }
+
+            foreach (var line in parent.Lines)
+            {
+                line.Id = nextId++;
+            }
+
+            foreach (var block in parent.Blocks)
+            {
+                block.Id = nextId++;
+            }
+
+            return nextId;
+        }
+
+        private Tag CreateSignalTag(
+            string designation,
+            string description,
+            string signal,
+            string condition)
+        {
+            var tag = new Tag() { Id = Guid.NewGuid().ToString() };
+            tag.Properties.Add("Designation", new TagProperty(designation));
+            tag.Properties.Add("Description", new TagProperty(description));
+            tag.Properties.Add("Signal", new TagProperty(signal));
+            tag.Properties.Add("Condition", new TagProperty(condition));
+            return tag;
+        }
+
+        private Wire CreateWire(
+            Context context,
+            Pin start,
+            Pin end)
+        {
+            var element = new Wire()
+            {
+                Start = start,
+                End = end,
+                X = 0,
+                Y = 0,
+                Id = Guid.NewGuid().ToString(),
+                Parent = context
+            };
+
+            context.Children.Add(element);
+
+            return element;
+        }
+
+        private Pin CreatePin(
+            Context context,
+            double x,
+            double y,
+            Element parent,
+            string name = "",
+            string factoryName = "",
+            PinType type = PinType.Undefined,
+            bool pinTypeUndefined = true)
+        {
+            var element = new Pin()
+            {
+                Name = name,
+                FactoryName = factoryName,
+                X = x,
+                Y = y,
+                Id = Guid.NewGuid().ToString(),
+                Parent = parent,
+                Type = type,
+                IsPinTypeUndefined = pinTypeUndefined
+            };
+
+            if (parent != null && !(parent is Context))
+            {
+                parent.Children.Add(element);
+            }
+
+            context.Children.Add(element);
+
+            return element;
+        }
+
+        private Signal CreateSignal(Context context, IBlock block)
+        {
+            var tag = CreateSignalTag("tag" + block.Id.ToString(), "", "", "");
+            tags.Add(tag);
+
+            var element = new Signal()
+            {
+                Name = block.Name.ToLower() + block.Id.ToString(),
+                Id = Guid.NewGuid().ToString(),
+                X = block.X,
+                Y = block.Y,
+                Tag = tag,
+                Parent = context,
+                Block = block
+            };
+
+            context.Children.Add(element);
+
+            var input = block.Points[0];
+            var output = block.Points[1];
+
+            var ipin = CreatePin(context, input.X, input.Y, element, "I", "I", PinType.Input, false);
+            var opin = CreatePin(context, output.X, output.Y, element, "O", "O", PinType.Output, false);
+
+            map.Add(input.Id, ipin);
+            map.Add(output.Id, opin);
+
+            return element;
+        }
+
+        private AndGate CreateAndGate(Context context, IBlock block)
+        {
+            var element = new AndGate()
+            {
+                Name = block.Name.ToLower() + block.Id.ToString(),
+                Id = Guid.NewGuid().ToString(),
+                X = block.X,
+                Y = block.Y,
+                Parent = context,
+                Block = block
+            };
+
+            context.Children.Add(element);
+
+            var left = block.Points[0];
+            var right = block.Points[1];
+            var top = block.Points[2];
+            var bottom = block.Points[3];
+
+            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
+            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
+            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
+            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
+
+            map.Add(left.Id, lpin);
+            map.Add(right.Id, rpin);
+            map.Add(top.Id, tpin);
+            map.Add(bottom.Id, bpin);
+
+            return element;
+        }
+
+        private OrGate CreateOrGate(Context context, IBlock block)
+        {
+            var element = new OrGate()
+            {
+                Name = block.Name.ToLower() + block.Id.ToString(),
+                Id = Guid.NewGuid().ToString(),
+                X = block.X,
+                Y = block.Y,
+                Parent = context,
+                Block = block
+            };
+
+            context.Children.Add(element);
+
+            var left = block.Points[0];
+            var right = block.Points[1];
+            var top = block.Points[2];
+            var bottom = block.Points[3];
+
+            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
+            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
+            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
+            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
+
+            map.Add(left.Id, lpin);
+            map.Add(right.Id, rpin);
+            map.Add(top.Id, tpin);
+            map.Add(bottom.Id, bpin);
+
+            return element;
+        }
+
+        private TimerOn CreateTimerOn(Context context, IBlock block)
+        {
+            var element = new TimerOn()
+            {
+                Name = block.Name.ToLower() + block.Id.ToString(),
+                Id = Guid.NewGuid().ToString(),
+                X = block.X,
+                Y = block.Y,
+                Parent = context,
+                Delay = 1.0f,
+                Block = block
+            };
+
+            context.Children.Add(element);
+
+            var left = block.Points[0];
+            var right = block.Points[1];
+            var top = block.Points[2];
+            var bottom = block.Points[3];
+
+            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
+            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
+            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
+            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
+
+            map.Add(left.Id, lpin);
+            map.Add(right.Id, rpin);
+            map.Add(top.Id, tpin);
+            map.Add(bottom.Id, bpin);
+
+            return element;
+        }
+
+        private TimerOff CreateTimerOff(Context context, IBlock block)
+        {
+            var element = new TimerOff()
+            {
+                Name = block.Name.ToLower() + block.Id.ToString(),
+                Id = Guid.NewGuid().ToString(),
+                X = block.X,
+                Y = block.Y,
+                Parent = context,
+                Delay = 1.0f,
+                Block = block
+            };
+
+            context.Children.Add(element);
+
+            var left = block.Points[0];
+            var right = block.Points[1];
+            var top = block.Points[2];
+            var bottom = block.Points[3];
+
+            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
+            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
+            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
+            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
+
+            map.Add(left.Id, lpin);
+            map.Add(right.Id, rpin);
+            map.Add(top.Id, tpin);
+            map.Add(bottom.Id, bpin);
+
+            return element;
+        }
+
+        private TimerPulse CreateTimerPulse(Context context, IBlock block)
+        {
+            var element = new TimerPulse()
+            {
+                Name = block.Name.ToLower() + block.Id.ToString(),
+                Id = Guid.NewGuid().ToString(),
+                X = block.X,
+                Y = block.Y,
+                Parent = context,
+                Delay = 1.0f,
+                Block = block
+            };
+
+            context.Children.Add(element);
+
+            var left = block.Points[0];
+            var right = block.Points[1];
+            var top = block.Points[2];
+            var bottom = block.Points[3];
+
+            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
+            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
+            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
+            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
+
+            map.Add(left.Id, lpin);
+            map.Add(right.Id, rpin);
+            map.Add(top.Id, tpin);
+            map.Add(bottom.Id, bpin);
+
+            return element;
+        }
+
+        private Pin Serialize(Context context, IPoint point)
+        {
+            var pin = CreatePin(context, point.X, point.Y, context, "pin" + point.Id.ToString());
+            map.Add(point.Id, pin);
+            return pin;
+        }
+
+        private Wire Serialize(Context context, ILine line)
+        {
+            Pin start = map[line.Start.Id];
+            Pin end = map[line.End.Id];
+            var wire = CreateWire(context, start, end);
+            return wire;
+        }
+
+        private Element Serialize(Context context, IBlock block)
+        {
+            if (Compare(block.Name, "SIGNAL"))
+            {
+                return CreateSignal(context, block);
+            }
+            else if (Compare(block.Name, "AND"))
+            {
+                return CreateAndGate(context, block);
+            }
+            else if (Compare(block.Name, "OR"))
+            {
+                return CreateOrGate(context, block);
+            }
+            else if (Compare(block.Name, "TIMER-ON"))
+            {
+                return CreateTimerOn(context, block);
+            }
+            else if (Compare(block.Name, "TIMER-OFF"))
+            {
+                return CreateTimerOff(context, block);
+            }
+            else if (Compare(block.Name, "TIMER-PULSE"))
+            {
+                return CreateTimerPulse(context, block);
+            }
+            else
+            {
+                throw new Exception("Unsupported block name.");
+            }
+        }
+
+        private void SerializerContents(Context context, IBlock root)
+        {
+            SetId(root, 1);
+
+            foreach (var block in root.Blocks)
+            {
+                Serialize(context, block);
+            }
+
+            foreach (var point in root.Points)
+            {
+                Serialize(context, point);
+            }
+
+            foreach (var line in root.Lines)
+            {
+                Serialize(context, line);
+            }
+        }
+
+        public Solution Serialize(IBlock root)
+        {
+            var solution = new Solution()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "solution"
+            };
+
+            var project = new Project()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "project",
+                Parent = solution
+            };
+
+            solution.Children.Add(project);
+
+            var context = new Context()
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = "context",
+                Parent = project
+            };
+
+            project.Children.Add(context);
+
+            map = new Dictionary<int, Pin>();
+            tags = new ObservableCollection<Tag>();
+
+            SerializerContents(context, root);
+
+            solution.Tags = tags;
+
+            return solution;
+        }
+    }
+
+    public interface IUpdate
+    {
+        void Set(ILine line, IBoolState state);
+        void Set(IRectangle rectangle, IBoolState state);
+        void Set(IEllipse ellipse, IBoolState state);
+        void Set(IText text, IBoolState state);
+        void Set(IImage image, IBoolState state);
+        void Set(IBlock parent, IBoolState state);
+    }
+
     public class SimulationContext
     {
         public Timer SimulationTimer { get; set; }
@@ -1914,13 +2317,13 @@ namespace Sheet.Simulation
                 var elements = contexts.SelectMany(x => x.Children).Concat(tags);
 
                 Debug.Print(
-                    "Simulation for {0} contexts, elements: {1}", 
+                    "Simulation for {0} contexts, elements: {1}",
                     contexts.Count(), elements.Count());
                 Debug.Print(
-                    "Debug Simulation Enabled: {0}", 
+                    "Debug Simulation Enabled: {0}",
                     SimulationSettings.EnableDebug);
                 Debug.Print(
-                    "Have Cache: {0}", 
+                    "Have Cache: {0}",
                     SimulationContext.Cache == null ? false : SimulationContext.Cache.HaveCache);
             }
 
@@ -2068,8 +2471,8 @@ namespace Sheet.Simulation
                 if (SimulationSettings.EnableDebug)
                 {
                     Debug.Print(
-                        "--- simulation: {0} | Type: {1} ---", 
-                        simulations[i].Element.ElementId, 
+                        "--- simulation: {0} | Type: {1} ---",
+                        simulations[i].Element.ElementId,
                         simulations[i].GetType());
                     Debug.Print("");
                 }
@@ -2082,7 +2485,7 @@ namespace Sheet.Simulation
             if (SimulationSettings.EnableDebug)
             {
                 Debug.Print(
-                    "Calculate() done in: {0}ms | {1} elements", 
+                    "Calculate() done in: {0}ms | {1} elements",
                     sw.Elapsed.TotalMilliseconds, length);
             }
         }
@@ -2097,7 +2500,7 @@ namespace Sheet.Simulation
 
         public void Stop()
         {
-            if (SimulationContext != null 
+            if (SimulationContext != null
                 && SimulationContext.SimulationTimer != null)
             {
                 SimulationContext.SimulationTimer.Dispose();
@@ -2133,409 +2536,6 @@ namespace Sheet.Simulation
             SimulationContext.SimulationClock.Cycle = 0;
             SimulationContext.SimulationClock.Resolution = 0;
         }
-    }
-
-    public class Serializer
-    {
-        private ObservableCollection<Tag> tags = null;
-        private Dictionary<int, Pin> map = null;
-
-        private bool Compare(string strA, string strB)
-        {
-            return string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase) == 0;
-        }
-
-        private int SetId(IBlock parent, int nextId)
-        {
-            foreach (var point in parent.Points)
-            {
-                point.Id = nextId++;
-            }
-
-            foreach (var line in parent.Lines)
-            {
-                line.Id = nextId++;
-            }
-
-            foreach (var block in parent.Blocks)
-            {
-                block.Id = nextId++;
-            }
-
-            return nextId;
-        }
-
-        private Tag CreateSignalTag(
-            string designation, 
-            string description, 
-            string signal, 
-            string condition)
-        {
-            var tag = new Tag() { Id = Guid.NewGuid().ToString() };
-            tag.Properties.Add("Designation", new TagProperty(designation));
-            tag.Properties.Add("Description", new TagProperty(description));
-            tag.Properties.Add("Signal", new TagProperty(signal));
-            tag.Properties.Add("Condition", new TagProperty(condition));
-            return tag;
-        }
-
-        private Wire CreateWire(
-            Context context, 
-            Pin start, 
-            Pin end)
-        {
-            var element = new Wire()
-            {
-                Start = start,
-                End = end,
-                X = 0,
-                Y = 0,
-                Id = Guid.NewGuid().ToString(),
-                Parent = context
-            };
-
-            context.Children.Add(element);
-
-            return element;
-        }
-
-        private Pin CreatePin(
-            Context context, 
-            double x, 
-            double y, 
-            Element parent, 
-            string name = "", 
-            string factoryName = "", 
-            PinType type = PinType.Undefined, 
-            bool pinTypeUndefined = true)
-        {
-            var element = new Pin()
-            {
-                Name = name,
-                FactoryName = factoryName,
-                X = x,
-                Y = y,
-                Id = Guid.NewGuid().ToString(),
-                Parent = parent,
-                Type = type,
-                IsPinTypeUndefined = pinTypeUndefined
-            };
-
-            if (parent != null && !(parent is Context))
-            {
-                parent.Children.Add(element);
-            }
-
-            context.Children.Add(element);
-
-            return element;
-        }
-
-        private Signal CreateSignal(Context context, IBlock block)
-        {
-            var tag = CreateSignalTag("tag" + block.Id.ToString(), "", "", "");
-            tags.Add(tag);
-
-            var element = new Signal()
-            {
-                Name = block.Name.ToLower() + block.Id.ToString(),
-                Id = Guid.NewGuid().ToString(),
-                X = block.X,
-                Y = block.Y,
-                Tag = tag,
-                Parent = context,
-                Block = block
-            };
-
-            context.Children.Add(element);
-
-            var input = block.Points[0];
-            var output = block.Points[1];
-
-            var ipin = CreatePin(context, input.X, input.Y, element, "I", "I", PinType.Input, false);
-            var opin = CreatePin(context, output.X, output.Y, element, "O", "O", PinType.Output, false);
-
-            map.Add(input.Id, ipin);
-            map.Add(output.Id, opin);
-
-            return element;
-        }
-
-        private AndGate CreateAndGate(Context context, IBlock block)
-        {
-            var element = new AndGate()
-            {
-                Name = block.Name.ToLower() + block.Id.ToString(),
-                Id = Guid.NewGuid().ToString(),
-                X = block.X,
-                Y = block.Y,
-                Parent = context,
-                Block = block
-            };
-
-            context.Children.Add(element);
-
-            var left = block.Points[0];
-            var right = block.Points[1];
-            var top = block.Points[2];
-            var bottom = block.Points[3];
-
-            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
-            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
-            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
-            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
-
-            map.Add(left.Id, lpin);
-            map.Add(right.Id, rpin);
-            map.Add(top.Id, tpin);
-            map.Add(bottom.Id, bpin);
-
-            return element;
-        }
-
-        private OrGate CreateOrGate(Context context, IBlock block)
-        {
-            var element = new OrGate()
-            {
-                Name = block.Name.ToLower() + block.Id.ToString(),
-                Id = Guid.NewGuid().ToString(),
-                X = block.X,
-                Y = block.Y,
-                Parent = context,
-                Block = block
-            };
-
-            context.Children.Add(element);
-
-            var left = block.Points[0];
-            var right = block.Points[1];
-            var top = block.Points[2];
-            var bottom = block.Points[3];
-
-            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
-            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
-            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
-            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
-
-            map.Add(left.Id, lpin);
-            map.Add(right.Id, rpin);
-            map.Add(top.Id, tpin);
-            map.Add(bottom.Id, bpin);
-
-            return element;
-        }
-
-        private TimerOn CreateTimerOn(Context context, IBlock block)
-        {
-            var element = new TimerOn()
-            {
-                Name = block.Name.ToLower() + block.Id.ToString(),
-                Id = Guid.NewGuid().ToString(),
-                X = block.X,
-                Y = block.Y,
-                Parent = context,
-                Delay = 1.0f,
-                Block = block
-            };
-
-            context.Children.Add(element);
-
-            var left = block.Points[0];
-            var right = block.Points[1];
-            var top = block.Points[2];
-            var bottom = block.Points[3];
-
-            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
-            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
-            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
-            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
-
-            map.Add(left.Id, lpin);
-            map.Add(right.Id, rpin);
-            map.Add(top.Id, tpin);
-            map.Add(bottom.Id, bpin);
-
-            return element;
-        }
-
-        private TimerOff CreateTimerOff(Context context, IBlock block)
-        {
-            var element = new TimerOff()
-            {
-                Name = block.Name.ToLower() + block.Id.ToString(),
-                Id = Guid.NewGuid().ToString(),
-                X = block.X,
-                Y = block.Y,
-                Parent = context,
-                Delay = 1.0f,
-                Block = block
-            };
-
-            context.Children.Add(element);
-
-            var left = block.Points[0];
-            var right = block.Points[1];
-            var top = block.Points[2];
-            var bottom = block.Points[3];
-
-            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
-            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
-            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
-            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
-
-            map.Add(left.Id, lpin);
-            map.Add(right.Id, rpin);
-            map.Add(top.Id, tpin);
-            map.Add(bottom.Id, bpin);
-
-            return element;
-        }
-
-        private TimerPulse CreateTimerPulse(Context context, IBlock block)
-        {
-            var element = new TimerPulse()
-            {
-                Name = block.Name.ToLower() + block.Id.ToString(),
-                Id = Guid.NewGuid().ToString(),
-                X = block.X,
-                Y = block.Y,
-                Parent = context,
-                Delay = 1.0f,
-                Block = block
-            };
-
-            context.Children.Add(element);
-
-            var left = block.Points[0];
-            var right = block.Points[1];
-            var top = block.Points[2];
-            var bottom = block.Points[3];
-
-            var lpin = CreatePin(context, left.X, left.Y, element, "L", "L");
-            var rpin = CreatePin(context, right.X, right.Y, element, "R", "R");
-            var tpin = CreatePin(context, top.X, top.Y, element, "T", "T");
-            var bpin = CreatePin(context, bottom.X, bottom.Y, element, "B", "B");
-
-            map.Add(left.Id, lpin);
-            map.Add(right.Id, rpin);
-            map.Add(top.Id, tpin);
-            map.Add(bottom.Id, bpin);
-
-            return element;
-        }
-
-        private Pin Serialize(Context context, IPoint point)
-        {
-            var pin = CreatePin(context, point.X, point.Y, context, "pin" + point.Id.ToString());
-            map.Add(point.Id, pin);
-            return pin;
-        }
-
-        private Wire Serialize(Context context, ILine line)
-        {
-            Pin start = map[line.Start.Id];
-            Pin end = map[line.End.Id];
-            var wire = CreateWire(context, start, end);
-            return wire;
-        }
-
-        private Element Serialize(Context context, IBlock block)
-        {
-            if (Compare(block.Name, "SIGNAL"))
-            {
-                return CreateSignal(context, block);
-            }
-            else if (Compare(block.Name, "AND"))
-            {
-                return CreateAndGate(context, block);
-            }
-            else if (Compare(block.Name, "OR"))
-            {
-                return CreateOrGate(context, block);
-            }
-            else if (Compare(block.Name, "TIMER-ON"))
-            {
-                return CreateTimerOn(context, block);
-            }
-            else if (Compare(block.Name, "TIMER-OFF"))
-            {
-                return CreateTimerOff(context, block);
-            }
-            else if (Compare(block.Name, "TIMER-PULSE"))
-            {
-                return CreateTimerPulse(context, block);
-            }
-            else
-            {
-                throw new Exception("Unsupported block name.");
-            }
-        }
-
-        private void SerializerContents(Context context, IBlock root)
-        {
-            SetId(root, 1);
-
-            foreach (var block in root.Blocks)
-            {
-                Serialize(context, block);
-            }
-
-            foreach (var point in root.Points)
-            {
-                Serialize(context, point);
-            }
-
-            foreach (var line in root.Lines)
-            {
-                Serialize(context, line);
-            }
-        }
-
-        public Solution Serialize(IBlock root)
-        {
-            var solution = new Solution()
-            {
-                Id = Guid.NewGuid().ToString(),
-                Name = "solution"
-            };
-
-            var project = new Project()
-            {
-                Id = Guid.NewGuid().ToString(),
-                Name = "project",
-                Parent = solution
-            };
-
-            solution.Children.Add(project);
-
-            var context = new Context()
-            {
-                Id = Guid.NewGuid().ToString(),
-                Name = "context",
-                Parent = project
-            };
-
-            project.Children.Add(context);
-
-            map = new Dictionary<int, Pin>();
-            tags = new ObservableCollection<Tag>();
-
-            SerializerContents(context, root);
-
-            solution.Tags = tags;
-
-            return solution;
-        }
-    }
-
-    public interface IUpdate
-    {
-        void Set(ILine line, IBoolState state);
-        void Set(IRectangle rectangle, IBoolState state);
-        void Set(IEllipse ellipse, IBoolState state);
-        void Set(IText text, IBoolState state);
-        void Set(IImage image, IBoolState state);
-        void Set(IBlock parent, IBoolState state);
     }
 
     public class Simulation
