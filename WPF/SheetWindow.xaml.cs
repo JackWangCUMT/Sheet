@@ -1,6 +1,5 @@
 ﻿using Sheet.Controller;
 using Sheet.Entry;
-using Sheet.Simulation;
 using Sheet.UI;
 using Sheet.Util;
 using Sheet.WPF;
@@ -762,15 +761,7 @@ namespace Sheet
 
         #region Simulation
         
-        private SolutionSimulation controller = null;
-
-        private Solution GetSolution()
-        {
-            var block = _sheetController.State.ContentBlock;
-            var serializer = new SolutionSerializer();
-            var solution = serializer.Serialize(block);
-            return solution;
-        }
+        private Simulation.Simulation simulation = null;
 
         private void StartSimulation()
         {
@@ -778,14 +769,16 @@ namespace Sheet
 
             try
             {
-                if (controller == null)
+                if (simulation == null)
                 {
-                    var solution = GetSolution();
+                    var block = _sheetController.State.ContentBlock;
+                    var serializer = new Simulation.Serializer();
+                    var solution = serializer.Serialize(block);
 
-                    controller = new SolutionSimulation(solution, 100);
-                    controller.EnableDebug(false);
-                    controller.EnableLog(false);
-                    controller.Start(new WpfUpdateState());
+                    simulation = new Simulation.Simulation(solution, 100);
+                    simulation.EnableDebug(false);
+                    simulation.EnableLog(false);
+                    simulation.Start(new WpfUpdate());
 
                     var window = new Window() 
                     {
@@ -812,10 +805,10 @@ namespace Sheet
         {
             try
             {
-                if (controller != null)
+                if (simulation != null)
                 {
-                    controller.Stop();
-                    controller = null;
+                    simulation.Stop();
+                    simulation = null;
                 }
             }
             catch(Exception ex)

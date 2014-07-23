@@ -896,20 +896,18 @@ namespace Sheet.WPF
         #endregion
     }
 
-    public class WpfUpdateState : IUpdateState
+    public class WpfUpdate : IUpdate
     {
         private readonly SolidColorBrush NullBrush;
         private readonly SolidColorBrush FalseBrush;
         private readonly SolidColorBrush TrueBrush;
 
-        public WpfUpdateState()
+        public WpfUpdate()
         {
             NullBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0x66, 0x66, 0x66));
             NullBrush.Freeze();
-
             FalseBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0xBF, 0xFF));
             FalseBrush.Freeze();
-
             TrueBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0x14, 0x93));
             TrueBrush.Freeze();
         }

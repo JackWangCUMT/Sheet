@@ -1331,7 +1331,7 @@ namespace Sheet.Simulation
         }
     }
 
-    public class SimulationCompiler
+    public class Compiler
     {
         public Dictionary<Type, Func<Element, ISimulation>> StateSimulationDict 
             = new Dictionary<Type, Func<Element, ISimulation>>()
@@ -1894,15 +1894,15 @@ namespace Sheet.Simulation
         }
     }
 
-    public class SimulationController
+    public class Controller
     {
-        public SimulationCompiler Compiler { get; private set; }
+        public Compiler Compiler { get; private set; }
         public SimulationContext SimulationContext { get; set; }
         public bool IsConsole { get; set; }
 
-        public SimulationController()
+        public Controller()
         {
-            Compiler = new SimulationCompiler();
+            Compiler = new Compiler();
         }
 
         private void Run(IEnumerable<Context> contexts, IEnumerable<Tag> tags, bool showInfo)
@@ -2135,7 +2135,7 @@ namespace Sheet.Simulation
         }
     }
 
-    public class SolutionSerializer
+    public class Serializer
     {
         private ObservableCollection<Tag> tags = null;
         private Dictionary<int, Pin> map = null;
@@ -2528,7 +2528,7 @@ namespace Sheet.Simulation
         }
     }
 
-    public interface IUpdateState
+    public interface IUpdate
     {
         void Set(ILine line, IBoolState state);
         void Set(IRectangle rectangle, IBoolState state);
@@ -2538,21 +2538,21 @@ namespace Sheet.Simulation
         void Set(IBlock parent, IBoolState state);
     }
 
-    public class SolutionSimulation
+    public class Simulation
     {
         private Solution _solution;
         private Clock _clock;
-        private SimulationController _controller;
+        private Controller _controller;
         private int _periodInMillisencods;
 
-        public SolutionSimulation(
+        public Simulation(
             Solution solution, 
             int periodInMillisencods)
         {
             _solution = solution;
             _periodInMillisencods = periodInMillisencods;
 
-            _controller = new SimulationController();
+            _controller = new Controller();
             _clock = new Clock();
 
             // create simulation context
@@ -2657,7 +2657,7 @@ namespace Sheet.Simulation
 
         private void UpdateSignalBlockStates(
             Signal[] signals, 
-            IUpdateState state)
+            IUpdate state)
         {
             bool update = false;
 
@@ -2708,7 +2708,7 @@ namespace Sheet.Simulation
 
         private Action GetUpdateAction(
             List<Context> contexts,
-            IUpdateState state)
+            IUpdate state)
         {
             var signals = contexts
                 .SelectMany(x => x.Children)
@@ -2722,7 +2722,7 @@ namespace Sheet.Simulation
             return updateOnUIThread;
         }
 
-        public void Start(IUpdateState state)
+        public void Start(IUpdate state)
         {
             // simulation is already running
             if (_controller.SimulationContext.SimulationTimer != null)
