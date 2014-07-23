@@ -10,11 +10,6 @@ using System.Windows.Threading;
 
 namespace Sheet.Simulation
 {
-    internal static class SimulationSettings
-    {
-        public static bool EnableDebug { get; set; }
-    }
-
     public abstract class NotifyObject : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
@@ -326,14 +321,10 @@ namespace Sheet.Simulation
                 || input.Connections == null 
                 || input.Connections.Length <= 0)
             {
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "No Valid Input/Connections for Id: {0} | State: {1}", 
-                        Element.ElementId, 
-                        State.State);
-                }
-
+                Debug.Print(
+                    "No Valid Input/Connections for Id: {0} | State: {1}", 
+                    Element.ElementId, 
+                    State.State);
                 return;
             }
 
@@ -349,16 +340,13 @@ namespace Sheet.Simulation
                 .Take(1)
                 .ToArray();
 
-            if (SimulationSettings.EnableDebug)
+            foreach (var connection in connections)
             {
-                foreach (var connection in connections)
-                {
-                    Debug.Print("Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
-                        connection.Item1.ElementId,
-                        connection.Item2,
-                        (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
-                        connection.Item1.Type);
-                }
+                Debug.Print("Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
+                    connection.Item1.ElementId,
+                    connection.Item2,
+                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
+                    connection.Item1.Type);
             }
 
             // get all connected inputs with state
@@ -390,17 +378,12 @@ namespace Sheet.Simulation
             {
                 // calculate new state
                 var first = StatesCache[0];
-
                 State.State = first.Item2 ? !(first.Item1.State) : first.Item1.State;
 
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "Id: {0} | State: {1}", 
-                        Element.ElementId, 
-                        State.State);
-                    Debug.Print("");
-                }
+                Debug.Print(
+                    "Id: {0} | State: {1}", 
+                    Element.ElementId, 
+                    State.State);
             }
         }
 
@@ -447,17 +430,14 @@ namespace Sheet.Simulation
                 .Select(y => y.Item1.SimulationParent)
                 .ToArray();
 
-            if (SimulationSettings.EnableDebug)
+            foreach (var connection in connections)
             {
-                foreach (var connection in connections)
-                {
-                    Debug.Print(
-                        "Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
-                        connection.Item1.ElementId,
-                        connection.Item2,
-                        (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
-                        connection.Item1.Type);
-                }
+                Debug.Print(
+                    "Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
+                    connection.Item1.ElementId,
+                    connection.Item2,
+                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
+                    connection.Item1.Type);
             }
 
             // get all connected inputs with state, where Tuple<IBoolState,bool> is IBoolState and Inverted
@@ -492,14 +472,10 @@ namespace Sheet.Simulation
                 // calculate new state
                 State.State = CalculateState(StatesCache);
 
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "Id: {0} | State: {1}", 
-                        Element.ElementId, 
-                        State.State);
-                    Debug.Print("");
-                }
+                Debug.Print(
+                    "Id: {0} | State: {1}", 
+                    Element.ElementId, 
+                    State.State);
             }
         }
 
@@ -568,17 +544,14 @@ namespace Sheet.Simulation
                 .Select(y => y.Item1.SimulationParent)
                 .ToArray();
 
-            if (SimulationSettings.EnableDebug)
+            foreach (var connection in connections)
             {
-                foreach (var connection in connections)
-                {
-                    Debug.Print(
-                        "Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
-                        connection.Item1.ElementId,
-                        connection.Item2,
-                        (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
-                        connection.Item1.Type);
-                }
+                Debug.Print(
+                    "Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
+                    connection.Item1.ElementId,
+                    connection.Item2,
+                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
+                    connection.Item1.Type);
             }
 
             // get all connected inputs with state, where Tuple<IBoolState,bool> is IBoolState and Inverted
@@ -613,14 +586,10 @@ namespace Sheet.Simulation
                 // calculate new state
                 State.State = CalculateState(StatesCache);
 
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "Id: {0} | State: {1}", 
-                        Element.ElementId, 
-                        State.State);
-                    Debug.Print("");
-                }
+                Debug.Print(
+                    "Id: {0} | State: {1}", 
+                    Element.ElementId, 
+                    State.State);
             }
         }
 
@@ -684,13 +653,10 @@ namespace Sheet.Simulation
 
             if (inputs == null || inputs.Count() != 1)
             {
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "No Valid Input for Id: {0} | State: {1}", 
-                        Element.ElementId, 
-                        State.State);
-                }
+                Debug.Print(
+                    "No Valid Input for Id: {0} | State: {1}", 
+                    Element.ElementId, 
+                    State.State);
 
                 return;
             }
@@ -708,17 +674,14 @@ namespace Sheet.Simulation
                 .Take(1)
                 .ToArray();
 
-            if (SimulationSettings.EnableDebug)
+            foreach (var connection in connections)
             {
-                foreach (var connection in connections)
-                {
-                    Debug.Print(
-                        "Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
-                        connection.Item1.ElementId,
-                        connection.Item2,
-                        (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
-                        connection.Item1.Type);
-                }
+                Debug.Print(
+                    "Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
+                    connection.Item1.ElementId,
+                    connection.Item2,
+                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
+                    connection.Item1.Type);
             }
 
             // get all connected inputs with state
@@ -799,14 +762,10 @@ namespace Sheet.Simulation
                         break;
                 }
 
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "Id: {0} | State: {1}", 
-                        Element.ElementId, 
-                        State.State);
-                    Debug.Print("");
-                }
+                Debug.Print(
+                    "Id: {0} | State: {1}", 
+                    Element.ElementId, 
+                    State.State);
             }
         }
 
@@ -848,13 +807,10 @@ namespace Sheet.Simulation
 
             if (inputs == null || inputs.Count() != 1)
             {
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "No Valid Input for Id: {0} | State: {1}", 
-                        Element.ElementId, 
-                        State.State);
-                }
+                Debug.Print(
+                    "No Valid Input for Id: {0} | State: {1}", 
+                    Element.ElementId, 
+                    State.State);
 
                 return;
             }
@@ -872,17 +828,14 @@ namespace Sheet.Simulation
                 .Take(1)
                 .ToArray();
 
-            if (SimulationSettings.EnableDebug)
+            foreach (var connection in connections)
             {
-                foreach (var connection in connections)
-                {
-                    Debug.Print(
-                        "Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
-                        connection.Item1.ElementId,
-                        connection.Item2,
-                        (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
-                        connection.Item1.Type);
-                }
+                Debug.Print(
+                    "Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
+                    connection.Item1.ElementId,
+                    connection.Item2,
+                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
+                    connection.Item1.Type);
             }
 
             // get all connected inputs with state
@@ -978,14 +931,10 @@ namespace Sheet.Simulation
                         break;
                 }
 
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "Id: {0} | State: {1}", 
-                        Element.ElementId, 
-                        State.State);
-                    Debug.Print("");
-                }
+                Debug.Print(
+                    "Id: {0} | State: {1}", 
+                    Element.ElementId, 
+                    State.State);
             }
         }
 
@@ -1027,13 +976,10 @@ namespace Sheet.Simulation
 
             if (inputs == null || inputs.Count() != 1)
             {
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "No Valid Input for Id: {0} | State: {1}", 
-                        Element.ElementId, 
-                        State.State);
-                }
+                Debug.Print(
+                    "No Valid Input for Id: {0} | State: {1}", 
+                    Element.ElementId, 
+                    State.State);
 
                 return;
             }
@@ -1051,17 +997,14 @@ namespace Sheet.Simulation
                 .Take(1)
                 .ToArray();
 
-            if (SimulationSettings.EnableDebug)
+            foreach (var connection in connections)
             {
-                foreach (var connection in connections)
-                {
-                    Debug.Print(
-                        "Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
-                        connection.Item1.ElementId,
-                        connection.Item2,
-                        (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
-                        connection.Item1.Type);
-                }
+                Debug.Print(
+                    "Pin: {0} | Inverted: {1} | SimulationParent: {2} | Type: {3}",
+                    connection.Item1.ElementId,
+                    connection.Item2,
+                    (connection.Item1.SimulationParent != null) ? connection.Item1.SimulationParent.ElementId : UInt32.MaxValue,
+                    connection.Item1.Type);
             }
 
             // get all connected inputs with state
@@ -1166,14 +1109,10 @@ namespace Sheet.Simulation
                         break;
                 }
 
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "Id: {0} | State: {1}", 
-                        Element.ElementId, 
-                        State.State);
-                    Debug.Print("");
-                }
+                Debug.Print(
+                    "Id: {0} | State: {1}", 
+                    Element.ElementId, 
+                    State.State);
             }
         }
 
@@ -1621,6 +1560,7 @@ namespace Sheet.Simulation
         public object SimulationTimerSync { get; set; }
         public IClock SimulationClock { get; set; }
         public SimulationCache Cache { get; set; }
+        public bool IsRunning { get; set; }
     }
 
     public class SimulationCache
@@ -1663,12 +1603,9 @@ namespace Sheet.Simulation
 
             foreach (var item in source)
             {
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "+ {0} depends on:", 
-                        (item as ISimulation).Element.Name);
-                }
+                Debug.Print(
+                    "+ {0} depends on:", 
+                    (item as ISimulation).Element.Name);
 
                 Visit(
                     item, 
@@ -1676,11 +1613,6 @@ namespace Sheet.Simulation
                     sorted, 
                     dependencies, 
                     ignoreDependencyCycles);
-
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print("");
-                }
             }
 
             return sorted;
@@ -1702,12 +1634,9 @@ namespace Sheet.Simulation
                 {
                     foreach (var dep in dependsOn)
                     {
-                        if (SimulationSettings.EnableDebug)
-                        {
-                            Debug.Print(
-                                "|     {0}", 
-                                (dep as ISimulation).Element.Name);
-                        }
+                        Debug.Print(
+                            "|     {0}", 
+                            (dep as ISimulation).Element.Name);
 
                         Visit(
                             dep, 
@@ -1864,16 +1793,13 @@ namespace Sheet.Simulation
             {
                 connections.Add(p.Item1.ElementId, p);
 
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "{0}    Pin: {1} | Inverted: {2} | SimulationParent: {3} | Type: {4}",
-                        new string(' ', level),
-                        p.Item1.ElementId,
-                        p.Item2,
-                        p.Item1.SimulationParent.ElementId,
-                        p.Item1.Type);
-                }
+                Debug.Print(
+                    "{0}    Pin: {1} | Inverted: {2} | SimulationParent: {3} | Type: {4}",
+                    new string(' ', level),
+                    p.Item1.ElementId,
+                    p.Item2,
+                    p.Item1.SimulationParent.ElementId,
+                    p.Item1.Type);
 
                 if (p.Item1.Type == PinType.Undefined 
                     && pinToWireDict.ContainsKey(pin.ElementId) == true)
@@ -1890,17 +1816,11 @@ namespace Sheet.Simulation
 
         public void Find(Element[] elements)
         {
-            if (SimulationSettings.EnableDebug)
-            {
-                Debug.Print("");
-                Debug.Print(
-                    "--- FindConnections(), elements.Count: {0}", 
-                    elements.Count());
-                Debug.Print("");
-            }
+            Debug.Print(
+                "--- Find(), elements.Count: {0}", 
+                elements.Count());
 
             var pinToWireDict = MapPinsToWires(elements);
-
             var pins = elements.Where(x => x is IStateSimulation && x.Children != null)
                                .SelectMany(x => x.Children)
                                .Cast<Pin>()
@@ -1918,14 +1838,11 @@ namespace Sheet.Simulation
             {
                 var pin = pins[i];
 
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "Pin  {0} | SimulationParent: {1} | Type: {2}",
-                        pin.ElementId,
-                        (pin.SimulationParent != null) ? pin.SimulationParent.ElementId : UInt32.MaxValue,
-                        pin.Type);
-                }
+                Debug.Print(
+                    "Pin  {0} | SimulationParent: {1} | Type: {2}",
+                    pin.ElementId,
+                    (pin.SimulationParent != null) ? pin.SimulationParent.ElementId : UInt32.MaxValue,
+                    pin.Type);
 
                 var connections = new Dictionary<UInt32, Tuple<Pin, bool>>();
 
@@ -1944,11 +1861,6 @@ namespace Sheet.Simulation
                 {
                     pin.Connections = null;
                 }
-            }
-
-            if (SimulationSettings.EnableDebug)
-            {
-                Debug.Print("");
             }
 
             pinToWireDict = null;
@@ -1987,25 +1899,19 @@ namespace Sheet.Simulation
                     {
                         connection.Item1.Type = PinType.Output;
 
-                        if (SimulationSettings.EnableDebug)
-                        {
-                            Debug.Print(
-                                "{0}{1} -> {2}", 
-                                level, 
-                                connection.Item1.ElementId, 
-                                connection.Item1.Type);
-                        }
+                        Debug.Print(
+                            "{0}{1} -> {2}", 
+                            level, 
+                            connection.Item1.ElementId, 
+                            connection.Item1.Type);
                     }
                     else
                     {
-                        if (SimulationSettings.EnableDebug)
-                        {
-                            Debug.Print(
-                                "{0}(*) {1} -> {2}", 
-                                level, 
-                                connection.Item1.ElementId, 
-                                connection.Item1.Type);
-                        }
+                        Debug.Print(
+                            "{0}(*) {1} -> {2}", 
+                            level, 
+                            connection.Item1.ElementId, 
+                            connection.Item1.Type);
                     }
 
                     if (connection.Item1.SimulationParent != null && isUndefined)
@@ -2035,14 +1941,11 @@ namespace Sheet.Simulation
                 {
                     pin.Type = PinType.Input;
 
-                    if (SimulationSettings.EnableDebug)
-                    {
-                        Debug.Print(
-                            "{0}{1} -> {2}", 
-                            level, 
-                            pin.ElementId, 
-                            pin.Type);
-                    }
+                    Debug.Print(
+                        "{0}{1} -> {2}", 
+                        level, 
+                        pin.ElementId, 
+                        pin.Type);
                 }
 
                 if (pin.Connections != null 
@@ -2082,20 +1985,12 @@ namespace Sheet.Simulation
                 var connection = connections[i];
                 var simulation = connection.SimulationParent as IStateSimulation;
 
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "+ {0} -> {1}", 
-                        connection.ElementId, 
-                        connection.Type);
-                }
+                Debug.Print(
+                    "+ {0} -> {1}", 
+                    connection.ElementId, 
+                    connection.Type);
 
                 ProcessInput(connection, "  ");
-
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print("");
-                }
             }
         }
 
@@ -2118,12 +2013,7 @@ namespace Sheet.Simulation
         {
             if (simulations == null)
             {
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print("--- warning: no ISimulation elements ---");
-                    Debug.Print("");
-                }
-
+                Debug.Print("--- warning: no ISimulation elements ---");
                 return;
             }
 
@@ -2131,22 +2021,13 @@ namespace Sheet.Simulation
 
             for (int i = 0; i < length; i++)
             {
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "--- compilation: {0} | Type: {1} ---", 
-                        simulations[i].Element.ElementId, 
-                        simulations[i].GetType());
-                    Debug.Print("");
-                }
+                Debug.Print(
+                    "--- compilation: {0} | Type: {1} ---", 
+                    simulations[i].Element.ElementId, 
+                    simulations[i].GetType());
 
                 simulations[i].Compile();
                 simulations[i].Clock = clock;
-
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print("");
-                }
             }
         }
 
@@ -2183,11 +2064,7 @@ namespace Sheet.Simulation
             // -- step 3: update pin connections ---
             Find(elements);
 
-            if (SimulationSettings.EnableDebug)
-            {
-                Debug.Print("--- elements with input connected ---");
-                Debug.Print("");
-            }
+            Debug.Print("--- elements with input connected ---");
 
             // -- step 4: get ordered elements for simulation ---
             FindPinTypes(elements);
@@ -2199,12 +2076,7 @@ namespace Sheet.Simulation
             GenerateCompileCache(simulations, clock);
 
             // -- step 7: sort simulations using dependencies ---
-
-            if (SimulationSettings.EnableDebug)
-            {
-                Debug.Print("-- dependencies ---");
-                Debug.Print("");
-            }
+            Debug.Print("-- dependencies ---");
 
             var ts = new TopologicalSort<ISimulation>();
             var sortedSimulations = ts.Sort(
@@ -2224,17 +2096,10 @@ namespace Sheet.Simulation
                 }, 
                 true);
 
-            if (SimulationSettings.EnableDebug)
+            Debug.Print("-- sorted dependencies ---");
+            foreach (var simulation in sortedSimulations)
             {
-                Debug.Print("-- sorted dependencies ---");
-                Debug.Print("");
-
-                foreach (var simulation in sortedSimulations)
-                {
-                    Debug.Print("{0}", simulation.Element.ElementId);
-                }
-
-                Debug.Print("");
+                Debug.Print("{0}", simulation.Element.ElementId);
             }
 
             // -- step 8: cache sorted elements
@@ -2318,11 +2183,9 @@ namespace Sheet.Simulation
             _context = new SimulationContext()
             {
                 Cache = null,
-                SimulationClock = _clock
+                SimulationClock = _clock,
+                IsRunning = false
             };
-
-            // disable debug output
-            SimulationSettings.EnableDebug = false;
         }
 
         private void Run(
@@ -2330,18 +2193,19 @@ namespace Sheet.Simulation
             IEnumerable<Tag> tags, 
             bool showInfo)
         {
+            _context.IsRunning = true;
+
             // print simulation info
             if (showInfo)
             {
                 // get total number of elements for simulation
-                var elements = contexts.SelectMany(x => x.Children).Concat(tags);
+                var elements = contexts
+                    .SelectMany(x => x.Children)
+                    .Concat(tags);
 
                 Debug.Print(
                     "Simulation for {0} contexts, elements: {1}",
                     contexts.Count(), elements.Count());
-                Debug.Print(
-                    "Debug Simulation Enabled: {0}",
-                    SimulationSettings.EnableDebug);
                 Debug.Print(
                     "Have Cache: {0}",
                     _context.Cache == null ? false : _context.Cache.HaveCache);
@@ -2389,17 +2253,14 @@ namespace Sheet.Simulation
                         action(s);
                         sw.Stop();
 
-                        if (SimulationSettings.EnableDebug)
-                        {
-                            Debug.Print(
-                                "Cycle {0} | {1}ms | vt:{2} rt:{3} dt:{4} id:{5}",
-                                _context.SimulationClock.Cycle,
-                                sw.Elapsed.TotalMilliseconds,
-                                virtualTime.TotalMilliseconds,
-                                realTime.Elapsed.TotalMilliseconds,
-                                DateTime.Now - dt,
-                                System.Threading.Thread.CurrentThread.ManagedThreadId);
-                        }
+                        Debug.Print(
+                            "Cycle {0} | {1}ms | vt:{2} rt:{3} dt:{4} id:{5}",
+                            _context.SimulationClock.Cycle,
+                            sw.Elapsed.TotalMilliseconds,
+                            virtualTime.TotalMilliseconds,
+                            realTime.Elapsed.TotalMilliseconds,
+                            DateTime.Now - dt,
+                            System.Threading.Thread.CurrentThread.ManagedThreadId);
                     }
                 },
                 contexts,
@@ -2418,8 +2279,15 @@ namespace Sheet.Simulation
             Run(
                 (state) =>
                 {
-                    Run(state as List<Context>, tags, false);
-                    update();
+                    if (_context != null && _context.IsRunning == true)
+                    {
+                        Run(
+                            state as List<Context>,
+                            tags, 
+                            false);
+
+                        update();
+                    }
                 },
                 contexts,
                 tags,
@@ -2432,53 +2300,33 @@ namespace Sheet.Simulation
             {
                 return;
             }
-
-            if (SimulationSettings.EnableDebug)
-            {
-                Debug.Print("");
-            }
-
+ 
             if (cache.Simulations == null)
             {
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print("--- warning: no ISimulation elements ---");
-                    Debug.Print("");
-                }
+                Debug.Print("--- warning: no ISimulation elements ---");
                 return;
             }
 
             var length = cache.Simulations.Length;
 
-            if (SimulationSettings.EnableDebug)
-            {
-                Debug.Print("");
-            }
-
             var sw = System.Diagnostics.Stopwatch.StartNew();
 
             for (int i = 0; i < length; i++)
             {
-                if (SimulationSettings.EnableDebug)
-                {
-                    Debug.Print(
-                        "--- simulation: {0} | Type: {1} ---",
-                        cache.Simulations[i].Element.ElementId,
-                        cache.Simulations[i].GetType());
-                    Debug.Print("");
-                }
+                Debug.Print(
+                    "--- simulation: {0} | Type: {1} ---",
+                    cache.Simulations[i].Element.ElementId,
+                    cache.Simulations[i].GetType());
 
                 cache.Simulations[i].Calculate();
             }
 
             sw.Stop();
 
-            if (SimulationSettings.EnableDebug)
-            {
-                Debug.Print(
-                    "Calculate() done in: {0}ms | {1} elements",
-                    sw.Elapsed.TotalMilliseconds, length);
-            }
+            Debug.Print(
+                "Calculate() done in: {0}ms | {1} elements",
+                sw.Elapsed.TotalMilliseconds, 
+                length);
         }
 
         public void ResetCache(bool collect)
@@ -2689,10 +2537,7 @@ namespace Sheet.Simulation
             // map tags
             MapTags(contexts);
 
-            if (SimulationSettings.EnableDebug)
-            {
-                DebugPrintTagMap();
-            }
+            DebugPrintTagMap();
 
             // set elements Id
             var elements = contexts.SelectMany(x => x.Children).Concat(_solution.Tags);
@@ -2734,22 +2579,22 @@ namespace Sheet.Simulation
         {
             if (_context.SimulationTimer != null)
             {
-                // stop simulation
-                if (_context != null)
+                lock (_context.SimulationTimerSync)
                 {
-                    _context.SimulationTimer.Dispose();
+                    // stop simulation
+                    if (_context != null)
+                    {
+                        _context.IsRunning = false;
+                        _context.SimulationTimer.Dispose();
+                        _context.SimulationTimer = null;
+                    }
+
+                    // reset previous simulation cache
+                    ResetCache(true);
+
+                    ResetTags();
                 }
-
-                // reset previous simulation cache
-                ResetCache(true);
-
-                ResetTags();
             }
-        }
-
-        public void EnableDebug(bool enable)
-        {
-            SimulationSettings.EnableDebug = enable;
         }
     }
 }

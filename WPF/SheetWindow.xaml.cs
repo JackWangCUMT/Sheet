@@ -776,7 +776,6 @@ namespace Sheet
                     var solution = serializer.Serialize(block);
 
                     simulation = new Simulation.Simulation(solution, 100);
-                    simulation.EnableDebug(false);
                     simulation.Start(new WpfUpdate());
 
                     var window = new Window() 
