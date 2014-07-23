@@ -2175,16 +2175,6 @@ namespace Sheet.Simulation
         #endregion
     }
 
-    public interface IBlockStateUpdate
-    {
-        void SeState(ILine line, IBoolState state);
-        void SeState(IRectangle rectangle, IBoolState state);
-        void SeState(IEllipse ellipse, IBoolState state);
-        void SeState(IText text, IBoolState state);
-        void SeState(IImage image, IBoolState state);
-        void SeState(IBlock parent, IBoolState state);
-    }
-
     public class SolutionRenamer
     {
         private static string CountersNamepsace = "Sheet.Simulation";
@@ -2782,6 +2772,16 @@ namespace Sheet.Simulation
         #endregion
     }
 
+    public interface IUpdateState
+    {
+        void Set(ILine line, IBoolState state);
+        void Set(IRectangle rectangle, IBoolState state);
+        void Set(IEllipse ellipse, IBoolState state);
+        void Set(IText text, IBoolState state);
+        void Set(IImage image, IBoolState state);
+        void Set(IBlock parent, IBoolState state);
+    }
+
     public class SolutionSimulation
     {
         private Solution _solution;
@@ -2901,7 +2901,7 @@ namespace Sheet.Simulation
 
         private void UpdateSignalBlockStates(
             Signal[] signals, 
-            IBlockStateUpdate state)
+            IUpdateState state)
         {
             bool update = false;
 
@@ -2916,7 +2916,7 @@ namespace Sheet.Simulation
                         && tag.Simulation.State.State != tag.Simulation.State.PreviousState)
                     {
                         update = true;
-                        state.SeState(signal.Block, tag.Simulation.State);
+                        state.Set(signal.Block, tag.Simulation.State);
                     }
                 }
 
@@ -2934,7 +2934,7 @@ namespace Sheet.Simulation
                     if (tag != null 
                         && tag.Simulation != null)
                     {
-                        state.SeState(signal.Block, tag.Simulation.State);
+                        state.Set(signal.Block, tag.Simulation.State);
                     }
                 }
             }
@@ -2959,9 +2959,9 @@ namespace Sheet.Simulation
                 .ToArray();
 
             var dispatcher = Dispatcher.CurrentDispatcher;
-            var helper = new WpfBlockStateUpdate();
+            var state = new WpfUpdateState();
 
-            var update = new Action(() => UpdateSignalBlockStates(signals, helper));
+            var update = new Action(() => UpdateSignalBlockStates(signals, state));
             var updateOnUIThread = new Action(() => dispatcher.BeginInvoke(update));
 
             return updateOnUIThread;

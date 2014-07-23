@@ -896,19 +896,13 @@ namespace Sheet.WPF
         #endregion
     }
 
-    public class WpfBlockStateUpdate : IBlockStateUpdate
+    public class WpfUpdateState : IUpdateState
     {
-        #region Fields
-
         private readonly SolidColorBrush NullBrush;
         private readonly SolidColorBrush FalseBrush;
         private readonly SolidColorBrush TrueBrush;
 
-        #endregion
-
-        #region Contructor
-
-        public WpfBlockStateUpdate()
+        public WpfUpdateState()
         {
             NullBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0x66, 0x66, 0x66));
             NullBrush.Freeze();
@@ -920,58 +914,58 @@ namespace Sheet.WPF
             TrueBrush.Freeze();
         }
 
-        #endregion
-
-        #region Brush Selector
-
-        private SolidColorBrush SelectStateBrush(IBoolState state)
+        private SolidColorBrush SelectBrush(IBoolState state)
         {
             if (state.State == true)
+            {
                 return TrueBrush;
+            }
             else if (state.State == false)
+            {
                 return FalseBrush;
+            }
             else
+            {
                 return NullBrush;
+            }
         }
 
-        #endregion
-
-        #region Set State
-
-        public void SeState(ILine line, IBoolState state)
+        public void Set(ILine line, IBoolState state)
         {
-            (line.Native as Line).Stroke = SelectStateBrush(state);
+            (line.Native as Line).Stroke = SelectBrush(state);
         }
 
-        public void SeState(IRectangle rectangle, IBoolState state)
+        public void Set(IRectangle rectangle, IBoolState state)
         {
-            (rectangle.Native as Rectangle).Stroke = SelectStateBrush(state);
-            (rectangle.Native as Rectangle).Fill = (rectangle.Native as Rectangle).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.TransparentBrush : SelectStateBrush(state);
+            (rectangle.Native as Rectangle).Stroke = SelectBrush(state);
+            (rectangle.Native as Rectangle).Fill = 
+                (rectangle.Native as Rectangle).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.TransparentBrush : SelectBrush(state);
         }
 
-        public void SeState(IEllipse ellipse, IBoolState state)
+        public void Set(IEllipse ellipse, IBoolState state)
         {
-            (ellipse.Native as Ellipse).Stroke = SelectStateBrush(state);
-            (ellipse.Native as Ellipse).Fill = (ellipse.Native as Ellipse).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.TransparentBrush : SelectStateBrush(state);
+            (ellipse.Native as Ellipse).Stroke = SelectBrush(state);
+            (ellipse.Native as Ellipse).Fill =
+                (ellipse.Native as Ellipse).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.TransparentBrush : SelectBrush(state);
         }
 
-        public void SeState(IText text, IBoolState state)
+        public void Set(IText text, IBoolState state)
         {
-            WpfBlockHelper.GetTextBlock(text).Foreground = SelectStateBrush(state);
+            WpfBlockHelper.GetTextBlock(text).Foreground = SelectBrush(state);
         }
 
-        public void SeState(IImage image, IBoolState state)
+        public void Set(IImage image, IBoolState state)
         {
-            (image.Native as Image).OpacityMask = SelectStateBrush(state);
+            (image.Native as Image).OpacityMask = SelectBrush(state);
         }
 
-        public void SeState(IBlock parent, IBoolState state)
+        public void Set(IBlock parent, IBoolState state)
         {
             if (parent.Lines != null)
             {
                 foreach (var line in parent.Lines)
                 {
-                    SeState(line, state);
+                    Set(line, state);
                 }
             }
 
@@ -979,7 +973,7 @@ namespace Sheet.WPF
             {
                 foreach (var rectangle in parent.Rectangles)
                 {
-                    SeState(rectangle, state);
+                    Set(rectangle, state);
                 }
             }
 
@@ -987,7 +981,7 @@ namespace Sheet.WPF
             {
                 foreach (var ellipse in parent.Ellipses)
                 {
-                    SeState(ellipse, state);
+                    Set(ellipse, state);
                 }
             }
 
@@ -995,7 +989,7 @@ namespace Sheet.WPF
             {
                 foreach (var text in parent.Texts)
                 {
-                    SeState(text, state);
+                    Set(text, state);
                 }
             }
 
@@ -1003,7 +997,7 @@ namespace Sheet.WPF
             {
                 foreach (var image in parent.Images)
                 {
-                    SeState(image, state);
+                    Set(image, state);
                 }
             }
 
@@ -1011,12 +1005,10 @@ namespace Sheet.WPF
             {
                 foreach (var block in parent.Blocks)
                 {
-                    SeState(block, state);
+                    Set(block, state);
                 }
             }
         }
-
-        #endregion
     }
 
     public class WpfOpenFileDialog : IOpenFileDialog
