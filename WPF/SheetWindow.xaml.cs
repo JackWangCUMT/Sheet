@@ -3,6 +3,7 @@ using Sheet.Entry;
 using Sheet.Simulation;
 using Sheet.UI;
 using Sheet.Util;
+using Sheet.WPF;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -784,7 +785,7 @@ namespace Sheet
                     controller = new SolutionSimulation(solution, 100);
                     controller.EnableDebug(false);
                     controller.EnableLog(false);
-                    controller.Start();
+                    controller.Start(new WpfUpdateState());
 
                     var window = new Window() 
                     {

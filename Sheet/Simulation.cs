@@ -1,5 +1,4 @@
 ﻿using Sheet.Block;
-using Sheet.WPF;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -2766,7 +2765,9 @@ namespace Sheet.Simulation
             }
         }
 
-        private Action GetUpdateAction(List<Context> contexts)
+        private Action GetUpdateAction(
+            List<Context> contexts,
+            IUpdateState state)
         {
             var signals = contexts
                 .SelectMany(x => x.Children)
@@ -2775,15 +2776,12 @@ namespace Sheet.Simulation
                 .ToArray();
 
             var dispatcher = Dispatcher.CurrentDispatcher;
-            var state = new WpfUpdateState();
-
             var update = new Action(() => UpdateSignalBlockStates(signals, state));
             var updateOnUIThread = new Action(() => dispatcher.BeginInvoke(update));
-
             return updateOnUIThread;
         }
 
-        public void Start()
+        public void Start(IUpdateState state)
         {
             // simulation is already running
             if (_controller.SimulationContext.SimulationTimer != null)
@@ -2843,7 +2841,7 @@ namespace Sheet.Simulation
                 contexts, 
                 _solution.Tags, 
                 period, 
-                GetUpdateAction(contexts));
+                GetUpdateAction(contexts, state));
 
             // reset simulation parent
             foreach (var element in elements)
