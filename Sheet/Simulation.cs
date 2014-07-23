@@ -47,16 +47,12 @@ namespace Sheet.Simulation
         void Compile();
         void Calculate();
         void Reset();
-
         Element Element { get; set; }
-
         IClock Clock { get; set; }
-
         IBoolState State { get; set; }
         bool? InitialState { get; set; }
         Tuple<IBoolState, bool>[] StatesCache { get; set; }
         bool HaveCache { get; set; }
-
         Element[] DependsOn { get; set; }
     }
 
@@ -163,12 +159,16 @@ namespace Sheet.Simulation
                 if (value != start)
                 {
                     if (start != null)
+                    {
                         Children.Remove(start);
+                    }
 
                     start = value;
 
                     if (start != null)
+                    {
                         Children.Add(start);
+                    }
                 }
             }
         }
@@ -181,12 +181,16 @@ namespace Sheet.Simulation
                 if (value != end)
                 {
                     if (end != null)
+                    {
                         Children.Remove(end);
+                    }
 
                     end = value;
 
                     if (end != null)
+                    {
                         Children.Add(end);
+                    }
                 }
             }
         }
@@ -230,19 +234,28 @@ namespace Sheet.Simulation
 
     public class AndGate : Element, IStateSimulation
     {
-        public AndGate() : base() { }
+        public AndGate() 
+            : base() 
+        {
+        }
         public ISimulation Simulation { get; set; }
     }
 
     public class OrGate : Element, IStateSimulation
     {
-        public OrGate() : base() { }
+        public OrGate() 
+            : base() 
+        { 
+        }
         public ISimulation Simulation { get; set; }
     }
 
     public class TimerOn : Element, ITimer, IStateSimulation
     {
-        public TimerOn() : base() { }
+        public TimerOn() 
+            : base() 
+        {
+        }
         public float Delay { get; set; }
         public string Unit { get; set; }
         public ISimulation Simulation { get; set; }
@@ -250,7 +263,10 @@ namespace Sheet.Simulation
 
     public class TimerOff : Element, ITimer, IStateSimulation
     {
-        public TimerOff() : base() { }
+        public TimerOff() 
+            : base() 
+        {
+        }
         public float Delay { get; set; }
         public string Unit { get; set; }
         public ISimulation Simulation { get; set; }
@@ -258,7 +274,10 @@ namespace Sheet.Simulation
 
     public class TimerPulse : Element, ITimer, IStateSimulation
     {
-        public TimerPulse() : base() { }
+        public TimerPulse() 
+            : base() 
+        { 
+        }
         public float Delay { get; set; }
         public string Unit { get; set; }
         public ISimulation Simulation { get; set; }
@@ -1200,7 +1219,10 @@ namespace Sheet.Simulation
 
                 if (SimulationSettings.EnableDebug)
                 {
-                    Debug.Print("Id: {0} | State: {1}", Element.ElementId, State.State);
+                    Debug.Print(
+                        "Id: {0} | State: {1}", 
+                        Element.ElementId, 
+                        State.State);
                     Debug.Print("");
                 }
             }
@@ -1219,17 +1241,27 @@ namespace Sheet.Simulation
 
     public class Context : Element
     {
-        public Context() : base() { }
+        public Context() 
+            : base() 
+        { 
+        }
     }
 
     public class Project : Element
     {
-        public Project() : base() { }
+        public Project() 
+            : base() 
+        { 
+        }
     }
 
     public class Solution : Element
     {
-        public Solution() : base() { Tags = new ObservableCollection<Tag>(); }
+        public Solution() 
+            : base() 
+        { 
+            Tags = new ObservableCollection<Tag>(); 
+        }
         public ObservableCollection<Tag> Tags { get; set; }
     }
 
@@ -1259,7 +1291,6 @@ namespace Sheet.Simulation
                 {
                     var simulation = cache.Simulations[i];
                     simulation.Reset();
-
                     (simulation.Element as IStateSimulation).Simulation = null;
                 }
             }
@@ -1529,7 +1560,12 @@ namespace Sheet.Simulation
             var pins = elements.Where(x => x is IStateSimulation && x.Children != null)
                                .SelectMany(x => x.Children)
                                .Cast<Pin>()
-                               .Where(p => (p.Type == PinType.Undefined || p.Type == PinType.Input) && pinToWireDict.ContainsKey(p.ElementId))
+                               .Where(p =>
+                                {
+                                    return 
+                                        (p.Type == PinType.Undefined || p.Type == PinType.Input) 
+                                        && pinToWireDict.ContainsKey(p.ElementId);
+                                })
                                .ToArray();
 
             var length = pins.Length;
@@ -1731,9 +1767,7 @@ namespace Sheet.Simulation
             {
                 var state = new BoolState();
                 var simulation = simulations[i];
-
                 state.State = simulation.InitialState;
-
                 simulation.State = state;
             }
         }
@@ -1767,7 +1801,6 @@ namespace Sheet.Simulation
                 }
 
                 simulations[i].Compile();
-
                 simulations[i].Clock = clock;
 
                 if (SimulationSettings.EnableDebug)
@@ -1786,7 +1819,9 @@ namespace Sheet.Simulation
             var cache = new SimulationCache();
 
             // -- step 1: reset pin connections ---
-            var pins = elements.Where(x => x is Pin).Cast<Pin>();
+            var pins = elements
+                .Where(x => x is Pin)
+                .Cast<Pin>();
 
             Reset(pins);
 
@@ -1799,7 +1834,8 @@ namespace Sheet.Simulation
                 var element = elements[i];
                 if (element is IStateSimulation)
                 {
-                    var simulation = StateSimulationDict[element.GetType()](element);
+                    var type = element.GetType();
+                    var simulation = StateSimulationDict[type](element);
                     simulations.Add(simulation);
                 }
             }
@@ -1831,13 +1867,22 @@ namespace Sheet.Simulation
             }
 
             var ts = new TopologicalSort<ISimulation>();
-            var sortedSimulations = ts.Sort(simulations, x =>
-            {
-                if (x.DependsOn == null)
-                    return null;
-                else
-                    return x.DependsOn.Cast<IStateSimulation>().Select(y => y.Simulation);
-            }, true);
+            var sortedSimulations = ts.Sort(
+                simulations, 
+                x =>
+                {
+                    if (x.DependsOn == null)
+                    {
+                        return null;
+                    }
+                    else
+                    {
+                        return x.DependsOn
+                            .Cast<IStateSimulation>()
+                            .Select(y => y.Simulation);
+                    }
+                }, 
+                true);
 
             if (SimulationSettings.EnableDebug)
             {
