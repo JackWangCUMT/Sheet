@@ -812,7 +812,7 @@ namespace Sheet.Controller
             CreatePlugins();
             CreatePage();
 
-            LoadLibraryFromResource(string.Concat("Sheet.Libraries", '.', "Digital.library"));
+            LoadLibraryFromResource(string.Concat("Sheet.Libraries", '.', "Common.library"));
         }
 
         private void SetDefaults()
