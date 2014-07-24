@@ -244,13 +244,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Libraries\Analog.library" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Libraries\Digital.library" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Libraries\Device.library" />
+    <EmbeddedResource Include="Libraries\Common.library" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
