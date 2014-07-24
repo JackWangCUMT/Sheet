@@ -2654,8 +2654,8 @@ namespace Sheet.Controller
                 // try to find point to connect line start
                 IPoint start = TryToFindPoint(args.SheetPosition);
 
-                // create start if Control key is pressed and start point has not been found
-                if (args.OnlyControl && start == null)
+                // create start if no Control key is pressed and start point has not been found
+                if (!args.OnlyControl && start == null)
                 {
                     start = InsertPoint(args.SheetPosition, true, false);
                 }
@@ -2667,8 +2667,8 @@ namespace Sheet.Controller
                 // try to find point to connect line end
                 IPoint end = TryToFindPoint(args.SheetPosition);
 
-                // create end point if Control key is pressed and end point has not been found
-                if (args.OnlyControl && end == null)
+                // create end point if no Control key is pressed and end point has not been found
+                if (!args.OnlyControl && end == null)
                 {
                     end = InsertPoint(args.SheetPosition, true, false);
                 }
