@@ -297,7 +297,9 @@ namespace Sheet.Simulation
         public void Compile()
         {
             if (HaveCache)
+            {
                 Reset();
+            }
 
             var tag = Element as Tag;
 
@@ -415,7 +417,9 @@ namespace Sheet.Simulation
         public void Compile()
         {
             if (HaveCache)
+            {
                 Reset();
+            }
 
             // get all connected inputs with possible state
             var connections = Element
@@ -483,7 +487,9 @@ namespace Sheet.Simulation
         {
             int length = states.Length;
             if (length == 1)
+            {
                 return null;
+            }
 
             bool? result = null;
             for (int i = 0; i < length; i++)
@@ -493,9 +499,13 @@ namespace Sheet.Simulation
                 var isInverted = item.Item2;
 
                 if (i == 0)
+                {
                     result = isInverted ? !(state) : state;
+                }
                 else
+                {
                     result &= isInverted ? !(state) : state;
+                }
             }
 
             return result;
@@ -529,7 +539,9 @@ namespace Sheet.Simulation
         public void Compile()
         {
             if (HaveCache)
+            {
                 Reset();
+            }
 
             // get all connected inputs with possible state
             var connections = Element
@@ -597,7 +609,9 @@ namespace Sheet.Simulation
         {
             int length = states.Length;
             if (length == 1)
+            {
                 return null;
+            }
 
             bool? result = null;
             for (int i = 0; i < length; i++)
@@ -607,9 +621,13 @@ namespace Sheet.Simulation
                 var isInverted = item.Item2;
 
                 if (i == 0)
+                {
                     result = isInverted ? !(state) : state;
+                }
                 else
+                {
                     result |= isInverted ? !(state) : state;
+                }
             }
 
             return result;
@@ -643,7 +661,9 @@ namespace Sheet.Simulation
         public void Compile()
         {
             if (HaveCache)
+            {
                 Reset();
+            }
 
             // only one input is allowed for timer
             var inputs = Element
@@ -797,7 +817,9 @@ namespace Sheet.Simulation
         public void Compile()
         {
             if (HaveCache)
+            {
                 Reset();
+            }
 
             // only one input is allowed for timer
             var inputs = Element
@@ -966,7 +988,9 @@ namespace Sheet.Simulation
         public void Compile()
         {
             if (HaveCache)
+            {
                 Reset();
+            }
 
             // only one input is allowed for timer
             var inputs = Element
@@ -1571,7 +1595,9 @@ namespace Sheet.Simulation
         public static void Reset(SimulationCache cache)
         {
             if (cache == null)
+            {
                 return;
+            }
 
             if (cache.Simulations != null)
             {
@@ -2402,13 +2428,14 @@ namespace Sheet.Simulation
         private void MapSignalsToTag(List<Signal> signals)
         {
             if (signals == null)
+            {
                 return;
+            }
 
             // map each Signal children to Tag
             foreach (var signal in signals)
             {
                 var tag = signal.Tag;
-
                 MapSignalToTag(signal, tag);
             }
         }
@@ -2422,7 +2449,6 @@ namespace Sheet.Simulation
                 .ToList();
 
             ResetTags();
-
             MapSignalsToTag(signals);
         }
 
@@ -2536,13 +2562,14 @@ namespace Sheet.Simulation
 
             // map tags
             MapTags(contexts);
-
             DebugPrintTagMap();
 
             // set elements Id
-            var elements = contexts.SelectMany(x => x.Children).Concat(_solution.Tags);
-            UInt32 elementId = 0;
+            var elements = contexts
+                .SelectMany(x => x.Children)
+                .Concat(_solution.Tags);
 
+            UInt32 elementId = 0;
             foreach (var element in elements)
             {
                 element.ElementId = elementId;
@@ -2581,7 +2608,6 @@ namespace Sheet.Simulation
             {
                 lock (_context.SimulationTimerSync)
                 {
-                    // stop simulation
                     if (_context != null)
                     {
                         _context.IsRunning = false;
@@ -2589,9 +2615,7 @@ namespace Sheet.Simulation
                         _context.SimulationTimer = null;
                     }
 
-                    // reset previous simulation cache
                     ResetCache(true);
-
                     ResetTags();
                 }
             }
