@@ -677,7 +677,6 @@ namespace Sheet.Simulation
                     "No Valid Input for Id: {0} | State: {1}", 
                     Element.ElementId, 
                     State.State);
-
                 return;
             }
 
@@ -2023,7 +2022,6 @@ namespace Sheet.Simulation
         private void InitializeStates(List<ISimulation> simulations)
         {
             var length = simulations.Count;
-
             for (int i = 0; i < length; i++)
             {
                 var state = new BoolState();
@@ -2137,11 +2135,15 @@ namespace Sheet.Simulation
 
             // Connections are not used after compilation is done
             foreach (var pin in pins)
+            {
                 pin.Connections = null;
+            }
 
             // DependsOn are not used after compilation is done
             foreach (var simulation in simulations)
+            {
                 simulation.DependsOn = null;
+            }
 
             pins = null;
             simulations = null;
@@ -2201,7 +2203,6 @@ namespace Sheet.Simulation
         {
             _solution = solution;
             _periodInMillisencods = periodInMillisencods;
-
             _compiler = new Compiler();
             _clock = new Clock();
 
@@ -2228,7 +2229,6 @@ namespace Sheet.Simulation
                 var elements = contexts
                     .SelectMany(x => x.Children)
                     .Concat(tags);
-
                 Debug.Print(
                     "Simulation for {0} contexts, elements: {1}",
                     contexts.Count(), elements.Count());
@@ -2311,7 +2311,6 @@ namespace Sheet.Simulation
                             state as List<Context>,
                             tags, 
                             false);
-
                         update();
                     }
                 },
@@ -2447,7 +2446,6 @@ namespace Sheet.Simulation
                 .Where(y => y is Signal)
                 .Cast<Signal>()
                 .ToList();
-
             ResetTags();
             MapSignalsToTag(signals);
         }
@@ -2528,7 +2526,6 @@ namespace Sheet.Simulation
                 .Where(y => y is Signal)
                 .Cast<Signal>()
                 .ToArray();
-
             var dispatcher = Dispatcher.CurrentDispatcher;
             var update = new Action(() => UpdateSignalBlockStates(signals, state));
             var updateOnUIThread = new Action(() => dispatcher.BeginInvoke(update));
@@ -2614,7 +2611,6 @@ namespace Sheet.Simulation
                         _context.SimulationTimer.Dispose();
                         _context.SimulationTimer = null;
                     }
-
                     ResetCache(true);
                     ResetTags();
                 }
