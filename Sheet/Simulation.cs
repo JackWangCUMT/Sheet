@@ -66,7 +66,6 @@ namespace Sheet.Simulation
         public Element()
         {
             Children = new ObservableCollection<Element>();
-            Parent = null;
         }
         public string Id { get; set; }
         public double X { get; set; }
@@ -286,7 +285,6 @@ namespace Sheet.Simulation
         }
 
         public Element Element { get; set; }
-
         public IClock Clock { get; set; }
         public IBoolState State { get; set; }
         public bool? InitialState { get; set; }
