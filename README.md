@@ -3,7 +3,7 @@ Sheet
 
 Diagram drawing application.
 
-Keyboard  Shortcuts:
+## Keyboard  Shortcuts
 
     (File)
     Ctrl+Shift+N    New Solution
@@ -56,7 +56,7 @@ Keyboard  Shortcuts:
     Q               Invert Line Start
     W               Invert Line End
 
-Mouse:
+## Mouse
 
     Left Click            Create / (Hold+Drag) Move / (Hold+Drag) Selection / Select / Deselect
                           Select/deselect single/multiple items while Ctrl key is pressesed.
@@ -65,7 +65,11 @@ Mouse:
     Double Middle Click   Auto-Fit (+Ctrl key to Reset Pan and Zoom)
     Mouse Over (+Shift)   Select signle item under mouse cursor.
 
-Icons:
+## Icons
 
     Document, Edit by http://thedesignoffice.org/, http://www.thexamlproject.com/
     Document by http://www.thenounproject.com/, http://www.thexamlproject.com/
+
+## License
+
+Sheet is licensed under the [MIT license](LICENSE.TXT).
