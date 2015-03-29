@@ -1,4 +1,6 @@
-﻿using Sheet.Util;
+﻿// Copyright (c) Wiesław Šoltés. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+using Sheet.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

@@ -1,4 +1,6 @@
-﻿using Microsoft.Win32;
+﻿// Copyright (c) Wiesław Šoltés. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+using Microsoft.Win32;
 using Sheet.Block;
 using Sheet.Controller;
 using Sheet.Item;

@@ -1,4 +1,6 @@
-﻿using Sheet.Entry;
+﻿// Copyright (c) Wiesław Šoltés. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+using Sheet.Entry;
 using Sheet.Controller;
 using Sheet.UI;
 using System;
