@@ -150,11 +150,9 @@
     <Compile Include="WPF\Controls\DatabasesControl.xaml.cs">
       <DependentUpon>DatabasesControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Sheet\Dxf.cs" />
     <Compile Include="WPF\Controls\LibraryControl.xaml.cs">
       <DependentUpon>LibraryControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Sheet\Pdf.cs" />
     <Compile Include="WPF\Controls\TextControl.xaml.cs">
       <DependentUpon>TextControl.xaml</DependentUpon>
     </Compile>

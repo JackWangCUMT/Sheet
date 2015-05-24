@@ -207,11 +207,6 @@ namespace Sheet.Controller
         void SaveJsonPage(string path);
         void SavePage();
 
-        // Export Page
-        void Export(IEnumerable<BlockItem> blocks);
-        void Export(SolutionEntry solution);
-        void ExportPage();
-
         // Library
         void Insert(ImmutablePoint p);
         IBlock Insert(BlockItem blockItem, ImmutablePoint p, bool select);
@@ -230,8 +225,6 @@ namespace Sheet.Controller
         // Page
         void SetPage(string text);
         string GetPage();
-        void ExportPage(string text);
-        void ExportPages(IEnumerable<string> texts);
         BlockItem SerializePage();
         void DeserializePage(BlockItem page);
         void ResetPage();
@@ -725,7 +718,6 @@ namespace Sheet.Controller
 
         public static string DatabaseFilter = "Csv Files (*.csv)|*.csv|All Files (*.*)|*.*";
         public static string ImageFilter = "Supported Files (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg|Png Files (*.png)|*.png|Jpg Files (*.jpg)|*.jpg|Jpeg Files (*.jpeg)|*.jpeg|All Files (*.*)|*.*";
-        public static string ExportFilter = "Pdf Documents (*.pdf)|*.pdf|Dxf Documents (*.dxf)|*.dxf|All Files (*.*)|*.*";
 
         #endregion
     }
@@ -911,18 +903,6 @@ namespace Sheet.Controller
             var text = _itemSerializer.SerializeContents(block);
 
             return text;
-        }
-
-        public void ExportPage(string text)
-        {
-            var block = _itemSerializer.DeserializeContents(text);
-            Export(ToSingle(block));
-        }
-
-        public void ExportPages(IEnumerable<string> texts)
-        {
-            var blocks = texts.Select(text => _itemSerializer.DeserializeContents(text));
-            Export(blocks);
         }
 
         public BlockItem SerializePage()
@@ -2336,112 +2316,6 @@ namespace Sheet.Controller
                         break;
                 }
             }
-        }
-
-        #endregion
-
-        #region Export Page
-
-        private void ExportToPdf(IEnumerable<BlockItem> blocks, string fileName)
-        {
-            var pages = blocks.Select(content => CreatePage(content, true, false)).ToList();
-
-            Task.Run(() =>
-            {
-                var writer = new BlockPdfWriter();
-                writer.Create(fileName, State.Options.PageWidth, State.Options.PageHeight, pages);
-                Process.Start(fileName);
-            });
-        }
-
-        private void ExportToDxf(IEnumerable<BlockItem> blocks, string fileName)
-        {
-            var pages = blocks.Select(block => CreatePage(block, true, false)).ToList();
-
-            Task.Run(() =>
-            {
-                var writer = new BlockDxfWriter();
-
-                if (blocks.Count() > 1)
-                {
-                    string path = System.IO.Path.GetDirectoryName(fileName);
-                    string name = System.IO.Path.GetFileNameWithoutExtension(fileName);
-                    string extension = System.IO.Path.GetExtension(fileName);
-
-                    int counter = 0;
-                    foreach (var page in pages)
-                    {
-                        string fileNameWithCounter = System.IO.Path.Combine(path, string.Concat(name, '-', counter.ToString("000"), extension));
-                        writer.Create(fileNameWithCounter, State.Options.PageWidth, State.Options.PageHeight, page);
-                        counter++;
-                    }
-                }
-                else
-                {
-                    var page = pages.FirstOrDefault();
-                    if (page != null)
-                    {
-                        writer.Create(fileName, State.Options.PageWidth, State.Options.PageHeight, page);
-                    }
-                }
-            });
-        }
-
-        public void Export(IEnumerable<BlockItem> blocks)
-        {
-            var dlg = _serviceLocator.GetInstance<ISaveFileDialog>();
-            dlg.Filter = FileDialogSettings.ExportFilter;
-            dlg.FilterIndex = 1;
-            dlg.FileName = "sheet";
-
-            if (dlg.ShowDialog() == true)
-            {
-                string path = dlg.FileName;
-                switch (dlg.FilterIndex)
-                {
-                    case 1:
-                    case 3:
-                    default:
-                        {
-                            try
-                            {
-                                ExportToPdf(blocks, path);
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.Print(ex.Message);
-                                Debug.Print(ex.StackTrace);
-                            }
-                        }
-                        break;
-                    case 2:
-                        {
-                            try
-                            {
-                                ExportToDxf(blocks, path);
-                            }
-                            catch (Exception ex)
-                            {
-                                Debug.Print(ex.Message);
-                                Debug.Print(ex.StackTrace);
-                            }
-                        }
-                        break;
-                }
-            }
-        }
-
-        public void Export(SolutionEntry solution)
-        {
-            var texts = solution.Documents.SelectMany(document => document.Pages).Select(page => page.Content);
-            ExportPages(texts);
-        }
-
-        public void ExportPage()
-        {
-            var block = _blockSerializer.SerializerAndSetId(State.ContentBlock, -1, State.ContentBlock.X, State.ContentBlock.Y, State.ContentBlock.Width, State.ContentBlock.Height, State.ContentBlock.DataId, "CONTENT");
-            var blocks = ToSingle(block);
-            Export(blocks);
         }
 
         #endregion

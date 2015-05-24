@@ -114,8 +114,6 @@
             <MenuItem x:Name="PageDuplicate" Header="_Duplicate Page" Click="PageDuplicate_Click"/>
             <Separator/>
             <MenuItem x:Name="PageRemove" Header="_Remove Page" Click="PageRemove_Click"/>
-            <Separator/>
-            <MenuItem x:Name="PageExport" Header="_Export Page" Click="PageExport_Click"/>
         </ContextMenu>
         <ContextMenu x:Key="DocumentContextMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
             <MenuItem x:Name="DocumentAddPage" Header="_Add Page" Click="DocumentAddPage_Click"/>
@@ -126,8 +124,6 @@
             <MenuItem x:Name="DocumentDuplicate" Header="_Duplicate Document" Click="DocumentDuplicate_Click"/>
             <Separator/>
             <MenuItem x:Name="DocumentRemove" Header="_Remove Document" Click="DocumentRemove_Click"/>
-            <Separator/>
-            <MenuItem x:Name="DocumentExport" Header="_Export Document" Click="DocumentExport_Click"/>
         </ContextMenu>
         <ContextMenu x:Key="TreeViewContextMenu" DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
             <MenuItem x:Name="TreeAddDocument" Header="_Add Document" Click="TreeAddDocument_Click"/>

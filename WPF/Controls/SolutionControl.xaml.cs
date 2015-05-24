@@ -128,36 +128,7 @@ namespace Sheet
         }
 
         #endregion
-
-        #region Export
-
-        public void ExportPage(object item)
-        {
-            if (_sheetController != null)
-            {
-                if (item != null && item is PageEntry)
-                {
-                    var page = item as PageEntry;
-                    _sheetController.ExportPage(page.Content);
-                }
-            }
-        }
-
-        public void ExportDocument(object item)
-        {
-            if (_sheetController != null)
-            {
-                if (item != null && item is DocumentEntry)
-                {
-                    var document = item as DocumentEntry;
-                    var texts = document.Pages.Select(x => x.Content);
-                    _sheetController.ExportPages(texts);
-                }
-            }
-        }
-
-        #endregion
-
+        
         #region TreeView Events
 
         private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -200,11 +171,6 @@ namespace Sheet
             _entryController.RemovePage(SolutionTree.SelectedItem);
         }
 
-        private void PageExport_Click(object sender, RoutedEventArgs e)
-        {
-            ExportPage(SolutionTree.SelectedItem);
-        }
-
         #endregion
 
         #region Document Menu Events
@@ -232,11 +198,6 @@ namespace Sheet
         private void DocumentRemove_Click(object sender, RoutedEventArgs e)
         {
             _entryController.RemoveDocument(SolutionTree.SelectedItem);
-        }
-
-        private void DocumentExport_Click(object sender, RoutedEventArgs e)
-        {
-            ExportDocument(SolutionTree.SelectedItem);
         }
 
         #endregion

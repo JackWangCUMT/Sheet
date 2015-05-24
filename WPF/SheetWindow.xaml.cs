@@ -414,21 +414,9 @@ namespace Sheet
                         UpdateModeMenu();
                     }
                     break;
-                // Ctrl+E: Export
                 // E: Mode Ellipse
                 case Key.E:
-                    if (onlyCtrl)
-                    {
-                        if (Solution.DataContext != null)
-                        {
-                            _sheetController.Export(Solution.DataContext as SolutionEntry);
-                        }
-                        else
-                        {
-                            _sheetController.ExportPage();
-                        }
-                    }
-                    else if (none)
+                    if (none)
                     {
                         _sheetController.State.Mode = SheetMode.Ellipse;
                         UpdateModeMenu();
@@ -863,18 +851,6 @@ namespace Sheet
         private void FileSavePage_Click(object sender, RoutedEventArgs e)
         {
             _sheetController.SavePage();
-        }
-
-        private void FileExport_Click(object sender, RoutedEventArgs e)
-        {
-            if (Solution.DataContext != null)
-            {
-                _sheetController.Export(Solution.DataContext as SolutionEntry);
-            }
-            else
-            {
-                _sheetController.ExportPage();
-            }
         }
 
         private void FileLibrary_Click(object sender, RoutedEventArgs e)
