@@ -1404,9 +1404,12 @@ namespace Sheet.Editor
 
         public bool BindDataToBlock(XBlock block, ItemData dataItem)
         {
-            if (block != null && block.Texts != null
-                && dataItem != null && dataItem.Columns != null && dataItem.Data != null
-                && block.Texts.Count == dataItem.Columns.Length - 1)
+            if (block != null 
+                && block.Texts != null
+                && dataItem != null 
+                && dataItem.Columns != null
+                && dataItem.Data != null
+                && block.Texts.Count == (dataItem.Columns.Length - 1))
             {
                 // assign block data id
                 block.DataId = int.Parse(dataItem.Data[0]);
