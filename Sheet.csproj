@@ -141,7 +141,6 @@
     <Compile Include="WPF\Controls\DatabaseControl.xaml.cs">
       <DependentUpon>DatabaseControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Sheet\Plugins.cs" />
     <Compile Include="Sheet\Sheet.cs" />
     <Compile Include="Sheet\UI.cs" />
     <Compile Include="Sheet\Util.cs" />

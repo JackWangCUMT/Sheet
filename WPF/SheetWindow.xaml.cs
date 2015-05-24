@@ -561,20 +561,6 @@ namespace Sheet
                         UpdateModeMenu(); 
                     }
                     break;
-                // Q: Invert Line Start
-                case Key.Q:
-                    if (none)
-                    {
-                        _sheetController.InvertSelectedLineStart(); 
-                    }
-                    break;
-                // W: Invert Line End
-                case Key.W:
-                    if (none)
-                    {
-                        _sheetController.InvertSelectedLineEnd(); 
-                    }
-                    break;
             }
         }
 
@@ -780,20 +766,6 @@ namespace Sheet
             _sheetController.State.Mode = SheetMode.Image;
             UpdateModeMenu();
         }
-
-        #endregion
-        
-        #region Logic Menu Events
-
-        private void LogicInvertLineStart_Click(object sender, RoutedEventArgs e)
-        {
-            _sheetController.InvertSelectedLineStart();
-        }
-
-        private void LogicInvertLineEnd_Click(object sender, RoutedEventArgs e)
-        {
-            _sheetController.InvertSelectedLineEnd();
-        } 
 
         #endregion
     }

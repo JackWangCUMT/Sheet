@@ -2,7 +2,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 using Sheet.Block;
 using Sheet.Item;
-using Sheet.Plugins;
 using Sheet.UI;
 using Sheet.Util;
 using Sheet.WPF;
@@ -228,10 +227,6 @@ namespace Sheet.Controller
         void DeserializePage(BlockItem page);
         void ResetPage();
         void ResetPageContent();
-
-        // Plugins
-        void InvertSelectedLineStart();
-        void InvertSelectedLineEnd();
     }
 
     public interface IZoomController
@@ -802,7 +797,6 @@ namespace Sheet.Controller
             SetDefaults();
 
             CreateBlocks();
-            CreatePlugins();
             CreatePage();
 
             LoadLibraryFromResource(string.Concat("Sheet.Libraries", '.', "Common.library"));
@@ -2800,48 +2794,6 @@ namespace Sheet.Controller
             page.Blocks.Add(content);
 
             return page;
-        }
-
-        #endregion
-
-        #region Plugins
-
-        private ISelectedBlockPlugin _invertedLineStartPlugin;
-        private ISelectedBlockPlugin _invertedLineEndPlugin;
-
-        private void CreatePlugins()
-        {
-            _invertedLineStartPlugin = new InvertLineStartPlugin(_serviceLocator);
-            _invertedLineEndPlugin = new InvertLineEndPlugin(_serviceLocator);
-        }
-
-        private void ProcessPlugin(ISelectedBlockPlugin plugin)
-        {
-            if (plugin.CanProcess(State.ContentSheet, State.ContentBlock, State.SelectedBlock, State.Options))
-            {
-                var copy = _blockFactory.CreateBlock(State.SelectedBlock.Id, State.SelectedBlock.X, State.SelectedBlock.Y, State.SelectedBlock.Width, State.SelectedBlock.Height, State.SelectedBlock.DataId, State.SelectedBlock.Name, null);
-                _blockController.ShallowCopy(State.SelectedBlock, copy);
-
-                _blockController.Deselect(State.SelectedBlock);
-                State.SelectedBlock = CreateSelectedBlock();
-
-                FinishEdit();
-                State.HistoryController.Register(plugin.Name);
-
-                plugin.Process(State.ContentSheet, State.ContentBlock, copy, State.Options);
-
-                State.SelectedBlock = copy;
-            }
-        }
-
-        public void InvertSelectedLineStart()
-        {
-            ProcessPlugin(_invertedLineStartPlugin);
-        }
-
-        public void InvertSelectedLineEnd()
-        {
-            ProcessPlugin(_invertedLineEndPlugin);
         }
 
         #endregion
