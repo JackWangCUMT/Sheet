@@ -14,7 +14,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Wiesław Šoltés")]
 [assembly: AssemblyProduct("Sheet")]
-[assembly: AssemblyCopyright("Copyright © Wiesław Šoltés 2014")]
+[assembly: AssemblyCopyright("Copyright © Wiesław Šoltés 2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

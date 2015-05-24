@@ -19,13 +19,9 @@ namespace Sheet
 {
     public partial class DatabasesControl : UserControl
     {
-        #region Constructor
-
         public DatabasesControl()
         {
             InitializeComponent();
         }
-
-        #endregion
     }
 }
