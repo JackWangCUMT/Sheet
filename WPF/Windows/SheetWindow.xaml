@@ -9,7 +9,9 @@
         Background="WhiteSmoke"
         WindowStartupLocation="CenterScreen" WindowState="Maximized"
         UseLayoutRounding="True" SnapsToDevicePixels="True" 
-        TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType" TextOptions.TextHintingMode="Auto"
+        TextOptions.TextFormattingMode="Display" 
+        TextOptions.TextRenderingMode="ClearType" 
+        TextOptions.TextHintingMode="Auto"
         PreviewKeyDown="Window_PreviewKeyDown">
     <Window.Resources>
         <ControlTemplate x:Key="HorizontalGridSplitterControlTemplateKey">
@@ -38,14 +40,14 @@
               Grid.Column="0"
               Grid.ColumnSpan="5">
             <MenuItem Header="_File">
-                <MenuItem x:Name="FileNewPage" Header="New Pa_ge" InputGestureText="Ctrl+N" Click="FileNewPage_Click"/>
+                <MenuItem x:Name="FileNewPage" Header="_New" InputGestureText="Ctrl+N" Click="FileNewPage_Click"/>
                 <Separator/>
-                <MenuItem x:Name="FileOpenPage" Header="Op_en Page..." InputGestureText="Ctrl+O" Click="FileOpenPage_Click"/>
-                <MenuItem x:Name="FileSavePage" Header="S_ave Page..." InputGestureText="Ctrl+S" Click="FileSavePage_Click"/>
+                <MenuItem x:Name="FileOpenPage" Header="Op_en..." InputGestureText="Ctrl+O" Click="FileOpenPage_Click"/>
+                <MenuItem x:Name="FileSavePage" Header="S_ave..." InputGestureText="Ctrl+S" Click="FileSavePage_Click"/>
                 <Separator/>
-                <MenuItem x:Name="FileLibrary" Header="_Library..." InputGestureText="Ctrl+L" Click="FileLibrary_Click"/>
+                <MenuItem x:Name="FileLibrary" Header="Open _Library..." InputGestureText="Ctrl+L" Click="FileLibrary_Click"/>
                 <Separator/>
-                <MenuItem x:Name="FileDatabase" Header="_Database..." InputGestureText="Ctrl+D" Click="FileDatabase_Click"/>
+                <MenuItem x:Name="FileDatabase" Header="Open _Database..." InputGestureText="Ctrl+D" Click="FileDatabase_Click"/>
                 <Separator/>
                 <MenuItem x:Name="FileExit" Header="E_xit" InputGestureText="Alt+F4" Click="FileExit_Click"/>
             </MenuItem>
@@ -79,15 +81,21 @@
                     <MenuItem x:Name="ViewZoomActualSize" Header="Act_ual Size" InputGestureText="Ctrl+1" Click="ViewZoomActualSize_Click"/>
                 </MenuItem>
             </MenuItem>
-            <MenuItem Header="_Mode">
+            <MenuItem Header="_Tool">
                 <MenuItem x:Name="ModeNone" Header="_None" InputGestureText="N" Click="ModeNone_Click"/>
+                <Separator/>
                 <MenuItem x:Name="ModeSelection" Header="_Selection" InputGestureText="S" Click="ModeSelection_Click"/>
+                <Separator/>
                 <MenuItem x:Name="ModeInsert" Header="_Insert" InputGestureText="I" Click="ModeInsert_Click"/>
+                <Separator/>
                 <MenuItem x:Name="ModePoint" Header="_Point" InputGestureText="P" Click="ModePoint_Click"/>
+                <Separator/>
                 <MenuItem x:Name="ModeLine" Header="_Line" InputGestureText="L" Click="ModeLine_Click"/>
                 <MenuItem x:Name="ModeRectangle" Header="_Rectangle" InputGestureText="R" Click="ModeRectangle_Click"/>
                 <MenuItem x:Name="ModeEllipse" Header="_Ellipse" InputGestureText="E" Click="ModeEllipse_Click"/>
+                <Separator/>
                 <MenuItem x:Name="ModeText" Header="_Text" InputGestureText="T" Click="ModeText_Click"/>
+                <Separator/>
                 <MenuItem x:Name="ModeImage" Header="Ima_ge" InputGestureText="D" Click="ModeImage_Click"/>
             </MenuItem>
         </Menu>
@@ -148,7 +156,8 @@
                                     Grid.Row="2" 
                                     Margin="0,0,0,0" 
                                     BorderBrush="LightGray" 
-                                    BorderThickness="0,1,0,0"/>
+                                    BorderThickness="0,1,0,0">
+            </local:DatabasesControl>
         </Grid>
     </Grid>
 </Window>
