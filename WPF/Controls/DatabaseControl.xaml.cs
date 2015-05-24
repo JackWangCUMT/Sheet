@@ -1,8 +1,7 @@
 ﻿// Copyright (c) Wiesław Šoltés. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-using Sheet.Item;
-using Sheet.UI;
-using Sheet.Util;
+using Sheet.Core;
+using Sheet.Editor;
 using Sheet.WPF;
 using System;
 using System.Collections.Generic;
@@ -73,7 +72,7 @@ namespace Sheet
             Database.View = CreateColumnsView(columns);
         }
 
-        public void SetData(List<string[]> data)
+        public void SetData(IList<string[]> data)
         {
             Database.ItemsSource = null;
             Database.ItemsSource = data;
@@ -114,7 +113,7 @@ namespace Sheet
                 {
                     string[] row = (string[])listView.ItemContainerGenerator.ItemFromContainer(listViewItem);
                     var controller = DataContext as IDatabaseController;
-                    var dataItem = new DataItem() { Columns = controller.Columns, Data = row };
+                    var dataItem = new ItemData() { Columns = controller.Columns, Data = row };
                     DataObject dragData = new DataObject("Data", dataItem);
                     DragDrop.DoDragDrop(listViewItem, dragData, DragDropEffects.Move);
                 }

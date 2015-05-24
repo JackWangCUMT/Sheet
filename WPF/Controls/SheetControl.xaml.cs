@@ -1,9 +1,7 @@
 ﻿// Copyright (c) Wiesław Šoltés. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-using Sheet.Block;
-using Sheet.Item;
-using Sheet.Controller;
-using Sheet.UI;
+using Sheet.Core;
+using Sheet.Editor;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -455,7 +453,7 @@ namespace Sheet
 
             if (e.Data.GetDataPresent(BlockDropFormat))
             {
-                var blockItem = e.Data.GetData(BlockDropFormat) as BlockItem;
+                var blockItem = e.Data.GetData(BlockDropFormat) as ItemBlock;
                 if (blockItem != null)
                 {
                     _sheetController.Insert(blockItem, position, true);
@@ -464,7 +462,7 @@ namespace Sheet
             }
             else if (e.Data.GetDataPresent(DataDropFormat))
             {
-                var dataItem = e.Data.GetData(DataDropFormat) as DataItem;
+                var dataItem = e.Data.GetData(DataDropFormat) as ItemData;
                 if (dataItem != null)
                 {
                     _sheetController.TryToBindData(position, dataItem);

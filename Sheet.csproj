@@ -124,11 +124,100 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <ApplicationDefinition Include="WPF\App.xaml">
+    <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Sheet\Block.cs" />
+    <Compile Include="Core\ArgbColor.cs" />
+    <Compile Include="Core\ArgbColors.cs" />
+    <Compile Include="Core\Item\ItemBlock.cs" />
+    <Compile Include="Core\Item\ItemChange.cs" />
+    <Compile Include="Core\Item\ItemData.cs" />
+    <Compile Include="Core\Item\ItemEllipse.cs" />
+    <Compile Include="Core\Item\ItemImage.cs" />
+    <Compile Include="Core\ImmutablePoint.cs" />
+    <Compile Include="Core\ImmutableRect.cs" />
+    <Compile Include="Core\Item\Item.cs" />
+    <Compile Include="Core\Item\ItemType.cs" />
+    <Compile Include="Core\Item\ItemLine.cs" />
+    <Compile Include="Core\Item\ItemPoint.cs" />
+    <Compile Include="Core\Item\ItemRectangle.cs" />
+    <Compile Include="Core\Item\ItemText.cs" />
+    <Compile Include="Core\Element\XBlock.cs" />
+    <Compile Include="Core\Dependency.cs" />
+    <Compile Include="Core\Element\XElement.cs" />
+    <Compile Include="Core\Element\XEllipse.cs" />
+    <Compile Include="Core\HAlignment.cs" />
+    <Compile Include="Core\Element\XImage.cs" />
+    <Compile Include="Core\Element\XLine.cs" />
+    <Compile Include="Core\Element\XPoint.cs" />
+    <Compile Include="Core\Element\XRectangle.cs" />
+    <Compile Include="Core\Element\XText.cs" />
+    <Compile Include="Core\Element\XThumb.cs" />
+    <Compile Include="Core\VAlignment.cs" />
+    <Compile Include="Editor\Element\BlockController.cs" />
+    <Compile Include="Editor\Element\BlockSerializer.cs" />
+    <Compile Include="Editor\Element\Core\IBlockController.cs" />
+    <Compile Include="Editor\Element\Core\IBlockFactory.cs" />
+    <Compile Include="Editor\Element\Core\IBlockHelper.cs" />
+    <Compile Include="Editor\Element\Core\IBlockSerializer.cs" />
+    <Compile Include="Editor\Element\Core\IPointController.cs" />
+    <Compile Include="Editor\Element\PointController.cs" />
+    <Compile Include="Editor\Item\Core\IItemController.cs" />
+    <Compile Include="Editor\Item\Core\IItemSerializer.cs" />
+    <Compile Include="Editor\Item\ItemController.cs" />
+    <Compile Include="Editor\Item\ItemSerializeOptions.cs" />
+    <Compile Include="Editor\Item\ItemSerializer.cs" />
+    <Compile Include="Editor\Sheet\Core\ICursorController.cs" />
+    <Compile Include="Editor\Sheet\Core\IHistoryController.cs" />
+    <Compile Include="Editor\Sheet\Core\ILibraryController.cs" />
+    <Compile Include="Editor\Sheet\Core\InputArgs.cs" />
+    <Compile Include="Editor\Sheet\Core\InputButton.cs" />
+    <Compile Include="Editor\Sheet\Core\IPageFactory.cs" />
+    <Compile Include="Editor\Sheet\Core\ISheet.cs" />
+    <Compile Include="Editor\Sheet\Core\ISheetController.cs" />
+    <Compile Include="Editor\Sheet\Core\ITextController.cs" />
+    <Compile Include="Editor\Sheet\Core\IZoomController.cs" />
+    <Compile Include="Editor\Sheet\Core\SheetCursor.cs" />
+    <Compile Include="Editor\Sheet\Core\SheetMode.cs" />
+    <Compile Include="Editor\Sheet\Core\SheetOptions.cs" />
+    <Compile Include="Editor\Sheet\Core\SheetState.cs" />
+    <Compile Include="Editor\Sheet\FileDialogSettings.cs" />
+    <Compile Include="Editor\Sheet\SheetController.cs" />
+    <Compile Include="Editor\Sheet\SheetEllipseMode.cs" />
+    <Compile Include="Editor\Sheet\SheetHistoryController.cs" />
+    <Compile Include="Editor\Sheet\SheetLineMode.cs" />
+    <Compile Include="Editor\Sheet\SheetPageFactory.cs" />
+    <Compile Include="Editor\Sheet\SheetRectangleMode.cs" />
+    <Compile Include="Editor\UI\Core\IView.cs" />
+    <Compile Include="Editor\UI\Core\IWindow.cs" />
+    <Compile Include="Editor\UI\Views\IDatabaseView.cs" />
+    <Compile Include="Editor\UI\Views\ILibraryView.cs" />
+    <Compile Include="Editor\UI\Views\ISheetView.cs" />
+    <Compile Include="Editor\UI\Views\ISolutionView.cs" />
+    <Compile Include="Editor\UI\Views\ITextView.cs" />
+    <Compile Include="Editor\UI\Windows\IMainWindow.cs" />
+    <Compile Include="Editor\Util\Base64.cs" />
+    <Compile Include="Editor\Util\Core\IBase64.cs" />
+    <Compile Include="Editor\Util\Core\IClipboard.cs" />
+    <Compile Include="Editor\Util\Core\IDatabaseController.cs" />
+    <Compile Include="Editor\Util\Core\IDataReader.cs" />
+    <Compile Include="Editor\Util\Core\IJsonSerializer.cs" />
+    <Compile Include="Editor\Util\Core\IOpenFileDialog.cs" />
+    <Compile Include="Editor\Util\Core\ISaveFileDialog.cs" />
+    <Compile Include="Editor\Util\CsvDatabaseController.cs" />
+    <Compile Include="Editor\Util\CsvDataReader.cs" />
+    <Compile Include="Editor\Util\NewtonsoftJsonSerializer.cs" />
+    <Compile Include="IoC\AppScopeServiceLocator.cs" />
+    <Compile Include="IoC\AppServiceLocator.cs" />
+    <Compile Include="IoC\Modules\BlockModule.cs" />
+    <Compile Include="IoC\Core\IScopeServiceLocator.cs" />
+    <Compile Include="IoC\Core\IServiceLocator.cs" />
+    <Compile Include="IoC\Modules\ItemModule.cs" />
+    <Compile Include="IoC\Modules\SheetModule.cs" />
+    <Compile Include="IoC\Modules\UtilModule.cs" />
+    <Compile Include="IoC\Modules\WpfModule.cs" />
+    <Compile Include="WPF\Controls\Custom\SizeBorder.cs" />
     <Compile Include="WPF\Controls\PropertiesControl.xaml.cs">
       <DependentUpon>PropertiesControl.xaml</DependentUpon>
     </Compile>
@@ -141,10 +230,6 @@
     <Compile Include="WPF\Controls\DatabaseControl.xaml.cs">
       <DependentUpon>DatabaseControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Sheet\Sheet.cs" />
-    <Compile Include="Sheet\UI.cs" />
-    <Compile Include="Sheet\Util.cs" />
-    <Compile Include="Sheet\Item.cs" />
     <Compile Include="WPF\Controls\DatabasesControl.xaml.cs">
       <DependentUpon>DatabasesControl.xaml</DependentUpon>
     </Compile>
@@ -154,7 +239,14 @@
     <Compile Include="WPF\Controls\TextControl.xaml.cs">
       <DependentUpon>TextControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WPF\Wpf.cs" />
+    <Compile Include="WPF\WpfFrameworkElementProperties.cs" />
+    <Compile Include="WPF\WpfBlockFactory.cs" />
+    <Compile Include="WPF\WpfBlockHelper.cs" />
+    <Compile Include="WPF\WpfCanvasSheet.cs" />
+    <Compile Include="WPF\WpfClipboard.cs" />
+    <Compile Include="WPF\WpfOpenFileDialog.cs" />
+    <Compile Include="WPF\WpfSaveFileDialog.cs" />
+    <Compile Include="WPF\WpfVisualHelper.cs" />
     <Page Include="WPF\Controls\PropertiesControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -183,18 +275,18 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="WPF\SheetWindow.xaml">
+    <Page Include="WPF\Windows\SheetWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="WPF\App.xaml.cs">
+    <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="WPF\Controls\SheetControl.xaml.cs">
       <DependentUpon>SheetControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WPF\SheetWindow.xaml.cs">
+    <Compile Include="WPF\Windows\SheetWindow.xaml.cs">
       <DependentUpon>SheetWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>

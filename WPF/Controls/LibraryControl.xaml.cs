@@ -1,8 +1,7 @@
 ﻿// Copyright (c) Wiesław Šoltés. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-using Sheet.Item;
-using Sheet.Controller;
-using Sheet.UI;
+using Sheet.Core;
+using Sheet.Editor;
 using Sheet.WPF;
 using System;
 using System.Collections.Generic;
@@ -47,16 +46,16 @@ namespace Sheet
 
         #region ILibraryController
 
-        public BlockItem GetSelected()
+        public ItemBlock GetSelected()
         {
             if (Blocks != null && Blocks.SelectedIndex >= 0)
             {
-                return Blocks.SelectedItem as BlockItem;
+                return Blocks.SelectedItem as ItemBlock;
             }
             return null;
         }
 
-        public void SetSelected(BlockItem block)
+        public void SetSelected(ItemBlock block)
         {
             if (Blocks != null)
             {
@@ -64,16 +63,16 @@ namespace Sheet
             }
         }
 
-        public IEnumerable<BlockItem> GetSource()
+        public IEnumerable<ItemBlock> GetSource()
         {
             if (Blocks != null)
             {
-                return Blocks.ItemsSource as IEnumerable<BlockItem>;
+                return Blocks.ItemsSource as IEnumerable<ItemBlock>;
             }
             return null;
         }
 
-        public void SetSource(IEnumerable<BlockItem> source)
+        public void SetSource(IEnumerable<ItemBlock> source)
         {
             if (Blocks != null)
             {
@@ -116,7 +115,7 @@ namespace Sheet
                 var listBoxItem = WpfVisualHelper.FindVisualParent<ListBoxItem>((DependencyObject)e.OriginalSource);
                 if (listBoxItem != null)
                 {
-                    BlockItem block = (BlockItem)listBox.ItemContainerGenerator.ItemFromContainer(listBoxItem);
+                    ItemBlock block = (ItemBlock)listBox.ItemContainerGenerator.ItemFromContainer(listBoxItem);
                     DataObject dragData = new DataObject("Block", block);
                     DragDrop.DoDragDrop(listBoxItem, dragData, DragDropEffects.Move);
                 }

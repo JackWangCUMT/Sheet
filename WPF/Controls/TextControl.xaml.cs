@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Wiesław Šoltés. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-using Sheet.Controller;
-using Sheet.UI;
+using Sheet.Editor;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -50,7 +49,7 @@ namespace Sheet
 
         #endregion
 
-        #region ITextController
+        #region XTextController
 
         public void Set(Action<string> ok, Action cancel, string title, string label, string text)
         {
