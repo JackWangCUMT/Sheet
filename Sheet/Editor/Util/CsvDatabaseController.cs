@@ -8,64 +8,54 @@ namespace Sheet.Editor
 {
     public class CsvDatabaseController : IDatabaseController
     {
-        #region Properties
-
-        private string name = null;
-        private string[] columns = null;
-        private IList<string[]> data = null;
+        private string _name = null;
+        private string[] _columns = null;
+        private IList<string[]> _data = null;
 
         public string Name
         {
-            get { return name; }
+            get { return _name; }
             set
             {
-                name = value;
+                _name = value;
             }
         }
 
         public string[] Columns
         {
-            get { return columns; }
+            get { return _columns; }
             set
             {
-                columns = value;
+                _columns = value;
             }
         }
 
         public IList<string[]> Data
         {
-            get { return data; }
+            get { return _data; }
             set
             {
-                data = value;
+                _data = value;
             }
         }
-
-        #endregion
-
-        #region Constructor
 
         public CsvDatabaseController(string name)
         {
             Name = name;
         }
 
-        #endregion
-
-        #region IDatabaseController
-
         public string[] Get(int index)
         {
-            return data.Where(x => int.Parse(x[0]) == index).FirstOrDefault();
+            return _data.Where(x => int.Parse(x[0]) == index).FirstOrDefault();
         }
 
         public bool Update(int index, string[] item)
         {
-            for (int i = 0; i < data.Count; i++)
+            for (int i = 0; i < _data.Count; i++)
             {
-                if (int.Parse(data[i][0]) == index)
+                if (int.Parse(_data[i][0]) == index)
                 {
-                    data[i] = item;
+                    _data[i] = item;
                     return true;
                 }
             }
@@ -74,12 +64,10 @@ namespace Sheet.Editor
 
         public int Add(string[] item)
         {
-            int index = data.Max((x) => int.Parse(x[0])) + 1;
+            int index = _data.Max((x) => int.Parse(x[0])) + 1;
             item[0] = index.ToString();
-            data.Add(item);
+            _data.Add(item);
             return index;
         }
-
-        #endregion
     }
 }
