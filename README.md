@@ -1,20 +1,15 @@
-Sheet
-=====
+# Sheet
 
 Diagram drawing application.
 
 ## Keyboard  Shortcuts
 
     (File)
-    Ctrl+Shift+N    New Solution
-    Ctrl+Shift+O    Open Solution
-    Ctrl+Shift+S    Save Solution
-    Ctrl+N          New Page
-    Ctrl+O          Open Page
-    Ctrl+S          Save Page
-    Ctrl+E          Export
-    Ctrl+L          Library
-    Ctrl+D          Database
+    Ctrl+N          New
+    Ctrl+O          Open
+    Ctrl+S          Save
+    Ctrl+L          Open Library
+    Ctrl+D          Open Database
     Alt+F4          Exit
     (Edit)
     Ctrl+Z          Undo
@@ -38,23 +33,16 @@ Diagram drawing application.
     (View)
     Ctrl+0          Zoom to Page Level
     Ctrl+1          Actual Size
-    (Mode)
-    N               Mode None
-    S               Mode Selection
-    I               Mode Insert
-    P               Mode Point
-    L               Mode Line
-    R               Mode Rectangle
-    E               Mode Ellipse
-    T               Mode Text
-    D               Mode Image
-    (Simulation)
-    F5              Start Simulation
-    F6              Stop Simulation
-    F7              Restart Simulation
-    (Logic)
-    Q               Invert Line Start
-    W               Invert Line End
+    (Tool)
+    N               None
+    S               Selection
+    I               Insert
+    P               Point
+    L               Line
+    R               Rectangle
+    E               Ellipse
+    T               Text
+    D               Image
 
 ## Mouse
 
