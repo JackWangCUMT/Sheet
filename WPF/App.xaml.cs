@@ -3,7 +3,6 @@
 using Autofac;
 using Sheet.Block;
 using Sheet.Controller;
-using Sheet.Entry;
 using Sheet.Item;
 using Sheet.UI;
 using Sheet.Util;
@@ -88,16 +87,6 @@ namespace Sheet
         {
             builder.RegisterType<Base64>().As<IBase64>().SingleInstance();
             builder.RegisterType<NewtonsoftJsonSerializer>().As<IJsonSerializer>().SingleInstance();
-        }
-    }
-
-    public class EntryModule : Module
-    {
-        protected override void Load(ContainerBuilder builder)
-        {
-            builder.RegisterType<EntryController>().As<IEntryController>().SingleInstance();
-            builder.RegisterType<EntrySerializer>().As<IEntrySerializer>().SingleInstance();
-            builder.RegisterType<EntryFactory>().As<IEntryFactory>().SingleInstance();
         }
     }
 
@@ -192,7 +181,6 @@ namespace Sheet
             builder.RegisterType<AppScopeServiceLocator>().As<IScopeServiceLocator>().InstancePerDependency();
 
             builder.RegisterModule<UtilModule>();
-            builder.RegisterModule<EntryModule>();
             builder.RegisterModule<BlockModule>();
             builder.RegisterModule<ItemModule>();
             builder.RegisterModule<SheetModule>();

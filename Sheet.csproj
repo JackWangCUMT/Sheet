@@ -145,7 +145,6 @@
     <Compile Include="Sheet\Sheet.cs" />
     <Compile Include="Sheet\UI.cs" />
     <Compile Include="Sheet\Util.cs" />
-    <Compile Include="Sheet\Entry.cs" />
     <Compile Include="Sheet\Item.cs" />
     <Compile Include="WPF\Controls\DatabasesControl.xaml.cs">
       <DependentUpon>DatabasesControl.xaml</DependentUpon>
@@ -156,10 +155,6 @@
     <Compile Include="WPF\Controls\TextControl.xaml.cs">
       <DependentUpon>TextControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WPF\Controls\SolutionControl.xaml.cs">
-      <DependentUpon>SolutionControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Sheet\Simulation.cs" />
     <Compile Include="WPF\Wpf.cs" />
     <Page Include="WPF\Controls\PropertiesControl.xaml">
       <SubType>Designer</SubType>
@@ -205,10 +200,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="WPF\Controls\TextControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="WPF\Controls\SolutionControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Wiesław Šoltés. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 using Sheet.Controller;
-using Sheet.Entry;
 using Sheet.UI;
 using Sheet.Util;
 using Sheet.WPF;
@@ -71,10 +70,6 @@ namespace Sheet
         #region IoC
 
         private readonly IServiceLocator _serviceLocator;
-        private readonly IEntryController _entryController;
-        private readonly IEntryFactory _entryFactory;
-        private readonly IEntrySerializer _entrySerializer;
-
         private ISheetController _sheetController;
         private List<ISheetController> _sheetControllers;
         private List<IScopeServiceLocator> _scopeServiceLocators;
@@ -84,10 +79,6 @@ namespace Sheet
             InitializeComponent();
 
             this._serviceLocator = serviceLocator;
-            this._entryController = serviceLocator.GetInstance<IEntryController>();
-            this._entryFactory = serviceLocator.GetInstance<IEntryFactory>();
-            this._entrySerializer = serviceLocator.GetInstance<IEntrySerializer>();
- 
             _scopeServiceLocators = new List<IScopeServiceLocator>();
             _sheetControllers = new List<ISheetController>();
 
@@ -150,8 +141,6 @@ namespace Sheet
 
         public void Dispose()
         {
-            StopSimulation();
-
             if (_scopeServiceLocators != null)
             {
                 foreach (var locator in _scopeServiceLocators)
@@ -165,7 +154,6 @@ namespace Sheet
 
         #region Fields
 
-        private string _solutionPath;
         private ObservableCollection<IDatabaseController> _databaseControllers;
 
         #endregion
@@ -175,7 +163,6 @@ namespace Sheet
         private void Init()
         {
             InitSizeBorder();
-            InitSolution();
             InitDrop();
             UpdateModeMenu();
             InitDatabases();
@@ -185,11 +172,6 @@ namespace Sheet
         {
             SizeBorder.ExecuteUpdateSize = (size) => _sheetController.SetAutoFitSize(size.Width, size.Height);
             SizeBorder.ExecuteSizeChanged = () => _sheetController.State.ZoomController.AutoFit();
-        }
-
-        private void InitSolution()
-        {
-            Solution.Init(_sheetController, _entryController);
         }
 
         private void InitDrop()
@@ -292,11 +274,7 @@ namespace Sheet
             string path = files.FirstOrDefault();
             string ext = System.IO.Path.GetExtension(path);
 
-            if (string.Compare(ext, FileDialogSettings.SolutionExtension, true) == 0)
-            {
-                await OpenSolution(path);
-            }
-            else if (string.Compare(ext, FileDialogSettings.PageExtension, true) == 0)
+            if (string.Compare(ext, FileDialogSettings.PageExtension, true) == 0)
             {
                 await _sheetController.OpenTextPage(path);
             }
@@ -368,7 +346,6 @@ namespace Sheet
                     break;
                 // N: Mode None
                 // Ctrl+N: New Page
-                // Ctrl+Shift+N: New Solution
                 case Key.N:
                     if (none)
                     {
@@ -379,34 +356,20 @@ namespace Sheet
                     {
                         _sheetController.NewPage();
                     }
-                    else if (ctrlShift)
-                    {
-                        NewSolution();
-                    }
                     break;
                 // Ctrl+O: Open Page
-                // Ctrl+Shift+O: Open Solution
                 case Key.O:
                     if (onlyCtrl)
                     {
                         _sheetController.OpenPage();
                     }
-                    else if (ctrlShift)
-                    {
-                        OpenSolution();
-                    }
                     break;
                 // Ctrl+S: Save Page
-                // Ctrl+Shift+S: Save Solution
                 // S: Mode Selection
                 case Key.S:
                     if (onlyCtrl)
                     {
                         _sheetController.SavePage();
-                    }
-                    else if (ctrlShift)
-                    {
-                        SaveSolution();
                     }
                     else if (none)
                     {
@@ -598,27 +561,6 @@ namespace Sheet
                         UpdateModeMenu(); 
                     }
                     break;
-                // F5: Start Simulation
-                case Key.F5:
-                    if (none)
-                    {
-                        StartSimulation();
-                    }
-                    break;
-                // F6: Stop Simulation
-                case Key.F6:
-                    if (none)
-                    {
-                        StopSimulation();
-                    }
-                    break;
-                // F7: Restart Simulation
-                case Key.F7:
-                    if (none)
-                    {
-                        RestartSimulation();
-                    }
-                    break;
                 // Q: Invert Line Start
                 case Key.Q:
                     if (none)
@@ -637,206 +579,8 @@ namespace Sheet
         }
 
         #endregion
-        
-        #region Solution
 
-        public async void NewSolution()
-        {
-            var dlg = _serviceLocator.GetInstance<ISaveFileDialog>();
-            dlg.Filter = FileDialogSettings.SolutionFilter;
-            dlg.FilterIndex = 1;
-            dlg.FileName = "solution";
-
-            if (dlg.ShowDialog() == true)
-            {
-                try
-                {
-                    _sheetController.ResetPage();
-
-                    await NewSolution(dlg.FileName);
-                }
-                catch (Exception ex)
-                {
-                    Debug.Print(ex.Message);
-                    Debug.Print(ex.StackTrace);
-                }
-            }
-        }
-
-        private async Task NewSolution(string path)
-        {
-            await Task.Run(() => _entrySerializer.CreateEmpty(path));
-            var solution = await Task.Run(() => _entrySerializer.Deserialize(path));
-
-            if (solution != null)
-            {
-                Solution.DataContext = null;
-                Solution.DataContext = solution;
-
-                _solutionPath = path;
-            }
-        }
-
-        public async void OpenSolution()
-        {
-            var dlg = _serviceLocator.GetInstance<IOpenFileDialog>();
-            dlg.Filter = FileDialogSettings.SolutionFilter;
-            dlg.FilterIndex = 1;
-            dlg.FileName = "";
-            
-            if (dlg.ShowDialog() == true)
-            {
-                try
-                {
-                    _sheetController.ResetPage();
-
-                    await OpenSolution(dlg.FileName);
-                }
-                catch (Exception ex)
-                {
-                    Debug.Print(ex.Message);
-                    Debug.Print(ex.StackTrace);
-                }
-            }
-        }
-
-        private async Task OpenSolution(string path)
-        {
-            var solution = await Task.Run(() => _entrySerializer.Deserialize(path));
-
-            if (solution != null)
-            {
-                Solution.DataContext = null;
-                Solution.DataContext = solution;
-
-                _solutionPath = path;
-            }
-        }
-
-        public void SaveSolution()
-        {
-            if (_solutionPath != null)
-            {
-                try
-                {
-                    var path = _solutionPath;
-                    var solution = Solution.DataContext as SolutionEntry;
-
-                    if (solution != null)
-                    {
-                        Solution.UpdateSelectedPage();
-                        _entrySerializer.Serialize(solution, path);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.Print(ex.Message);
-                    Debug.Print(ex.StackTrace);
-                }
-            }
-        }
-
-        private void CloseSolution()
-        {
-            if (_solutionPath != null)
-            {
-                _solutionPath = null;
-                Solution.DataContext = null;
-
-                _sheetController.ResetPage();
-            }
-        }
-
-        #endregion
-
-        #region Simulation
-        
-        private Simulation.Simulation simulation = null;
-
-        private void StartSimulation()
-        {
-            _sheetController.DeselectAll();
-
-            try
-            {
-                if (simulation == null)
-                {
-                    var block = _sheetController.State.ContentBlock;
-                    var serializer = new Simulation.Serializer();
-                    var solution = serializer.Serialize(block);
-
-                    simulation = new Simulation.Simulation(solution, 100);
-                    simulation.Start(new WpfUpdate());
-
-                    var window = new Window() 
-                    {
-                        Title = "Tags", 
-                        Width = 300, 
-                        Height = 500, 
-                        WindowStartupLocation = WindowStartupLocation.CenterScreen 
-                    };
-
-                    window.Owner = this;
-                    window.Content = new TagsControl();
-                    window.DataContext = solution.Tags;
-                    window.Show();
-                }
-            }
-            catch(Exception ex)
-            {
-                Debug.Print(ex.Message);
-                Debug.Print(ex.StackTrace);
-            }
-        }
-
-        private void StopSimulation()
-        {
-            try
-            {
-                if (simulation != null)
-                {
-                    simulation.Stop();
-                    simulation = null;
-                }
-            }
-            catch(Exception ex)
-            {
-                Debug.Print(ex.Message);
-                Debug.Print(ex.StackTrace);
-            }
-
-            _sheetController.DeselectAll();
-        }
-        
-        private void RestartSimulation()
-        {
-            StopSimulation();
-            StartSimulation();
-        }
-        
-        #endregion
-        
         #region File Menu Events
-
-        private void FileNewSolution_Click(object sender, RoutedEventArgs e)
-        {
-            NewSolution();
-        }
-
-        private void FileOpenSolution_Click(object sender, RoutedEventArgs e)
-        {
-            OpenSolution();
-        }
-
-        private void FileSaveSolution_Click(object sender, RoutedEventArgs e)
-        {
-            SaveSolution();
-        }
-
-        private void FileCloseSolution_Click(object sender, RoutedEventArgs e)
-        {
-            CloseSolution();
-        }
 
         private void FileNewPage_Click(object sender, RoutedEventArgs e)
         {
@@ -1037,25 +781,6 @@ namespace Sheet
             UpdateModeMenu();
         }
 
-        #endregion
-
-        #region Simulation Menu Events
-
-        private void SimulationStart_Click(object sender, RoutedEventArgs e)
-        {
-            StartSimulation();
-        }
-
-        private void SimulationStop_Click(object sender, RoutedEventArgs e)
-        {
-            StopSimulation();
-        } 
-
-        private void SimulationRestart_Click(object sender, RoutedEventArgs e)
-        {
-            RestartSimulation();
-        } 
-        
         #endregion
         
         #region Logic Menu Events

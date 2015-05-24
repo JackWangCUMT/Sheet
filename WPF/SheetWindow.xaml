@@ -25,7 +25,6 @@
             <ColumnDefinition Width="6"/>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="6"/>
-            <ColumnDefinition Width="150"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -39,13 +38,6 @@
               Grid.Column="0"
               Grid.ColumnSpan="5">
             <MenuItem Header="_File">
-                <MenuItem x:Name="FileNewSolution" Header="_New Solution..." InputGestureText="Ctrl+Shift+N" Click="FileNewSolution_Click"/>
-                <Separator/>
-                <MenuItem x:Name="FileOpenSolution" Header="_Open Solution..." InputGestureText="Ctrl+Shift+O" Click="FileOpenSolution_Click"/>
-                <MenuItem x:Name="FileSaveSolution" Header="_Save Solution" InputGestureText="Ctrl+Shift+S" Click="FileSaveSolution_Click"/>
-                <Separator/>
-                <MenuItem x:Name="FileCloseSolution" Header="_Close Solution" InputGestureText="" Click="FileCloseSolution_Click"/>
-                <Separator/>
                 <MenuItem x:Name="FileNewPage" Header="New Pa_ge" InputGestureText="Ctrl+N" Click="FileNewPage_Click"/>
                 <Separator/>
                 <MenuItem x:Name="FileOpenPage" Header="Op_en Page..." InputGestureText="Ctrl+O" Click="FileOpenPage_Click"/>
@@ -97,12 +89,6 @@
                 <MenuItem x:Name="ModeEllipse" Header="_Ellipse" InputGestureText="E" Click="ModeEllipse_Click"/>
                 <MenuItem x:Name="ModeText" Header="_Text" InputGestureText="T" Click="ModeText_Click"/>
                 <MenuItem x:Name="ModeImage" Header="Ima_ge" InputGestureText="D" Click="ModeImage_Click"/>
-            </MenuItem>
-            <MenuItem Header="_Simulation">
-                <MenuItem x:Name="SimulationStart" Header="_Start" InputGestureText="F5" Click="SimulationStart_Click"/>
-                <MenuItem x:Name="SimulationStop" Header="S_top" InputGestureText="F6" Click="SimulationStop_Click"/>
-                <Separator/>
-                <MenuItem x:Name="SimulationRestart" Header="_Restart" InputGestureText="F7" Click="SimulationRestart_Click"/>
             </MenuItem>
             <MenuItem Header="_Logic">
                 <MenuItem x:Name="LogicInvertLineStart" Header="Invert Line _Start" InputGestureText="Q" Click="LogicInvertLineStart_Click"/>
@@ -168,26 +154,5 @@
                                     BorderBrush="LightGray" 
                                     BorderThickness="0,1,0,0"/>
         </Grid>
-        <GridSplitter Grid.Row="1" 
-                      Grid.Column="3" 
-                      FocusVisualStyle="{x:Null}"
-                      VerticalAlignment="Stretch" 
-                      HorizontalAlignment="Stretch" 
-                      Background="LightGray" 
-                      ResizeBehavior="PreviousAndNext"
-                      ResizeDirection="Columns"
-                      Template="{StaticResource VerticalGridSplitterControlTemplateKey}">
-        </GridSplitter>
-        <local:SolutionControl x:Name="Solution" 
-                               Background="Transparent"
-                               FocusVisualStyle="{x:Null}"
-                               Grid.Row="1"
-                               Grid.Column="4"
-                               Visibility="Visible" 
-                               Margin="0,6,6,6" 
-                               VerticalAlignment="Stretch" 
-                               HorizontalAlignment="Stretch"
-                               BorderBrush="LightGray"
-                               BorderThickness="1,0,0,0"/>
     </Grid>
 </Window>

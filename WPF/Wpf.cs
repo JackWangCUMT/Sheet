@@ -4,7 +4,6 @@ using Microsoft.Win32;
 using Sheet.Block;
 using Sheet.Controller;
 using Sheet.Item;
-using Sheet.Simulation;
 using Sheet.Util;
 using Splat;
 using System;
@@ -896,119 +895,6 @@ namespace Sheet.WPF
         }
 
         #endregion
-    }
-
-    public class WpfUpdate : IUpdate
-    {
-        private readonly SolidColorBrush NullBrush;
-        private readonly SolidColorBrush FalseBrush;
-        private readonly SolidColorBrush TrueBrush;
-
-        public WpfUpdate()
-        {
-            NullBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0x66, 0x66, 0x66));
-            NullBrush.Freeze();
-            FalseBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0x00, 0xBF, 0xFF));
-            FalseBrush.Freeze();
-            TrueBrush = new SolidColorBrush(Color.FromArgb(0xFF, 0xFF, 0x14, 0x93));
-            TrueBrush.Freeze();
-        }
-
-        private SolidColorBrush SelectBrush(IBoolState state)
-        {
-            if (state.State == true)
-            {
-                return TrueBrush;
-            }
-            else if (state.State == false)
-            {
-                return FalseBrush;
-            }
-            else
-            {
-                return NullBrush;
-            }
-        }
-
-        public void Set(ILine line, IBoolState state)
-        {
-            (line.Native as Line).Stroke = SelectBrush(state);
-        }
-
-        public void Set(IRectangle rectangle, IBoolState state)
-        {
-            (rectangle.Native as Rectangle).Stroke = SelectBrush(state);
-            (rectangle.Native as Rectangle).Fill = 
-                (rectangle.Native as Rectangle).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.TransparentBrush : SelectBrush(state);
-        }
-
-        public void Set(IEllipse ellipse, IBoolState state)
-        {
-            (ellipse.Native as Ellipse).Stroke = SelectBrush(state);
-            (ellipse.Native as Ellipse).Fill =
-                (ellipse.Native as Ellipse).Fill == WpfBlockFactory.TransparentBrush ? WpfBlockFactory.TransparentBrush : SelectBrush(state);
-        }
-
-        public void Set(IText text, IBoolState state)
-        {
-            WpfBlockHelper.GetTextBlock(text).Foreground = SelectBrush(state);
-        }
-
-        public void Set(IImage image, IBoolState state)
-        {
-            (image.Native as Image).OpacityMask = SelectBrush(state);
-        }
-
-        public void Set(IBlock parent, IBoolState state)
-        {
-            if (parent.Lines != null)
-            {
-                foreach (var line in parent.Lines)
-                {
-                    Set(line, state);
-                }
-            }
-
-            if (parent.Rectangles != null)
-            {
-                foreach (var rectangle in parent.Rectangles)
-                {
-                    Set(rectangle, state);
-                }
-            }
-
-            if (parent.Ellipses != null)
-            {
-                foreach (var ellipse in parent.Ellipses)
-                {
-                    Set(ellipse, state);
-                }
-            }
-
-            if (parent.Texts != null)
-            {
-                foreach (var text in parent.Texts)
-                {
-                    Set(text, state);
-                }
-            }
-
-            if (parent.Images != null)
-            {
-                foreach (var image in parent.Images)
-                {
-                    Set(image, state);
-                }
-            }
-
-            if (parent.Blocks != null)
-            {
-                foreach (var block in parent.Blocks)
-                {
-                    Set(block, state);
-                }
-            }
-        }
     }
 
     public class WpfOpenFileDialog : IOpenFileDialog
